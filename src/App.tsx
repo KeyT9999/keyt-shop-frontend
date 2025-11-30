@@ -1,154 +1,151 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
-import './App.css'
+import { useState, useEffect, useRef } from 'react';
+import { Link, Routes, Route, useLocation } from 'react-router-dom';
+import './App.css';
+import ProductList from './pages/ProductList';
+import ProductDetail from './pages/ProductDetail';
+import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import YoutubeSummarizerPage from './pages/YoutubeSummarizerPage';
+import GetOtpPage from './pages/GetOtpPage';
+import ProfilePage from './pages/ProfilePage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ChatGptAccountsPage from './pages/admin/ChatGptAccountsPage';
+import SubscriptionsPage from './pages/admin/SubscriptionsPage';
+import UserLoginHistoryPage from './pages/admin/UserLoginHistoryPage';
+import OtpRequestsPage from './pages/admin/OtpRequestsPage';
+import UsersPage from './pages/admin/UsersPage';
+import ProductsPage from './pages/admin/ProductsPage';
+import OrderDetailPage from './pages/OrderDetailPage';
+import { useCartContext } from './context/useCartContext';
+import { useAuthContext } from './context/useAuthContext';
 
-// Interface TypeScript cho Product
-interface Product {
-  _id: string;
-  name: string;
-  price: number;
-  currency: string;
-  billingCycle: string;
-  category: string;
-  isHot: boolean;
-  promotion?: string;
-  features: string[];
-  description: string;
-  imageUrl?: string;
-  stock: number;
-}
+export default function App() {
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const { totalItems } = useCartContext();
+  const { user, logout } = useAuthContext();
+  const location = useLocation();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
-function App() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Gọi API khi component mount
+  // Debug: Log user admin status
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get('http://localhost:5000/api/products');
-        setProducts(response.data);
-        setError(null);
-      } catch (err) {
-        console.error('❌ Lỗi khi gọi API:', err);
-        setError('Không thể tải sản phẩm. Vui lòng kiểm tra Backend!');
-      } finally {
-        setLoading(false);
+    if (user) {
+      console.log('Current user:', user);
+      console.log('Is admin:', user.admin);
+    }
+  }, [user]);
+
+  const navItems = [
+    { label: 'Home', href: '/' },
+    { label: 'Products', href: '/products' },
+    { label: 'Summarizer', href: '/summarizer' },
+    { label: 'Get OTP', href: '/get-otp' },
+    ...(user && user.admin === true ? [{ label: 'Admin', href: '/admin/dashboard' }] : [])
+  ];
+
+  useEffect(() => {
+    setProfileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setProfileMenuOpen(false);
       }
     };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [profileMenuOpen]);
 
-    fetchProducts();
-  }, []);
-
-  // Format giá tiền
-  const formatPrice = (price: number, currency: string) => {
-    return new Intl.NumberFormat('vi-VN').format(price) + ' ' + currency;
-  };
+  const HeaderContent = (
+    <>
+      <Link to="/" className="app-logo">
+        KeyT Shop
+      </Link>
+      <nav className="simple-nav">
+        {navItems.map(item => (
+          <Link 
+            key={item.href} 
+            to={item.href} 
+            className={location.pathname === item.href ? 'active' : ''}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+      <div className="header-actions">
+        {!user?.admin && (
+          <Link to="/cart" className="cart-link">
+          🛒 Giỏ hàng
+            {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+        </Link>
+        )}
+        {user ? (
+          <div className="user-menu" ref={menuRef}>
+            <button
+              type="button"
+              className="user-menu__trigger"
+              onClick={() => setProfileMenuOpen((prev) => !prev)}
+            >
+              {user.username}
+            </button>
+            {profileMenuOpen && (
+              <div className="user-menu__dropdown">
+                <Link to="/profile" onClick={() => setProfileMenuOpen(false)}>
+                  Profile
+                </Link>
+                <button type="button" onClick={logout}>
+                  Đăng xuất
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="auth-links">
+            <Link to="/login">Đăng nhập</Link>
+            <Link to="/register">Đăng ký</Link>
+          </div>
+        )}
+      </div>
+    </>
+  );
 
   return (
     <div className="app">
-      {/* Header */}
-      <header className="header">
-        <h1>🏪 Tiệm Tạp Hóa KeyT</h1>
-        <p>Chuyên cung cấp tài khoản Canva Pro & các dịch vụ chất lượng</p>
+      <header className="main-header">
+        {HeaderContent}
       </header>
 
-      {/* Main Content */}
       <main className="main-content">
-        {loading && (
-          <div className="loading">
-            <div className="spinner"></div>
-            <p>Đang tải sản phẩm...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="error-box">
-            <p>⚠️ {error}</p>
-          </div>
-        )}
-
-        {!loading && !error && products.length === 0 && (
-          <div className="empty-state">
-            <p>📦 Chưa có sản phẩm nào</p>
-          </div>
-        )}
-
-        {!loading && !error && products.length > 0 && (
-          <div className="products-grid">
-            {products.map((product) => (
-              <div key={product._id} className="product-card">
-                {/* Badge Hot */}
-                {product.isHot && (
-                  <div className="hot-badge">🔥 HOT</div>
-                )}
-
-                {/* Product Image */}
-                <div className="product-image">
-                  {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} />
-                  ) : (
-                    <div className="image-placeholder">
-                      <span>🎨</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Product Info */}
-                <div className="product-info">
-                  <span className="category">{product.category}</span>
-                  <h2 className="product-name">{product.name}</h2>
-                  <p className="description">{product.description}</p>
-
-                  {/* Price */}
-                  <div className="price-section">
-                    <span className="price">
-                      {formatPrice(product.price, product.currency)}
-                    </span>
-                    <span className="billing-cycle">/ {product.billingCycle}</span>
-                  </div>
-
-                  {/* Promotion */}
-                  {product.promotion && (
-                    <div className="promotion">
-                      🎉 {product.promotion}
-                    </div>
-                  )}
-
-                  {/* Features */}
-                  <div className="features">
-                    <h4>✨ Tính năng nổi bật:</h4>
-                    <ul>
-                      {product.features.map((feature, index) => (
-                        <li key={index}>{feature}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Stock */}
-                  <div className="stock">
-                    📦 Còn lại: <strong>{product.stock}</strong> tài khoản
-                  </div>
-
-                  {/* Button */}
-                  <button className="buy-button">
-                    🛒 Mua ngay
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <Routes>
+          <Route path="/" element={<ProductList />} />
+          <Route path="/products" element={<ProductList />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/orders/:id" element={<OrderDetailPage />} />
+          <Route path="/summarizer" element={<YoutubeSummarizerPage />} />
+          <Route path="/get-otp" element={<GetOtpPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/chatgpt-accounts" element={<ChatGptAccountsPage />} />
+          <Route path="/admin/subscriptions" element={<SubscriptionsPage />} />
+          <Route path="/admin/users" element={<UsersPage />} />
+          <Route path="/admin/products" element={<ProductsPage />} />
+          <Route path="/admin/user-login-history/:userId" element={<UserLoginHistoryPage />} />
+          <Route path="/admin/otp-requests" element={<OtpRequestsPage />} />
+        </Routes>
       </main>
-
-      {/* Footer */}
-      <footer className="footer">
-        <p>Made with ❤️ by KeyT Shop</p>
-      </footer>
     </div>
-  )
+  );
 }
-
-export default App

@@ -77,7 +77,6 @@ export default function ActivityTab() {
             </div>
           )}
         </div>
-      )}
     </div>
   );
 }

@@ -120,10 +120,10 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
           .split('\n')
           .map((f) => f.trim())
           .filter((f) => f.length > 0),
-        promotion: formData.promotion || null,
-        description: formData.description || null,
-        images: images.length > 0 ? images : null,
-        imageUrl: images.length > 0 ? images[0] : null, // Giữ lại imageUrl cho backward compatible
+        promotion: formData.promotion || undefined,
+        description: formData.description || undefined,
+        images: images.length > 0 ? images : undefined,
+        imageUrl: images.length > 0 ? images[0] : undefined, // Giữ lại imageUrl cho backward compatible
         options: options.length > 0 ? options.map(opt => ({
           name: opt.name.trim(),
           price: Number(opt.price)

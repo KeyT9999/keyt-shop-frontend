@@ -59,7 +59,7 @@ export default function App() {
     
     if (prevPathname !== location.pathname) {
       startTransition(() => {
-        setProfileMenuOpen(false);
+    setProfileMenuOpen(false);
       });
     }
   }, [location.pathname]);

@@ -533,39 +533,6 @@ export default function OrderDetailPage() {
             </div>
           )}
 
-          {/* Payment Section - Show only if payment is pending AND no checkoutUrl (hasn't created payment link yet) */}
-          {order.paymentStatus === 'pending' && !checkoutUrl && (
-            <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>
-                Thanh toán
-              </h2>
-              
-              {/* Payment Button - Only show if no checkoutUrl */}
-              <button
-                onClick={handlePayment}
-                disabled={loadingPayment}
-                style={{
-                  width: '100%',
-                  padding: '0.875rem',
-                  background: loadingPayment ? '#9ca3af' : '#2563eb',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: loadingPayment ? 'not-allowed' : 'pointer',
-                  transition: 'background 0.2s'
-                }}
-              >
-                {loadingPayment ? 'Đang xử lý...' : 'Tạo link thanh toán'}
-              </button>
-              
-              <p style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: '#6b7280', textAlign: 'center' }}>
-                Click nút trên để tạo link thanh toán PayOS
-              </p>
-            </div>
-          )}
-
           {/* Payment Processing Message - Show when returning from PayOS */}
           {processingPayment && (
             <div style={{ background: '#dbeafe', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '1.5rem' }}>

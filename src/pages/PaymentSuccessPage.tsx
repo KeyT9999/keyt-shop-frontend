@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE_URL from '../config/api';
 
 export default function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
@@ -25,20 +26,27 @@ export default function PaymentSuccessPage() {
 
   const findOrderByPayOSCode = async (payosOrderCode: string, status: string | null, code: string | null) => {
     try {
+      console.log('🔍 Searching for order with PayOS code:', payosOrderCode);
       // Call API to find order by PayOS orderCode
       const response = await axios.get(`${API_BASE_URL}/payos/order-by-code/${payosOrderCode}`);
       
+      console.log('📦 API Response:', response.data);
+      
       if (response.data.success && response.data.order) {
         const orderId = response.data.order._id;
+        console.log('✅ Order found, redirecting to:', `/orders/${orderId}?payment=success`);
         // Redirect to order detail page with payment success param
         navigate(`/orders/${orderId}?payment=success`, { replace: true });
       } else {
+        console.error('❌ Order not found in response:', response.data);
         setError('Không tìm thấy đơn hàng');
         setLoading(false);
       }
     } catch (err: any) {
-      console.error('Error finding order:', err);
-      setError(err.response?.data?.message || 'Không thể tìm thấy đơn hàng');
+      console.error('❌ Error finding order:', err);
+      console.error('❌ Error response:', err.response?.data);
+      const errorMessage = err.response?.data?.message || 'Không thể tìm thấy đơn hàng';
+      setError(errorMessage);
       setLoading(false);
     }
   };

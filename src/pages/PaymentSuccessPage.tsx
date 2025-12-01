@@ -26,7 +26,7 @@ export default function PaymentSuccessPage() {
   const findOrderByPayOSCode = async (payosOrderCode: string, status: string | null, code: string | null) => {
     try {
       // Call API to find order by PayOS orderCode
-      const response = await axios.get(`http://localhost:5000/api/payos/order-by-code/${payosOrderCode}`);
+      const response = await axios.get(`${API_BASE_URL}/payos/order-by-code/${payosOrderCode}`);
       
       if (response.data.success && response.data.order) {
         const orderId = response.data.order._id;

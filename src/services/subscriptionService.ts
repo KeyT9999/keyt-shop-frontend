@@ -1,7 +1,6 @@
 import axios from 'axios';
 import type { ServiceSubscription, SubscriptionImportResult } from '../types/subscription';
-
-const API_BASE_URL = 'http://localhost:5000/api';
+import API_BASE_URL from '../config/api';
 
 export const subscriptionService = {
   /**

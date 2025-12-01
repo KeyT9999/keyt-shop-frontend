@@ -37,7 +37,7 @@ export default function RegisterPage() {
         <div className="auth-card__glow" />
         <div className="auth-card__header">
           <p className="auth-eyebrow">Thành viên mới</p>
-          <h2>Tạo tài khoản KeyT Shop</h2>
+          <h2>Tạo tài khoản Tiệm Tạp Hóa KeyT</h2>
         </div>
 
         <div className="auth-form-wrapper auth-form-wrapper--open">

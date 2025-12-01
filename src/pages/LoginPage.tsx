@@ -78,7 +78,7 @@ export default function LoginPage() {
         <div className="auth-card__glow" />
         <div className="auth-card__header">
           <p className="auth-eyebrow">Chào mừng trở lại</p>
-          <h2>Đăng nhập KeyT Shop</h2>
+          <h2>Đăng nhập Tiệm Tạp Hóa KeyT</h2>
         </div>
 
         <div className="auth-form-wrapper auth-form-wrapper--open">

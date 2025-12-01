@@ -6,6 +6,7 @@ import { useAuthContext } from '../context/useAuthContext';
 import { formatPrice } from '../utils/formatPrice';
 import { profileService } from '../services/profileService';
 import type { Product } from '../types/product';
+import API_BASE_URL from '../config/api';
 
 export default function CheckoutPage() {
   const { cart, totalAmount, clearCart, updateCartItem } = useCartContext();
@@ -43,7 +44,7 @@ export default function CheckoutPage() {
       // Fetch product data cho tất cả items trong cart
       const productPromises = cart.map(async (item) => {
         try {
-          const response = await axios.get(`http://localhost:5000/api/products/${item._id}`);
+          const response = await axios.get(`${API_BASE_URL}/products/${item._id}`);
           const productData: Product = response.data;
           
           // Update cart item với product data mới (đặc biệt là requiredFields)
@@ -161,7 +162,7 @@ export default function CheckoutPage() {
     };
 
     try {
-      const response = await axios.post('http://localhost:5000/api/orders', payload, {
+      const response = await axios.post(`${API_BASE_URL}/orders`, payload, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       

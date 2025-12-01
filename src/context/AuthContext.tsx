@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { AuthContext } from './auth-context';
 import type { AuthState } from './auth-context';
+import API_BASE_URL from '../config/api';
 
 const STORAGE_KEY = 'keyt-auth';
 
@@ -38,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     setErrorCode(null);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', payload);
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, payload);
       setState({ user: response.data.user, token: response.data.token });
     } catch (err: unknown) {
       const resp = (err as any)?.response;
@@ -56,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     setErrorCode(null);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', payload);
+      const response = await axios.post(`${API_BASE_URL}/auth/register`, payload);
       return response.data;
     } catch (err: unknown) {
       const message = (err as any)?.response?.data?.message || 'Không thể đăng ký';
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     setErrorCode(null);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/google', { credential });
+      const response = await axios.post(`${API_BASE_URL}/auth/google`, { credential });
       setState({ user: response.data.user, token: response.data.token });
     } catch (err: unknown) {
       const message = (err as any)?.response?.data?.message || 'Không thể đăng nhập bằng Google';

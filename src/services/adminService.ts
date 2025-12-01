@@ -2,8 +2,7 @@ import axios from 'axios';
 import type { AdminStats, UserOtpInfo, UserLoginHistoryResponse, OrderStats, OrdersListResponse, OrderFilters } from '../types/admin';
 import type { Product } from '../types/product';
 import type { Order } from '../types/profile';
-
-const API_BASE_URL = 'http://localhost:5000/api';
+import API_BASE_URL from '../config/api';
 
 export const adminService = {
   /**

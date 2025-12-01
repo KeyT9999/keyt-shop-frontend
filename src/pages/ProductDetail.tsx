@@ -6,6 +6,7 @@ import { formatPrice } from '../utils/formatPrice';
 import { useCartContext } from '../context/useCartContext';
 import { useAuthContext } from '../context/useAuthContext';
 import './ProductDetail.css';
+import API_BASE_URL from '../config/api';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -29,7 +30,7 @@ export default function ProductDetail() {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const response = await axios.get(`${API_BASE_URL}/products/${id}`);
         const productData = response.data;
         setProduct(productData);
         // Tự động chọn option đầu tiên nếu có options
@@ -168,7 +169,7 @@ export default function ProductDetail() {
           {/* Seller Info */}
           <div className="seller-info">
             <span className="seller-label">Người bán:</span>
-            <span className="seller-name">KeyT Shop</span>
+            <span className="seller-name">Tiệm Tạp Hóa KeyT</span>
             <span className="seller-tag tag-online">Online</span>
             <span className="seller-tag tag-verified">Đã xác thực</span>
           </div>

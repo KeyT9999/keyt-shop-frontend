@@ -7,6 +7,7 @@ import { profileService } from '../services/profileService';
 import { payosService } from '../services/payosService';
 import OrderFeedbackModal from '../components/order/OrderFeedbackModal';
 import type { Order } from '../types/profile';
+import API_BASE_URL from '../config/api';
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -66,7 +67,7 @@ export default function OrderDetailPage() {
       }
 
       // Load trực tiếp từ API
-      const response = await axios.get(`http://localhost:5000/api/orders/${id}`, {
+      const response = await axios.get(`${API_BASE_URL}/orders/${id}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       const orderData = response.data;

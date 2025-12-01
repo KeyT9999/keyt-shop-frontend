@@ -78,7 +78,7 @@ export default function App() {
   const HeaderContent = (
     <>
       <Link to="/" className="app-logo">
-        KeyT Shop
+        🏪 Tiệm Tạp Hóa KeyT
       </Link>
       <nav className="simple-nav">
         {navItems.map(item => (

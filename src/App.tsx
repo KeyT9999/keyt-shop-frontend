@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, startTransition } from 'react';
 import { Link, Routes, Route, useLocation } from 'react-router-dom';
 import './App.css';
 import ProductList from './pages/ProductList';
@@ -20,12 +20,17 @@ import UserLoginHistoryPage from './pages/admin/UserLoginHistoryPage';
 import OtpRequestsPage from './pages/admin/OtpRequestsPage';
 import UsersPage from './pages/admin/UsersPage';
 import ProductsPage from './pages/admin/ProductsPage';
+import OrdersPage from './pages/admin/OrdersPage';
+import AdminOrderDetailPage from './pages/admin/AdminOrderDetailPage';
 import OrderDetailPage from './pages/OrderDetailPage';
+import InvoiceView from './components/order/InvoiceView';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import { useCartContext } from './context/useCartContext';
 import { useAuthContext } from './context/useAuthContext';
 
 export default function App() {
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const prevPathnameRef = useRef<string>('');
   const { totalItems } = useCartContext();
   const { user, logout } = useAuthContext();
   const location = useLocation();
@@ -47,8 +52,16 @@ export default function App() {
     ...(user && user.admin === true ? [{ label: 'Admin', href: '/admin/dashboard' }] : [])
   ];
 
+  // Close menu when route changes
   useEffect(() => {
-    setProfileMenuOpen(false);
+    const prevPathname = prevPathnameRef.current;
+    prevPathnameRef.current = location.pathname;
+    
+    if (prevPathname !== location.pathname) {
+      startTransition(() => {
+        setProfileMenuOpen(false);
+      });
+    }
   }, [location.pathname]);
 
   useEffect(() => {
@@ -129,6 +142,8 @@ export default function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders/:id" element={<OrderDetailPage />} />
+          <Route path="/orders/:id/invoice" element={<InvoiceView />} />
+          <Route path="/payment-success" element={<PaymentSuccessPage />} />
           <Route path="/summarizer" element={<YoutubeSummarizerPage />} />
           <Route path="/get-otp" element={<GetOtpPage />} />
           <Route path="/profile" element={<ProfilePage />} />
@@ -142,6 +157,8 @@ export default function App() {
           <Route path="/admin/subscriptions" element={<SubscriptionsPage />} />
           <Route path="/admin/users" element={<UsersPage />} />
           <Route path="/admin/products" element={<ProductsPage />} />
+          <Route path="/admin/orders" element={<OrdersPage />} />
+          <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
           <Route path="/admin/user-login-history/:userId" element={<UserLoginHistoryPage />} />
           <Route path="/admin/otp-requests" element={<OtpRequestsPage />} />
         </Routes>

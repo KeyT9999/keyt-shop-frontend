@@ -56,6 +56,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const updateCartItem = (productId: string, productData: Partial<Product>) => {
+    setCart((prev) =>
+      prev.map((item) =>
+        item._id === productId ? { ...item, ...productData } : item
+      )
+    );
+  };
+
   const totalItems = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
   const totalAmount = useMemo(
@@ -69,7 +77,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ cart, totalItems, totalAmount, addItem, removeItem, updateQuantity, clearCart }}
+      value={{ cart, totalItems, totalAmount, addItem, removeItem, updateQuantity, updateCartItem, clearCart }}
     >
       {children}
     </CartContext.Provider>

@@ -122,6 +122,23 @@ export default function AdminDashboard() {
             Quản lý Sản phẩm
           </Link>
           <Link
+            to="/admin/orders"
+            style={{
+              padding: '1rem',
+              background: '#2563eb',
+              borderRadius: '8px',
+              color: '#ffffff',
+              textDecoration: 'none',
+              textAlign: 'center',
+              fontWeight: '600',
+              transition: 'background 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#1d4ed8'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#2563eb'}
+          >
+            Quản lý Đơn hàng
+          </Link>
+          <Link
             to="/admin/chatgpt-accounts"
             style={{
               padding: '1rem',

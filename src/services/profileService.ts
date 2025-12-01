@@ -5,7 +5,11 @@ import type {
   ChangePasswordData,
   Order,
   UserActivity,
-  LoginHistory
+  LoginHistory,
+  OrderFilters,
+  OrdersListResponse,
+  InvoiceData,
+  OrderFeedbackData
 } from '../types/profile';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -36,10 +40,22 @@ class ProfileService {
   }
 
   /**
-   * Get user's order history
+   * Get user's order history with filters, search, and sort
    */
-  async getOrders(): Promise<Order[]> {
-    const response = await axios.get(`${API_BASE_URL}/user/orders`);
+  async getOrders(filters?: OrderFilters): Promise<OrdersListResponse> {
+    const params = new URLSearchParams();
+    if (filters) {
+      if (filters.orderStatus) params.append('orderStatus', filters.orderStatus);
+      if (filters.paymentStatus) params.append('paymentStatus', filters.paymentStatus);
+      if (filters.startDate) params.append('startDate', filters.startDate);
+      if (filters.endDate) params.append('endDate', filters.endDate);
+      if (filters.search) params.append('search', filters.search);
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
+      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.limit) params.append('limit', filters.limit.toString());
+    }
+    const response = await axios.get(`${API_BASE_URL}/user/orders?${params.toString()}`);
     return response.data;
   }
 
@@ -48,6 +64,22 @@ class ProfileService {
    */
   async getOrder(orderId: string): Promise<Order> {
     const response = await axios.get(`${API_BASE_URL}/user/orders/${orderId}`);
+    return response.data;
+  }
+
+  /**
+   * Get order invoice data
+   */
+  async getOrderInvoice(orderId: string): Promise<InvoiceData> {
+    const response = await axios.get(`${API_BASE_URL}/user/orders/${orderId}/invoice`);
+    return response.data;
+  }
+
+  /**
+   * Submit feedback/review for an order item
+   */
+  async submitOrderFeedback(orderId: string, feedbackData: OrderFeedbackData): Promise<{ message: string; feedback: any }> {
+    const response = await axios.post(`${API_BASE_URL}/user/orders/${orderId}/feedback`, feedbackData);
     return response.data;
   }
 

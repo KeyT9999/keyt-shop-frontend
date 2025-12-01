@@ -3,6 +3,13 @@ export interface ProductOption {
   price: number;
 }
 
+export interface ProductRequiredField {
+  label: string;        // "Email Canva", "Email để nhận docs", "Account:MK"
+  type: 'email' | 'text' | 'account';
+  placeholder: string;  // "Vui lòng nhập email Canva của bạn"
+  required: boolean;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -18,4 +25,5 @@ export interface Product {
   images?: string[]; // Array of image URLs
   stock: number;
   options?: ProductOption[];
+  requiredFields?: ProductRequiredField[];
 }

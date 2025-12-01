@@ -38,6 +38,12 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
     features: product?.features?.join('\n') || ''
   });
   const [options, setOptions] = useState<ProductOption[]>(product?.options || []);
+  const [requiredFields, setRequiredFields] = useState<Array<{
+    label: string;
+    type: 'email' | 'text' | 'account';
+    placeholder: string;
+    required: boolean;
+  }>>(product?.requiredFields || []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -121,7 +127,17 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
         options: options.length > 0 ? options.map(opt => ({
           name: opt.name.trim(),
           price: Number(opt.price)
-        })).filter(opt => opt.name && opt.price > 0) : []
+        })).filter(opt => opt.name && opt.price > 0) : [],
+        requiredFields: requiredFields.length > 0 
+          ? requiredFields
+              .filter(field => field.label.trim() && field.placeholder.trim())
+              .map(field => ({
+                label: field.label.trim(),
+                type: field.type,
+                placeholder: field.placeholder.trim(),
+                required: field.required
+              }))
+          : []
       };
 
       if (product) {
@@ -545,6 +561,171 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                   setOptions([...options, { name, price }]);
                   nameInput.value = '';
                   priceInput.value = '';
+                }
+              }}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: '#22c55e',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              + Thêm
+            </button>
+          </div>
+        </div>
+
+        {/* Required Fields Section */}
+        <div style={{ marginBottom: '1.5rem', padding: '1.5rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e5e5' }}>
+          <label style={{ display: 'block', marginBottom: '1rem', color: '#1f2937', fontWeight: '600', fontSize: '1rem' }}>
+            Điều kiện cần (Required Fields)
+            <span style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: 'normal', marginLeft: '0.5rem' }}>
+              - Thông tin bổ sung khách hàng cần nhập khi mua sản phẩm
+            </span>
+          </label>
+          
+          {requiredFields.length > 0 && (
+            <div style={{ marginBottom: '1rem' }}>
+              {requiredFields.map((field, index) => (
+                <div key={index} style={{ 
+                  display: 'flex', 
+                  gap: '0.5rem', 
+                  marginBottom: '0.5rem',
+                  alignItems: 'center',
+                  padding: '0.75rem',
+                  background: '#ffffff',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e5e5'
+                }}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <strong style={{ color: '#1f2937', fontSize: '0.9rem' }}>{field.label}</strong>
+                      <span style={{ 
+                        padding: '0.25rem 0.5rem', 
+                        background: field.type === 'email' ? '#dbeafe' : field.type === 'account' ? '#fef3c7' : '#f3f4f6',
+                        color: field.type === 'email' ? '#1e40af' : field.type === 'account' ? '#92400e' : '#374151',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600'
+                      }}>
+                        {field.type}
+                      </span>
+                      {field.required && (
+                        <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>*</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                      {field.placeholder}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setRequiredFields(requiredFields.filter((_, i) => i !== index))}
+                    style={{
+                      padding: '0.5rem',
+                      background: '#ef4444',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem'
+                    }}
+                  >
+                    Xóa
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr auto auto', gap: '0.5rem', alignItems: 'end' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>
+                Label (VD: Email Canva)
+              </label>
+              <input
+                type="text"
+                id="required-field-label"
+                placeholder="VD: Email Canva"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #e5e5e5',
+                  borderRadius: '8px',
+                  fontSize: '1rem'
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>
+                Type
+              </label>
+              <select
+                id="required-field-type"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #e5e5e5',
+                  borderRadius: '8px',
+                  fontSize: '1rem'
+                }}
+              >
+                <option value="text">Text</option>
+                <option value="email">Email</option>
+                <option value="account">Account</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>
+                Placeholder
+              </label>
+              <input
+                type="text"
+                id="required-field-placeholder"
+                placeholder="VD: Vui lòng nhập email Canva"
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #e5e5e5',
+                  borderRadius: '8px',
+                  fontSize: '1rem'
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '0.5rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280', fontSize: '0.9rem', fontWeight: '500', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  id="required-field-required"
+                  defaultChecked={true}
+                  style={{ cursor: 'pointer' }}
+                />
+                Required
+              </label>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const labelInput = document.getElementById('required-field-label') as HTMLInputElement;
+                const typeInput = document.getElementById('required-field-type') as HTMLSelectElement;
+                const placeholderInput = document.getElementById('required-field-placeholder') as HTMLInputElement;
+                const requiredInput = document.getElementById('required-field-required') as HTMLInputElement;
+                
+                const label = labelInput.value.trim();
+                const type = typeInput.value as 'email' | 'text' | 'account';
+                const placeholder = placeholderInput.value.trim();
+                const required = requiredInput.checked;
+
+                if (label && placeholder) {
+                  setRequiredFields([...requiredFields, { label, type, placeholder, required }]);
+                  labelInput.value = '';
+                  typeInput.value = 'text';
+                  placeholderInput.value = '';
+                  requiredInput.checked = true;
                 }
               }}
               style={{

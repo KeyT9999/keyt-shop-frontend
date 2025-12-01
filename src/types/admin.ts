@@ -50,3 +50,37 @@ export interface UserLoginHistoryResponse {
   distinctIpCount: number;
 }
 
+// Import Order type from profile
+import type { Order } from './profile';
+
+export interface OrderStats {
+  todayOrders: number;
+  pendingConfirmation: number;
+  processing: number;
+  todayRevenue: number;
+  monthRevenue: number;
+}
+
+export interface OrdersListResponse {
+  orders: Order[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface OrderFilters {
+  orderStatus?: 'pending' | 'confirmed' | 'processing' | 'completed' | 'cancelled';
+  paymentStatus?: 'pending' | 'paid' | 'failed';
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerName?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: 'date' | 'amount' | 'status';
+  sortOrder?: 'asc' | 'desc';
+}
+

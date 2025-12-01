@@ -11,8 +11,6 @@ export default function PaymentSuccessPage() {
 
   useEffect(() => {
     const orderCode = searchParams.get('orderCode');
-    const status = searchParams.get('status');
-    const code = searchParams.get('code');
 
     if (!orderCode) {
       setError('Không tìm thấy mã đơn hàng');

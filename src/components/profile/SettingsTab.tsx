@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { profileService } from '../../services/profileService';
-import type { UserProfile, UpdateProfileData } from '../../types/profile';
+import type { UserProfile } from '../../types/profile';
 
 interface SettingsTabProps {
   profile: UserProfile;

@@ -53,7 +53,6 @@ export default function ChatGptAccountsPage() {
           <button
             onClick={() => {
               setShowAddForm(!showAddForm);
-              setEditingId(null);
             }}
             style={{
               padding: '0.75rem 1.5rem',

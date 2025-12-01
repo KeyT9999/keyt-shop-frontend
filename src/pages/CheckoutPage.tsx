@@ -16,8 +16,6 @@ export default function CheckoutPage() {
   const [note, setNote] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
-  const [loadingProfile, setLoadingProfile] = useState(true);
-  const [loadingProducts, setLoadingProducts] = useState(false);
   // State để lưu dữ liệu requiredFields cho mỗi sản phẩm
   // Format: { productId: { fieldLabel: value } }
   const [requiredFieldsData, setRequiredFieldsData] = useState<Record<string, Record<string, string>>>({});
@@ -40,7 +38,6 @@ export default function CheckoutPage() {
     if (cart.length === 0) return;
     
     try {
-      setLoadingProducts(true);
       // Fetch product data cho tất cả items trong cart
       const productPromises = cart.map(async (item) => {
         try {
@@ -65,14 +62,11 @@ export default function CheckoutPage() {
       await Promise.all(productPromises);
     } catch (err) {
       console.error('❌ Error reloading products data:', err);
-    } finally {
-      setLoadingProducts(false);
     }
   };
 
   const loadUserProfile = async () => {
     try {
-      setLoadingProfile(true);
       const profile = await profileService.getProfile();
       // Auto điền thông tin từ profile
       setCustomer({
@@ -82,8 +76,6 @@ export default function CheckoutPage() {
       });
     } catch (err) {
       console.error('Error loading user profile:', err);
-    } finally {
-      setLoadingProfile(false);
     }
   };
 

@@ -17,7 +17,6 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
@@ -70,14 +69,6 @@ export default function OrderDetailPage() {
       });
       const orderData = response.data;
       setOrder(orderData);
-      
-      // Set checkout URL and QR code from order data if available
-      if (orderData.checkoutUrl) {
-        setCheckoutUrl(orderData.checkoutUrl);
-      }
-      if (orderData.qrCode) {
-        setQrCode(orderData.qrCode);
-      }
       
       // Load payment info if order exists and user is logged in (to get latest status)
       // Only load if order payment is pending and we don't have checkoutUrl yet
@@ -158,9 +149,6 @@ export default function OrderDetailPage() {
     try {
       const paymentInfo = await payosService.getPaymentInfo(id, token);
       if (paymentInfo.success) {
-        if (paymentInfo.order.checkoutUrl) {
-          setCheckoutUrl(paymentInfo.order.checkoutUrl);
-        }
         // Update order status if payment was completed
         if (paymentInfo.paymentInfo?.status === 'PAID' && order && order.paymentStatus !== 'paid') {
           setOrder({ ...order, paymentStatus: 'paid' });

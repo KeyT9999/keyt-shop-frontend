@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useAuthContext } from '../../context/useAuthContext';
 import { profileService } from '../../services/profileService';
 import { uploadService } from '../../services/uploadService';
@@ -11,13 +11,11 @@ interface PersonalInfoTabProps {
 
 export default function PersonalInfoTab({ profile, onUpdate }: PersonalInfoTabProps) {
   const { token } = useAuthContext();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(profile.avatar || null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   const [formData, setFormData] = useState<UpdateProfileData>({
@@ -42,12 +40,6 @@ export default function PersonalInfoTab({ profile, onUpdate }: PersonalInfoTabPr
       }
       setSelectedFile(file);
       setError(null);
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -104,7 +96,6 @@ export default function PersonalInfoTab({ profile, onUpdate }: PersonalInfoTabPr
       displayName: profile.displayName || '',
       avatar: profile.avatar || ''
     });
-    setAvatarPreview(profile.avatar || null);
     setSelectedFile(null);
     setIsEditing(false);
     setError(null);

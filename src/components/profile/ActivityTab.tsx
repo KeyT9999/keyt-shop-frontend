@@ -6,7 +6,6 @@ export default function ActivityTab() {
   const [activity, setActivity] = useState<UserActivity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<'otp'>('otp');
 
   useEffect(() => {
     loadActivity();

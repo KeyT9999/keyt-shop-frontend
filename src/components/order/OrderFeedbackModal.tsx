@@ -65,7 +65,7 @@ export default function OrderFeedbackModal({ order, onClose, onSuccess }: OrderF
           const feedbackData: OrderFeedbackData = {
             productId: item.productId,
             rating: feedback.rating,
-            comment: feedback.comment || undefined
+            comment: feedback.comment && feedback.comment.trim() ? feedback.comment.trim() : undefined
           };
           await profileService.submitOrderFeedback(order._id, feedbackData);
         }
@@ -150,7 +150,7 @@ export default function OrderFeedbackModal({ order, onClose, onSuccess }: OrderF
             </p>
 
             <div style={{ marginBottom: '1.5rem' }}>
-              {order.items.map((item, index) => {
+              {order.items.map((item) => {
                 const feedback = feedbacks[item.productId] || { rating: 0, comment: '' };
                 const hasExistingFeedback = item.feedback;
 

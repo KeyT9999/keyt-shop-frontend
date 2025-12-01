@@ -7,7 +7,6 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ username: '', email: '', password: '' });
   const [formError, setFormError] = useState<string | null>(null);
   const [cardVisible, setCardVisible] = useState(false);
-  const [formVisible, setFormVisible] = useState(false);
   const [successEmail, setSuccessEmail] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -24,8 +23,8 @@ export default function RegisterPage() {
     }
     setFormError(null);
     try {
-      const data = await register(form);
-      setSuccessEmail(data?.user?.email || form.email);
+      await register(form);
+      setSuccessEmail(form.email);
     } catch {
       // context đã set error
     }

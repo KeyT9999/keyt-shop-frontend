@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/useAuthContext';
 import { adminService } from '../../services/adminService';
 import type { OrderStats, OrdersListResponse, OrderFilters } from '../../types/admin';
-import type { Order } from '../../types/profile';
 import { formatPrice } from '../../utils/formatPrice';
 
 export default function OrdersPage() {

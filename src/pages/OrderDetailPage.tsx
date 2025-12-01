@@ -18,8 +18,6 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
-  const [qrCode, setQrCode] = useState<string | null>(null);
-  const [loadingPayment, setLoadingPayment] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
@@ -163,24 +161,14 @@ export default function OrderDetailPage() {
         if (paymentInfo.order.checkoutUrl) {
           setCheckoutUrl(paymentInfo.order.checkoutUrl);
         }
-        if (paymentInfo.order.qrCode) {
-          setQrCode(paymentInfo.order.qrCode);
-        }
-        
         // Update order status if payment was completed
         if (paymentInfo.paymentInfo?.status === 'PAID' && order && order.paymentStatus !== 'paid') {
           setOrder({ ...order, paymentStatus: 'paid' });
           // Reload order to get latest data
           loadOrder();
-        } else if (order && paymentInfo.order.paymentStatus) {
-          // Update order status from payment info
-          if (paymentInfo.order.paymentStatus !== order.paymentStatus) {
-            setOrder({ 
-              ...order, 
-              paymentStatus: paymentInfo.order.paymentStatus as 'pending' | 'paid' | 'failed',
-              orderStatus: paymentInfo.order.orderStatus || order.orderStatus
-            });
-          }
+        } else if (order && paymentInfo.order) {
+          // Reload order to get latest status from backend
+          loadOrder();
         }
       }
     } catch (err) {
@@ -188,30 +176,6 @@ export default function OrderDetailPage() {
     }
   };
 
-  const handlePayment = async () => {
-    if (!id || !token) return;
-    
-    setLoadingPayment(true);
-    try {
-      // Try to create payment link if it doesn't exist
-      if (!checkoutUrl) {
-        const result = await payosService.createPaymentLink(id, token);
-        if (result.success && result.checkoutUrl) {
-          setCheckoutUrl(result.checkoutUrl);
-          setQrCode(result.qrCode);
-          window.location.href = result.checkoutUrl;
-        }
-      } else {
-        // Redirect to existing checkout URL
-        window.location.href = checkoutUrl;
-      }
-    } catch (err) {
-      console.error('Error creating payment link:', err);
-      alert('Không thể tạo link thanh toán. Vui lòng thử lại sau.');
-    } finally {
-      setLoadingPayment(false);
-    }
-  };
 
   if (loading) {
     return (

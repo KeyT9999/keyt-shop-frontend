@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { useAuthContext } from '../context/useAuthContext';
 import API_BASE_URL from '../config/api';
 
 export interface PaymentLinkResponse {

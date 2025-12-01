@@ -9,7 +9,6 @@ export default function ChatGptAccountsPage() {
   const [accounts, setAccounts] = useState<ChatGptAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (token && user?.admin) {

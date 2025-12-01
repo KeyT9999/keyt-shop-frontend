@@ -21,10 +21,10 @@ export default function PaymentSuccessPage() {
     }
 
     // Find order by PayOS orderCode
-    findOrderByPayOSCode(orderCode, status, code);
+    findOrderByPayOSCode(orderCode);
   }, [searchParams]);
 
-  const findOrderByPayOSCode = async (payosOrderCode: string, status: string | null, code: string | null) => {
+  const findOrderByPayOSCode = async (payosOrderCode: string) => {
     try {
       console.log('🔍 Searching for order with PayOS code:', payosOrderCode);
       // Call API to find order by PayOS orderCode

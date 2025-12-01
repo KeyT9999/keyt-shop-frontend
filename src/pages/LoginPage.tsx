@@ -9,7 +9,6 @@ export default function LoginPage() {
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [formError, setFormError] = useState<string | null>(null);
   const [cardVisible, setCardVisible] = useState(false);
-  const [formVisible, setFormVisible] = useState(false);
   const [resendEmail, setResendEmail] = useState('');
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);

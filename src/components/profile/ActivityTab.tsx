@@ -56,8 +56,7 @@ export default function ActivityTab() {
         <h2>Hoạt động</h2>
       </div>
 
-      {activeSection === 'otp' && (
-        <div className="activity-section">
+      <div className="activity-section">
           <h3>Lịch sử yêu cầu OTP</h3>
           {activity.otpRequests.length === 0 ? (
             <div className="profile-empty">

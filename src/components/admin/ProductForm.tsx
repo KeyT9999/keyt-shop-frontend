@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useAuthContext } from '../../context/useAuthContext';
 import { adminService } from '../../services/adminService';
 import { uploadService } from '../../services/uploadService';

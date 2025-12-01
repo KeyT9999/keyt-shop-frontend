@@ -25,24 +25,6 @@ export default function PersonalInfoTab({ profile, onUpdate }: PersonalInfoTabPr
     avatar: profile.avatar || ''
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Vui lòng chọn file ảnh');
-        return;
-      }
-      // Validate file size (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setError('File ảnh không được vượt quá 5MB');
-        return;
-      }
-      setSelectedFile(file);
-      setError(null);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);

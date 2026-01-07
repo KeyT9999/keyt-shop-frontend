@@ -4,7 +4,7 @@ import { VideoMetadataCard } from '../features/youtubeSummarizer/components/Vide
 import { ResultSection } from '../features/youtubeSummarizer/components/ResultSection';
 import { ChatInterface } from '../features/youtubeSummarizer/components/ChatInterface';
 import { fetchVideoMetadata } from '../features/youtubeSummarizer/services/youtubeService';
-import { generateVideoSummary } from '../features/youtubeSummarizer/services/geminiService';
+import { generateVideoSummary, GeminiApiError } from '../features/youtubeSummarizer/services/geminiService';
 import { SummaryStyle } from '../features/youtubeSummarizer/types';
 import type { AppState, VideoMetadata, SummaryResult } from '../features/youtubeSummarizer/types';
 import { useAuthContext } from '../context/useAuthContext';
@@ -170,12 +170,25 @@ const YoutubeSummarizerPage: React.FC = () => {
       }, 200);
     } catch (err: any) {
       console.error(err);
-      const errorMessage = err.message || 'AI đang quá tải hoặc gặp lỗi. Vui lòng thử lại sau.';
-      setError(errorMessage);
       
-      // If API key is invalid, allow user to re-enter
-      if (errorMessage.includes('API Key') || errorMessage.includes('API_KEY') || errorMessage.includes('key')) {
-        handleApiKeyError();
+      // Handle GeminiApiError specifically
+      if (err instanceof GeminiApiError) {
+        setError(err.message);
+        
+        // If API key is invalid or leaked, clear it and prompt user to re-enter
+        if (err.isApiKeyError) {
+          handleApiKeyError();
+        }
+      } else {
+        // Handle other errors
+        const errorMessage = err.message || 'AI đang quá tải hoặc gặp lỗi. Vui lòng thử lại sau.';
+        setError(errorMessage);
+        
+        // Check if error message contains API key related keywords
+        const errorMsgLower = errorMessage.toLowerCase();
+        if (errorMsgLower.includes('api key') || errorMsgLower.includes('api_key') || errorMsgLower.includes('key')) {
+          handleApiKeyError();
+        }
       }
       
       setAppState('ready_to_summarize');
@@ -275,6 +288,7 @@ const YoutubeSummarizerPage: React.FC = () => {
                 '\n'
               )}`}
               apiKey={geminiApiKey}
+              onApiKeyError={handleApiKeyError}
             />
           </section>
         )}

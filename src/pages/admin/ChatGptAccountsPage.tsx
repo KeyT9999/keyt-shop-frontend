@@ -9,6 +9,7 @@ export default function ChatGptAccountsPage() {
   const [accounts, setAccounts] = useState<ChatGptAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<ChatGptAccount | null>(null);
 
   useEffect(() => {
     if (token && user?.admin) {
@@ -52,11 +53,15 @@ export default function ChatGptAccountsPage() {
           <h1 style={{ color: '#1f2937' }}>Quản lý Email ChatGPT</h1>
           <button
             onClick={() => {
-              setShowAddForm(!showAddForm);
+              if (editingAccount) {
+                setEditingAccount(null);
+              } else {
+                setShowAddForm(!showAddForm);
+              }
             }}
             style={{
               padding: '0.75rem 1.5rem',
-              background: '#2563eb',
+              background: editingAccount ? '#6b7280' : '#2563eb',
               color: '#ffffff',
               border: 'none',
               borderRadius: '8px',
@@ -64,20 +69,40 @@ export default function ChatGptAccountsPage() {
               fontWeight: '600',
               transition: 'background 0.2s'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#1d4ed8'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#2563eb'}
+            onMouseEnter={(e) => {
+              if (!editingAccount) e.currentTarget.style.background = '#1d4ed8';
+            }}
+            onMouseLeave={(e) => {
+              if (!editingAccount) e.currentTarget.style.background = '#2563eb';
+            }}
           >
-            {showAddForm ? 'Hủy' : 'Thêm Email ChatGPT'}
+            {editingAccount ? 'Hủy sửa' : showAddForm ? 'Hủy' : 'Thêm Email ChatGPT'}
           </button>
         </div>
 
-        {showAddForm && (
+        {showAddForm && !editingAccount && (
           <ChatGptAccountForm
             onSuccess={() => {
               setShowAddForm(false);
               fetchAccounts();
             }}
             onCancel={() => setShowAddForm(false)}
+          />
+        )}
+
+        {editingAccount && (
+          <ChatGptAccountForm
+            accountId={editingAccount._id}
+            initialData={{
+              _id: editingAccount._id,
+              chatgptEmail: editingAccount.chatgptEmail,
+              secretKey: editingAccount.secretKey
+            }}
+            onSuccess={() => {
+              setEditingAccount(null);
+              fetchAccounts();
+            }}
+            onCancel={() => setEditingAccount(null)}
           />
         )}
 
@@ -96,22 +121,45 @@ export default function ChatGptAccountsPage() {
                   <td style={{ padding: '1rem', color: '#1f2937' }}>{account.chatgptEmail}</td>
                   <td style={{ padding: '1rem', color: '#1f2937', fontFamily: 'monospace' }}>{account.secretKey}</td>
                   <td style={{ padding: '1rem' }}>
-                    <button
-                      onClick={() => handleDelete(account._id)}
-                      style={{
-                        padding: '0.5rem 1rem',
-                        background: '#ef4444',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
-                    >
-                      Xóa
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => {
+                          setEditingAccount(account);
+                          setShowAddForm(false);
+                        }}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          background: '#3b82f6',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          transition: 'background 0.2s',
+                          fontWeight: 500
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#2563eb'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#3b82f6'}
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDelete(account._id)}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          background: '#ef4444',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          transition: 'background 0.2s',
+                          fontWeight: 500
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
+                      >
+                        Xóa
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -1,8 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useAuthContext } from '../context/useAuthContext';
 import { profileService } from '../services/profileService';
+
+// Ripple effect hook
+const useRipple = () => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const createRipple = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const button = event.currentTarget;
+    const circle = document.createElement('span');
+    const diameter = Math.max(button.clientWidth, button.clientHeight);
+    const radius = diameter / 2;
+
+    const rect = button.getBoundingClientRect();
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${event.clientX - rect.left - radius}px`;
+    circle.style.top = `${event.clientY - rect.top - radius}px`;
+    circle.classList.add('ripple');
+
+    const ripple = button.getElementsByClassName('ripple')[0];
+    if (ripple) {
+      ripple.remove();
+    }
+
+    button.appendChild(circle);
+  };
+
+  return { buttonRef, createRipple };
+};
 
 export default function LoginPage() {
   const { login, loginWithGoogle, loading, error, errorCode } = useAuthContext();
@@ -13,6 +40,8 @@ export default function LoginPage() {
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
   const navigate = useNavigate();
+  const submitRipple = useRipple();
+  const resendRipple = useRipple();
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setCardVisible(true));
@@ -101,7 +130,13 @@ export default function LoginPage() {
             </label>
             {formError && <p className="auth-error">{formError}</p>}
             {error && <p className="auth-error">{error}</p>}
-            <button type="submit" className="auth-submit" disabled={loading}>
+            <button
+              type="submit"
+              className="auth-submit"
+              disabled={loading}
+              ref={submitRipple.buttonRef}
+              onClick={submitRipple.createRipple}
+            >
               {loading ? 'Đang xử lý...' : 'Đăng nhập'}
             </button>
             <div className="divider">
@@ -128,7 +163,13 @@ export default function LoginPage() {
                 />
               </label>
               {resendMessage && <p className="auth-helper" style={{ color: '#a5b4fc' }}>{resendMessage}</p>}
-              <button type="submit" className="auth-submit" disabled={resendLoading}>
+              <button
+                type="submit"
+                className="auth-submit"
+                disabled={resendLoading}
+                ref={resendRipple.buttonRef}
+                onClick={resendRipple.createRipple}
+              >
                 {resendLoading ? 'Đang gửi...' : 'Gửi lại link xác minh'}
               </button>
             </form>

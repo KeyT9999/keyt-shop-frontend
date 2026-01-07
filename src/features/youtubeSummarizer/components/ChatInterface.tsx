@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, Loader2, User, Bot } from 'lucide-react';
 import type { ChatMessage } from '../types';
-import { chatWithVideoContext } from '../services/geminiService';
+import { chatWithVideoContext, GeminiApiError } from '../services/geminiService';
 
 interface Props {
   videoContext: string;
   apiKey: string;
+  onApiKeyError?: () => void;
 }
 
 const quickPrompts = [
@@ -14,7 +15,7 @@ const quickPrompts = [
   'Tác giả có nhắc đến ví dụ nào không?',
 ];
 
-export const ChatInterface: React.FC<Props> = ({ videoContext, apiKey }) => {
+export const ChatInterface: React.FC<Props> = ({ videoContext, apiKey, onApiKeyError }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -66,7 +67,26 @@ export const ChatInterface: React.FC<Props> = ({ videoContext, apiKey }) => {
 
       setMessages((prev) => [...prev, botMsg]);
     } catch (error: any) {
-      const errorMessage = error.message || 'Xin lỗi, tôi đang gặp sự cố khi trả lời câu hỏi này.';
+      let errorMessage = 'Xin lỗi, tôi đang gặp sự cố khi trả lời câu hỏi này.';
+      
+      // Handle GeminiApiError specifically
+      if (error instanceof GeminiApiError) {
+        errorMessage = error.message;
+        
+        // Notify parent component about API key error
+        if (error.isApiKeyError && onApiKeyError) {
+          onApiKeyError();
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+        
+        // Check if error message contains API key related keywords
+        const errorMsgLower = error.message.toLowerCase();
+        if ((errorMsgLower.includes('api key') || errorMsgLower.includes('api_key')) && onApiKeyError) {
+          onApiKeyError();
+        }
+      }
+      
       const fallbackMsg: ChatMessage = {
         id: `${Date.now()}-error`,
         role: 'model',

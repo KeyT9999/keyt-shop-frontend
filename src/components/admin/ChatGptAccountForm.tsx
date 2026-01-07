@@ -5,11 +5,13 @@ import { chatgptService } from '../../services/chatgptService';
 interface ChatGptAccountFormProps {
   onSuccess: () => void;
   onCancel: () => void;
-  initialData?: { chatgptEmail: string; secretKey: string };
+  initialData?: { _id?: string; chatgptEmail: string; secretKey: string };
+  accountId?: string;
 }
 
-export default function ChatGptAccountForm({ onSuccess, onCancel, initialData }: ChatGptAccountFormProps) {
+export default function ChatGptAccountForm({ onSuccess, onCancel, initialData, accountId }: ChatGptAccountFormProps) {
   const { token } = useAuthContext();
+  const isEditMode = !!accountId || !!initialData?._id;
   const [formData, setFormData] = useState({
     chatgptEmail: initialData?.chatgptEmail || '',
     secretKey: initialData?.secretKey || ''
@@ -53,9 +55,23 @@ export default function ChatGptAccountForm({ onSuccess, onCancel, initialData }:
     setLoading(true);
 
     try {
-      if (initialData) {
-        // Update mode - would need account ID
-        alert('Update mode not implemented in this form');
+      if (isEditMode) {
+        const id = accountId || initialData?._id;
+        if (!id) {
+          setError('Không tìm thấy ID tài khoản');
+          setLoading(false);
+          return;
+        }
+        const result = await chatgptService.updateAccount(
+          id,
+          {
+            chatgptEmail: formData.chatgptEmail,
+            secretKey: formData.secretKey
+          },
+          token!
+        );
+        setOtp(result.otp);
+        setCountdown(30); // Bắt đầu đếm ngược 30 giây
       } else {
         const result = await chatgptService.addAccount(formData.chatgptEmail, formData.secretKey, token!);
         setOtp(result.otp);
@@ -88,7 +104,9 @@ export default function ChatGptAccountForm({ onSuccess, onCancel, initialData }:
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
       }}
     >
-      <h3 style={{ color: '#1f2937', marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 600 }}>Thêm Email ChatGPT</h3>
+      <h3 style={{ color: '#1f2937', marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 600 }}>
+        {isEditMode ? 'Sửa Email ChatGPT' : 'Thêm Email ChatGPT'}
+      </h3>
       
       <div style={{ marginBottom: '1rem' }}>
         <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: 500 }}>
@@ -237,7 +255,7 @@ export default function ChatGptAccountForm({ onSuccess, onCancel, initialData }:
             if (!loading) e.currentTarget.style.background = '#2563eb';
           }}
         >
-          {loading ? 'Đang xử lý...' : 'Thêm'}
+          {loading ? 'Đang xử lý...' : isEditMode ? 'Cập nhật' : 'Thêm'}
         </button>
         {otp && (
           <button

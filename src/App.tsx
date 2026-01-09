@@ -27,6 +27,8 @@ import InvoiceView from './components/order/InvoiceView';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import { useCartContext } from './context/useCartContext';
 import { useAuthContext } from './context/useAuthContext';
+import { FormEvent } from 'react';
+import Footer from './components/Footer';
 
 export default function App() {
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -35,6 +37,7 @@ export default function App() {
   const { user, logout } = useAuthContext();
   const location = useLocation();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Debug: Log user admin status
   useEffect(() => {
@@ -77,67 +80,99 @@ export default function App() {
 
   const HeaderContent = (
     <>
-      <Link to="/" className="app-logo">
-        🏪 Tiệm Tạp Hóa KeyT
-      </Link>
-      <nav className="simple-nav">
-        {navItems.map(item => (
-          <Link 
-            key={item.href} 
-            to={item.href} 
-            className={location.pathname === item.href ? 'active' : ''}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-      <div className="header-actions">
-        {!user?.admin && (
-          <Link to="/cart" className="cart-link">
-          🛒 Giỏ hàng
-            {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+      <div className="topbar">
+        <Link to="/" className="app-logo">
+          <span className="logo-mark">🛒</span>
+          <span>KeyT Store</span>
         </Link>
-        )}
-        {user ? (
-          <div className="user-menu" ref={menuRef}>
-            <button
-              type="button"
-              className="user-menu__trigger"
-              onClick={() => setProfileMenuOpen((prev) => !prev)}
+
+        <form
+          className="search-bar"
+          onSubmit={(e: FormEvent<HTMLFormElement>) => {
+            e.preventDefault();
+          }}
+        >
+          <input
+            type="text"
+            placeholder="Nhập nội dung cần tìm..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button type="submit" aria-label="Tìm kiếm">
+            🔍
+          </button>
+        </form>
+
+        <div className="header-actions">
+          {!user?.admin && (
+            <Link to="/cart" className="cart-link">
+              🛒 Giỏ hàng
+              {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+            </Link>
+          )}
+          {user ? (
+            <div className="user-menu" ref={menuRef}>
+              <button
+                type="button"
+                className="user-menu__trigger"
+                onClick={() => setProfileMenuOpen((prev) => !prev)}
+              >
+                {user.username}
+              </button>
+              {profileMenuOpen && (
+                <div className="user-menu__dropdown">
+                  <Link to="/profile" onClick={() => setProfileMenuOpen(false)}>
+                    Profile
+                  </Link>
+                  <button type="button" onClick={logout}>
+                    Đăng xuất
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="auth-links">
+              <Link to="/login" className="action-pill ghost">Đăng nhập</Link>
+              <Link to="/register" className="action-pill primary">Đăng ký</Link>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="subbar">
+        <button className="category-button">☰ Danh mục</button>
+
+        <nav className="simple-nav">
+          {navItems.map(item => (
+            <Link 
+              key={item.href} 
+              to={item.href} 
+              className={location.pathname === item.href ? 'active' : ''}
             >
-              {user.username}
-            </button>
-            {profileMenuOpen && (
-              <div className="user-menu__dropdown">
-                <Link to="/profile" onClick={() => setProfileMenuOpen(false)}>
-                  Profile
-                </Link>
-                <button type="button" onClick={logout}>
-                  Đăng xuất
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="auth-links">
-            <Link to="/login">Đăng nhập</Link>
-            <Link to="/register">Đăng ký</Link>
-          </div>
-        )}
+              {item.label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </>
   );
 
   return (
     <div className="app">
+      <div className="floating-rail">
+        <a href="https://zalo.me" className="rail-item" aria-label="Zalo">ZL</a>
+        <a href="https://m.me" className="rail-item" aria-label="Messenger">MS</a>
+        <a href="#contact" className="rail-item" aria-label="Liên hệ">☎</a>
+      </div>
+
       <header className="main-header">
         {HeaderContent}
       </header>
 
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<ProductList />} />
-          <Route path="/products" element={<ProductList />} />
+          <Route path="/" element={<ProductList searchQuery={searchQuery} showHero />} />
+          <Route path="/products" element={<ProductList searchQuery={searchQuery} showHero={false} />} />
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
@@ -163,6 +198,8 @@ export default function App() {
           <Route path="/admin/otp-requests" element={<OtpRequestsPage />} />
         </Routes>
       </main>
+
+      <Footer />
     </div>
   );
 }

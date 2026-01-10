@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import type { Product } from '../types/product';
@@ -19,6 +19,10 @@ export default function ProductDetail() {
   const { addItem } = useCartContext();
   const { user } = useAuthContext();
   const navigate = useNavigate();
+  const isOutOfStock = useMemo(() => {
+    if (!product) return false;
+    return product.status === 'out_of_stock' || product.status === 'discontinued' || (product.stock !== undefined && product.stock <= 0);
+  }, [product]);
 
   useEffect(() => {
     if (!id) {
@@ -226,6 +230,7 @@ export default function ProductDetail() {
             <button
               type="button"
                 className="buy-btn add-to-cart-btn"
+                disabled={isOutOfStock}
                 onClick={() => {
                   // Nếu có option được chọn, tạo product với giá từ option
                   if (selectedOptionIndex !== null && product.options && product.options[selectedOptionIndex]) {
@@ -241,11 +246,12 @@ export default function ProductDetail() {
                   }
                 }}
             >
-              🛒 Thêm vào giỏ hàng
+              {isOutOfStock ? 'Hết hàng' : '🛒 Thêm vào giỏ hàng'}
             </button>
               <button
                 type="button"
                 className="buy-btn buy-now-btn"
+                disabled={isOutOfStock}
                 onClick={() => {
                   // Thêm sản phẩm vào giỏ hàng
                   if (selectedOptionIndex !== null && product.options && product.options[selectedOptionIndex]) {
@@ -263,7 +269,7 @@ export default function ProductDetail() {
                   navigate('/checkout');
                 }}
               >
-                ⚡ Mua ngay
+                {isOutOfStock ? 'Hết hàng' : '⚡ Mua ngay'}
               </button>
           </div>
           )}

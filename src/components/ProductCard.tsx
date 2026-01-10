@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { Product } from '../types/product';
 import { formatPrice } from '../utils/formatPrice';
+import { useCartContext } from '../context/useCartContext';
 
 interface ProductCardProps {
   product: Product;
@@ -8,6 +9,8 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const discountLabel = product.isHot ? '-16%' : undefined;
+  const { addItem } = useCartContext();
+  const isOutOfStock = product.status === 'out_of_stock' || product.status === 'discontinued' || (product.stock !== undefined && product.stock <= 0);
 
   return (
     <article className="product-card">
@@ -40,10 +43,15 @@ export default function ProductCard({ product }: ProductCardProps) {
             <span aria-hidden="true">🔎</span>
             <span>Xem chi tiết</span>
           </Link>
-          <Link to={`/products/${product._id}`} className="product-card__cta">
+          <button
+            type="button"
+            className="product-card__cta"
+            onClick={() => addItem(product)}
+            disabled={isOutOfStock}
+          >
             <span aria-hidden="true">🛒</span>
-            <span>Thêm vào giỏ</span>
-          </Link>
+            <span>{isOutOfStock ? 'Hết hàng' : 'Thêm vào giỏ'}</span>
+          </button>
         </div>
       </div>
     </article>

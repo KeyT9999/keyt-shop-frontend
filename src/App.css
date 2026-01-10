@@ -202,7 +202,7 @@
   width: 100%;
   background: transparent;
   border: none;
-  color: #1f2937;
+  color: #e2e8f0;
   text-decoration: none;
   padding: 0.5rem 1rem;
   text-align: left;
@@ -213,7 +213,7 @@
 
 .user-menu__dropdown a:hover,
 .user-menu__dropdown button:hover {
-  background: #f3f4f6;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .auth-links {

@@ -31,6 +31,8 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
     billingCycle: product?.billingCycle || 'tháng',
     category: product?.category || '',
     stock: product?.stock || 0,
+    status: product?.status || 'in_stock',
+    lowStockThreshold: product?.lowStockThreshold || 0,
     isHot: product?.isHot || false,
     promotion: product?.promotion || '',
     description: product?.description || '',
@@ -116,6 +118,8 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
         ...formData,
         price: Number(formData.price),
         stock: Number(formData.stock),
+        status: formData.status,
+        lowStockThreshold: Number(formData.lowStockThreshold),
         features: formData.features
           .split('\n')
           .map((f) => f.trim())
@@ -327,6 +331,48 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               type="number"
               value={formData.stock}
               onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
+              min="0"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #e5e5e5',
+                borderRadius: '8px',
+                fontSize: '1rem'
+              }}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
+              Trạng thái
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #e5e5e5',
+                borderRadius: '8px',
+                fontSize: '1rem'
+              }}
+            >
+              <option value="in_stock">Còn hàng</option>
+              <option value="out_of_stock">Hết hàng</option>
+              <option value="discontinued">Ngừng kinh doanh</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
+              Ngưỡng cảnh báo tồn kho thấp
+            </label>
+            <input
+              type="number"
+              value={formData.lowStockThreshold}
+              onChange={(e) => setFormData({ ...formData, lowStockThreshold: Number(e.target.value) })}
               min="0"
               style={{
                 width: '100%',

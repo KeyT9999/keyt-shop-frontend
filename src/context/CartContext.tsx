@@ -3,16 +3,17 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Product } from '../types/product';
 import { CartContext } from './cart-context';
 import type { CartItem } from './cart-context';
+import { useAuthContext } from './useAuthContext';
 
-const STORAGE_KEY = 'keyt-cart';
+const STORAGE_KEY_BASE = 'keyt-cart';
 
-function loadCartFromStorage(): CartItem[] {
+function loadCartFromStorage(storageKey: string): CartItem[] {
   if (typeof window === 'undefined') {
     return [];
   }
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(storageKey);
     return stored ? JSON.parse(stored) : [];
   } catch (error) {
     console.error('❌ Lỗi khi đọc giỏ hàng từ localStorage', error);
@@ -21,14 +22,34 @@ function loadCartFromStorage(): CartItem[] {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>(loadCartFromStorage);
+  const { user } = useAuthContext();
+  const activeStorageKey = useMemo(
+    () => `${STORAGE_KEY_BASE}-${user?.id || (user as any)?._id || 'guest'}`,
+    [user?.id, (user as any)?._id]
+  );
+
+  const [cart, setCart] = useState<CartItem[]>(() =>
+    user ? loadCartFromStorage(activeStorageKey) : []
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
-  }, [cart]);
+    localStorage.setItem(activeStorageKey, JSON.stringify(cart));
+  }, [cart, activeStorageKey]);
+
+  // Khi user thay đổi, tải giỏ hàng riêng; nếu không đăng nhập thì làm trống
+  useEffect(() => {
+    if (!user) {
+      setCart([]);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(activeStorageKey, JSON.stringify([]));
+      }
+      return;
+    }
+    setCart(loadCartFromStorage(activeStorageKey));
+  }, [activeStorageKey, user]);
 
   const addItem = (product: Product) => {
     setCart((prev) => {

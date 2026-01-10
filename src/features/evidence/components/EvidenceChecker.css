@@ -8,6 +8,12 @@
   margin: 4px 0;
 }
 
+.evidence-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .eyebrow {
   text-transform: uppercase;
   font-size: 12px;
@@ -300,6 +306,63 @@
   gap: 6px;
   font-weight: 600;
   color: #374151;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .panel {
+    padding: 14px;
+  }
+
+  .evidence-header h1 {
+    font-size: 20px;
+  }
+
+  .evidence-header .lede {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .input-row {
+    flex-wrap: wrap;
+  }
+
+  .input-row .ghost-btn {
+    flex: 1 1 30%;
+    min-width: 0;
+  }
+
+  .field.inline {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .controls-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .controls-row .field.inline,
+  .controls-row input,
+  .controls-row select {
+    width: 100%;
+  }
+
+  .toggle {
+    margin-top: 4px;
+  }
+
+  .evidence-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .evidence-card {
+    padding: 12px;
+  }
+
+  .chip-row {
+    gap: 6px;
+  }
 }
 
 .confidence {

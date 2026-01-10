@@ -14,6 +14,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import EvidenceCheckerPage from './pages/EvidenceCheckerPage';
 import ChatGptAccountsPage from './pages/admin/ChatGptAccountsPage';
 import SubscriptionsPage from './pages/admin/SubscriptionsPage';
 import UserLoginHistoryPage from './pages/admin/UserLoginHistoryPage';
@@ -51,6 +52,7 @@ export default function App() {
     { label: 'Home', href: '/' },
     { label: 'Products', href: '/products' },
     { label: 'Summarizer', href: '/summarizer' },
+    { label: 'Evidence', href: '/evidence' },
     { label: 'Get OTP', href: '/get-otp' },
     ...(user && user.admin === true ? [{ label: 'Admin', href: '/admin/dashboard' }] : [])
   ];
@@ -179,6 +181,7 @@ export default function App() {
           <Route path="/orders/:id" element={<OrderDetailPage />} />
           <Route path="/orders/:id/invoice" element={<InvoiceView />} />
           <Route path="/payment-success" element={<PaymentSuccessPage />} />
+          <Route path="/evidence" element={<EvidenceCheckerPage />} />
           <Route path="/summarizer" element={<YoutubeSummarizerPage />} />
           <Route path="/get-otp" element={<GetOtpPage />} />
           <Route path="/profile" element={<ProfilePage />} />

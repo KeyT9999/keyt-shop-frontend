@@ -15,6 +15,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminBannerPage from './pages/admin/AdminBannerPage';
 import EvidenceCheckerPage from './pages/EvidenceCheckerPage';
 import ChatGptAccountsPage from './pages/admin/ChatGptAccountsPage';
 import SubscriptionsPage from './pages/admin/SubscriptionsPage';
@@ -72,6 +73,7 @@ export default function App() {
                     <Route path="/admin/dashboard" element={<AdminDashboard />} />
                     <Route path="/admin/chatgpt-accounts" element={<ChatGptAccountsPage />} />
                     <Route path="/admin/subscriptions" element={<SubscriptionsPage />} />
+                    <Route path="/admin/banners" element={<AdminBannerPage />} />
                     <Route path="/admin/users" element={<UsersPage />} />
                     <Route path="/admin/products" element={<ProductsPage />} />
                     <Route path="/admin/orders" element={<OrdersPage />} />

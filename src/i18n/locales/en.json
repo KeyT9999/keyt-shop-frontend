@@ -2,9 +2,9 @@
     "header": {
         "home": "Home",
         "shop": "Shop",
-        "blog": "Blog",
-        "about": "About",
-        "contact": "Contact",
+        "summarizer": "Summarizer",
+        "evidence": "Evidence",
+        "get_otp": "Get OTP",
         "search_placeholder": "Search products...",
         "login": "Login",
         "register": "Register",

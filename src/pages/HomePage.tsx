@@ -5,11 +5,14 @@ import axios from 'axios';
 import {
     ArrowRight, Star, Heart, ShoppingCart, Eye,
     Truck, ShieldCheck, Clock, Award,
-    Instagram
+    Instagram, Pencil
 } from 'lucide-react';
+import { useAuthContext } from '../context/useAuthContext';
 
+import type { Banner } from '../types/banner';
 import type { Product } from '../types/product';
 import API_BASE_URL from '../config/api';
+import { getBanners } from '../api/bannerApi';
 import { useCartContext } from '../context/useCartContext';
 import { formatPrice } from '../utils/formatPrice';
 import './HomePage.css';
@@ -32,26 +35,50 @@ const REVIEWS = [
 
 export default function HomePage() {
     const [products, setProducts] = useState<Product[]>([]);
+    const [banners, setBanners] = useState<Banner[]>([]);
     const [loading, setLoading] = useState(true);
     const { addItem } = useCartContext();
+    const { user } = useAuthContext();
     const navigate = useNavigate();
 
     const { t } = useTranslation();
 
     useEffect(() => {
-        const fetchProducts = async () => {
+        const fetchData = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`${API_BASE_URL}/products`);
-                setProducts(response.data);
+                const [productsRes, bannersRes] = await Promise.all([
+                    axios.get(`${API_BASE_URL}/products`),
+                    getBanners()
+                ]);
+                setProducts(productsRes.data);
+                setBanners(bannersRes);
             } catch (err) {
-                console.error('Error fetching products:', err);
+                console.error('Error fetching data:', err);
             } finally {
                 setLoading(false);
             }
         };
-        fetchProducts();
+        fetchData();
     }, []);
+
+
+    const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+    const heroBanners = banners.filter(b => b.position === 'hero');
+    const heroBanner = heroBanners.length > 0 ? heroBanners[currentHeroIndex] : null;
+
+    useEffect(() => {
+        if (heroBanners.length <= 1) return;
+
+        const interval = setInterval(() => {
+            setCurrentHeroIndex(prev => (prev + 1) % heroBanners.length);
+        }, 4000);
+
+        return () => clearInterval(interval);
+    }, [heroBanners.length]);
+
+    const flashSaleBanner = banners.find(b => b.position === 'flash_sale');
+    const promoBanner = banners.find(b => b.position === 'promo');
 
     const featuredProducts = products.slice(0, 8);
     const bestSellers = products.filter(p => p.isHot).slice(0, 6);
@@ -110,21 +137,49 @@ export default function HomePage() {
     return (
         <div className="homepage">
             {/* 1. Hero Section */}
-            <section className="hero-section">
+            <section className="hero-section" style={{
+                backgroundImage: heroBanner ? `url(${heroBanner.imageUrl})` : undefined,
+                transition: 'background-image 0.5s ease-in-out'
+            }}>
                 <div className="hero-bg-overlay"></div>
+                {user?.admin && (
+                    <button
+                        className="admin-edit-btn"
+                        onClick={() => navigate('/admin/banners')}
+                        title="Edit Banner"
+                    >
+                        <Pencil size={20} />
+                    </button>
+                )}
                 <div className="container hero-content">
                     <div className="hero-text-block">
-                        <span className="hero-eyebrow">{t('home.hero.eyebrow')}</span>
-                        <h1 className="hero-title" dangerouslySetInnerHTML={{ __html: t('home.hero.title') }}></h1>
-                        <p className="hero-desc">{t('home.hero.desc')}</p>
+                        <span className="hero-eyebrow">{heroBanner?.title || t('home.hero.eyebrow')}</span>
+                        <h1 className="hero-title" dangerouslySetInnerHTML={{ __html: heroBanner?.description || t('home.hero.title') }}></h1>
+                        {!heroBanner?.description && <p className="hero-desc">{t('home.hero.desc')}</p>}
                         <div className="hero-cta-group">
-                            <Link to="/products" className="btn btn-primary">{t('home.hero.shop_now')}</Link>
+                            <Link to={heroBanner?.link || "/products"} className="btn btn-primary">{t('home.hero.shop_now')}</Link>
                             <Link to="/about" className="btn btn-outline">{t('home.hero.view_collection')}</Link>
                         </div>
                         <div className="hero-trust-badges">
                             <span><Truck size={16} /> {t('home.hero.instant_delivery')}</span>
                             <span><ShieldCheck size={16} /> {t('home.hero.secure_payment')}</span>
                         </div>
+                        {heroBanners.length > 1 && (
+                            <div className="hero-indicators" style={{ display: 'flex', gap: '8px', marginTop: '2rem' }}>
+                                {heroBanners.map((_, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => setCurrentHeroIndex(idx)}
+                                        style={{
+                                            width: '12px', height: '12px', borderRadius: '50%', border: 'none',
+                                            backgroundColor: idx === currentHeroIndex ? '#fff' : 'rgba(255,255,255,0.4)',
+                                            cursor: 'pointer', transition: 'background-color 0.3s'
+                                        }}
+                                        aria-label={`Go to slide ${idx + 1}`}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>
@@ -171,30 +226,33 @@ export default function HomePage() {
             </section>
 
             {/* 4. Flash Sale (Banner style for now) */}
-            <section className="section flash-sale-section">
+            <section className="section flash-sale-section" style={flashSaleBanner ? { backgroundImage: `url(${flashSaleBanner.imageUrl})`, backgroundSize: 'cover' } : undefined}>
                 <div className="container">
                     <div className="flash-sale-wrapper">
                         <div className="flash-content">
                             <span className="flash-badge">{t('home.flash_sale.badge')}</span>
-                            <h2 dangerouslySetInnerHTML={{ __html: t('home.flash_sale.title') }}></h2>
+                            <h2 dangerouslySetInnerHTML={{ __html: flashSaleBanner?.title || t('home.flash_sale.title') }}></h2>
+                            {flashSaleBanner?.description && <p style={{ marginBottom: '1.5rem', color: 'rgba(255,255,255,0.9)' }}>{flashSaleBanner.description}</p>}
                             <div className="countdown-timer">
                                 <div className="timer-box"><span>02</span><small>{t('home.flash_sale.days')}</small></div>
                                 <div className="timer-box"><span>14</span><small>{t('home.flash_sale.hours')}</small></div>
                                 <div className="timer-box"><span>30</span><small>{t('home.flash_sale.mins')}</small></div>
                                 <div className="timer-box"><span>45</span><small>{t('home.flash_sale.secs')}</small></div>
                             </div>
-                            <Link to="/products" className="btn btn-white">{t('home.flash_sale.shop_btn')}</Link>
+                            <Link to={flashSaleBanner?.link || "/products"} className="btn btn-white">{t('home.flash_sale.shop_btn')}</Link>
                         </div>
-                        <div className="flash-image">
-                            {/* Replace with a transparent png of a product bundle if available */}
-                            <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=600" alt="Flash Sale" />
-                        </div>
+                        {!flashSaleBanner && (
+                            <div className="flash-image">
+                                {/* Replace with a transparent png of a product bundle if available */}
+                                <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=600" alt="Flash Sale" />
+                            </div>
+                        )}
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* 5. Best Sellers */}
-            <section className="section best-sellers-section">
+            < section className="section best-sellers-section" >
                 <div className="container">
                     <div className="section-header">
                         <h2>{t('home.best_sellers.title')}</h2>
@@ -203,10 +261,10 @@ export default function HomePage() {
                         {bestSellers.map(p => <HomeProductCard key={p._id} product={p} />)}
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* 6. Why Choose Us */}
-            <section className="section trust-section">
+            < section className="section trust-section" >
                 <div className="container">
                     <div className="trust-grid">
                         <div className="trust-item">
@@ -231,28 +289,42 @@ export default function HomePage() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* 7. Promo Banner */}
-            <section className="section promo-banner-section">
+            < section className="section promo-banner-section" >
                 <div className="container">
-                    <div className="promo-banner">
-                        <div className="promo-text">
-                            <h2>{t('home.newsletter.title')}</h2>
-                            <p>{t('home.newsletter.desc')}</p>
+                    {promoBanner ? (
+                        <div className="promo-banner" style={{ backgroundImage: `url(${promoBanner.imageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                            <div className="promo-text" style={{ color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                                <h2>{promoBanner.title}</h2>
+                                <p>{promoBanner.description}</p>
+                            </div>
+                            {promoBanner.link && (
+                                <div className="promo-action">
+                                    <Link to={promoBanner.link} className="btn btn-primary">Discover</Link>
+                                </div>
+                            )}
                         </div>
-                        <div className="promo-action">
-                            <div className="newsletter-form-inline">
-                                <input type="email" placeholder={t('home.newsletter.placeholder')} />
-                                <button className="btn btn-black">{t('home.newsletter.btn')}</button>
+                    ) : (
+                        <div className="promo-banner">
+                            <div className="promo-text">
+                                <h2>{t('home.newsletter.title')}</h2>
+                                <p>{t('home.newsletter.desc')}</p>
+                            </div>
+                            <div className="promo-action">
+                                <div className="newsletter-form-inline">
+                                    <input type="email" placeholder={t('home.newsletter.placeholder')} />
+                                    <button className="btn btn-black">{t('home.newsletter.btn')}</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
-            </section>
+            </section >
 
             {/* 8. New Arrivals */}
-            <section className="section new-arrivals-section">
+            < section className="section new-arrivals-section" >
                 <div className="container">
                     <div className="section-header">
                         <h2>{t('home.new_arrivals.title')}</h2>
@@ -261,10 +333,10 @@ export default function HomePage() {
                         {newArrivals.map(p => <HomeProductCard key={p._id} product={p} />)}
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* 9. Customer Reviews */}
-            <section className="section reviews-section bg-light">
+            < section className="section reviews-section bg-light" >
                 <div className="container">
                     <div className="section-header center">
                         <h2>{t('home.reviews.title')}</h2>
@@ -284,10 +356,10 @@ export default function HomePage() {
                         ))}
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* 10. Brand Logos */}
-            <section className="section brands-section">
+            < section className="section brands-section" >
                 <div className="container">
                     <div className="brands-wrapper">
                         {['Netflix', 'Spotify', 'Adobe', 'Microsoft', 'Google'].map(brand => (
@@ -295,10 +367,10 @@ export default function HomePage() {
                         ))}
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* 11 & 12. Blog & Newsletter (Combined or simple) */}
-            <section className="section blog-section">
+            < section className="section blog-section" >
                 <div className="container">
                     <div className="section-header">
                         <h2>{t('home.blog.title')}</h2>
@@ -318,10 +390,10 @@ export default function HomePage() {
                         ))}
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* 13. Social Feed Placeholder */}
-            <div className="social-feed-section">
+            < div className="social-feed-section" >
                 <div className="container">
                     <div className="social-header">
                         <Instagram size={24} />
@@ -333,7 +405,7 @@ export default function HomePage() {
                         ))}
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

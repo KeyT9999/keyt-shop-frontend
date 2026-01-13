@@ -1,51 +1,25 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useAuthContext } from '../context/useAuthContext';
 import { profileService } from '../services/profileService';
-
-// Ripple effect hook
-const useRipple = () => {
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  const createRipple = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const button = event.currentTarget;
-    const circle = document.createElement('span');
-    const diameter = Math.max(button.clientWidth, button.clientHeight);
-    const radius = diameter / 2;
-
-    const rect = button.getBoundingClientRect();
-    circle.style.width = circle.style.height = `${diameter}px`;
-    circle.style.left = `${event.clientX - rect.left - radius}px`;
-    circle.style.top = `${event.clientY - rect.top - radius}px`;
-    circle.classList.add('ripple');
-
-    const ripple = button.getElementsByClassName('ripple')[0];
-    if (ripple) {
-      ripple.remove();
-    }
-
-    button.appendChild(circle);
-  };
-
-  return { buttonRef, createRipple };
-};
+import { User, Lock, Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function LoginPage() {
   const { login, loginWithGoogle, loading, error, errorCode } = useAuthContext();
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [formError, setFormError] = useState<string | null>(null);
-  const [cardVisible, setCardVisible] = useState(false);
   const [resendEmail, setResendEmail] = useState('');
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
+
+  // Animation state for entrance
+  const [mounted, setMounted] = useState(false);
+
   const navigate = useNavigate();
-  const submitRipple = useRipple();
-  const resendRipple = useRipple();
 
   useEffect(() => {
-    const id = requestAnimationFrame(() => setCardVisible(true));
-    return () => cancelAnimationFrame(id);
+    setMounted(true);
   }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -101,74 +75,139 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-page">
-      <div className={`auth-card ${cardVisible ? 'auth-card--visible' : ''}`}>
-        <div className="auth-card__glow" />
-        <div className="auth-card__header">
-          <p className="auth-eyebrow">Chào mừng trở lại</p>
-          <h2>Đăng nhập Tiệm Tạp Hóa KeyT</h2>
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] right-[-5%] w-96 h-96 bg-royal-blue-200/40 rounded-full blur-3xl" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-200/30 rounded-full blur-3xl opacity-60" />
+      </div>
+
+      <div
+        className={`w-full max-w-[440px] bg-white rounded-2xl shadow-xl border border-gray-100 p-8 md:p-10 relative z-10 transition-all duration-700 transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}
+      >
+        <div className="text-center mb-8">
+          <p className="text-royal-blue-600 font-bold tracking-wider text-xs uppercase mb-2">Chào mừng trở lại</p>
+          <h2 className="text-3xl font-bold text-gray-800">Tiệm Tạp Hóa KeyT</h2>
+          <p className="text-gray-500 text-sm mt-2">Đăng nhập tài khoản của bạn</p>
         </div>
 
-        <div className="auth-form-wrapper auth-form-wrapper--open">
-          <form onSubmit={handleSubmit} className="auth-form">
-            <label>
-              Username
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="group space-y-1">
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-royal-blue-500 transition-colors">
+                <User size={20} />
+              </div>
               <input
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:border-royal-blue-500 focus:ring-4 focus:ring-royal-blue-500/10 transition-all duration-200"
+                placeholder="Username"
                 value={credentials.username}
                 onChange={(event) => setCredentials((prev) => ({ ...prev, username: event.target.value }))}
                 required
               />
-            </label>
-            <label>
-              Password
+            </div>
+          </div>
+
+          <div className="group space-y-1">
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-royal-blue-500 transition-colors">
+                <Lock size={20} />
+              </div>
               <input
                 type="password"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:border-royal-blue-500 focus:ring-4 focus:ring-royal-blue-500/10 transition-all duration-200"
+                placeholder="Password"
                 value={credentials.password}
                 onChange={(event) => setCredentials((prev) => ({ ...prev, password: event.target.value }))}
                 required
               />
-            </label>
-            {formError && <p className="auth-error">{formError}</p>}
-            {error && <p className="auth-error">{error}</p>}
-            <button
-              type="submit"
-              className="auth-submit"
-              disabled={loading}
-              ref={submitRipple.buttonRef}
-              onClick={submitRipple.createRipple}
-            >
-              {loading ? 'Đang xử lý...' : 'Đăng nhập'}
-            </button>
-            <div className="divider">
-              <span>hoặc</span>
             </div>
-            <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
-          </form>
+          </div>
+
+          <div className="flex items-center justify-between text-sm">
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-royal-blue-600 focus:ring-royal-blue-500 cursor-pointer" />
+              <span className="text-gray-500 group-hover:text-gray-700 transition-colors">Ghi nhớ đăng nhập</span>
+            </label>
+            <Link to="/forgot-password" className="text-royal-blue-600 hover:text-royal-blue-700 font-medium hover:underline transition-all">
+              Quên mật khẩu?
+            </Link>
+          </div>
+
+          {(formError || error) && (
+            <div className="flex items-center gap-3 bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-100 animate-pulse">
+              <AlertCircle size={18} className="shrink-0" />
+              <p>{formError || error}</p>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3.5 px-4 bg-gradient-to-r from-royal-blue-600 to-royal-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-royal-blue-500/30 hover:shadow-royal-blue-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+          </button>
+        </form>
+
+        <div className="relative my-8">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-gray-400 font-medium tracking-wide">Hoặc tiếp tục với</span>
+          </div>
+        </div>
+
+        <div className="flex justify-center">
+          <div className="w-full">
+            {/* Google Login Component centered */}
+            <div className="flex justify-center transform hover:-translate-y-0.5 transition-transform duration-200">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="outline"
+                shape="rectangular"
+                text="signin_with"
+                width="100%"
+                locale="vi"
+              />
+            </div>
+          </div>
         </div>
 
         {errorCode === 'EMAIL_NOT_VERIFIED' && (
-          <div className="auth-form-wrapper auth-form-wrapper--open">
-            <form onSubmit={handleResendVerification} className="auth-form">
-              <p className="auth-error" style={{ marginTop: '0.5rem' }}>
-                Tài khoản chưa xác minh email. Nhập email để nhận lại link xác minh.
-              </p>
-              <label>
-                Email
+          <div className="mt-8 pt-6 border-t border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <form onSubmit={handleResendVerification} className="space-y-4">
+              <div className="flex items-start gap-3 bg-indigo-50 text-indigo-700 p-4 rounded-xl text-sm border border-indigo-100">
+                <AlertCircle size={20} className="shrink-0 mt-0.5" />
+                <p>Tài khoản chưa xác minh email. Vui lòng nhập email để nhận lại liên kết kích hoạt.</p>
+              </div>
+
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Mail size={20} />
+                </div>
                 <input
                   type="email"
-                  placeholder="Email của bạn"
+                  placeholder="Nhập email của bạn"
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:border-royal-blue-500 focus:ring-4 focus:ring-royal-blue-500/10 transition-all"
                   value={resendEmail}
                   onChange={(e) => setResendEmail(e.target.value)}
                   required
                 />
-              </label>
-              {resendMessage && <p className="auth-helper" style={{ color: '#a5b4fc' }}>{resendMessage}</p>}
+              </div>
+
+              {resendMessage && (
+                <div className={`p-3 rounded-lg text-sm border flex items-center gap-2 ${resendMessage.includes('thành công') ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                  {resendMessage.includes('thành công') ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                  {resendMessage}
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="auth-submit"
                 disabled={resendLoading}
-                ref={resendRipple.buttonRef}
-                onClick={resendRipple.createRipple}
+                className="w-full py-3 px-4 bg-indigo-100 text-indigo-700 font-semibold rounded-xl hover:bg-indigo-200 active:scale-[0.98] transition-all disabled:opacity-60"
               >
                 {resendLoading ? 'Đang gửi...' : 'Gửi lại link xác minh'}
               </button>
@@ -176,9 +215,14 @@ export default function LoginPage() {
           </div>
         )}
 
-        <p className="auth-helper">
-          Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
-        </p>
+        <div className="mt-8 text-center">
+          <p className="text-gray-500 text-sm">
+            Chưa có tài khoản?{' '}
+            <Link to="/register" className="text-royal-blue-600 font-semibold hover:text-royal-blue-800 transition-colors">
+              Đăng ký ngay
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

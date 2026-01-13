@@ -1,0 +1,87 @@
+{
+    "header": {
+        "home": "Home",
+        "shop": "Shop",
+        "blog": "Blog",
+        "about": "About",
+        "contact": "Contact",
+        "search_placeholder": "Search products...",
+        "login": "Login",
+        "register": "Register",
+        "logout": "Logout",
+        "profile": "Profile",
+        "orders": "Orders",
+        "hi": "Hi",
+        "menu": "Menu"
+    },
+    "home": {
+        "hero": {
+            "eyebrow": "Spring Collection 2026",
+            "title": "Upgrade Your <br/> Digital Life",
+            "desc": "Get the best software keys, premium accounts, and digital assets at unbeatable prices. Instant delivery guaranteed.",
+            "shop_now": "Shop Now",
+            "view_collection": "View Collection",
+            "instant_delivery": "Instant Delivery",
+            "secure_payment": "100% Secure"
+        },
+        "categories": {
+            "title": "Shop by Category",
+            "view_all": "View All"
+        },
+        "featured": {
+            "eyebrow": "Curated For You",
+            "title": "Featured Products"
+        },
+        "flash_sale": {
+            "badge": "Limited Time Offer",
+            "title": "Flash Sale: 50% OFF<br/>Annual Subscriptions",
+            "shop_btn": "Shop The Sale",
+            "days": "Days",
+            "hours": "Hours",
+            "mins": "Mins",
+            "secs": "Secs"
+        },
+        "best_sellers": {
+            "title": "Best Sellers"
+        },
+        "trust": {
+            "instant_delivery": {
+                "title": "Instant Delivery",
+                "desc": "Get your codes immediately via email after payment."
+            },
+            "secure_payment": {
+                "title": "Secure Payment",
+                "desc": "We use top-tier encryption to ensure your data is safe."
+            },
+            "support": {
+                "title": "24/7 Support",
+                "desc": "Our team is here to help you anytime, anywhere."
+            },
+            "quality": {
+                "title": "Quality Guarantee",
+                "desc": "100% working keys or full refund guaranteed."
+            }
+        },
+        "new_arrivals": {
+            "title": "New Arrivals"
+        },
+        "reviews": {
+            "title": "What Our Customers Say"
+        },
+        "blog": {
+            "title": "Latest From Blog",
+            "read_more": "Read More"
+        },
+        "newsletter": {
+            "title": "New to KeyTShop?",
+            "desc": "Subscribe to our newsletter and get a 10% discount code.",
+            "placeholder": "Your email address",
+            "btn": "Subscribe"
+        }
+    },
+    "product": {
+        "add_to_cart": "Add to Cart",
+        "out_of_stock": "Out of Stock",
+        "hot": "HOT"
+    }
+}

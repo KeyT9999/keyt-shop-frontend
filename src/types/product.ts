@@ -24,6 +24,8 @@ export interface Product {
   imageUrl?: string | null; // Giữ lại để backward compatible
   images?: string[] | null; // Array of image URLs
   stock: number;
+  status?: 'in_stock' | 'out_of_stock' | 'discontinued';
+  lowStockThreshold?: number;
   options?: ProductOption[];
   requiredFields?: ProductRequiredField[];
 }

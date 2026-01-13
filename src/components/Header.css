@@ -160,7 +160,10 @@ body {
   bottom: 15px;
 }
 
-.nav-link:hover,
+.nav-link:hover {
+  color: var(--accent-color);
+}
+
 .nav-link.active {
   color: var(--accent-color);
 }

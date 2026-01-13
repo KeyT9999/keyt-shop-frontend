@@ -2,9 +2,9 @@
     "header": {
         "home": "Trang Chủ",
         "shop": "Cửa Hàng",
-        "blog": "Tin Tức",
-        "about": "Giới Thiệu",
-        "contact": "Liên Hệ",
+        "summarizer": "Tóm Tắt YT",
+        "evidence": "Check Uy Tín",
+        "get_otp": "Thuê OTP",
         "search_placeholder": "Tìm kiếm sản phẩm...",
         "login": "Đăng Nhập",
         "register": "Đăng Ký",

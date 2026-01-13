@@ -47,9 +47,9 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 { title: 'Featured', items: ['Summer Collection', 'Winter Essentials', 'Gift Guide'] }
             ]
         },
-        { label: 'BLOG', href: '#', hasDropdown: false },
-        { label: 'ABOUT', href: '/about', hasDropdown: false },
-        { label: 'CONTACT', href: '#', hasDropdown: false },
+        { label: 'SUMMARIZER', href: '/summarizer', hasDropdown: false },
+        { label: 'EVIDENCE', href: '/evidence', hasDropdown: false },
+        { label: 'GET OTP', href: '/get-otp', hasDropdown: false },
     ];
 
     const handleLogout = () => {
@@ -151,6 +151,12 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                     {user ? (
                                         <>
                                             <div className="user-welcome">Hi, {user.username || 'User'}</div>
+                                            {user.admin && (
+                                                <>
+                                                    <Link to="/admin/dashboard" className="admin-link">Dashboard</Link>
+                                                    <Link to="/admin/banners" className="admin-link">Banners</Link>
+                                                </>
+                                            )}
                                             <Link to="/profile">My Profile</Link>
                                             <Link to="/orders">Orders</Link>
                                             <button onClick={handleLogout}>Logout</button>

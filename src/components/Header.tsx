@@ -43,9 +43,22 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             href: '/products',
             hasDropdown: true,
             megaMenu: [
-                { title: 'Collections', items: ['New Arrivals', 'Best Sellers', 'Trending', 'Sale'] },
-                { title: 'Categories', items: ['Electronics', 'Fashion', 'Home & Living', 'Accessories'] },
-                { title: 'Featured', items: ['Summer Collection', 'Winter Essentials', 'Gift Guide'] }
+                {
+                    title: 'Giải trí',
+                    items: ['Netflix Premium', 'Spotify Premium', 'YouTube Premium', 'Disney+']
+                },
+                {
+                    title: 'Thiết kế',
+                    items: ['Canva Pro', 'Adobe Creative Cloud', 'Figma Professional', 'Freepik Premium']
+                },
+                {
+                    title: 'Năng suất',
+                    items: ['Google Drive + Gemini', 'Microsoft 365', 'ChatGPT Plus', 'Notion Premium']
+                },
+                {
+                    title: 'Học tập',
+                    items: ['Coursera Plus', 'Udemy Business', 'Duolingo Super', 'Grammarly Premium']
+                }
             ]
         },
         { label: 'SUMMARIZER', href: '/summarizer', hasDropdown: false },
@@ -109,13 +122,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                                     </ul>
                                                 </div>
                                             ))}
-                                            <div className="mega-menu-promo">
-                                                <div className="promo-card">
-                                                    <span>New Arrival</span>
-                                                    <h3>Summer Sale</h3>
-                                                    <Link to="/products">Shop Now</Link>
-                                                </div>
-                                            </div>
                                         </div>
                                     )}
                                 </li>

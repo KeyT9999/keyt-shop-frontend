@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Globe } from 'lucide-react'; // Added Globe
 import { useCartContext } from '../context/useCartContext';
 import { useAuthContext } from '../context/useAuthContext';
@@ -17,6 +17,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     const { user, logout } = useAuthContext();
     const { i18n } = useTranslation(); // Init hook
     const location = useLocation();
+    const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
     const handleLogout = () => {
         logout();
+        navigate('/login');
     };
 
     return (

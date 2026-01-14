@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useAuthContext } from '../context/useAuthContext';
 import { profileService } from '../services/profileService';
 import { User, Lock, Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function LoginPage() {
-  const { login, loginWithGoogle, loading, error, errorCode } = useAuthContext();
+  const { user, login, loginWithGoogle, loading, error, errorCode } = useAuthContext();
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [formError, setFormError] = useState<string | null>(null);
   const [resendEmail, setResendEmail] = useState('');
@@ -17,6 +19,19 @@ export default function LoginPage() {
   const [mounted, setMounted] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const submitRipple = useRipple();
+  const resendRipple = useRipple();
+
+  // Get redirect path from location state (set by ProtectedRoute)
+  const from = (location.state as { from?: string })?.from || '/';
+
+  // If user is already logged in, redirect to the intended page or home
+  useEffect(() => {
+    if (user) {
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, from]);
 
   useEffect(() => {
     setMounted(true);
@@ -31,7 +46,8 @@ export default function LoginPage() {
     setFormError(null);
     try {
       await login(credentials);
-      navigate('/');
+      // Redirect to the page user was trying to access, or home if none
+      navigate(from, { replace: true });
     } catch {
       // error message already saved in context
     }
@@ -46,7 +62,8 @@ export default function LoginPage() {
     setFormError(null);
     try {
       await loginWithGoogle(response.credential);
-      navigate('/');
+      // Redirect to the page user was trying to access, or home if none
+      navigate(from, { replace: true });
     } catch {
       // Axios error already handled inside AuthContext
     }

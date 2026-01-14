@@ -1,265 +1,349 @@
-import { useState, useEffect } from 'react';
+﻿import { useState } from 'react';
+import axios from 'axios';
 import { useAuthContext } from '../context/useAuthContext';
-import { chatgptService } from '../services/chatgptService';
+import { Link } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 export default function GetOtpPage() {
-  const { token } = useAuthContext();
+  const { user, token } = useAuthContext();
   const [chatgptEmail, setChatgptEmail] = useState('');
-  const [otp, setOtp] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState('');
+  const [countdown, setCountdown] = useState(0);
 
-  // Countdown timer effect
-  useEffect(() => {
-    if (countdown !== null && countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (countdown === 0) {
-      setOtp(null);
-      setCountdown(null);
-    }
-  }, [countdown]);
-
-  const handleCopyOtp = async () => {
-    if (otp) {
-      try {
-        await navigator.clipboard.writeText(otp);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (err) {
-        alert('Không thể copy mã OTP');
-      }
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleGetOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setOtp(null);
-    setCountdown(null);
+
+    if (!chatgptEmail) {
+      setError('Vui lòng nhập email ChatGPT');
+      return;
+    }
+
     setLoading(true);
+    setError('');
+    setOtp('');
 
     try {
-      if (!token) {
-        setError('Vui lòng đăng nhập để sử dụng tính năng này.');
-        setLoading(false);
-        return;
-      }
+      const response = await axios.post(
+        `${API_BASE_URL}/chatgpt/get-otp`,
+        { chatgptEmail },
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        }
+      );
 
-      const response = await chatgptService.getOtp(chatgptEmail, token);
-      setOtp(response.otp);
-      setCountdown(30); // Bắt đầu đếm ngược 30 giây
+      setOtp(response.data.otp);
+      setCountdown(30);
+
+      const interval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra khi lấy mã OTP.');
+      setError(err.response?.data?.message || 'Không thể lấy mã OTP. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleCopyOtp = () => {
+    navigator.clipboard.writeText(otp);
+    alert('✅ Đã sao chép mã OTP!');
+  };
+
+  if (!user) {
+    return (
+      <div className="otp-page-container">
+        <div className="otp-card">
+          <h2 style={{ color: '#1f2937', marginBottom: '1rem', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)' }}>
+            Vui lòng đăng nhập
+          </h2>
+          <p style={{ color: '#6b7280', marginBottom: '2rem', fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}>
+            Bạn cần đăng nhập để sử dụng tính năng Get OTP
+          </p>
+          <Link to="/login" className="btn-primary">
+            Đăng nhập ngay
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="main-content">
-      <div style={{ maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
-        <h1 style={{ marginBottom: '2rem', color: '#1f2937', fontSize: '2rem', fontWeight: 700 }}>
-          Lấy mã OTP ChatGPT
-        </h1>
-        
-        <div style={{ 
-          background: '#ffffff', 
-          borderRadius: '12px', 
-          padding: '2rem', 
-          border: '1px solid #e5e5e5',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-        }}>
-          <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ 
-                display: 'block', 
-                marginBottom: '0.75rem', 
-                color: '#1f2937',
-                fontWeight: 600,
-                fontSize: '1rem'
-              }}>
-                Email ChatGPT:
-              </label>
+    <>
+      <div className="otp-page-container">
+        <div className="otp-card">
+          <div className="otp-header">
+            <h1 className="otp-title">Get OTP ChatGPT</h1>
+            <p className="otp-subtitle">Lấy mã OTP để đăng nhập ChatGPT</p>
+          </div>
+
+          <form onSubmit={handleGetOtp}>
+            <div className="form-group">
+              <label className="form-label">Email ChatGPT</label>
               <input
                 type="email"
                 value={chatgptEmail}
                 onChange={(e) => setChatgptEmail(e.target.value)}
-                required
-                placeholder="Nhập email ChatGPT của bạn"
-                style={{
-                  width: '100%',
-                  padding: '0.875rem',
-                  borderRadius: '8px',
-                  border: '1px solid #d1d5db',
-                  background: '#ffffff',
-                  color: '#1f2937',
-                  fontSize: '1rem',
-                  transition: 'border-color 0.2s'
-                }}
-                onFocus={(e) => e.currentTarget.style.borderColor = '#2563eb'}
-                onBlur={(e) => e.currentTarget.style.borderColor = '#d1d5db'}
+                placeholder="gptkeyt....@outlook.com.vn"
+                disabled={loading}
+                className="form-input"
               />
-              <p style={{ 
-                marginTop: '0.5rem', 
-                fontSize: '0.875rem', 
-                color: '#6b7280' 
-              }}>
-                Nhập email account GPT mà Shop cấp vào đây
-              </p>
             </div>
-            
+
+            {error && (
+              <div className="error-box">
+                <p className="error-text">⚠️ {error}</p>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={loading || !token}
-              style={{
-                width: '100%',
-                padding: '0.875rem',
-                borderRadius: '8px',
-                border: 'none',
-                background: loading || !token ? '#9ca3af' : '#2563eb',
-                color: '#ffffff',
-                fontSize: '1rem',
-                fontWeight: '600',
-                cursor: loading || !token ? 'not-allowed' : 'pointer',
-                transition: 'background 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                if (!loading && token) {
-                  e.currentTarget.style.background = '#1d4ed8';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!loading && token) {
-                  e.currentTarget.style.background = '#2563eb';
-                }
-              }}
+              disabled={loading || !chatgptEmail}
+              className={`btn-submit ${loading || !chatgptEmail ? 'disabled' : ''}`}
             >
-              {loading ? 'Đang tải...' : !token ? 'Vui lòng đăng nhập' : 'Lấy mã OTP'}
+              {loading ? '🔄 Đang lấy mã...' : '🚀 Lấy mã OTP'}
             </button>
           </form>
 
-          {error && (
-            <div
-              style={{
-                padding: '1rem',
-                background: '#fee2e2',
-                border: '1px solid #fecaca',
-                borderRadius: '8px',
-                color: '#dc2626',
-                marginBottom: '1rem'
-              }}
-            >
-              <strong>⚠️ Lỗi:</strong> {error}
+          {otp && (
+            <div className="otp-result">
+              <p className="otp-result-label">✅ Mã OTP của bạn:</p>
+              <div className="otp-code">{otp}</div>
+              {countdown > 0 && (
+                <p className="otp-countdown">⏱️ Mã có hiệu lực trong {countdown}s</p>
+              )}
+              <button onClick={handleCopyOtp} className="btn-copy">
+                📋 Sao chép mã OTP
+              </button>
             </div>
           )}
 
-          {!token && (
-            <div
-              style={{
-                padding: '1rem',
-                background: '#fef3c7',
-                border: '1px solid #fde68a',
-                borderRadius: '8px',
-                color: '#92400e',
-                marginBottom: '1rem'
-              }}
-            >
-              <strong>ℹ️ Thông báo:</strong> Bạn cần đăng nhập để sử dụng tính năng này.
-            </div>
-          )}
-        </div>
-
-        {otp && (
-          <div
-            style={{
-              marginTop: '2rem',
-              padding: '2.5rem',
-              background: '#ffffff',
-              border: '2px solid #2563eb',
-              borderRadius: '12px',
-              textAlign: 'center',
-              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
-            }}
-          >
-            <div style={{ 
-              marginBottom: '1rem',
-              fontSize: '0.875rem',
-              color: '#6b7280',
-              fontWeight: 500,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em'
-            }}>
-              Mã OTP của bạn
-            </div>
-            <div
-              style={{
-                fontSize: '3.5rem',
-                fontWeight: 'bold',
-                textAlign: 'center',
-                letterSpacing: '0.5rem',
-                color: '#2563eb',
-                marginBottom: '1.5rem',
-                fontFamily: 'monospace',
-                padding: '1rem',
-                background: '#eff6ff',
-                borderRadius: '8px',
-                border: '1px solid #dbeafe'
-              }}
-            >
-              {otp}
-            </div>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              gap: '0.5rem',
-              color: countdown && countdown <= 10 ? '#dc2626' : '#6b7280',
-              fontSize: '0.875rem',
-              fontWeight: countdown && countdown <= 10 ? 600 : 400,
-              marginBottom: '1.5rem'
-            }}>
-              <span>⏱️</span>
-              <span>
-                {countdown !== null 
-                  ? `Mã còn hiệu lực trong ${countdown} giây` 
-                  : 'Mã này có hiệu lực trong 30 giây'}
-              </span>
-            </div>
-            <button
-              onClick={handleCopyOtp}
-              style={{
-                padding: '0.75rem 1.5rem',
-                background: copied ? '#10b981' : '#2563eb',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'background 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                margin: '0 auto'
-              }}
-              onMouseEnter={(e) => {
-                if (!copied) e.currentTarget.style.background = '#1d4ed8';
-              }}
-              onMouseLeave={(e) => {
-                if (!copied) e.currentTarget.style.background = '#2563eb';
-              }}
-            >
-              {copied ? '✓ Đã copy' : '📋 Copy mã OTP'}
-            </button>
+          <div className="back-link-container">
+            <Link to="/" className="back-link">
+              ← Quay lại trang chủ
+            </Link>
           </div>
-        )}
+        </div>
       </div>
-    </div>
+
+      <style>{`
+        .otp-page-container {
+          min-height: 80vh;
+          background: #ffffff;
+          padding: 1rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .otp-card {
+          background: #ffffff;
+          padding: 2rem 1.5rem;
+          max-width: 500px;
+          width: 100%;
+          text-align: center;
+        }
+
+        .otp-header {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+
+        .otp-title {
+          color: #1f2937;
+          font-size: clamp(1.5rem, 5vw, 2rem);
+          font-weight: 700;
+          margin-bottom: 0.5rem;
+        }
+
+        .otp-subtitle {
+          color: #6b7280;
+          font-size: clamp(0.75rem, 3vw, 0.875rem);
+        }
+
+        .form-group {
+          margin-bottom: 1.5rem;
+          text-align: left;
+        }
+
+        .form-label {
+          display: block;
+          margin-bottom: 0.5rem;
+          font-size: clamp(0.75rem, 3vw, 0.875rem);
+          font-weight: 600;
+          color: #374151;
+        }
+
+        .form-input {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: clamp(0.875rem, 3.5vw, 1rem);
+          transition: all 0.2s;
+          outline: none;
+          box-sizing: border-box;
+        }
+
+        .form-input:focus {
+          border-color: #000000;
+        }
+
+        .error-box {
+          padding: 1rem;
+          background: #fee2e2;
+          border-left: 4px solid #dc2626;
+          border-radius: 6px;
+          margin-bottom: 1.5rem;
+        }
+
+        .error-text {
+          color: #991b1b;
+          font-size: clamp(0.75rem, 3vw, 0.875rem);
+          margin: 0;
+        }
+
+        .btn-submit {
+          width: 100%;
+          padding: 0.875rem;
+          background: #000000;
+          color: #ffffff;
+          border: none;
+          border-radius: 8px;
+          font-size: clamp(0.875rem, 3.5vw, 1rem);
+          font-weight: 600;
+          cursor: pointer;
+          transition: transform 0.2s;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-submit:hover:not(.disabled) {
+          transform: translateY(-2px);
+        }
+
+        .btn-submit.disabled {
+          background: #9ca3af;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        .btn-primary {
+          display: inline-block;
+          padding: 0.75rem 2rem;
+          background: #000000;
+          color: #ffffff;
+          border-radius: 8px;
+          text-decoration: none;
+          font-weight: 600;
+          transition: transform 0.2s;
+          font-size: clamp(0.875rem, 3.5vw, 1rem);
+        }
+
+        .otp-result {
+          margin-top: 2rem;
+          padding: 1.5rem;
+          background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+          border-radius: 12px;
+          border: 2px solid #10b981;
+          text-align: center;
+          animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .otp-result-label {
+          color: #065f46;
+          font-size: clamp(0.75rem, 3vw, 0.875rem);
+          margin-bottom: 0.5rem;
+          font-weight: 600;
+        }
+
+        .otp-code {
+          font-size: clamp(2rem, 8vw, 3rem);
+          font-weight: 700;
+          font-family: monospace;
+          color: #059669;
+          letter-spacing: 0.3rem;
+          margin-bottom: 1rem;
+          word-break: break-all;
+        }
+
+        .otp-countdown {
+          color: #047857;
+          font-size: clamp(0.75rem, 3vw, 0.875rem);
+          margin-bottom: 1rem;
+        }
+
+        .btn-copy {
+          padding: 0.75rem 1.5rem;
+          background: #ffffff;
+          color: #059669;
+          border: 2px solid #059669;
+          border-radius: 8px;
+          font-size: clamp(0.75rem, 3vw, 0.875rem);
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
+          width: 100%;
+        }
+
+        .btn-copy:hover {
+          background: #059669;
+          color: #ffffff;
+        }
+
+        .back-link-container {
+          margin-top: 2rem;
+          text-align: center;
+        }
+
+        .back-link {
+          color: #6b7280;
+          text-decoration: none;
+          font-size: clamp(0.75rem, 3vw, 0.875rem);
+          transition: color 0.2s;
+        }
+
+        .back-link:hover {
+          color: #000000;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @media (max-width: 640px) {
+          .otp-card {
+            padding: 1.5rem 1rem;
+          }
+
+          .otp-code {
+            letter-spacing: 0.2rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .otp-page-container {
+            padding: 0.5rem;
+          }
+
+          .otp-card {
+            padding: 1rem 0.75rem;
+          }
+        }
+      `}</style>
+    </>
   );
 }
-

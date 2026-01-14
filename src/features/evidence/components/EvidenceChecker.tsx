@@ -1,20 +1,42 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
+import {
+  Settings,
+  Key,
+  Trash2,
+  Eye,
+  EyeOff,
+  Search,
+  ExternalLink,
+  ShieldCheck,
+  HelpCircle,
+  FileSearch,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+} from 'lucide-react';
 import { fetchEvidence } from '../services/evidenceService';
 import type { EvidenceItem } from '../types';
 import { clearGeminiApiKey, getGeminiApiKey, saveGeminiApiKey } from '../../../utils/geminiApiKey';
 import './EvidenceChecker.css';
 
 const verificationLabels: Record<EvidenceItem['verification'], string> = {
-  verified: 'Đã kiểm chứng',
-  unverified: 'Chưa khớp nguồn',
-  unknown: 'Chưa xác định',
-  trusted: 'Nguồn uy tín (chờ tải)',
+  verified: 'Verified',
+  unverified: 'Unverified',
+  unknown: 'Unknown',
+  trusted: 'Trusted Source',
+};
+
+const verificationIcons: Record<EvidenceItem['verification'], any> = {
+  verified: CheckCircle2,
+  unverified: XCircle,
+  unknown: HelpCircle,
+  trusted: ShieldCheck,
 };
 
 const verificationClass: Record<EvidenceItem['verification'], string> = {
   verified: 'badge badge--success',
-  unverified: 'badge badge--warning',
+  unverified: 'badge badge--error',
   unknown: 'badge badge--neutral',
   trusted: 'badge badge--info',
 };
@@ -24,6 +46,7 @@ export default function EvidenceChecker() {
   const [query, setQuery] = useState('');
   const [maxResults, setMaxResults] = useState(5);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [evidence, setEvidence] = useState<EvidenceItem[]>([]);
@@ -39,6 +62,13 @@ export default function EvidenceChecker() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
+
+    if (!apiKey) {
+      setIsSettingsOpen(true);
+      setError('Vui lòng nhập Google AI Studio API Key để tiếp tục.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -93,186 +123,244 @@ export default function EvidenceChecker() {
 
   return (
     <div className="evidence-page">
+      {/* Header Section */}
       <header className="evidence-header">
-        <div>
-          <p className="eyebrow">Evidence Finder</p>
-          <h1>Tìm nguồn có dẫn chứng kiểm chứng</h1>
-          <p className="lede">
-            Nhập nội dung cần xác thực, hệ thống sẽ tìm nguồn uy tín (DOI/PDF/nhà xuất bản)
-            kèm trích dẫn và kiểm chứng snippet để tránh bịa nguồn.
-          </p>
+        <div className="header-content">
+          <div>
+            <p className="eyebrow">AI Research Assistant</p>
+            <h1>Evidence Finder</h1>
+            <p className="lede">
+              Xác thực thông tin y học bằng cách đối chiếu nguồn uy tín (PubMed, DOI, Medical Journals).
+            </p>
+          </div>
+          <button
+            className={`settings-btn ${isSettingsOpen ? 'active' : ''}`}
+            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+            title="Cấu hình API Key"
+          >
+            <Settings size={20} />
+            <span>Settings</span>
+          </button>
         </div>
-      </header>
 
-      <section className="panel">
-        <form className="evidence-form" onSubmit={handleSubmit}>
-          <div className="field">
-            <label htmlFor="apiKey">Google AI Studio API Key</label>
-            <div className="input-row">
-              <input
-                id="apiKey"
-                type={showApiKey ? 'text' : 'password'}
-                placeholder="Nhập API key (chỉ lưu trên trình duyệt)"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                required
-              />
-              <a
-                className="ghost-btn"
-                href="https://aistudio.google.com/api-keys"
-                target="_blank"
-                rel="noreferrer"
-                title="Mở trang lấy Google AI Studio API Key"
-              >
-                Lấy key
-              </a>
-              <button
-                type="button"
-                className="ghost-btn"
-                onClick={() => setShowApiKey((prev) => !prev)}
-              >
-                {showApiKey ? 'Ẩn' : 'Hiện'}
-              </button>
-              <button type="button" className="ghost-btn" onClick={handleClearApiKey}>
-                Xóa
-              </button>
+        {/* Settings Panel (Collapsible) */}
+        {isSettingsOpen && (
+          <div className="settings-panel">
+            <div className="setting-group">
+              <label htmlFor="apiKey" className="setting-label">
+                <Key size={14} /> Google AI Studio API Key
+              </label>
+              <div className="input-group">
+                <input
+                  id="apiKey"
+                  type={showApiKey ? 'text' : 'password'}
+                  placeholder="Paste your API key here..."
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="icon-btn"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  title={showApiKey ? 'Ẩn key' : 'Hiện key'}
+                >
+                  {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+                <button
+                  type="button"
+                  className="icon-btn danger"
+                  onClick={handleClearApiKey}
+                  title="Xóa key đã lưu"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+              <p className="hint">
+                Chưa có key? <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">Lấy key tại đây</a>. Key chỉ được lưu cục bộ trên trình duyệt của bạn.
+              </p>
             </div>
-            <p className="hint">API key chỉ được dùng trên trình duyệt, không gửi lên server khác.</p>
-          </div>
 
-          <div className="field">
-            <label htmlFor="query">Thông tin cần xác thực</label>
-            <textarea
-              id="query"
-              placeholder="Ví dụ: “Metformin có cải thiện kháng insulin ở PCOS?”"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              rows={3}
-              required
-            />
-          </div>
-
-          <div className="form-footer">
-            <div className="field inline">
-              <label htmlFor="maxResults">Số kết quả tối đa</label>
+            <div className="setting-group inline">
+              <label htmlFor="maxResults" className="setting-label">Số kết quả tối đa</label>
               <input
                 id="maxResults"
                 type="number"
                 min={1}
-                max={5}
+                max={10}
+                className="small-input"
                 value={maxResults}
                 onChange={(e) => setMaxResults(Number(e.target.value))}
               />
             </div>
+          </div>
+        )}
+      </header>
 
-            <button type="submit" className="primary-btn" disabled={loading}>
-              {loading ? 'Đang tìm...' : 'Tìm evidence'}
+      {/* Main Search Section */}
+      <section className="search-section">
+        <form className="evidence-form" onSubmit={handleSubmit}>
+          <div className="search-container">
+            <textarea
+              id="query"
+              className="search-input"
+              placeholder="Nhập nhận định y học cần kiểm chứng (Ví dụ: Metformin cải thiện kháng insulin ở bệnh nhân PCOS...)"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              rows={1}
+              required
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e as any);
+                }
+              }}
+            />
+            <button type="submit" className="evidence-search-btn" disabled={loading}>
+              {loading ? (
+                <div className="spinner"></div>
+              ) : (
+                <>
+                  <Search size={18} />
+                  <span>Tìm Evidence</span>
+                </>
+              )}
             </button>
           </div>
-
-          {error && <div className="alert alert--error">{error}</div>}
+          {error && <div className="alert alert--error"><AlertTriangle size={16} /> {error}</div>}
         </form>
       </section>
 
-      <section className="panel">
-        <div className="panel-header results-header">
-          <div>
-            <h2>Kết quả</h2>
-            <p className="hint">
-              Mỗi kết quả hiển thị snippet, vị trí và trạng thái kiểm chứng (verified/trusted/unverified/unknown).
-            </p>
-          </div>
-          <div className="results-actions">
-            <div className="chip-row">
-              <span className="chip">Tổng: {evidence.length}</span>
-              <span className="chip chip--success">Verified: {statusCounts.verified || 0}</span>
-              <span className="chip chip--info">Trusted: {statusCounts.trusted || 0}</span>
-              <span className="chip chip--warning">Unverified: {statusCounts.unverified || 0}</span>
-              <span className="chip chip--neutral">Unknown: {statusCounts.unknown || 0}</span>
-            </div>
-            <div className="controls-row">
-              <div className="field inline">
-                <label htmlFor="statusFilter">Trạng thái</label>
-                <select
-                  id="statusFilter"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
-                >
-                  <option value="all">Tất cả</option>
-                  <option value="verified">Verified</option>
-                  <option value="trusted">Trusted</option>
-                  <option value="unverified">Unverified</option>
-                  <option value="unknown">Unknown</option>
-                </select>
+      {/* Results Section */}
+      <section className="results-section">
+        {evidence.length > 0 ? (
+          <>
+            <div className="results-header">
+              <div className="results-title">
+                <h2>Kết quả phân tích <span className="count-badge">{evidence.length}</span></h2>
               </div>
-              <div className="field inline">
-                <label htmlFor="textFilter">Tìm nhanh</label>
-                <input
-                  id="textFilter"
-                  type="text"
-                  placeholder="Tìm theo tiêu đề/snippet/nguồn"
-                  value={textFilter}
-                  onChange={(e) => setTextFilter(e.target.value)}
-                />
-              </div>
-              <label className="toggle">
-                <input
-                  type="checkbox"
-                  checked={sortByScore}
-                  onChange={(e) => setSortByScore(e.target.checked)}
-                />
-                <span>Sắp xếp ưu tiên nguồn uy tín</span>
-              </label>
-            </div>
-          </div>
-        </div>
 
-        {evidence.length === 0 && !loading && (
-          <div className="empty-state">
-            <p>Chưa có kết quả. Nhập nội dung và bấm “Tìm evidence”.</p>
-          </div>
-        )}
+              <div className="filter-bar">
+                <div className="filter-group">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as any)}
+                    className="filter-select"
+                  >
+                    <option value="all">Tất cả trạng thái</option>
+                    <option value="verified">Verified</option>
+                    <option value="trusted">Trusted</option>
+                    <option value="unverified">Unverified</option>
+                    <option value="unknown">Unknown</option>
+                  </select>
 
-        <div className="evidence-grid">
-          {filteredEvidence.map((item, index) => (
-            <article key={index} className="evidence-card">
-              <div className="evidence-card__header">
-                <div className="title-row">
-                  <span className={verificationClass[item.verification]}>
-                    {verificationLabels[item.verification]}
-                  </span>
-                  {typeof item.sourceScore === 'number' && (
-                    <span className="confidence">
-                      Nguồn: {item.sourceLabel || 'N/A'} ({(item.sourceScore * 100).toFixed(0)}%)
-                    </span>
-                  )}
-                  {typeof item.confidence === 'number' && (
-                    <span className="confidence">Độ tin cậy: {(item.confidence * 100).toFixed(0)}%</span>
-                  )}
-                  {typeof item.verificationScore === 'number' && (
-                    <span className="confidence">
-                      Match: {(item.verificationScore * 100).toFixed(0)}%
-                    </span>
-                  )}
+                  <div className="search-filter">
+                    <Search size={14} className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Lọc kết quả..."
+                      value={textFilter}
+                      onChange={(e) => setTextFilter(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <h3 className="evidence-title">{item.title || 'Không rõ tiêu đề'}</h3>
-                {item.url && (
-                  <a className="evidence-link" href={item.url} target="_blank" rel="noreferrer">
-                    {item.url}
-                  </a>
-                )}
+
+                <div className="sort-toggle">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={sortByScore}
+                      onChange={(e) => setSortByScore(e.target.checked)}
+                    />
+                    <span>Ưu tiên nguồn uy tín</span>
+                  </label>
+                </div>
               </div>
 
-              <div className="evidence-body">
-                {item.snippet && <p className="snippet">“{item.snippet}”</p>}
-                {item.location && <p className="meta">Vị trí: {item.location}</p>}
-                {item.reasoning && <p className="meta">Giải thích: {item.reasoning}</p>}
-                {item.verificationNote && <p className="meta">Ghi chú: {item.verificationNote}</p>}
-                {item.sourceType && <p className="meta">Nguồn: {item.sourceType.toUpperCase()}</p>}
+              <div className="stats-row">
+                {statusCounts.verified > 0 && <span className="stat-tag success">Verified: {statusCounts.verified}</span>}
+                {statusCounts.trusted > 0 && <span className="stat-tag info">Trusted: {statusCounts.trusted}</span>}
+                {statusCounts.unverified > 0 && <span className="stat-tag warning">Unverified: {statusCounts.unverified}</span>}
+                {statusCounts.unknown > 0 && <span className="stat-tag neutral">Unknown: {statusCounts.unknown}</span>}
               </div>
-            </article>
-          ))}
-        </div>
+            </div>
+
+            <div className="evidence-grid">
+              {filteredEvidence.map((item, index) => {
+                const Icon = verificationIcons[item.verification] || HelpCircle;
+                return (
+                  <article key={index} className="evidence-card">
+                    <div className="card-header">
+                      <div className="badge-row">
+                        <span className={verificationClass[item.verification]}>
+                          <Icon size={14} strokeWidth={2.5} />
+                          {verificationLabels[item.verification]}
+                        </span>
+                        {item.sourceScore && (
+                          <span className="sc-score" title={`Reliability Score: ${Math.round(item.sourceScore * 100)}%`}>
+                            Confidence: {Math.round(item.sourceScore * 100)}%
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="card-title">{item.title || 'Nguồn không xác định'}</h3>
+                      {item.url && (
+                        <a className="card-link" href={item.url} target="_blank" rel="noreferrer">
+                          {item.url} <ExternalLink size={12} />
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="card-body">
+                      {item.snippet && (
+                        <div className="snippet-box">
+                          <p>“{item.snippet}”</p>
+                        </div>
+                      )}
+
+                      <div className="meta-grid">
+                        {item.location && (
+                          <div className="meta-item">
+                            <span className="label">Vị trí:</span> <span className="value">{item.location}</span>
+                          </div>
+                        )}
+                        {item.sourceType && (
+                          <div className="meta-item">
+                            <span className="label">Loại nguồn:</span> <span className="value">{item.sourceType}</span>
+                          </div>
+                        )}
+                        {item.verificationNote && (
+                          <div className="meta-item full">
+                            <span className="label">Ghi chú:</span> <span className="value">{item.verificationNote}</span>
+                          </div>
+                        )}
+                        {item.reasoning && (
+                          <div className="meta-item full reasoning">
+                            <div className="reasoning-label">💡 AI Reasoning:</div>
+                            <div className="reasoning-text">{item.reasoning}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          !loading && (
+            <div className="empty-state">
+              <div className="illustration">
+                <FileSearch size={64} strokeWidth={1} />
+              </div>
+              <h3>Sẵn sàng tìm kiếm</h3>
+              <p>Nhập nhận định y khoa của bạn để AI đối chiếu với hàng triệu tài liệu khoa học.</p>
+              <div className="suggestions">
+                <span>Gợi ý:</span>
+                <button type="button" onClick={() => setQuery("Vitamin D liều cao có giảm nguy cơ cúm không?")}>Vitamin D & Cúm</button>
+                <button type="button" onClick={() => setQuery("Intermittent Fasting ảnh hưởng thế nào đến cơ bắp?")}>IF & Cơ bắp</button>
+              </div>
+            </div>
+          )
+        )}
       </section>
     </div>
   );

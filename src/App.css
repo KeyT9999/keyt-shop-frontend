@@ -17,6 +17,12 @@
   min-height: calc(100vh - 200px);
 }
 
+.main-content-full {
+  min-height: calc(100vh - 200px);
+  padding: 0;
+  width: 100%;
+}
+
 /* Footer */
 .footer {
   text-align: center;

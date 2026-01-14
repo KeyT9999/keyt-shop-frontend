@@ -17,9 +17,11 @@
   min-height: calc(100vh - 200px);
 }
 
-.main-content--full {
-  max-width: none;
+.main-content-full {
+  min-height: calc(100vh - 200px);
   padding: 0;
+  width: 100%;
+  max-width: none;
 }
 
 /* Footer */

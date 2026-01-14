@@ -39,6 +39,7 @@ export default function App() {
     const { user } = useAuthContext();
     const [searchQuery, setSearchQuery] = useState('');
     const location = useLocation();
+    const isHomePage = location.pathname === '/';
 
     // Debug: Log user admin status
     useEffect(() => {
@@ -56,7 +57,7 @@ export default function App() {
 
             <Header onSearch={setSearchQuery} searchValue={searchQuery} />
 
-            <main className={`main-content ${isEvidencePage ? 'main-content--full' : ''}`}>
+            <main className={(isHomePage || isEvidencePage) ? "main-content-full" : "main-content"}>
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/products" element={<ProductList searchQuery={searchQuery} showHero={false} />} />

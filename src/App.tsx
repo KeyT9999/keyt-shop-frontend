@@ -26,11 +26,13 @@ import ProductsPage from './pages/admin/ProductsPage';
 import OrdersPage from './pages/admin/OrdersPage';
 import AdminOrderDetailPage from './pages/admin/AdminOrderDetailPage';
 import OrderDetailPage from './pages/OrderDetailPage';
+import UserOrdersPage from './pages/UserOrdersPage';
 import InvoiceView from './components/order/InvoiceView';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import { useAuthContext } from './context/useAuthContext';
 import Footer from './components/Footer';
 import Header from './components/Header';
+import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
     const { user } = useAuthContext();
@@ -62,14 +64,15 @@ export default function App() {
                     <Route path="/products" element={<ProductList searchQuery={searchQuery} showHero={false} />} />
                     <Route path="/products/:id" element={<ProductDetail />} />
                     <Route path="/cart" element={<CartPage />} />
-                    <Route path="/checkout" element={<CheckoutPage />} />
-                    <Route path="/orders/:id" element={<OrderDetailPage />} />
-                    <Route path="/orders/:id/invoice" element={<InvoiceView />} />
-                    <Route path="/payment-success" element={<PaymentSuccessPage />} />
-                    <Route path="/evidence" element={<EvidenceCheckerPage />} />
-                    <Route path="/summarizer" element={<YoutubeSummarizerPage />} />
-                    <Route path="/get-otp" element={<GetOtpPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+                    <Route path="/orders" element={<ProtectedRoute><UserOrdersPage /></ProtectedRoute>} />
+                    <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
+                    <Route path="/orders/:id/invoice" element={<ProtectedRoute><InvoiceView /></ProtectedRoute>} />
+                    <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
+                    <Route path="/evidence" element={<ProtectedRoute><EvidenceCheckerPage /></ProtectedRoute>} />
+                    <Route path="/summarizer" element={<ProtectedRoute><YoutubeSummarizerPage /></ProtectedRoute>} />
+                    <Route path="/get-otp" element={<ProtectedRoute><GetOtpPage /></ProtectedRoute>} />
+                    <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/verify-email" element={<VerifyEmailPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />

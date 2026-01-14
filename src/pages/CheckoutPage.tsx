@@ -9,7 +9,7 @@ import type { Product } from '../types/product';
 import API_BASE_URL from '../config/api';
 
 export default function CheckoutPage() {
-  const { cart, totalAmount, clearCart, updateCartItem } = useCartContext();
+  const { cart, totalAmount, clearCart, updateCartItem, updateQuantity } = useCartContext();
   const { user, token } = useAuthContext();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState({ name: '', email: '', phone: '' });
@@ -228,21 +228,88 @@ export default function CheckoutPage() {
             </h2>
             <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '1rem' }}>
               {cart.map((item) => (
-                <div key={item._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderBottom: '1px solid #f3f4f6' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>{item.name}</div>
-                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                      {formatPrice(item.price, item.currency)} x {item.quantity}
-                    </div>
-                    {/* Debug info */}
-                    {item.requiredFields && item.requiredFields.length > 0 && (
-                      <div style={{ fontSize: '0.75rem', color: '#059669', marginTop: '0.25rem' }}>
-                        ⚠️ Cần thông tin bổ sung
+                <div key={item._id} style={{ padding: '0.75rem 0', borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>{item.name}</div>
+                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
+                        {formatPrice(item.price, item.currency)}
                       </div>
-                    )}
+                      {/* Debug info */}
+                      {item.requiredFields && item.requiredFields.length > 0 && (
+                        <div style={{ fontSize: '0.75rem', color: '#059669', marginTop: '0.25rem' }}>
+                          ⚠️ Cần thông tin bổ sung
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ fontWeight: 600, color: '#1f2937', fontSize: '1.125rem' }}>
+                      {formatPrice(item.price * item.quantity, item.currency)}
+                    </div>
                   </div>
-                  <div style={{ fontWeight: 600, color: '#1f2937' }}>
-                    {formatPrice(item.price * item.quantity, item.currency)}
+                  {/* Quantity Control */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    <span style={{ fontSize: '0.875rem', color: '#6b7280', marginRight: '0.25rem' }}>Số lượng:</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <button
+                        onClick={() => updateQuantity(item._id, Math.max(1, item.quantity - 1))}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '4px',
+                          border: '1px solid #d1d5db',
+                          background: '#f3f4f6',
+                          color: '#1f2937',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.125rem',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        value={item.quantity}
+                        min={1}
+                        onChange={(e) => updateQuantity(item._id, Math.max(1, Number(e.target.value) || 1))}
+                        style={{
+                          width: '60px',
+                          textAlign: 'center',
+                          borderRadius: '4px',
+                          border: '1px solid #d1d5db',
+                          padding: '0.25rem',
+                          fontSize: '0.875rem',
+                          fontWeight: 500
+                        }}
+                      />
+                      <button
+                        onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '4px',
+                          border: '1px solid #d1d5db',
+                          background: '#f3f4f6',
+                          color: '#1f2937',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.125rem',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

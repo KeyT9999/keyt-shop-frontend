@@ -171,12 +171,12 @@ export default function OrdersTab() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.75rem', fontSize: '0.75rem' }}>
           {steps.map((step, index) => {
-            const isActive = order.orderStatus === step.key || 
+            const isActive = order.orderStatus === step.key ||
               (step.key === 'pending' && !order.confirmedAt) ||
               (step.key === 'confirmed' && order.confirmedAt && !order.processingAt) ||
               (step.key === 'processing' && order.processingAt && !order.completedAt);
             const isCompleted = steps.findIndex(s => s.key === order.orderStatus) > index;
-            
+
             return (
               <div key={step.key} style={{ flex: 1, textAlign: 'center' }}>
                 <div
@@ -477,11 +477,11 @@ export default function OrdersTab() {
                         to={`/orders/${order._id}`}
                         style={{ color: '#2563eb', textDecoration: 'none' }}
                       >
-                        Đơn hàng #{order._id.slice(-8).toUpperCase()}
+                        Đơn hàng #{order.orderCode || order._id.slice(-8).toUpperCase()}
                       </Link>
                     </h3>
-                    <p className="order-card__date">
-                      {new Date(order.createdAt).toLocaleString('vi-VN')}
+                    <p className="order-card__date" style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                      ID: {order._id.slice(-8).toUpperCase()} • {new Date(order.createdAt).toLocaleString('vi-VN')}
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>

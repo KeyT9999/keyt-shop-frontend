@@ -32,6 +32,7 @@ import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import { useAuthContext } from './context/useAuthContext';
 import Footer from './components/Footer';
 import Header from './components/Header';
+import FloatingContact from './components/FloatingContact';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -50,11 +51,7 @@ export default function App() {
 
     return (
         <div className="app">
-            <div className="floating-rail">
-                <a href="https://zalo.me" className="rail-item" aria-label="Zalo">ZL</a>
-                <a href="https://m.me" className="rail-item" aria-label="Messenger">MS</a>
-                <a href="#contact" className="rail-item" aria-label="Liên hệ">☎</a>
-            </div>
+            <FloatingContact />
 
             <Header onSearch={setSearchQuery} searchValue={searchQuery} />
 

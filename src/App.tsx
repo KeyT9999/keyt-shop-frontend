@@ -49,13 +49,15 @@ export default function App() {
         }
     }, [user]);
 
+    const isEvidencePage = location.pathname === '/evidence';
+
     return (
         <div className="app">
             <FloatingContact />
 
             <Header onSearch={setSearchQuery} searchValue={searchQuery} />
 
-            <main className={isHomePage ? "main-content-full" : "main-content"}>
+            <main className={(isHomePage || isEvidencePage) ? "main-content-full" : "main-content"}>
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/products" element={<ProductList searchQuery={searchQuery} showHero={false} />} />

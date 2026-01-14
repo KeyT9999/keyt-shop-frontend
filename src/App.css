@@ -21,6 +21,7 @@
   min-height: calc(100vh - 200px);
   padding: 0;
   width: 100%;
+  max-width: none;
 }
 
 /* Footer */

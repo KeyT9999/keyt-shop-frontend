@@ -1,6 +1,5 @@
+
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useAuthContext } from '../context/useAuthContext';
@@ -20,8 +19,7 @@ export default function LoginPage() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const submitRipple = useRipple();
-  const resendRipple = useRipple();
+
 
   // Get redirect path from location state (set by ProtectedRoute)
   const from = (location.state as { from?: string })?.from || '/';

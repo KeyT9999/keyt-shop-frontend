@@ -188,7 +188,7 @@ export default function OrdersPage() {
               <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#374151', fontWeight: 500 }}>Tìm kiếm</label>
               <input
                 type="text"
-                placeholder="Order ID, tên, email, SĐT..."
+                placeholder="Mã đơn hàng (6 chữ số), tên, email, SĐT..."
                 value={filters.search || ''}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
                 style={{
@@ -331,7 +331,7 @@ export default function OrdersPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e5e5' }}>
-                      <th style={{ padding: '1rem', textAlign: 'left', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Order ID</th>
+                      <th style={{ padding: '1rem', textAlign: 'left', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Mã đơn hàng</th>
                       <th style={{ padding: '1rem', textAlign: 'left', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Khách hàng</th>
                       <th style={{ padding: '1rem', textAlign: 'left', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Sản phẩm</th>
                       <th style={{ padding: '1rem', textAlign: 'right', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Tổng tiền</th>
@@ -351,8 +351,9 @@ export default function OrdersPage() {
                     ) : (
                       ordersData.orders.map((order) => (
                         <tr key={order._id} style={{ borderBottom: '1px solid #e5e5e5', cursor: 'pointer' }} onClick={() => navigate(`/admin/orders/${order._id}`)}>
-                          <td style={{ padding: '1rem', color: '#1f2937', fontSize: '0.875rem', fontFamily: 'monospace' }}>
-                            #{order._id.slice(-8).toUpperCase()}
+                          <td style={{ padding: '1rem', color: '#1f2937', fontSize: '0.875rem' }}>
+                            <div style={{ fontWeight: 600, fontSize: '1rem', color: '#2563eb' }}>#{order.orderCode || order._id.slice(-8).toUpperCase()}</div>
+                            <div style={{ color: '#9ca3af', fontSize: '0.75rem', fontFamily: 'monospace' }}>ID: {order._id.slice(-8)}</div>
                           </td>
                           <td style={{ padding: '1rem', color: '#1f2937', fontSize: '0.875rem' }}>
                             <div style={{ fontWeight: 600 }}>{order.customer.name}</div>
@@ -445,9 +446,9 @@ export default function OrdersPage() {
                 {Array.from({ length: ordersData.totalPages }, (_, i) => i + 1)
                   .filter(page => {
                     // Show first page, last page, current page, and pages around current
-                    return page === 1 || 
-                           page === ordersData.totalPages || 
-                           (page >= ordersData.page - 1 && page <= ordersData.page + 1);
+                    return page === 1 ||
+                      page === ordersData.totalPages ||
+                      (page >= ordersData.page - 1 && page <= ordersData.page + 1);
                   })
                   .map((page, index, array) => {
                     // Add ellipsis if there's a gap

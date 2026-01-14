@@ -52,6 +52,7 @@ export interface ChangePasswordData {
 
 export interface Order {
   _id: string;
+  orderCode?: number; // 6-digit order code for customer reference
   userId?: string;
   customer: {
     name: string;

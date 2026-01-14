@@ -197,419 +197,422 @@ export default function AdminOrderDetailPage() {
       `}</style>
       <div className="main-content print-content">
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div>
+              <button
+                onClick={() => navigate('/admin/orders')}
+                className="no-print"
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#ffffff',
+                  color: '#374151',
+                  border: '1px solid #e5e5e5',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  marginBottom: '1rem',
+                  fontSize: '0.875rem'
+                }}
+              >
+                ← Quay lại
+              </button>
+              <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <h1 style={{ color: '#1f2937', margin: 0, fontSize: '2rem' }}>HÓA ĐƠN BÁN HÀNG</h1>
+                <p style={{ color: '#1f2937', fontSize: '1.5rem', fontWeight: 'bold', margin: '1rem 0 0.5rem 0' }}>
+                  Mã đơn hàng: <span style={{ color: '#2563eb' }}>#{order.orderCode || order._id.slice(-8).toUpperCase()}</span>
+                </p>
+                <p style={{ color: '#9ca3af', fontSize: '0.75rem', fontFamily: 'monospace', marginTop: '0.25rem' }}>
+                  ID: {order._id.slice(-8).toUpperCase()}
+                </p>
+                <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                  Ngày tạo: {new Date(order.createdAt).toLocaleString('vi-VN')}
+                </p>
+              </div>
+            </div>
             <button
-              onClick={() => navigate('/admin/orders')}
+              onClick={handlePrintInvoice}
               className="no-print"
               style={{
-                padding: '0.5rem 1rem',
-                background: '#ffffff',
-                color: '#374151',
-                border: '1px solid #e5e5e5',
+                padding: '0.75rem 1.5rem',
+                background: '#059669',
+                color: '#ffffff',
+                border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                marginBottom: '1rem',
+                fontWeight: 600,
                 fontSize: '0.875rem'
               }}
             >
-              ← Quay lại
+              🖨️ In hóa đơn
             </button>
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <h1 style={{ color: '#1f2937', margin: 0, fontSize: '2rem' }}>HÓA ĐƠN BÁN HÀNG</h1>
-              <p style={{ color: '#6b7280', fontSize: '1rem', marginTop: '0.5rem' }}>
-                Mã đơn hàng: <strong>#{order._id.slice(-8).toUpperCase()}</strong>
-              </p>
-              <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                Ngày tạo: {new Date(order.createdAt).toLocaleString('vi-VN')}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handlePrintInvoice}
-            className="no-print"
-            style={{
-              padding: '0.75rem 1.5rem',
-              background: '#059669',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: '0.875rem'
-            }}
-          >
-            🖨️ In hóa đơn
-          </button>
-        </div>
-
-        {/* Status Cards */}
-        <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-          <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Trạng thái đơn hàng</div>
-            <div
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '6px',
-                background: getOrderStatusColor(order.orderStatus),
-                color: '#ffffff',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                display: 'inline-block'
-              }}
-            >
-              {getOrderStatusText(order.orderStatus)}
-            </div>
           </div>
 
-          <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Trạng thái thanh toán</div>
-            <div
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '6px',
-                background: getPaymentStatusColor(order.paymentStatus),
-                color: '#ffffff',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                display: 'inline-block'
-              }}
-            >
-              {getPaymentStatusText(order.paymentStatus)}
-            </div>
-          </div>
-
-          <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Tổng tiền</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>
-              {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}
-            </div>
-          </div>
-        </div>
-
-        {/* Timeline */}
-        {(order.confirmedAt || order.processingAt || order.completedAt) && (
-          <div className="no-print" style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '2rem' }}>
-            <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Lịch sử đơn hàng</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#059669' }}></div>
-                <div>
-                  <div style={{ fontWeight: 600, color: '#1f2937' }}>Tạo đơn hàng</div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                    {new Date(order.createdAt).toLocaleString('vi-VN')}
-                  </div>
-                </div>
+          {/* Status Cards */}
+          <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Trạng thái đơn hàng</div>
+              <div
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  background: getOrderStatusColor(order.orderStatus),
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  display: 'inline-block'
+                }}
+              >
+                {getOrderStatusText(order.orderStatus)}
               </div>
+            </div>
 
-              {order.confirmedAt && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#7c3aed' }}></div>
-                  <div>
-                    <div style={{ fontWeight: 600, color: '#1f2937' }}>Đã xác nhận</div>
-                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                      {new Date(order.confirmedAt).toLocaleString('vi-VN')}
-                      {typeof order.confirmedBy === 'object' && order.confirmedBy && (
-                        <span> bởi {order.confirmedBy.username}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Trạng thái thanh toán</div>
+              <div
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  background: getPaymentStatusColor(order.paymentStatus),
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  display: 'inline-block'
+                }}
+              >
+                {getPaymentStatusText(order.paymentStatus)}
+              </div>
+            </div>
 
-              {order.processingAt && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#2563eb' }}></div>
-                  <div>
-                    <div style={{ fontWeight: 600, color: '#1f2937' }}>Bắt đầu xử lý</div>
-                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                      {new Date(order.processingAt).toLocaleString('vi-VN')}
-                    </div>
-                  </div>
-                </div>
-              )}
+            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Tổng tiền</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>
+                {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}
+              </div>
+            </div>
+          </div>
 
-              {order.completedAt && (
+          {/* Timeline */}
+          {(order.confirmedAt || order.processingAt || order.completedAt) && (
+            <div className="no-print" style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '2rem' }}>
+              <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Lịch sử đơn hàng</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#059669' }}></div>
                   <div>
-                    <div style={{ fontWeight: 600, color: '#1f2937' }}>Hoàn thành</div>
+                    <div style={{ fontWeight: 600, color: '#1f2937' }}>Tạo đơn hàng</div>
                     <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                      {new Date(order.completedAt).toLocaleString('vi-VN')}
+                      {new Date(order.createdAt).toLocaleString('vi-VN')}
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
-        )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
-          {/* Left Column - Customer Info & Items */}
-          <div>
-            {/* Customer Info */}
-            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '1.5rem' }}>
-              <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Thông tin khách hàng</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Tên</div>
-                  <div style={{ fontWeight: 600, color: '#1f2937' }}>{order.customer.name}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Email</div>
-                  <div style={{ fontWeight: 600, color: '#1f2937' }}>{order.customer.email}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Số điện thoại</div>
-                  <div style={{ fontWeight: 600, color: '#1f2937' }}>{order.customer.phone}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Items */}
-            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5' }}>
-              <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Sản phẩm</h2>
-              <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '1rem' }}>
-                {order.items.map((item, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      padding: '1rem 0',
-                      borderBottom: index < order.items.length - 1 ? '1px solid #f3f4f6' : 'none'
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: item.requiredFieldsData && item.requiredFieldsData.length > 0 ? '0.75rem' : '0' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>
-                          {item.name}
-                        </div>
-                        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                          Số lượng: {item.quantity} x {formatPrice(item.price, item.currency)}
-                        </div>
-                      </div>
-                      <div style={{ fontWeight: 600, color: '#1f2937' }}>
-                        {formatPrice(item.price * item.quantity, item.currency)}
+                {order.confirmedAt && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#7c3aed' }}></div>
+                    <div>
+                      <div style={{ fontWeight: 600, color: '#1f2937' }}>Đã xác nhận</div>
+                      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                        {new Date(order.confirmedAt).toLocaleString('vi-VN')}
+                        {typeof order.confirmedBy === 'object' && order.confirmedBy && (
+                          <span> bởi {order.confirmedBy.username}</span>
+                        )}
                       </div>
                     </div>
-                    {/* Hiển thị requiredFieldsData nếu có */}
-                    {item.requiredFieldsData && item.requiredFieldsData.length > 0 && (
-                      <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0f9ff', borderRadius: '6px', borderLeft: '3px solid #2563eb' }}>
-                        <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e40af', marginBottom: '0.5rem' }}>
-                          Thông tin bổ sung:
-                        </div>
-                        {item.requiredFieldsData.map((fieldData, fieldIndex) => (
-                          <div key={fieldIndex} style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>
-                            <strong>{fieldData.label}:</strong> {fieldData.value}
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
-                ))}
-              </div>
-              <div
-                style={{
-                  marginTop: '1rem',
-                  paddingTop: '1rem',
-                  borderTop: '2px solid #e5e5e5',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
-                <span style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1f2937' }}>Tổng tiền</span>
-                <strong style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2563eb' }}>
-                  {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}
-                </strong>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Actions & Notes */}
-          <div>
-            {/* Actions */}
-            <div className="no-print" style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '1.5rem' }}>
-              <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Thao tác</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {order.orderStatus === 'pending' && (
-                  <button
-                    onClick={() => handleAction('confirm', 'xác nhận')}
-                    disabled={actionLoading !== null}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      background: actionLoading === 'confirm' ? '#9ca3af' : '#7c3aed',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: actionLoading === 'confirm' ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                      fontSize: '0.875rem'
-                    }}
-                  >
-                    {actionLoading === 'confirm' ? 'Đang xử lý...' : '✓ Xác nhận đơn hàng'}
-                  </button>
                 )}
 
-                {order.orderStatus === 'confirmed' && (
-                  <button
-                    onClick={() => handleAction('processing', 'bắt đầu xử lý')}
-                    disabled={actionLoading !== null}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      background: actionLoading === 'processing' ? '#9ca3af' : '#2563eb',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: actionLoading === 'processing' ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                      fontSize: '0.875rem'
-                    }}
-                  >
-                    {actionLoading === 'processing' ? 'Đang xử lý...' : '⚙️ Bắt đầu xử lý'}
-                  </button>
+                {order.processingAt && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#2563eb' }}></div>
+                    <div>
+                      <div style={{ fontWeight: 600, color: '#1f2937' }}>Bắt đầu xử lý</div>
+                      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                        {new Date(order.processingAt).toLocaleString('vi-VN')}
+                      </div>
+                    </div>
+                  </div>
                 )}
 
-                {order.orderStatus === 'processing' && (
-                  <button
-                    onClick={() => handleAction('complete', 'hoàn thành')}
-                    disabled={actionLoading !== null}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      background: actionLoading === 'complete' ? '#9ca3af' : '#059669',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: actionLoading === 'complete' ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                      fontSize: '0.875rem'
-                    }}
-                  >
-                    {actionLoading === 'complete' ? 'Đang xử lý...' : '✅ Hoàn thành đơn hàng'}
-                  </button>
-                )}
-
-                {order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
-                  <button
-                    onClick={() => handleAction('cancel', 'hủy')}
-                    disabled={actionLoading !== null}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      background: actionLoading === 'cancel' ? '#9ca3af' : '#dc2626',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: actionLoading === 'cancel' ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                      fontSize: '0.875rem'
-                    }}
-                  >
-                    {actionLoading === 'cancel' ? 'Đang xử lý...' : '❌ Hủy đơn hàng'}
-                  </button>
+                {order.completedAt && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#059669' }}></div>
+                    <div>
+                      <div style={{ fontWeight: 600, color: '#1f2937' }}>Hoàn thành</div>
+                      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                        {new Date(order.completedAt).toLocaleString('vi-VN')}
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
+          )}
 
-            {/* Customer Note */}
-            {order.note && (
-              <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
-                <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Ghi chú khách hàng</h2>
-                <div style={{ padding: '1rem', background: '#f9fafb', borderRadius: '6px', color: '#374151', whiteSpace: 'pre-line' }}>
-                  {order.note}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+            {/* Left Column - Customer Info & Items */}
+            <div>
+              {/* Customer Info */}
+              <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '1.5rem' }}>
+                <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Thông tin khách hàng</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Tên</div>
+                    <div style={{ fontWeight: 600, color: '#1f2937' }}>{order.customer.name}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Email</div>
+                    <div style={{ fontWeight: 600, color: '#1f2937' }}>{order.customer.email}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Số điện thoại</div>
+                    <div style={{ fontWeight: 600, color: '#1f2937' }}>{order.customer.phone}</div>
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Admin Notes */}
-            <div className="no-print" style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h2 style={{ margin: 0, color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Ghi chú nội bộ</h2>
-                {!editingNotes && (
-                  <button
-                    onClick={() => setEditingNotes(true)}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      background: '#2563eb',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '0.875rem',
-                      fontWeight: 600
-                    }}
-                  >
-                    {order.adminNotes ? 'Sửa' : 'Thêm ghi chú'}
-                  </button>
-                )}
-              </div>
-              {editingNotes ? (
-                <div>
-                  <textarea
-                    value={adminNotes}
-                    onChange={(e) => setAdminNotes(e.target.value)}
-                    placeholder="Nhập ghi chú nội bộ..."
-                    rows={6}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '1px solid #e5e5e5',
-                      borderRadius: '6px',
-                      fontSize: '0.875rem',
-                      fontFamily: 'inherit',
-                      resize: 'vertical'
-                    }}
-                  />
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                    <button
-                      onClick={handleSaveNotes}
-                      disabled={actionLoading === 'notes'}
+              {/* Items */}
+              <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5' }}>
+                <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Sản phẩm</h2>
+                <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '1rem' }}>
+                  {order.items.map((item, index) => (
+                    <div
+                      key={index}
                       style={{
-                        padding: '0.5rem 1rem',
-                        background: actionLoading === 'notes' ? '#9ca3af' : '#059669',
+                        padding: '1rem 0',
+                        borderBottom: index < order.items.length - 1 ? '1px solid #f3f4f6' : 'none'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: item.requiredFieldsData && item.requiredFieldsData.length > 0 ? '0.75rem' : '0' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>
+                            {item.name}
+                          </div>
+                          <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                            Số lượng: {item.quantity} x {formatPrice(item.price, item.currency)}
+                          </div>
+                        </div>
+                        <div style={{ fontWeight: 600, color: '#1f2937' }}>
+                          {formatPrice(item.price * item.quantity, item.currency)}
+                        </div>
+                      </div>
+                      {/* Hiển thị requiredFieldsData nếu có */}
+                      {item.requiredFieldsData && item.requiredFieldsData.length > 0 && (
+                        <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0f9ff', borderRadius: '6px', borderLeft: '3px solid #2563eb' }}>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e40af', marginBottom: '0.5rem' }}>
+                            Thông tin bổ sung:
+                          </div>
+                          {item.requiredFieldsData.map((fieldData, fieldIndex) => (
+                            <div key={fieldIndex} style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>
+                              <strong>{fieldData.label}:</strong> {fieldData.value}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div
+                  style={{
+                    marginTop: '1rem',
+                    paddingTop: '1rem',
+                    borderTop: '2px solid #e5e5e5',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <span style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1f2937' }}>Tổng tiền</span>
+                  <strong style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2563eb' }}>
+                    {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Actions & Notes */}
+            <div>
+              {/* Actions */}
+              <div className="no-print" style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '1.5rem' }}>
+                <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Thao tác</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {order.orderStatus === 'pending' && (
+                    <button
+                      onClick={() => handleAction('confirm', 'xác nhận')}
+                      disabled={actionLoading !== null}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        background: actionLoading === 'confirm' ? '#9ca3af' : '#7c3aed',
                         color: '#ffffff',
                         border: 'none',
                         borderRadius: '6px',
-                        cursor: actionLoading === 'notes' ? 'not-allowed' : 'pointer',
-                        fontSize: '0.875rem',
-                        fontWeight: 600
+                        cursor: actionLoading === 'confirm' ? 'not-allowed' : 'pointer',
+                        fontWeight: 600,
+                        fontSize: '0.875rem'
                       }}
                     >
-                      {actionLoading === 'notes' ? 'Đang lưu...' : 'Lưu'}
+                      {actionLoading === 'confirm' ? 'Đang xử lý...' : '✓ Xác nhận đơn hàng'}
                     </button>
+                  )}
+
+                  {order.orderStatus === 'confirmed' && (
                     <button
-                      onClick={() => {
-                        setEditingNotes(false);
-                        setAdminNotes(order.adminNotes || '');
-                      }}
-                      disabled={actionLoading === 'notes'}
+                      onClick={() => handleAction('processing', 'bắt đầu xử lý')}
+                      disabled={actionLoading !== null}
                       style={{
-                        padding: '0.5rem 1rem',
-                        background: '#ffffff',
-                        color: '#374151',
-                        border: '1px solid #e5e5e5',
+                        width: '100%',
+                        padding: '0.75rem',
+                        background: actionLoading === 'processing' ? '#9ca3af' : '#2563eb',
+                        color: '#ffffff',
+                        border: 'none',
                         borderRadius: '6px',
-                        cursor: actionLoading === 'notes' ? 'not-allowed' : 'pointer',
-                        fontSize: '0.875rem',
-                        fontWeight: 600
+                        cursor: actionLoading === 'processing' ? 'not-allowed' : 'pointer',
+                        fontWeight: 600,
+                        fontSize: '0.875rem'
                       }}
                     >
-                      Hủy
+                      {actionLoading === 'processing' ? 'Đang xử lý...' : '⚙️ Bắt đầu xử lý'}
                     </button>
+                  )}
+
+                  {order.orderStatus === 'processing' && (
+                    <button
+                      onClick={() => handleAction('complete', 'hoàn thành')}
+                      disabled={actionLoading !== null}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        background: actionLoading === 'complete' ? '#9ca3af' : '#059669',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: actionLoading === 'complete' ? 'not-allowed' : 'pointer',
+                        fontWeight: 600,
+                        fontSize: '0.875rem'
+                      }}
+                    >
+                      {actionLoading === 'complete' ? 'Đang xử lý...' : '✅ Hoàn thành đơn hàng'}
+                    </button>
+                  )}
+
+                  {order.orderStatus !== 'completed' && order.orderStatus !== 'cancelled' && (
+                    <button
+                      onClick={() => handleAction('cancel', 'hủy')}
+                      disabled={actionLoading !== null}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        background: actionLoading === 'cancel' ? '#9ca3af' : '#dc2626',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: actionLoading === 'cancel' ? 'not-allowed' : 'pointer',
+                        fontWeight: 600,
+                        fontSize: '0.875rem'
+                      }}
+                    >
+                      {actionLoading === 'cancel' ? 'Đang xử lý...' : '❌ Hủy đơn hàng'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Customer Note */}
+              {order.note && (
+                <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
+                  <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Ghi chú khách hàng</h2>
+                  <div style={{ padding: '1rem', background: '#f9fafb', borderRadius: '6px', color: '#374151', whiteSpace: 'pre-line' }}>
+                    {order.note}
                   </div>
                 </div>
-              ) : (
-                <div style={{ padding: '1rem', background: '#fef3c7', borderRadius: '6px', color: '#374151', whiteSpace: 'pre-line', borderLeft: '3px solid #f59e0b', minHeight: '60px' }}>
-                  {order.adminNotes || 'Chưa có ghi chú'}
-                </div>
               )}
+
+              {/* Admin Notes */}
+              <div className="no-print" style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h2 style={{ margin: 0, color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Ghi chú nội bộ</h2>
+                  {!editingNotes && (
+                    <button
+                      onClick={() => setEditingNotes(true)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: '#2563eb',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: 600
+                      }}
+                    >
+                      {order.adminNotes ? 'Sửa' : 'Thêm ghi chú'}
+                    </button>
+                  )}
+                </div>
+                {editingNotes ? (
+                  <div>
+                    <textarea
+                      value={adminNotes}
+                      onChange={(e) => setAdminNotes(e.target.value)}
+                      placeholder="Nhập ghi chú nội bộ..."
+                      rows={6}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '6px',
+                        fontSize: '0.875rem',
+                        fontFamily: 'inherit',
+                        resize: 'vertical'
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                      <button
+                        onClick={handleSaveNotes}
+                        disabled={actionLoading === 'notes'}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          background: actionLoading === 'notes' ? '#9ca3af' : '#059669',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: actionLoading === 'notes' ? 'not-allowed' : 'pointer',
+                          fontSize: '0.875rem',
+                          fontWeight: 600
+                        }}
+                      >
+                        {actionLoading === 'notes' ? 'Đang lưu...' : 'Lưu'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingNotes(false);
+                          setAdminNotes(order.adminNotes || '');
+                        }}
+                        disabled={actionLoading === 'notes'}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          background: '#ffffff',
+                          color: '#374151',
+                          border: '1px solid #e5e5e5',
+                          borderRadius: '6px',
+                          cursor: actionLoading === 'notes' ? 'not-allowed' : 'pointer',
+                          fontSize: '0.875rem',
+                          fontWeight: 600
+                        }}
+                      >
+                        Hủy
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ padding: '1rem', background: '#fef3c7', borderRadius: '6px', color: '#374151', whiteSpace: 'pre-line', borderLeft: '3px solid #f59e0b', minHeight: '60px' }}>
+                    {order.adminNotes || 'Chưa có ghi chú'}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
     </>
   );

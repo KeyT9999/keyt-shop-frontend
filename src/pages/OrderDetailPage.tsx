@@ -50,7 +50,7 @@ export default function OrderDetailPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Thử load từ profileService trước (nếu user đã đăng nhập)
       if (token && user) {
         try {
@@ -69,7 +69,7 @@ export default function OrderDetailPage() {
       });
       const orderData = response.data;
       setOrder(orderData);
-      
+
       // Load payment info if order exists and user is logged in (to get latest status)
       // Only load if order payment is pending and we don't have checkoutUrl yet
       if (orderData && token && user && orderData.paymentStatus === 'pending' && !orderData.checkoutUrl) {
@@ -145,7 +145,7 @@ export default function OrderDetailPage() {
 
   const loadPaymentInfo = async () => {
     if (!id || !token) return;
-    
+
     try {
       const paymentInfo = await payosService.getPaymentInfo(id, token);
       if (paymentInfo.success) {
@@ -218,8 +218,11 @@ export default function OrderDetailPage() {
         <h1 style={{ color: '#1f2937', fontSize: '1.875rem', fontWeight: 700, marginBottom: '0.5rem' }}>
           Chi tiết đơn hàng
         </h1>
-        <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-          Mã đơn hàng: <strong>#{order._id.slice(-8).toUpperCase()}</strong>
+        <p style={{ color: '#1f2937', fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+          Mã đơn hàng: <span style={{ color: '#2563eb', fontSize: '1.25rem' }}>#{order.orderCode || order._id.slice(-8).toUpperCase()}</span>
+        </p>
+        <p style={{ color: '#9ca3af', fontSize: '0.75rem', fontFamily: 'monospace' }}>
+          ID: {order._id.slice(-8).toUpperCase()}
         </p>
       </div>
 
@@ -274,7 +277,7 @@ export default function OrderDetailPage() {
             {getPaymentStatusText(order.paymentStatus)}
           </div>
         </div>
-        
+
         {/* Enhanced Timeline */}
         <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e5e5e5' }}>
           <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
@@ -338,7 +341,7 @@ export default function OrderDetailPage() {
                   {steps.map((step, index) => {
                     const isActive = step.key === order.orderStatus;
                     const isCompleted = step.completed && index <= currentStepIndex;
-                    
+
                     return (
                       <div key={step.key} style={{ textAlign: 'center' }}>
                         <div

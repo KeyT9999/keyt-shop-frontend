@@ -26,6 +26,7 @@ import ProductsPage from './pages/admin/ProductsPage';
 import OrdersPage from './pages/admin/OrdersPage';
 import AdminOrderDetailPage from './pages/admin/AdminOrderDetailPage';
 import OrderDetailPage from './pages/OrderDetailPage';
+import UserOrdersPage from './pages/UserOrdersPage';
 import InvoiceView from './components/order/InvoiceView';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import { useAuthContext } from './context/useAuthContext';
@@ -61,6 +62,7 @@ export default function App() {
                     <Route path="/products/:id" element={<ProductDetail />} />
                     <Route path="/cart" element={<CartPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/orders" element={<UserOrdersPage />} />
                     <Route path="/orders/:id" element={<OrderDetailPage />} />
                     <Route path="/orders/:id/invoice" element={<InvoiceView />} />
                     <Route path="/payment-success" element={<PaymentSuccessPage />} />

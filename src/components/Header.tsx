@@ -158,7 +158,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                                 </>
                                             )}
                                             <Link to="/profile">My Profile</Link>
-                                            <Link to="/orders">Orders</Link>
+                                            <Link to={user.admin ? "/admin/orders" : "/orders"}>Orders</Link>
                                             <button onClick={handleLogout}>Logout</button>
                                         </>
                                     ) : (

@@ -201,14 +201,24 @@
 }
 
 /* --- Search Section --- */
+
 .search-section {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  justify-content: center;
+  /* Center the form horizontally */
   position: sticky;
   top: 20px;
   z-index: 10;
+  padding: 0 16px;
+  /* Add some side padding just in case */
 }
+
+.evidence-form {
+  width: 100%;
+  max-width: 1400px;
+  /* Limit width for aesthetics */
+}
+
 
 .search-container {
   display: flex;

@@ -24,6 +24,12 @@
   max-width: none;
 }
 
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
 /* Footer */
 .footer {
   text-align: center;

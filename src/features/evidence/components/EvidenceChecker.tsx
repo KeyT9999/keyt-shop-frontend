@@ -41,7 +41,11 @@ const verificationClass: Record<EvidenceItem['verification'], string> = {
   trusted: 'badge badge--info',
 };
 
+import { useAuthContext } from '../../../context/useAuthContext';
+import { profileService } from '../../../services/profileService';
+
 export default function EvidenceChecker() {
+  const { user } = useAuthContext();
   const [apiKey, setApiKey] = useState('');
   const [query, setQuery] = useState('');
   const [maxResults, setMaxResults] = useState(5);
@@ -54,10 +58,33 @@ export default function EvidenceChecker() {
   const [textFilter, setTextFilter] = useState('');
   const [sortByScore, setSortByScore] = useState(true);
 
+  // Initial load: Try LocalStorage first, then Backend if logged in
   useEffect(() => {
-    const storedKey = getGeminiApiKey();
-    if (storedKey) setApiKey(storedKey);
-  }, []);
+    // 1. Check LocalStorage (Fast)
+    const localKey = getGeminiApiKey();
+    if (localKey) {
+      setApiKey(localKey);
+    }
+
+    // 2. Check Backend (Source of Truth for Logged In)
+    const loadFromBackend = async () => {
+      if (user) {
+        try {
+          const profile = await profileService.getProfile();
+          if (profile.geminiApiKey) {
+            setApiKey(profile.geminiApiKey);
+            // Sync back to local if missing/different
+            if (profile.geminiApiKey !== localKey) {
+              saveGeminiApiKey(profile.geminiApiKey);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to load API key from profile', err);
+        }
+      }
+    };
+    loadFromBackend();
+  }, [user]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -72,9 +99,15 @@ export default function EvidenceChecker() {
     setLoading(true);
 
     try {
+      // Save Key on use (Sync both Local and Backend)
+      saveGeminiApiKey(apiKey);
+      if (user) {
+        // Silently sync to backend
+        profileService.saveGeminiApiKey(apiKey).catch(console.error);
+      }
+
       const results = await fetchEvidence({ query, apiKey, maxResults });
       setEvidence(results);
-      saveGeminiApiKey(apiKey);
     } catch (err: any) {
       setError(err?.message || 'Đã xảy ra lỗi khi tìm kiếm evidence.');
       setEvidence([]);

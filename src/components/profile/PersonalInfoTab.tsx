@@ -17,7 +17,7 @@ export default function PersonalInfoTab({ profile, onUpdate }: PersonalInfoTabPr
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
+
   const [formData, setFormData] = useState<UpdateProfileData>({
     email: profile.email,
     phone: profile.phone || '',
@@ -86,10 +86,17 @@ export default function PersonalInfoTab({ profile, onUpdate }: PersonalInfoTabPr
 
   return (
     <div className="profile-tab">
-      <div className="profile-tab__header">
-        <h2>Thông tin cá nhân</h2>
+      <div className="profile-tab__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '1px solid #f3f4f6', paddingBottom: '24px' }}>
+        <div>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Thông tin cá nhân</h2>
+          <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: '14px' }}>Quản lý thông tin cá nhân và liên hệ của bạn.</p>
+        </div>
         {!isEditing && (
-          <button className="profile-button" onClick={() => setIsEditing(true)}>
+          <button
+            className="profile-button primary"
+            onClick={() => setIsEditing(true)}
+            style={{ borderRadius: '99px', padding: '10px 24px' }}
+          >
             ✏️ Chỉnh sửa
           </button>
         )}

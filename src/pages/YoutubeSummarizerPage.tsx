@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Header } from '../features/youtubeSummarizer/components/Header';
+import { useRef, useState, useEffect } from 'react';
 import { VideoMetadataCard } from '../features/youtubeSummarizer/components/VideoMetadataCard';
 import { ResultSection } from '../features/youtubeSummarizer/components/ResultSection';
 import { ChatInterface } from '../features/youtubeSummarizer/components/ChatInterface';
@@ -9,7 +8,22 @@ import { SummaryStyle } from '../features/youtubeSummarizer/types';
 import type { AppState, VideoMetadata, SummaryResult } from '../features/youtubeSummarizer/types';
 import { useAuthContext } from '../context/useAuthContext';
 import { profileService } from '../services/profileService';
+import {
+  Settings,
+  Key,
+  Trash2,
+  Eye,
+  EyeOff,
+  Search,
+  AlertTriangle,
+  Youtube,
+  Sparkles,
+  FileSearch,
+  CheckCircle2,
+  ArrowRight
+} from 'lucide-react';
 import './YoutubeSummarizerPage.css';
+import { saveGeminiApiKey as saveToLocal, getGeminiApiKey as getFromLocal, clearGeminiApiKey as clearLocal } from '../utils/geminiApiKey';
 
 const styleOptions = [
   {
@@ -29,14 +43,20 @@ const styleOptions = [
   },
 ];
 
+const suggestionChips = [
+  { label: 'Tóm tắt TED Talk', icon: '🎤', url: 'https://www.youtube.com/watch?v=R1vskiVDwl4' },
+  { label: 'Review iPhone 16', icon: '📱', url: 'https://www.youtube.com/watch?v=GHhD4rO5C9I' },
+  { label: 'Học ReactJS', icon: '⚛️', url: 'https://www.youtube.com/watch?v=SqcY0GlETPk' },
+];
+
 const YoutubeSummarizerPage: React.FC = () => {
   const { user } = useAuthContext();
   const [urlInput, setUrlInput] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [apiKeyInput, setApiKeyInput] = useState('');
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
-  const [loadingApiKey, setLoadingApiKey] = useState(true);
-  const [savingApiKey, setSavingApiKey] = useState(false);
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false); // Changed from Modal to Panel
+  const [apiKeyInput, setApiKeyInput] = useState(''); // Used for manual entry
+  const [showApiKey, setShowApiKey] = useState(false);
+
   const [appState, setAppState] = useState<AppState>('idle');
   const [metadata, setMetadata] = useState<VideoMetadata | null>(null);
   const [summaryResult, setSummaryResult] = useState<SummaryResult | null>(null);
@@ -44,90 +64,62 @@ const YoutubeSummarizerPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const summarySectionRef = useRef<HTMLElement | null>(null);
 
-  // Load API key from backend on mount
+  // Load API key from LocalStorage and Backend on mount
   useEffect(() => {
-    const loadApiKey = async () => {
-      if (!user) {
-        setLoadingApiKey(false);
-        setShowApiKeyInput(true);
-        return;
-      }
+    // 1. Load Local (Fast)
+    const localKey = getFromLocal();
+    if (localKey) {
+      setGeminiApiKey(localKey);
+      setApiKeyInput(localKey);
+    }
 
+    // 2. Load Backend (Source of Truth if logged in)
+    const loadApiKey = async () => {
+      if (!user) return;
       try {
         const profile = await profileService.getProfile();
         if (profile.geminiApiKey) {
           setGeminiApiKey(profile.geminiApiKey);
-          setShowApiKeyInput(false);
-        } else {
-          setShowApiKeyInput(true);
+          setApiKeyInput(profile.geminiApiKey);
+          // Sync to local if valid
+          if (profile.geminiApiKey !== localKey) {
+            saveToLocal(profile.geminiApiKey);
+          }
         }
       } catch (err) {
         console.error('Error loading API key:', err);
-        setShowApiKeyInput(true);
-      } finally {
-        setLoadingApiKey(false);
       }
     };
-
     loadApiKey();
   }, [user]);
 
-  // Save API key to backend
   const handleSaveApiKey = async () => {
-    if (!apiKeyInput.trim()) {
-      setError('Vui lòng nhập Gemini API Key');
-      return;
-    }
+    const trimmedKey = apiKeyInput.trim();
 
-    if (!user) {
-      setError('Vui lòng đăng nhập để lưu API Key');
-      return;
-    }
-
-    setSavingApiKey(true);
-    setError(null);
-
-    try {
-      await profileService.saveGeminiApiKey(apiKeyInput.trim());
-      setGeminiApiKey(apiKeyInput.trim());
-      setApiKeyInput('');
-      setShowApiKeyInput(false);
-    } catch (err: any) {
-      console.error('Error saving API key:', err);
-      setError(err.response?.data?.message || 'Không thể lưu API Key. Vui lòng thử lại.');
-    } finally {
-      setSavingApiKey(false);
-    }
-  };
-
-  // Allow user to re-enter API key if it fails
-  const handleApiKeyError = () => {
-    setShowApiKeyInput(true);
-    setGeminiApiKey('');
-  };
-
-  // Edit API key
-  const handleEditApiKey = () => {
-    setShowApiKeyInput(true);
-    setApiKeyInput(geminiApiKey);
-  };
-
-  // Delete API key
-  const handleDeleteApiKey = async () => {
-    if (!user) return;
-    
-    if (!window.confirm('Bạn có chắc chắn muốn xóa Gemini API Key?')) {
-      return;
-    }
-
-    try {
-      await profileService.saveGeminiApiKey('');
+    if (!trimmedKey) {
       setGeminiApiKey('');
-      setShowApiKeyInput(true);
-      setApiKeyInput('');
-    } catch (err: any) {
-      console.error('Error deleting API key:', err);
-      setError('Không thể xóa API Key. Vui lòng thử lại.');
+      clearLocal();
+      if (user) {
+        try {
+          await profileService.saveGeminiApiKey('');
+        } catch (e) { console.error(e); }
+      }
+      return;
+    }
+
+    try {
+      // Always save to local
+      saveToLocal(trimmedKey);
+      setGeminiApiKey(trimmedKey);
+
+      // Save to backend if user exists
+      if (user) {
+        await profileService.saveGeminiApiKey(trimmedKey);
+      }
+
+      setShowSettingsPanel(false);
+    } catch (err) {
+      console.error("Error saving API Key", err);
     }
   };
 
@@ -144,17 +136,17 @@ const YoutubeSummarizerPage: React.FC = () => {
       setMetadata(data);
       setAppState('ready_to_summarize');
     } catch (err) {
-      setError('Không thể lấy thông tin video. Vui lòng kiểm tra lại đường dẫn.');
+      setError('Không thể lấy thông tin video. Vui lòng kiểm tra lại đường dẫn và thử lại.');
       setAppState('idle');
     }
   };
 
   const handleSummarize = async () => {
     if (!metadata) return;
-    
+
     if (!geminiApiKey || !geminiApiKey.trim()) {
       setError('Vui lòng nhập Gemini API Key để sử dụng tính năng AI.');
-      setShowApiKeyInput(true);
+      setShowSettingsPanel(true);
       return;
     }
 
@@ -170,27 +162,12 @@ const YoutubeSummarizerPage: React.FC = () => {
       }, 200);
     } catch (err: any) {
       console.error(err);
-      
-      // Handle GeminiApiError specifically
-      if (err instanceof GeminiApiError) {
+      if (err instanceof GeminiApiError && err.isApiKeyError) {
+        setShowSettingsPanel(true);
         setError(err.message);
-        
-        // If API key is invalid or leaked, clear it and prompt user to re-enter
-        if (err.isApiKeyError) {
-          handleApiKeyError();
-        }
       } else {
-        // Handle other errors
-        const errorMessage = err.message || 'AI đang quá tải hoặc gặp lỗi. Vui lòng thử lại sau.';
-        setError(errorMessage);
-        
-        // Check if error message contains API key related keywords
-        const errorMsgLower = errorMessage.toLowerCase();
-        if (errorMsgLower.includes('api key') || errorMsgLower.includes('api_key') || errorMsgLower.includes('key')) {
-          handleApiKeyError();
-        }
+        setError(err.message || 'Lỗi khi tóm tắt video.');
       }
-      
       setAppState('ready_to_summarize');
     }
   };
@@ -203,168 +180,182 @@ const YoutubeSummarizerPage: React.FC = () => {
     setError(null);
   };
 
+  // Render Logic
   return (
-    <div className="summarizer-page">
-      <Header />
+    <div className="ys-page">
+      {/* Header Section */}
+      <header className="ys-header">
+        <div className="ys-header-content">
+          <div>
+            <p className="ys-eyebrow">AI Video Assistant</p>
+            <h1>YouTube Summarizer</h1>
+            <p className="ys-lede">
+              Tóm tắt video YouTube, tạo ghi chú học tập và hỏi đáp với video trong vài giây.
+            </p>
+          </div>
+          <button
+            className={`ys-settings-btn ${showSettingsPanel ? 'active' : ''}`}
+            onClick={() => setShowSettingsPanel(!showSettingsPanel)}
+            title="Cấu hình API Key"
+          >
+            <Settings size={20} />
+            <span>Settings</span>
+          </button>
+        </div>
 
-      <main>
-        <section className="summarizer-intro">
-          <h2>Tiết kiệm thời gian học tập & làm việc với AI</h2>
-          <p>
-            Dán link YouTube vào, để Gemini 2.5 Flash đọc tiêu đề & ngữ cảnh rồi trả về tóm tắt cùng điểm nổi bật, sau
-            đó thoải mái hỏi thêm trong chat.
-          </p>
-        </section>
+        {/* Settings Panel (Collapsible) */}
+        {showSettingsPanel && (
+          <div className="ys-settings-panel">
+            <div className="ys-setting-group">
+              <label className="ys-setting-label">
+                <Key size={14} /> Google AI Studio API Key
+              </label>
+              <div className="ys-input-group">
+                <input
+                  type={showApiKey ? 'text' : 'password'}
+                  placeholder="Paste your API key here..."
+                  value={apiKeyInput}
+                  onChange={(e) => setApiKeyInput(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="ys-icon-btn"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  title={showApiKey ? 'Ẩn key' : 'Hiện key'}
+                >
+                  {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+                <button
+                  type="button"
+                  className="ys-icon-btn"
+                  onClick={handleSaveApiKey}
+                  title="Lưu key"
+                  style={{ backgroundColor: '#e0f2fe', color: '#0369a1' }}
+                >
+                  <CheckCircle2 size={16} />
+                </button>
+              </div>
+              <p className="ys-hint">
+                Chưa có key? <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">Lấy key tại đây</a>. Key được lưu bảo mật.
+              </p>
+            </div>
+          </div>
+        )}
+      </header>
 
-
-        <section className="summarizer-input-section">
-          <div className="summarizer-input-row">
+      {/* Main Search Section */}
+      <section className="ys-search-section">
+        <div className="ys-form">
+          <div className="ys-search-container">
             <input
-              type="text"
+              className="ys-search-input"
               placeholder="Dán link YouTube (ví dụ: https://youtu.be/abc123)"
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-              className="summarizer-input"
-              disabled={appState === 'analyzing'}
             />
             <button
-              className="summarizer-button"
+              className="ys-search-btn"
               onClick={handleAnalyze}
-              disabled={!urlInput.trim() || appState === 'analyzing'}
+              disabled={appState === 'analyzing' || !urlInput.trim()}
             >
-              {appState === 'analyzing' ? 'Đang phân tích...' : 'Phân tích video'}
+              {appState === 'analyzing' ? (
+                <div className="ys-spinner"></div>
+              ) : (
+                <>
+                  <Search size={18} />
+                  <span>Phân tích</span>
+                </>
+              )}
             </button>
           </div>
-          {(appState === 'analyzing' || appState === 'summarizing') && (
-            <div className="status-pill">
-              {appState === 'analyzing' ? 'Đang kiểm tra đường dẫn...' : 'Đang gửi yêu cầu tới Gemini...'}
-            </div>
-          )}
-          {error && <div className="error-pill">{error}</div>}
-        </section>
+          {error && <div className="ys-alert ys-alert--error" style={{ marginTop: '12px' }}><AlertTriangle size={16} /> {error}</div>}
+        </div>
+      </section>
 
+      {/* Results Section */}
+      <section className="ys-results-section">
+
+        {/* Empty State */}
+        {!metadata && appState !== 'analyzing' && (
+          <div className="ys-empty-state">
+            <div className="ys-illustration">
+              <Youtube size={64} strokeWidth={1} />
+            </div>
+            <h3>Sẵn sàng tóm tắt</h3>
+            <p>Dán link video YouTube để AI giúp bạn nắm bắt nội dung chính ngay lập tức.</p>
+            <div className="ys-suggestions">
+              <span>Thử ngay:</span>
+              {suggestionChips.map((chip, idx) => (
+                <button key={idx} onClick={() => { setUrlInput(chip.url); setTimeout(handleAnalyze, 100); }}>
+                  {chip.icon} {chip.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Content Flow */}
         {metadata && (
-          <section className="summarizer-meta-section">
+          <div className="ys-card-container">
+
+            {/* 1. Metadata Card */}
             <VideoMetadataCard metadata={metadata} onClear={handleReset} />
 
+            {/* 2. Style Selection (If not yet summarized) */}
             {appState === 'ready_to_summarize' && (
-              <div className="summarizer-style-panel">
-                <p className="summarizer-style-panel__title">Chọn kiểu tóm tắt</p>
-                <div className="summarizer-style-options">
+              <div className="ys-card">
+                <div className="ys-card-header">
+                  <h3 className="ys-card-title"><Sparkles size={18} /> Chọn phong cách tóm tắt</h3>
+                </div>
+                <div className="ys-style-grid">
                   {styleOptions.map((option) => (
-                    <button
+                    <div
                       key={option.value}
-                      type="button"
-                      className={`summarizer-style-option ${
-                        selectedStyle === option.value ? 'active' : ''
-                      }`}
+                      className={`ys-style-option ${selectedStyle === option.value ? 'active' : ''}`}
                       onClick={() => setSelectedStyle(option.value)}
                     >
-                      <strong>{option.label}</strong>
-                      <p>{option.desc}</p>
-                    </button>
+                      <span className="ys-style-title">{option.label}</span>
+                      <span className="ys-style-desc">{option.desc}</span>
+                    </div>
                   ))}
                 </div>
-                <div className="summarizer-style-actions">
-                  <button className="summarizer-button" onClick={handleSummarize}>
-                    Tóm tắt ngay
-                  </button>
-                </div>
+                <button className="ys-action-btn" onClick={handleSummarize}>
+                  <Sparkles size={18} />
+                  Tạo tóm tắt ngay
+                </button>
               </div>
             )}
 
+            {/* Loading State */}
             {appState === 'summarizing' && (
-              <div className="summarizer-status">Gemini đang tạo tóm tắt, chờ chút nhé...</div>
+              <div className="ys-card" style={{ textAlign: 'center', padding: '40px' }}>
+                <div className="ys-spinner" style={{ width: '32px', height: '32px', margin: '0 auto 16px', borderColor: '#d1d5db', borderTopColor: '#6366f1' }}></div>
+                <p style={{ color: '#4b5563', fontWeight: 500 }}>Gemini đang xem video và tổng hợp nội dung...</p>
+              </div>
             )}
-          </section>
-        )}
 
-        {summaryResult && appState === 'finished' && (
-          <section className="summarizer-result-grid" ref={summarySectionRef}>
-            <ResultSection result={summaryResult} />
-            <ChatInterface
-              videoContext={`Title: ${metadata?.title}\nSummary: ${summaryResult.shortSummary}\nKey Points: ${summaryResult.keyPoints.join(
-                '\n'
-              )}`}
-              apiKey={geminiApiKey}
-              onApiKeyError={handleApiKeyError}
-            />
-          </section>
-        )}
-      </main>
+            {/* 3. Summary Results */}
+            {summaryResult && appState === 'finished' && (
+              <div ref={summarySectionRef as any}>
+                <ResultSection result={summaryResult} />
+              </div>
+            )}
 
-      {/* Gemini API Key Panel - Fixed bottom right */}
-      <div className="gemini-key-panel">
-        <div className="gemini-key-panel__header">
-          <h4>Gemini API Key</h4>
-          {geminiApiKey && !showApiKeyInput && (
-            <div className="gemini-key-panel__actions">
-              <button
-                className="gemini-key-panel__btn gemini-key-panel__btn--edit"
-                onClick={handleEditApiKey}
-                title="Sửa"
-              >
-                ✏️
-              </button>
-              <button
-                className="gemini-key-panel__btn gemini-key-panel__btn--delete"
-                onClick={handleDeleteApiKey}
-                title="Xóa"
-              >
-                🗑️
-              </button>
-            </div>
-          )}
-        </div>
+            {/* 4. Chat Interface */}
+            {summaryResult && appState === 'finished' && (
+              <ChatInterface
+                videoContext={`Title: ${metadata.title}\nSummary: ${summaryResult.shortSummary}\nKey Points: ${summaryResult.keyPoints.join('\n')}`}
+                apiKey={geminiApiKey}
+                onApiKeyError={() => setShowSettingsPanel(true)}
+              />
+            )}
 
-        {showApiKeyInput ? (
-          <div className="gemini-key-panel__content">
-            <input
-              type="password"
-              placeholder="Nhập Gemini API Key"
-              value={apiKeyInput}
-              onChange={(e) => setApiKeyInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSaveApiKey()}
-              className="gemini-key-panel__input"
-              disabled={savingApiKey || loadingApiKey}
-            />
-            <button
-              className="gemini-key-panel__save-btn"
-              onClick={handleSaveApiKey}
-              disabled={!apiKeyInput.trim() || savingApiKey || loadingApiKey}
-            >
-              {savingApiKey ? 'Đang lưu...' : 'Lưu'}
-            </button>
-            <a
-              href="https://aistudio.google.com/apikey"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="gemini-key-panel__help-link"
-            >
-              📖 Lấy API Key tại Google AI Studio
-            </a>
-          </div>
-        ) : (
-          <div className="gemini-key-panel__content">
-            <div className="gemini-key-panel__status">
-              <span className="gemini-key-panel__status-icon">✓</span>
-              <span className="gemini-key-panel__status-text">Đã cấu hình</span>
-            </div>
-            <a
-              href="https://aistudio.google.com/apikey"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="gemini-key-panel__help-link"
-            >
-              📖 Hướng dẫn lấy API Key
-            </a>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 };
 
 export default YoutubeSummarizerPage;
-

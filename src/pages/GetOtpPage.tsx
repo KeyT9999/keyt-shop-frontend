@@ -2,6 +2,8 @@
 import axios from 'axios';
 import { useAuthContext } from '../context/useAuthContext';
 import { Link } from 'react-router-dom';
+import { Loader2, Mail, Copy, CheckCircle, AlertCircle } from 'lucide-react';
+import chatgptIcon from '../assets/icon-chatgpt.png';
 import API_BASE_URL from '../config/api';
 
 export default function GetOtpPage() {
@@ -80,48 +82,74 @@ export default function GetOtpPage() {
       <div className="otp-page-container">
         <div className="otp-card">
           <div className="otp-header">
+            <div className="brand-icon">
+              <img src={chatgptIcon} alt="ChatGPT" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+            </div>
             <h1 className="otp-title">Get OTP ChatGPT</h1>
-            <p className="otp-subtitle">Lấy mã OTP để đăng nhập ChatGPT</p>
+            <p className="otp-subtitle">Nhập email ChatGPT để nhận mã OTP đăng nhập</p>
           </div>
 
-          <form onSubmit={handleGetOtp}>
+          <form onSubmit={handleGetOtp} className="otp-form">
             <div className="form-group">
               <label className="form-label">Email ChatGPT</label>
-              <input
-                type="email"
-                value={chatgptEmail}
-                onChange={(e) => setChatgptEmail(e.target.value)}
-                placeholder="gptkeyt....@outlook.com.vn"
-                disabled={loading}
-                className="form-input"
-              />
+              <div className="input-wrapper">
+                <Mail className="input-icon" size={20} />
+                <input
+                  type="email"
+                  value={chatgptEmail}
+                  onChange={(e) => setChatgptEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  disabled={loading}
+                  className="form-input"
+                />
+              </div>
             </div>
 
             {error && (
               <div className="error-box">
-                <p className="error-text">⚠️ {error}</p>
+                <AlertCircle size={20} className="error-icon" />
+                <p className="error-text">{error}</p>
               </div>
             )}
 
             <button
               type="submit"
-              disabled={loading || !chatgptEmail}
-              className={`btn-submit ${loading || !chatgptEmail ? 'disabled' : ''}`}
+              disabled={loading}
+              className="btn-submit"
             >
-              {loading ? '🔄 Đang lấy mã...' : '🚀 Lấy mã OTP'}
+              {loading ? (
+                <div className="btn-content">
+                  <Loader2 className="spinner" size={20} />
+                  <span>Đang xử lý...</span>
+                </div>
+              ) : (
+                <div className="btn-content">
+                  <span>🚀 Lấy mã OTP</span>
+                </div>
+              )}
             </button>
           </form>
 
           {otp && (
             <div className="otp-result">
-              <p className="otp-result-label">✅ Mã OTP của bạn:</p>
-              <div className="otp-code">{otp}</div>
+              <div className="result-header">
+                <CheckCircle size={24} className="success-icon" />
+                <p className="otp-result-label">Lấy mã thành công!</p>
+              </div>
+
+              <div className="otp-display">
+                <span className="otp-code">{otp}</span>
+                <button onClick={handleCopyOtp} className="copy-btn-icon" title="Sao chép">
+                  <Copy size={20} />
+                </button>
+              </div>
+
               {countdown > 0 && (
-                <p className="otp-countdown">⏱️ Mã có hiệu lực trong {countdown}s</p>
+                <div className="countdown-bar">
+                  <div className="progress" style={{ width: `${(countdown / 30) * 100}%` }}></div>
+                  <p className="countdown-text">Mã hết hạn sau {countdown}s</p>
+                </div>
               )}
-              <button onClick={handleCopyOtp} className="btn-copy">
-                📋 Sao chép mã OTP
-              </button>
             </div>
           )}
 
@@ -136,211 +164,305 @@ export default function GetOtpPage() {
       <style>{`
         .otp-page-container {
           min-height: 80vh;
-          background: #ffffff;
-          padding: 1rem;
+          width: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
+          padding: 2rem 1rem;
+          background-color: #f8fafc;
         }
 
         .otp-card {
           background: #ffffff;
-          padding: 2rem 1.5rem;
-          max-width: 500px;
+          padding: 2.5rem;
+          max-width: 480px;
           width: 100%;
+          border-radius: 20px;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
           text-align: center;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        /* Decorative Background Blob */
+        .otp-card::before {
+             content: '';
+             position: absolute;
+             top: -50px;
+             right: -50px;
+             width: 150px;
+             height: 150px;
+             background: linear-gradient(135deg, rgba(255, 138, 0, 0.1), rgba(255, 92, 57, 0.1));
+             border-radius: 50%;
+             z-index: 0;
         }
 
         .otp-header {
-          text-align: center;
           margin-bottom: 2rem;
+          position: relative;
+          z-index: 1;
+        }
+
+        .brand-icon {
+          width: 64px;
+          height: 64px;
+          background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+          color: #f97316;
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1.25rem;
+          box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.1);
         }
 
         .otp-title {
-          color: #1f2937;
-          font-size: clamp(1.5rem, 5vw, 2rem);
-          font-weight: 700;
-          margin-bottom: 0.5rem;
+          color: #1e293b;
+          font-size: 1.75rem;
+          font-weight: 800;
+          margin: 0 0 0.5rem;
+          letter-spacing: -0.025em;
         }
 
         .otp-subtitle {
-          color: #6b7280;
-          font-size: clamp(0.75rem, 3vw, 0.875rem);
+          color: #64748b;
+          font-size: 0.95rem;
+          margin: 0;
+        }
+
+        .otp-form {
+          position: relative;
+          z-index: 1;
+          text-align: left;
         }
 
         .form-group {
           margin-bottom: 1.5rem;
-          text-align: left;
         }
 
         .form-label {
           display: block;
           margin-bottom: 0.5rem;
-          font-size: clamp(0.75rem, 3vw, 0.875rem);
+          font-size: 0.9rem;
           font-weight: 600;
-          color: #374151;
+          color: #334155;
+        }
+
+        .input-wrapper {
+          position: relative;
+        }
+
+        .input-icon {
+          position: absolute;
+          left: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #94a3b8;
+          pointer-events: none;
+          transition: color 0.2s;
         }
 
         .form-input {
           width: 100%;
-          padding: 0.75rem 1rem;
-          border: 2px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: clamp(0.875rem, 3.5vw, 1rem);
-          transition: all 0.2s;
+          padding: 0.75rem 1rem 0.75rem 2.75rem !important; /* Force space for icon */
+          border: 2px solid #e2e8f0;
+          border-radius: 12px;
+          font-size: 1rem;
+          color: #1e293b;
+          transition: all 0.2s ease;
           outline: none;
-          box-sizing: border-box;
+          background: #f8fafc;
         }
 
         .form-input:focus {
-          border-color: #000000;
+          border-color: #f97316; /* Orange focus */
+          background: #fff;
+          box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1); /* Ring effect */
+        }
+        
+        .input-wrapper:focus-within .input-icon {
+            color: #f97316;
         }
 
         .error-box {
-          padding: 1rem;
-          background: #fee2e2;
-          border-left: 4px solid #dc2626;
-          border-radius: 6px;
+          padding: 0.75rem;
+          background: #fef2f2;
+          border: 1px solid #fee2e2;
+          border-radius: 8px;
           margin-bottom: 1.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          color: #dc2626;
+        }
+        
+        .error-icon {
+            flex-shrink: 0;
         }
 
         .error-text {
-          color: #991b1b;
-          font-size: clamp(0.75rem, 3vw, 0.875rem);
+          font-size: 0.9rem;
+          font-weight: 500;
           margin: 0;
         }
 
         .btn-submit {
           width: 100%;
           padding: 0.875rem;
-          background: #000000;
-          color: #ffffff;
+          background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+          color: white;
           border: none;
-          border-radius: 8px;
-          font-size: clamp(0.875rem, 3.5vw, 1rem);
-          font-weight: 600;
+          border-radius: 12px;
+          font-size: 1rem;
+          font-weight: 700;
           cursor: pointer;
-          transition: transform 0.2s;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3), 0 2px 4px -1px rgba(249, 115, 22, 0.15);
+          position: relative;
+          overflow: hidden;
         }
 
         .btn-submit:hover:not(.disabled) {
-          transform: translateY(-2px);
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.4), 0 4px 6px -2px rgba(249, 115, 22, 0.2);
+        }
+        
+        .btn-submit:active:not(.disabled) {
+            transform: translateY(0) scale(0.98);
         }
 
         .btn-submit.disabled {
-          background: #9ca3af;
+          background: #cbd5e1;
+          color: #94a3b8;
           cursor: not-allowed;
           box-shadow: none;
+          transform: none;
+        }
+        
+        .btn-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
-        .btn-primary {
-          display: inline-block;
-          padding: 0.75rem 2rem;
-          background: #000000;
-          color: #ffffff;
-          border-radius: 8px;
-          text-decoration: none;
-          font-weight: 600;
-          transition: transform 0.2s;
-          font-size: clamp(0.875rem, 3.5vw, 1rem);
-        }
-
+        /* Result Section */
         .otp-result {
           margin-top: 2rem;
           padding: 1.5rem;
-          background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-          border-radius: 12px;
-          border: 2px solid #10b981;
-          text-align: center;
-          animation: fadeIn 0.5s ease-in-out;
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+          border-radius: 16px;
+          animation: slideUp 0.4s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: #16a34a;
         }
 
         .otp-result-label {
-          color: #065f46;
-          font-size: clamp(0.75rem, 3vw, 0.875rem);
-          margin-bottom: 0.5rem;
           font-weight: 600;
+          margin: 0;
+        }
+
+        .otp-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 2px dashed #86efac;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
         }
 
         .otp-code {
-          font-size: clamp(2rem, 8vw, 3rem);
+          font-size: 1.75rem;
           font-weight: 700;
-          font-family: monospace;
-          color: #059669;
-          letter-spacing: 0.3rem;
-          margin-bottom: 1rem;
-          word-break: break-all;
+          font-family: 'Courier New', monospace;
+          color: #15803d;
+          letter-spacing: 4px;
+        }
+        
+        .copy-btn-icon {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn-icon:hover {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        
+        .countdown-bar {
+            text-align: center;
+        }
+        
+        .progress {
+            height: 4px;
+            background: #22c55e;
+            border-radius: 2px;
+            margin-bottom: 0.5rem;
+            transition: width 1s linear;
         }
 
-        .otp-countdown {
-          color: #047857;
-          font-size: clamp(0.75rem, 3vw, 0.875rem);
-          margin-bottom: 1rem;
-        }
-
-        .btn-copy {
-          padding: 0.75rem 1.5rem;
-          background: #ffffff;
-          color: #059669;
-          border: 2px solid #059669;
-          border-radius: 8px;
-          font-size: clamp(0.75rem, 3vw, 0.875rem);
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-          width: 100%;
-        }
-
-        .btn-copy:hover {
-          background: #059669;
-          color: #ffffff;
+        .countdown-text {
+          color: #15803d;
+          font-size: 0.85rem;
+          font-weight: 500;
+          margin: 0;
         }
 
         .back-link-container {
           margin-top: 2rem;
-          text-align: center;
         }
 
         .back-link {
-          color: #6b7280;
+          color: #64748b;
           text-decoration: none;
-          font-size: clamp(0.75rem, 3vw, 0.875rem);
+          font-size: 0.9rem;
+          font-weight: 500;
           transition: color 0.2s;
         }
 
         .back-link:hover {
-          color: #000000;
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          color: #0f172a;
+          text-decoration: underline;
         }
 
         @media (max-width: 640px) {
           .otp-card {
-            padding: 1.5rem 1rem;
+            padding: 1.5rem;
           }
-
+          .otp-title {
+            font-size: 1.5rem;
+          }
           .otp-code {
-            letter-spacing: 0.2rem;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .otp-page-container {
-            padding: 0.5rem;
-          }
-
-          .otp-card {
-            padding: 1rem 0.75rem;
+             font-size: 1.4rem; 
           }
         }
       `}</style>

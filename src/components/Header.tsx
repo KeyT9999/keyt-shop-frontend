@@ -74,7 +74,11 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 { label: 'Cách Up Font Chữ Lên Canva', href: 'https://linhhhh.my.canva.site/cachupfontchu', external: true }
             ]
         },
-        { label: 'GET OTP', href: '/get-otp', hasDropdown: false },
+
+        { label: 'GET OTP GPT', href: '/get-otp', hasDropdown: false },
+
+       
+
     ];
 
     const handleLogout = () => {

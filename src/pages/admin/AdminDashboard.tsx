@@ -11,7 +11,8 @@ import {
   CreditCard,
   Key,
   LogOut,
-  Menu
+  Menu,
+  Star
 } from 'lucide-react';
 import './AdminStyles.css';
 
@@ -22,8 +23,9 @@ import OrdersPage from './OrdersPage';
 import ChatGptAccountsPage from './ChatGptAccountsPage';
 import SubscriptionsPage from './SubscriptionsPage';
 import OtpRequestsPage from './OtpRequestsPage';
+import ReviewsPage from './ReviewsPage';
 
-type AdminTab = 'dashboard' | 'users' | 'products' | 'orders' | 'chatgpt' | 'subscriptions' | 'otp';
+type AdminTab = 'dashboard' | 'users' | 'products' | 'orders' | 'chatgpt' | 'subscriptions' | 'otp' | 'reviews';
 
 export default function AdminDashboard() {
   const { token, user, logout } = useAuthContext();
@@ -69,6 +71,8 @@ export default function AdminDashboard() {
         return <ProductsPage />;
       case 'orders':
         return <OrdersPage />;
+      case 'reviews':
+        return <ReviewsPage />;
       case 'chatgpt':
         return <ChatGptAccountsPage />;
       case 'subscriptions':
@@ -137,6 +141,7 @@ export default function AdminDashboard() {
       case 'users': return 'Quản lý Users';
       case 'products': return 'Quản lý Sản phẩm';
       case 'orders': return 'Quản lý Đơn hàng';
+      case 'reviews': return 'Quản lý Đánh giá';
       case 'chatgpt': return 'ChatGPT Accounts';
       case 'subscriptions': return 'Subscriptions';
       case 'otp': return 'OTP Requests';
@@ -188,6 +193,14 @@ export default function AdminDashboard() {
           >
             <ShoppingBag size={20} />
             <span>Đơn hàng</span>
+          </button>
+
+          <button
+            className={`admin-nav-item ${activeTab === 'reviews' ? 'active' : ''}`}
+            onClick={() => setActiveTab('reviews')}
+          >
+            <Star size={20} />
+            <span>Đánh giá</span>
           </button>
 
           <div style={{ height: '1px', background: '#e5e7eb', margin: '8px 0' }}></div>

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { profileService } from '../../services/profileService';
 import type { Order, OrderFilters } from '../../types/profile';
 import { formatPrice } from '../../utils/formatPrice';
+import { reviewService, type ReviewableProduct } from '../../services/reviewService';
+import ReviewForm from '../ReviewForm';
 
 export default function OrdersTab() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -21,6 +23,8 @@ export default function OrdersTab() {
   });
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<{ productId: string; productName: string; productImage: string; orderId: string } | null>(null);
 
   useEffect(() => {
     loadOrders();
@@ -139,6 +143,42 @@ export default function OrdersTab() {
     const totalSteps = steps.length;
     const percentage = ((currentStep + 1) / totalSteps) * 100;
     return { step: currentStep + 1, totalSteps, percentage };
+  };
+
+  const handleReviewClick = async (order: Order) => {
+    try {
+      const data = await reviewService.canReviewOrder(order._id);
+      
+      if (!data.canReview) {
+        alert('Đơn hàng chưa hoàn thành hoặc không thể đánh giá');
+        return;
+      }
+
+      // Find first product that hasn't been reviewed
+      const unreviewedProduct = data.products.find(p => !p.hasReviewed);
+      
+      if (!unreviewedProduct) {
+        alert('Bạn đã đánh giá tất cả sản phẩm trong đơn hàng này rồi!');
+        return;
+      }
+
+      setSelectedProduct({
+        productId: unreviewedProduct.productId,
+        productName: unreviewedProduct.productName,
+        productImage: unreviewedProduct.productImage,
+        orderId: order._id
+      });
+      setShowReviewForm(true);
+    } catch (err) {
+      console.error('Error checking reviewable products:', err);
+      alert('Có lỗi xảy ra. Vui lòng thử lại.');
+    }
+  };
+
+  const handleReviewSuccess = () => {
+    setShowReviewForm(false);
+    setSelectedProduct(null);
+    loadOrders(); // Reload orders to update review status
   };
 
   const renderTimeline = (order: Order) => {
@@ -512,13 +552,34 @@ export default function OrdersTab() {
                   <div className="order-card__total">
                     <strong>Tổng tiền: {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}</strong>
                   </div>
-                  <Link
-                    to={`/orders/${order._id}`}
-                    className="profile-button secondary"
-                    style={{ textDecoration: 'none', display: 'inline-block' }}
-                  >
-                    Xem chi tiết
-                  </Link>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    {order.orderStatus === 'completed' && (
+                      <button
+                        type="button"
+                        onClick={() => handleReviewClick(order)}
+                        className="profile-button primary"
+                        style={{
+                          background: '#fbbf24',
+                          color: '#1f2937',
+                          border: 'none',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem',
+                          fontWeight: 600
+                        }}
+                      >
+                        ⭐ Đánh giá
+                      </button>
+                    )}
+                    <Link
+                      to={`/orders/${order._id}`}
+                      className="profile-button secondary"
+                      style={{ textDecoration: 'none', display: 'inline-block' }}
+                    >
+                      Xem chi tiết
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
@@ -563,6 +624,21 @@ export default function OrdersTab() {
             </div>
           )}
         </>
+      )}
+
+      {/* Review Form Modal */}
+      {showReviewForm && selectedProduct && (
+        <ReviewForm
+          productId={selectedProduct.productId}
+          productName={selectedProduct.productName}
+          productImage={selectedProduct.productImage}
+          orderId={selectedProduct.orderId}
+          onClose={() => {
+            setShowReviewForm(false);
+            setSelectedProduct(null);
+          }}
+          onSuccess={handleReviewSuccess}
+        />
       )}
     </div>
   );

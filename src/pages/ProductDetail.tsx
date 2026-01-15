@@ -5,6 +5,7 @@ import type { Product } from '../types/product';
 import { formatPrice } from '../utils/formatPrice';
 import { useCartContext } from '../context/useCartContext';
 import { useAuthContext } from '../context/useAuthContext';
+import { reviewService, type Review, type ReviewStats } from '../services/reviewService';
 import './ProductDetail.css';
 import API_BASE_URL from '../config/api';
 
@@ -16,6 +17,9 @@ export default function ProductDetail() {
   const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const { addItem } = useCartContext();
   const { user } = useAuthContext();
   const navigate = useNavigate();
@@ -56,6 +60,37 @@ export default function ProductDetail() {
 
     fetchProduct();
   }, [id]);
+
+  // Load reviews when switching to reviews tab
+  useEffect(() => {
+    if (activeTab === 'reviews' && id && !reviewsLoading && reviews.length === 0) {
+      loadReviews();
+    }
+  }, [activeTab, id]);
+
+  const loadReviews = async () => {
+    if (!id) return;
+    
+    try {
+      setReviewsLoading(true);
+      const data = await reviewService.getProductReviews(id, 1, 10);
+      setReviews(data.reviews);
+      setReviewStats(data.stats);
+    } catch (err) {
+      console.error('Error loading reviews:', err);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   if (loading) {
   return (
@@ -162,13 +197,6 @@ export default function ProductDetail() {
             <div className="stars">★★★★★</div>
             <span className="stats-text">561 Reviews | Đã bán: 5750 | Khiếu nại: 0.0%</span>
           </div>
-
-          {/* Usage Info */}
-          {product.description && (
-            <div className="usage-info">
-              <p>{product.description}</p>
-            </div>
-          )}
 
           {/* Seller Info */}
           <div className="seller-info">
@@ -329,8 +357,89 @@ export default function ProductDetail() {
 
           {activeTab === 'reviews' && (
             <div className="tab-panel">
-              <h2 className="panel-title">Reviews</h2>
-              <p>Chức năng reviews đang được phát triển...</p>
+              <h2 className="panel-title">Đánh giá sản phẩm</h2>
+              
+              {reviewStats && (
+                <div className="review-summary">
+                  <div className="rating-overview">
+                    <div className="average-rating">
+                      <span className="rating-number">{reviewStats.averageRating.toFixed(1)}</span>
+                      <div className="stars">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span key={star} className={star <= Math.round(reviewStats.averageRating) ? 'star filled' : 'star'}>
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                      <span className="total-reviews">{reviewStats.totalReviews} đánh giá</span>
+                    </div>
+                    
+                    <div className="rating-breakdown">
+                      {[5, 4, 3, 2, 1].map((star) => {
+                        const count = reviewStats[`rating${star}` as keyof ReviewStats] as number;
+                        const percentage = reviewStats.totalReviews > 0 ? (count / reviewStats.totalReviews) * 100 : 0;
+                        return (
+                          <div key={star} className="rating-bar-item">
+                            <span className="star-label">{star} ★</span>
+                            <div className="bar-container">
+                              <div className="bar-fill" style={{ width: `${percentage}%` }}></div>
+                            </div>
+                            <span className="count">{count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {reviewsLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem' }}>
+                  <p>Đang tải đánh giá...</p>
+                </div>
+              ) : reviews.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                  <p>Chưa có đánh giá nào cho sản phẩm này.</p>
+                  <p>Hãy là người đầu tiên đánh giá!</p>
+                </div>
+              ) : (
+                <div className="reviews-list">
+                  {reviews.map((review) => (
+                    <div key={review._id} className="review-item">
+                      <div className="review-header">
+                        <div className="reviewer-info">
+                          <div className="reviewer-avatar">
+                            {review.userId.username.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="reviewer-name">{review.userId.username}</div>
+                            <div className="review-date">{formatDate(review.createdAt)}</div>
+                          </div>
+                        </div>
+                        <div className="review-rating">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span key={star} className={star <= review.rating ? 'star filled' : 'star'}>
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="review-content">
+                        <p>{review.comment}</p>
+                      </div>
+                      {review.reply && (
+                        <div className="review-reply">
+                          <div className="reply-header">
+                            <strong>Phản hồi từ người bán</strong>
+                            <span>{formatDate(review.reply.repliedAt)}</span>
+                          </div>
+                          <p>{review.reply.content}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
         </div>
       )}
         </div>

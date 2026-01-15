@@ -128,7 +128,7 @@ body {
 }
 
 .nav-item {
-  position: relative;
+  /* position: relative; removed to allow mega-menu to center relative to header */
 }
 
 .nav-link {
@@ -187,7 +187,10 @@ body {
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  width: 900px;
+  width: 100%;
+  /* Use full available width */
+  max-width: 1400px;
+  /* Constrain to container width */
   background: var(--white);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   padding: 2rem;

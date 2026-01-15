@@ -2,7 +2,8 @@ export interface Banner {
     _id: string;
     title?: string;
     description?: string;
-    imageUrl: string;
+    imageUrl?: string;
+    youtubeUrl?: string;
     link?: string;
     position: 'hero' | 'flash_sale' | 'promo' | 'footer';
     order: number;

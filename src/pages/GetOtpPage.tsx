@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 import { useAuthContext } from '../context/useAuthContext';
 import { Link } from 'react-router-dom';
@@ -320,6 +320,9 @@ export default function GetOtpPage() {
           box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3), 0 2px 4px -1px rgba(249, 115, 22, 0.15);
           position: relative;
           overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .btn-submit:hover:not(.disabled) {
@@ -344,6 +347,7 @@ export default function GetOtpPage() {
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            width: 100%;
         }
         
         .spinner {

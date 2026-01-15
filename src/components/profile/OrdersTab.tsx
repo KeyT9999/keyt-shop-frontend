@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { profileService } from '../../services/profileService';
 import type { Order, OrderFilters } from '../../types/profile';
 import { formatPrice } from '../../utils/formatPrice';
-import { reviewService, type ReviewableProduct } from '../../services/reviewService';
+import { reviewService } from '../../services/reviewService';
 import ReviewForm from '../ReviewForm';
 
 export default function OrdersTab() {

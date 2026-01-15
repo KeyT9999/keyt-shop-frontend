@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useAuthContext } from '../../context/useAuthContext';
 import { reviewService, type Review } from '../../services/reviewService';
 import { Star, Trash2, MessageSquare, Search } from 'lucide-react';
 
 export default function ReviewsPage() {
-  const { token } = useAuthContext();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

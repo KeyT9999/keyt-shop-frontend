@@ -700,10 +700,15 @@
 }
 
 /* Responsive */
+/* Responsive Design */
 @media (max-width: 968px) {
+  .product-detail-page {
+    padding: 1rem;
+  }
+
   .product-detail-container {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
   }
 
   .product-image-section {
@@ -717,6 +722,266 @@
 
   .rating-bar-item {
     grid-template-columns: 2.5rem 1fr 2.5rem;
+  }
+
+  /* Product tabs */
+  .product-tabs {
+    margin-top: 2rem;
+  }
+
+  .tabs-nav {
+    gap: 0.5rem;
+  }
+
+  .tab-btn {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Mobile Optimization */
+@media (max-width: 768px) {
+  .product-detail-page {
+    padding: 0.5rem;
+  }
+
+  /* Image Section */
+  .product-image-wrapper {
+    height: 300px;
+  }
+
+  .image-nav-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1.5rem;
+  }
+
+  .image-counter {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .image-thumbnails {
+    gap: 0.5rem;
+  }
+
+  .thumbnail {
+    width: 60px;
+    height: 60px;
+  }
+
+  /* Product Info */
+  .product-label {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.75rem;
+  }
+
+  .product-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .product-stats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .stars {
+    font-size: 1rem;
+  }
+
+  .stats-text {
+    font-size: 0.75rem;
+  }
+
+  /* Seller & Meta */
+  .seller-info,
+  .product-meta {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .seller-name,
+  .meta-value {
+    font-size: 0.9rem;
+  }
+
+  /* Price */
+  .product-price {
+    font-size: 2rem;
+    margin: 1rem 0;
+  }
+
+  /* Subscription Options */
+  .subscription-section {
+    padding: 1rem;
+  }
+
+  .section-title {
+    font-size: 0.85rem;
+  }
+
+  .subscription-options {
+    gap: 0.5rem;
+  }
+
+  .subscription-btn {
+    font-size: 0.85rem;
+    padding: 0.65rem 1rem;
+  }
+
+  /* Action Buttons */
+  .action-section {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .buy-btn {
+    font-size: 0.95rem;
+    padding: 0.85rem 1.5rem;
+  }
+
+  .login-message {
+    font-size: 0.9rem;
+  }
+
+  /* Tabs */
+  .product-tabs {
+    margin-top: 1.5rem;
+  }
+
+  .tabs-nav {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+
+  .tab-btn {
+    flex: 1;
+    font-size: 0.85rem;
+    padding: 0.65rem 0.75rem;
+  }
+
+  .tabs-content {
+    padding: 1rem;
+  }
+
+  .panel-title {
+    font-size: 1.25rem;
+  }
+
+  .section-heading {
+    font-size: 1.1rem;
+  }
+
+  .content-list li {
+    font-size: 0.9rem;
+    padding-left: 0.5rem;
+  }
+
+  /* Reviews */
+  .review-summary {
+    padding: 1rem;
+  }
+
+  .rating-number {
+    font-size: 2.5rem;
+  }
+
+  .average-rating .star {
+    font-size: 1.25rem;
+  }
+
+  .review-item {
+    padding: 1rem;
+  }
+
+  .reviewer-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .reviewer-name {
+    font-size: 0.9rem;
+  }
+
+  .review-rating .star {
+    font-size: 1rem;
+  }
+
+  .review-content p {
+    font-size: 0.9rem;
+  }
+
+  .review-reply {
+    padding: 0.75rem;
+  }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 480px) {
+  .product-detail-page {
+    padding: 0.25rem;
+  }
+
+  /* Image */
+  .product-image-wrapper {
+    height: 250px;
+  }
+
+  /* Title */
+  .product-title {
+    font-size: 1.25rem;
+  }
+
+  /* Price */
+  .product-price {
+    font-size: 1.75rem;
+  }
+
+  /* Buttons */
+  .buy-btn {
+    font-size: 0.9rem;
+    padding: 0.75rem 1.25rem;
+  }
+
+  .subscription-btn {
+    font-size: 0.8rem;
+    padding: 0.6rem 0.85rem;
+  }
+
+  /* Tabs */
+  .tab-btn {
+    font-size: 0.8rem;
+    padding: 0.6rem;
+  }
+
+  .tabs-content {
+    padding: 0.75rem;
+  }
+
+  .panel-title {
+    font-size: 1.1rem;
+  }
+
+  /* Reviews mobile */
+  .rating-number {
+    font-size: 2rem;
+  }
+
+  .review-item {
+    padding: 0.75rem;
+  }
+
+  .reviewer-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+
+  .review-content p {
+    font-size: 0.85rem;
   }
 }
 

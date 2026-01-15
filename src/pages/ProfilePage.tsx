@@ -6,10 +6,10 @@ import PersonalInfoTab from '../components/profile/PersonalInfoTab';
 import SecurityTab from '../components/profile/SecurityTab';
 import OrdersTab from '../components/profile/OrdersTab';
 import ActivityTab from '../components/profile/ActivityTab';
-import SettingsTab from '../components/profile/SettingsTab';
+
 import './ProfilePage.css';
 
-type TabType = 'personal' | 'security' | 'orders' | 'activity' | 'settings';
+type TabType = 'personal' | 'security' | 'orders' | 'activity';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>('personal');
@@ -69,14 +69,18 @@ export default function ProfilePage() {
     { id: 'personal' as TabType, label: 'Thông tin cá nhân', icon: '👤' },
     { id: 'security' as TabType, label: 'Bảo mật', icon: '🔒' },
     { id: 'orders' as TabType, label: 'Đơn hàng', icon: '📦' },
-    { id: 'activity' as TabType, label: 'Hoạt động', icon: '📊' },
-    { id: 'settings' as TabType, label: 'Cài đặt', icon: '⚙️' }
+    { id: 'activity' as TabType, label: 'Hoạt động', icon: '📊' }
   ];
 
   return (
     <div className="profile-page">
+      <div className="profile-page-header">
+        <p className="profile-eyebrow">MY ACCOUNT</p>
+        <h1 className="profile-title">Profile Settings</h1>
+      </div>
+
       <ProfileHeader profile={profile} onUpdate={handleProfileUpdate} />
-      
+
       <div className="profile-tabs">
         <div className="profile-tabs__nav">
           {tabs.map((tab) => (
@@ -104,9 +108,7 @@ export default function ProfilePage() {
           {activeTab === 'activity' && (
             <ActivityTab />
           )}
-          {activeTab === 'settings' && (
-            <SettingsTab profile={profile} onUpdate={handleProfileUpdate} />
-          )}
+
         </div>
       </div>
     </div>

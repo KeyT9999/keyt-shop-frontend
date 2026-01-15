@@ -55,94 +55,98 @@ export default function ProductList({ searchQuery = '', showHero = true }: Produ
   return (
     <>
       {showHero && (
-        <>
-          <section className="hero-section">
-            <div className="hero-banner">
-              <div className="hero-eyebrow">Ưu đãi nổi bật</div>
-              <h1>Kho dịch vụ số đa dạng, giá tốt mỗi ngày</h1>
-              <p>Netflix, Google One, Canva, Spotify, ChatGPT Plus và nhiều hơn nữa.</p>
-              <div className="hero-actions">
-                <button type="button" className="primary" onClick={() => navigate('/products')}>Khám phá ngay</button>
-                <button type="button" className="ghost" onClick={() => navigate('/products')}>Xem gói khuyến mãi</button>
-              </div>
-            </div>
-            <div className="hero-grid">
-              {heroCards.map((card) => (
-                <button
-                  key={card.title}
-                  type="button"
-                  className={`hero-card tone-${card.tone}`}
-                  onClick={() => navigate('/products')}
-                >
-                  <div className="hero-card__icon">{card.emoji}</div>
-                  <div>
-                    <p className="hero-card__title">{card.title}</p>
-                    <p className="hero-card__desc">{card.desc}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="quick-nav">
-            {quickCategories.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                className="pill"
-                onClick={() => navigate('/products')}
-              >
-                <span className="pill__icon">{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </section>
-
-          <div className="section-heading section-heading--center">
-            <div>
-              <p className="section-eyebrow">Best Seller</p>
-              <h2>Sản phẩm bán chạy</h2>
-              <p className="section-sub">Cập nhật liên tục các gói hot, nhiều ưu đãi.</p>
+        <section className="hero-section">
+          <div className="hero-banner">
+            <div className="hero-eyebrow">Ưu đãi nổi bật</div>
+            <h1>Kho dịch vụ số đa dạng, giá tốt mỗi ngày</h1>
+            <p>Netflix, Google One, Canva, Spotify, ChatGPT Plus và nhiều hơn nữa.</p>
+            <div className="hero-actions">
+              <button type="button" className="primary" onClick={() => navigate('/products')}>Khám phá ngay</button>
+              <button type="button" className="ghost" onClick={() => navigate('/products')}>Xem gói khuyến mãi</button>
             </div>
           </div>
-        </>
+          <div className="hero-grid">
+            {heroCards.map((card) => (
+              <button
+                key={card.title}
+                type="button"
+                className={`hero-card tone-${card.tone}`}
+                onClick={() => navigate('/products')}
+              >
+                <div className="hero-card__icon">{card.emoji}</div>
+                <div>
+                  <p className="hero-card__title">{card.title}</p>
+                  <p className="hero-card__desc">{card.desc}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
-      {loading && (
-        <div className="loading">
-          <div className="spinner"></div>
-          <p>Đang tải sản phẩm...</p>
-        </div>
-      )}
+      <div className="container">
+        {showHero && (
+          <>
+            <section className="quick-nav">
+              {quickCategories.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  className="pill"
+                  onClick={() => navigate('/products')}
+                >
+                  <span className="pill__icon">{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </section>
 
-      {error && (
-        <div className="error-box">
-          <p>⚠️ {error}</p>
-        </div>
-      )}
+            <div className="section-heading section-heading--center">
+              <div>
+                <p className="section-eyebrow">Best Seller</p>
+                <h2>Sản phẩm bán chạy</h2>
+                <p className="section-sub">Cập nhật liên tục các gói hot, nhiều ưu đãi.</p>
+              </div>
+            </div>
+          </>
+        )}
 
-      {!loading && !error && products.length === 0 && (
-        <div className="empty-state">
-          <p>📦 Chưa có sản phẩm nào</p>
-        </div>
-      )}
+        {loading && (
+          <div className="loading">
+            <div className="spinner"></div>
+            <p>Đang tải sản phẩm...</p>
+          </div>
+        )}
 
-      {!loading && !error && products.length > 0 && (
-        <div className="products-grid">
-          {products
-            .filter((product) => {
-              const q = searchQuery.trim().toLowerCase();
-              if (!q) return true;
-              return (
-                product.name.toLowerCase().includes(q) ||
-                (product.category && product.category.toLowerCase().includes(q))
-              );
-            })
-            .map((product) => (
-            <ProductCard key={product._id} product={product} />
-          ))}
-        </div>
-      )}
+        {error && (
+          <div className="error-box">
+            <p>⚠️ {error}</p>
+          </div>
+        )}
+
+        {!loading && !error && products.length === 0 && (
+          <div className="empty-state">
+            <p>📦 Chưa có sản phẩm nào</p>
+          </div>
+        )}
+
+        {!loading && !error && products.length > 0 && (
+          <div className="products-grid">
+            {products
+              .filter((product) => {
+                const q = searchQuery.trim().toLowerCase();
+                if (!q) return true;
+                return (
+                  product.name.toLowerCase().includes(q) ||
+                  (product.category && product.category.toLowerCase().includes(q))
+                );
+              })
+              .map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+          </div>
+        )}
+      </div>
     </>
   );
 }

@@ -38,14 +38,14 @@ export default function ProfileHeader({ profile, onUpdate }: ProfileHeaderProps)
     try {
       setUploading(true);
       const uploadResult = await uploadService.uploadAvatar(file, token);
-      
+
       // Update profile with new avatar URL
       const result = await profileService.updateProfile({ avatar: uploadResult.imageUrl });
-      
+
       if (onUpdate) {
         onUpdate(result.user);
       }
-      
+
       // Reload page to reflect changes
       window.location.reload();
     } catch (err: any) {
@@ -57,15 +57,15 @@ export default function ProfileHeader({ profile, onUpdate }: ProfileHeaderProps)
 
   return (
     <div className="profile-header">
-      <div 
-        className="profile-header__avatar" 
+      <div
+        className="profile-header__avatar"
         style={{ position: 'relative', cursor: uploading ? 'wait' : 'pointer' }}
         onClick={handleAvatarClick}
       >
-        <img 
-          src={avatarUrl} 
+        <img
+          src={avatarUrl}
           alt={displayName}
-          style={{ 
+          style={{
             opacity: uploading ? 0.6 : 1,
             transition: 'opacity 0.2s'
           }}
@@ -109,6 +109,12 @@ export default function ProfileHeader({ profile, onUpdate }: ProfileHeaderProps)
           }}
         >
           ✏️
+          <style>{`
+            .avatar-edit-btn {
+               border: 3px solid white;
+               box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+          `}</style>
         </div>
         <input
           ref={fileInputRef}
@@ -122,9 +128,11 @@ export default function ProfileHeader({ profile, onUpdate }: ProfileHeaderProps)
         <h1 className="profile-header__name">{displayName}</h1>
         <p className="profile-header__email">{profile.email}</p>
         <div className="profile-header__meta">
-          <span className="profile-header__badge">
-            {profile.loginType === 'login-google' ? '🔗 Google' : '📧 Email'}
-          </span>
+          {profile.loginType === 'login-google' && (
+            <span className="profile-header__badge">
+              🔗 Google
+            </span>
+          )}
           {profile.admin && (
             <span className="profile-header__badge admin">👑 Admin</span>
           )}

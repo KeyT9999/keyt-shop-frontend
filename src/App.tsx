@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import './App.css';
 import ProductList from './pages/ProductList';
 import HomePage from './pages/HomePage';
@@ -38,8 +38,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 export default function App() {
     const { user } = useAuthContext();
     const [searchQuery, setSearchQuery] = useState('');
-    const location = useLocation();
-    const isHomePage = location.pathname === '/';
+
+
 
     // Debug: Log user admin status
     useEffect(() => {
@@ -49,7 +49,7 @@ export default function App() {
         }
     }, [user]);
 
-    const isEvidencePage = location.pathname === '/evidence';
+
 
     return (
         <div className="app">
@@ -57,7 +57,7 @@ export default function App() {
 
             <Header onSearch={setSearchQuery} searchValue={searchQuery} />
 
-            <main className={(isHomePage || isEvidencePage) ? "main-content-full" : "main-content"}>
+            <main className="main-content-full">
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/products" element={<ProductList searchQuery={searchQuery} showHero={false} />} />

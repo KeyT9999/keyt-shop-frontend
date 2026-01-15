@@ -11,16 +11,13 @@ import { profileService } from '../services/profileService';
 import {
   Settings,
   Key,
-  Trash2,
   Eye,
   EyeOff,
   Search,
   AlertTriangle,
   Youtube,
   Sparkles,
-  FileSearch,
-  CheckCircle2,
-  ArrowRight
+  CheckCircle2
 } from 'lucide-react';
 import './YoutubeSummarizerPage.css';
 import { saveGeminiApiKey as saveToLocal, getGeminiApiKey as getFromLocal, clearGeminiApiKey as clearLocal } from '../utils/geminiApiKey';

@@ -63,7 +63,22 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
         },
         { label: 'SUMMARIZER', href: '/summarizer', hasDropdown: false },
         { label: 'EVIDENCE', href: '/evidence', hasDropdown: false },
-        { label: 'GET OTP', href: '/get-otp', hasDropdown: false },
+        {
+            label: 'TIP FREE',
+            href: '#',
+            hasDropdown: true,
+            simpleDropdown: [
+                { label: 'Khóa Học Capcut Quạ HD', href: 'https://drive.google.com/drive/folders/1qBVyGif2u7qChuQIvQmt51MwxGsuLojp?usp=drive_link', external: true },
+                { label: 'Khóa Học Canva', href: 'https://drive.google.com/drive/folders/1clQOT7Zf99HjXOuqKZMZtLp_WNkGL5zq?usp=drive_link', external: true },
+                { label: 'Cách Tạo AI GPT Hiểu Bạn Nhất Trên Đời', href: 'https://www.canva.com/design/DAGw3EKPBqg/Jdv5m9tA62BK5U93ijCfKw/view?utm_content=DAGw3EKPBqg&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hec974d0021', external: true },
+                { label: 'Cách Up Font Chữ Lên Canva', href: 'https://linhhhh.my.canva.site/cachupfontchu', external: true }
+            ]
+        },
+
+        { label: 'GET OTP GPT', href: '/get-otp', hasDropdown: false },
+
+       
+
     ];
 
     const handleLogout = () => {
@@ -109,20 +124,41 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
                                     {/* Mega Menu / Dropdown */}
                                     {item.hasDropdown && activeDropdown === item.label && (
-                                        <div className="mega-menu">
-                                            {item.megaMenu?.map((section, idx) => (
-                                                <div key={idx} className="mega-menu-column">
-                                                    <h4>{section.title}</h4>
+                                        <>
+                                            {item.megaMenu && (
+                                                <div className="mega-menu">
+                                                    {item.megaMenu.map((section, idx) => (
+                                                        <div key={idx} className="mega-menu-column">
+                                                            <h4>{section.title}</h4>
+                                                            <ul>
+                                                                {section.items.map((subItem, sIdx) => (
+                                                                    <li key={sIdx}>
+                                                                        <Link to="#">{subItem}</Link>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {item.simpleDropdown && (
+                                                <div className="simple-dropdown">
                                                     <ul>
-                                                        {section.items.map((subItem, sIdx) => (
+                                                        {item.simpleDropdown.map((subItem, sIdx) => (
                                                             <li key={sIdx}>
-                                                                <Link to="#">{subItem}</Link>
+                                                                <a 
+                                                                    href={subItem.href} 
+                                                                    target="_blank" 
+                                                                    rel="noopener noreferrer"
+                                                                >
+                                                                    {subItem.label}
+                                                                </a>
                                                             </li>
                                                         ))}
                                                     </ul>
                                                 </div>
-                                            ))}
-                                        </div>
+                                            )}
+                                        </>
                                     )}
                                 </li>
                             ))}
@@ -213,10 +249,56 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
                 <nav className="mobile-nav">
                     {navItems.map(item => (
-                        <div key={item.label} className="mobile-nav-item">
-                            <Link to={item.href} onClick={() => setIsMobileMenuOpen(false)}>
-                                {item.label}
-                            </Link>
+                        <div key={item.label}>
+                            {!item.hasDropdown ? (
+                                <Link 
+                                    to={item.href} 
+                                    className="mobile-nav-item" 
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    {item.label}
+                                </Link>
+                            ) : item.simpleDropdown ? (
+                                <div>
+                                    <button 
+                                        className="mobile-nav-item mobile-nav-dropdown-btn"
+                                        onClick={() => setActiveDropdown(activeDropdown === item.label ? null : item.label)}
+                                    >
+                                        <span>{item.label}</span>
+                                        <ChevronDown 
+                                            size={16} 
+                                            style={{ 
+                                                transform: activeDropdown === item.label ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                transition: 'transform 0.2s'
+                                            }} 
+                                        />
+                                    </button>
+                                    {activeDropdown === item.label && (
+                                        <div className="mobile-dropdown-submenu">
+                                            {item.simpleDropdown.map((subItem, sIdx) => (
+                                                <a 
+                                                    key={sIdx}
+                                                    href={subItem.href} 
+                                                    className="mobile-dropdown-item"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                >
+                                                    {subItem.label}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <Link 
+                                    to={item.href} 
+                                    className="mobile-nav-item" 
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    {item.label}
+                                </Link>
+                            )}
                         </div>
                     ))}
                     <div className="mobile-nav-divider"></div>

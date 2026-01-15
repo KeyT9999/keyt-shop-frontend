@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuthContext } from '../../context/useAuthContext';
 import type { Banner, BannerFormData } from '../../types/banner';
 import { getAllBannersAdmin, createBanner, updateBanner, deleteBanner, uploadBannerImage } from '../../api/bannerApi';
-import { Plus, Edit, Trash2, X, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Upload, Image as ImageIcon, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import './AdminStyles.css';
+import './AdminBannerPage.css';
 
 export default function AdminBannerPage() {
     const { token } = useAuthContext();
@@ -13,6 +14,7 @@ export default function AdminBannerPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [dragActive, setDragActive] = useState(false);
 
     const [formData, setFormData] = useState<BannerFormData>({
         title: '',
@@ -87,6 +89,38 @@ export default function AdminBannerPage() {
         }
     };
 
+    const handleDrag = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setDragActive(true);
+        } else if (e.type === "dragleave") {
+            setDragActive(false);
+        }
+    };
+
+    const handleDrop = async (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            const file = e.dataTransfer.files[0];
+            if (!token) return;
+
+            try {
+                setUploading(true);
+                const imageUrl = await uploadBannerImage(file, token);
+                setFormData(prev => ({ ...prev, imageUrl }));
+            } catch (error) {
+                console.error('Failed to upload image', error);
+                alert('Failed to upload image');
+            } finally {
+                setUploading(false);
+            }
+        }
+    };
+
     const openEditModal = (banner: Banner) => {
         setEditingBanner(banner);
         setFormData({
@@ -113,124 +147,184 @@ export default function AdminBannerPage() {
         });
     };
 
+    const getPositionColor = (position: string) => {
+        switch (position) {
+            case 'hero': return 'blue';
+            case 'flash_sale': return 'red';
+            case 'promo': return 'purple';
+            case 'footer': return 'gray';
+            default: return 'gray';
+        }
+    };
+
+    const getPositionLabel = (position: string) => {
+        switch (position) {
+            case 'hero': return 'Hero Slider';
+            case 'flash_sale': return 'Flash Sale';
+            case 'promo': return 'Promo Banner';
+            case 'footer': return 'Footer';
+            default: return position;
+        }
+    };
+
     return (
-        <div className="admin-page container">
-            <div className="admin-header">
-                <h2>Manage Banners</h2>
-                <button
-                    className="btn btn-primary"
-                    onClick={() => {
-                        setEditingBanner(null);
-                        resetForm();
-                        setIsModalOpen(true);
-                    }}
-                >
-                    <Plus size={18} /> Add Banner
-                </button>
+        <div className="banner-page">
+            <div className="banner-header">
+                <div className="banner-header-content">
+                    <div>
+                        <h1 className="banner-title">Banner Management</h1>
+                        <p className="banner-subtitle">Manage your website banners and promotional content</p>
+                    </div>
+                    <button
+                        className="btn-add-banner"
+                        onClick={() => {
+                            setEditingBanner(null);
+                            resetForm();
+                            setIsModalOpen(true);
+                        }}
+                    >
+                        <Plus size={20} />
+                        <span>Add New Banner</span>
+                    </button>
+                </div>
             </div>
 
-            {loading ? (
-                <div className="loading">Loading...</div>
-            ) : (
-                <div className="table-responsive">
-                    <table className="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Image</th>
-                                <th>Title</th>
-                                <th>Position</th>
-                                <th>Order</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {banners.map((banner) => (
-                                <tr key={banner._id}>
-                                    <td>
-                                        <img
-                                            src={banner.imageUrl}
-                                            alt={banner.title}
-                                            style={{ height: '50px', objectFit: 'cover', borderRadius: '4px' }}
-                                        />
-                                    </td>
-                                    <td>{banner.title || '-'}</td>
-                                    <td>
-                                        <span className={`badge badge-${banner.position}`}>{banner.position}</span>
-                                    </td>
-                                    <td>{banner.order}</td>
-                                    <td>
-                                        <span className={`status-badge ${banner.isActive ? 'active' : 'inactive'}`}>
-                                            {banner.isActive ? 'Active' : 'Hidden'}
+            <div className="banner-content">
+                {loading ? (
+                    <div className="banner-loading">
+                        <div className="spinner"></div>
+                        <p>Loading banners...</p>
+                    </div>
+                ) : banners.length === 0 ? (
+                    <div className="banner-empty">
+                        <ImageIcon size={64} strokeWidth={1} />
+                        <h3>No banners yet</h3>
+                        <p>Start by creating your first banner</p>
+                        <button className="btn-add-banner" onClick={() => setIsModalOpen(true)}>
+                            <Plus size={20} />
+                            Add Banner
+                        </button>
+                    </div>
+                ) : (
+                    <div className="banner-grid">
+                        {banners.map((banner) => (
+                            <div key={banner._id} className="banner-card">
+                                <div className="banner-card-image">
+                                    <img src={banner.imageUrl} alt={banner.title || 'Banner'} />
+                                    <div className="banner-card-overlay">
+                                        <button 
+                                            className="banner-action-btn edit"
+                                            onClick={() => openEditModal(banner)}
+                                            title="Edit"
+                                        >
+                                            <Edit size={18} />
+                                        </button>
+                                        <button 
+                                            className="banner-action-btn delete"
+                                            onClick={() => handleDelete(banner._id)}
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                    <div className="banner-card-status">
+                                        {banner.isActive ? (
+                                            <span className="status-badge active">
+                                                <Eye size={14} />
+                                                Active
+                                            </span>
+                                        ) : (
+                                            <span className="status-badge inactive">
+                                                <EyeOff size={14} />
+                                                Hidden
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="banner-card-content">
+                                    <div className="banner-card-header">
+                                        <h3 className="banner-card-title">
+                                            {banner.title || 'Untitled Banner'}
+                                        </h3>
+                                        <span className={`position-badge ${getPositionColor(banner.position)}`}>
+                                            {getPositionLabel(banner.position)}
                                         </span>
-                                    </td>
-                                    <td>
-                                        <div className="action-buttons">
-                                            <button className="btn-icon" onClick={() => openEditModal(banner)}>
-                                                <Edit size={18} />
-                                            </button>
-                                            <button className="btn-icon delete" onClick={() => handleDelete(banner._id)}>
-                                                <Trash2 size={18} />
-                                            </button>
+                                    </div>
+                                    {banner.description && (
+                                        <p className="banner-card-description">{banner.description}</p>
+                                    )}
+                                    <div className="banner-card-footer">
+                                        <div className="banner-card-meta">
+                                            <span className="banner-order">Order: {banner.order}</span>
                                         </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                                        {banner.link && (
+                                            <a 
+                                                href={banner.link} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="banner-link"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <ExternalLink size={14} />
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
 
             {isModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h3>{editingBanner ? 'Edit Banner' : 'Add New Banner'}</h3>
-                            <button className="close-btn" onClick={() => setIsModalOpen(false)}>
+                <div className="modal-overlay-custom" onClick={() => setIsModalOpen(false)}>
+                    <div className="modal-content-custom" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header-custom">
+                            <div>
+                                <h2>{editingBanner ? 'Edit Banner' : 'Create New Banner'}</h2>
+                                <p>Fill in the banner details below</p>
+                            </div>
+                            <button className="modal-close-btn" onClick={() => setIsModalOpen(false)}>
                                 <X size={24} />
                             </button>
                         </div>
-                        <form onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label>Banner Image *</label>
-                                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+
+                        <form onSubmit={handleSubmit} className="banner-form">
+                            <div className="form-section">
+                                <label className="form-label">Banner Image *</label>
+                                <div 
+                                    className={`image-upload-area ${dragActive ? 'drag-active' : ''} ${formData.imageUrl ? 'has-image' : ''}`}
+                                    onDragEnter={handleDrag}
+                                    onDragLeave={handleDrag}
+                                    onDragOver={handleDrag}
+                                    onDrop={handleDrop}
+                                >
                                     {formData.imageUrl ? (
-                                        <div style={{ position: 'relative', width: '150px', height: '100px' }}>
-                                            <img
-                                                src={formData.imageUrl}
-                                                alt="Preview"
-                                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }}
-                                            />
+                                        <div className="image-preview">
+                                            <img src={formData.imageUrl} alt="Preview" />
                                             <button
                                                 type="button"
+                                                className="remove-image-btn"
                                                 onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
-                                                style={{
-                                                    position: 'absolute', top: -8, right: -8,
-                                                    background: 'red', color: 'white',
-                                                    border: 'none', borderRadius: '50%',
-                                                    width: '24px', height: '24px', cursor: 'pointer',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                                }}
                                             >
-                                                <X size={14} />
+                                                <X size={16} />
                                             </button>
                                         </div>
                                     ) : (
-                                        <div
+                                        <div 
+                                            className="upload-placeholder"
                                             onClick={() => fileInputRef.current?.click()}
-                                            style={{
-                                                width: '150px', height: '100px',
-                                                border: '2px dashed #ccc', borderRadius: '6px',
-                                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                                cursor: 'pointer', background: '#f9fafb'
-                                            }}
                                         >
                                             {uploading ? (
-                                                <span style={{ fontSize: '0.8rem' }}>Uploading...</span>
+                                                <>
+                                                    <div className="spinner-small"></div>
+                                                    <span>Uploading...</span>
+                                                </>
                                             ) : (
                                                 <>
-                                                    <Upload size={24} color="#6b7280" />
-                                                    <span style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '0.5rem' }}>Upload Image</span>
+                                                    <Upload size={40} />
+                                                    <h4>Drop your image here, or click to browse</h4>
+                                                    <p>Supports: JPG, PNG, GIF (Max 5MB)</p>
                                                 </>
                                             )}
                                         </div>
@@ -242,50 +336,58 @@ export default function AdminBannerPage() {
                                         accept="image/*"
                                         style={{ display: 'none' }}
                                     />
-                                    <div style={{ flex: 1 }}>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.imageUrl}
-                                            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                                            placeholder="or paste image URL"
-                                            style={{ width: '100%' }}
-                                        />
-                                    </div>
                                 </div>
+                                <div className="form-divider">
+                                    <span>OR</span>
+                                </div>
+                                <input
+                                    type="url"
+                                    className="form-input"
+                                    required
+                                    value={formData.imageUrl}
+                                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                                    placeholder="Paste image URL here"
+                                />
                             </div>
 
-                            <div className="form-group">
-                                <label>Title</label>
+                            <div className="form-section">
+                                <label className="form-label">Banner Title</label>
                                 <input
                                     type="text"
+                                    className="form-input"
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                    placeholder="Enter banner title"
                                 />
                             </div>
 
-                            <div className="form-group">
-                                <label>Description</label>
+                            <div className="form-section">
+                                <label className="form-label">Description</label>
                                 <textarea
+                                    className="form-textarea"
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    placeholder="Enter banner description"
+                                    rows={3}
                                 />
                             </div>
 
-                            <div className="form-group">
-                                <label>Link URL</label>
+                            <div className="form-section">
+                                <label className="form-label">Link URL</label>
                                 <input
                                     type="text"
+                                    className="form-input"
                                     value={formData.link}
                                     onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                                    placeholder="/products/xyz"
+                                    placeholder="/products or https://example.com"
                                 />
                             </div>
 
                             <div className="form-row">
-                                <div className="form-group">
-                                    <label>Position</label>
+                                <div className="form-section">
+                                    <label className="form-label">Position</label>
                                     <select
+                                        className="form-select"
                                         value={formData.position}
                                         onChange={(e) => setFormData({ ...formData, position: e.target.value as any })}
                                     >
@@ -296,32 +398,42 @@ export default function AdminBannerPage() {
                                     </select>
                                 </div>
 
-                                <div className="form-group">
-                                    <label>Order</label>
+                                <div className="form-section">
+                                    <label className="form-label">Display Order</label>
                                     <input
                                         type="number"
+                                        className="form-input"
                                         value={formData.order}
                                         onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
+                                        min="0"
                                     />
                                 </div>
                             </div>
 
-                            <div className="form-group checkbox">
-                                <label>
+                            <div className="form-section">
+                                <label className="form-checkbox">
                                     <input
                                         type="checkbox"
                                         checked={formData.isActive}
                                         onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                                     />
-                                    Active
+                                    <span>Make this banner active</span>
                                 </label>
                             </div>
 
-                            <div className="modal-actions">
-                                <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>
+                            <div className="modal-footer-custom">
+                                <button 
+                                    type="button" 
+                                    className="btn-secondary-custom" 
+                                    onClick={() => setIsModalOpen(false)}
+                                >
                                     Cancel
                                 </button>
-                                <button type="submit" className="btn btn-primary" disabled={uploading}>
+                                <button 
+                                    type="submit" 
+                                    className="btn-primary-custom" 
+                                    disabled={uploading || !formData.imageUrl}
+                                >
                                     {editingBanner ? 'Save Changes' : 'Create Banner'}
                                 </button>
                             </div>

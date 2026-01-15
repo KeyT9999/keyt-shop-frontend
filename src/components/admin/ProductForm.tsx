@@ -28,7 +28,7 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
     name: product?.name || '',
     price: product?.price || 0,
     currency: product?.currency || 'VND',
-    billingCycle: product?.billingCycle || 'tháng',
+    billingCycle: product?.billingCycle || '1 tháng',
     category: product?.category || '',
     stock: product?.stock || 0,
     status: product?.status || 'in_stock',
@@ -318,8 +318,18 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                 fontSize: '1rem'
               }}
             >
-              <option value="tháng">Tháng</option>
-              <option value="năm">Năm</option>
+              <option value="1 tháng">1 tháng</option>
+              <option value="2 tháng">2 tháng</option>
+              <option value="3 tháng">3 tháng</option>
+              <option value="4 tháng">4 tháng</option>
+              <option value="5 tháng">5 tháng</option>
+              <option value="6 tháng">6 tháng</option>
+              <option value="7 tháng">7 tháng</option>
+              <option value="8 tháng">8 tháng</option>
+              <option value="9 tháng">9 tháng</option>
+              <option value="10 tháng">10 tháng</option>
+              <option value="11 tháng">11 tháng</option>
+              <option value="1 năm">1 năm</option>
             </select>
           </div>
 

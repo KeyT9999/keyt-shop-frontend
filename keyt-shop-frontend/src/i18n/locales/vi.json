@@ -1,0 +1,86 @@
+{
+    "header": {
+        "home": "Trang Chủ",
+        "shop": "Cửa Hàng",
+        "summarizer": "Tóm Tắt YT",
+        "evidence": "Check Uy Tín",
+        "get_otp": "Thuê OTP",
+        "search_placeholder": "Tìm kiếm sản phẩm...",
+        "login": "Đăng Nhập",
+        "register": "Đăng Ký",
+        "logout": "Đăng Xuất",
+        "profile": "Hồ Sơ",
+        "orders": "Đơn Hàng",
+        "hi": "Chào",
+        "menu": "Danh Mục"
+    },
+    "home": {
+        "hero": {
+            "title": "Nâng Tầm <br/> Cuộc Sống Số",
+            "desc": "Sở hữu key phần mềm, tài khoản premium và tài sản số với giá tốt nhất. Cam kết giao hàng tức thì.",
+            "shop_now": "Mua Ngay",
+            "view_collection": "Xem Bộ Sưu Tập",
+            "instant_delivery": "Giao Hàng Tức Thì",
+            "secure_payment": "Bảo Mật 100%"
+        },
+        "categories": {
+            "title": "Danh Mục Sản Phẩm",
+            "view_all": "Xem Tất Cả"
+        },
+        "featured": {
+            "eyebrow": "Dành Riêng Cho Bạn",
+            "title": "Sản Phẩm Nổi Bật"
+        },
+        "flash_sale": {
+            "badge": "Ưu Đãi Có Hạn",
+            "title": "Flash Sale: Giảm 50%<br/>Gói Năm",
+            "shop_btn": "Săn Deal Ngay",
+            "days": "Ngày",
+            "hours": "Giờ",
+            "mins": "Phút",
+            "secs": "Giây"
+        },
+        "best_sellers": {
+            "title": "Bán Chạy Nhất"
+        },
+        "trust": {
+            "instant_delivery": {
+                "title": "Giao Hàng Tức Thì",
+                "desc": "Nhận mã ngay qua email sau khi thanh toán."
+            },
+            "secure_payment": {
+                "title": "Thanh Toán An Toàn",
+                "desc": "Sử dụng mã hóa cao cấp để bảo vệ dữ liệu của bạn."
+            },
+            "support": {
+                "title": "Hỗ Trợ 24/7",
+                "desc": "Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ bạn mọi lúc."
+            },
+            "quality": {
+                "title": "Cam Kết Chất Lượng",
+                "desc": "Key chính hãng 100% hoặc hoàn tiền nếu lỗi."
+            }
+        },
+        "new_arrivals": {
+            "title": "Sản Phẩm Mới"
+        },
+        "reviews": {
+            "title": "Khách Hàng Nói Gì"
+        },
+        "blog": {
+            "title": "Tin Tức Mới Nhất",
+            "read_more": "Đọc Thêm"
+        },
+        "newsletter": {
+            "title": "Bạn mới đến KeyTShop?",
+            "desc": "Đăng ký nhận tin để nhận mã giảm giá 10%.",
+            "placeholder": "Địa chỉ email của bạn",
+            "btn": "Đăng Ký"
+        }
+    },
+    "product": {
+        "add_to_cart": "Thêm Giỏ Hàng",
+        "out_of_stock": "Hết Hàng",
+        "hot": "HOT"
+    }
+}

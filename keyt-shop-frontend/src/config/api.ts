@@ -1,0 +1,7 @@
+// API Base URL configuration
+// In production, this will be set via VITE_API_BASE_URL environment variable
+// In development, it defaults to localhost
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
+export default API_BASE_URL;
+

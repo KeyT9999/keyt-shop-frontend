@@ -1,0 +1,22 @@
+# Cursor
+.cursor/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Dependencies (handled by subproject .gitignore files)
+node_modules/
+
+# Build outputs
+dist/
+build/

@@ -10,7 +10,7 @@ import API_BASE_URL from '../config/api';
 import { CreditCard, User, CheckCircle2 } from 'lucide-react';
 
 export default function CheckoutPage() {
-  const { cart, totalAmount, clearCart, updateCartItem, updateQuantity } = useCartContext();
+  const { cart, totalAmount, clearCart, updateCartItem } = useCartContext();
   const { user, token } = useAuthContext();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState({ 

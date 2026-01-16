@@ -4,6 +4,7 @@ import axios from 'axios';
 import type { Product } from '../types/product';
 import { formatPrice } from '../utils/formatPrice';
 import { useCartContext } from '../context/useCartContext';
+import { useAddToCartAnimation } from '../context/AddToCartAnimationContext';
 import { reviewService, type Review, type ReviewStats } from '../services/reviewService';
 import './ProductDetail.css';
 import API_BASE_URL from '../config/api';
@@ -24,6 +25,7 @@ export default function ProductDetail() {
   const [reviewsLoading, setReviewsLoading] = useState(false);
 
   const { addItem } = useCartContext();
+  const { triggerAnimation } = useAddToCartAnimation();
   const navigate = useNavigate();
 
   const isOutOfStock = useMemo(() => {
@@ -127,7 +129,26 @@ export default function ProductDetail() {
     ? `${product.name} - ${product.options[selectedOptionIndex].name}`
     : product.name;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    // Get button position for animation
+    let startX = window.innerWidth / 2;
+    let startY = window.innerHeight / 2;
+    
+    if (e?.currentTarget) {
+      const buttonRect = e.currentTarget.getBoundingClientRect();
+      startX = buttonRect.left + buttonRect.width / 2;
+      startY = buttonRect.top + buttonRect.height / 2;
+    }
+    
+    // Trigger animation
+    triggerAnimation({
+      id: `product-${product._id}-${Date.now()}`,
+      startX,
+      startY,
+      productImage: product.imageUrl || (product.images && product.images.length > 0 ? product.images[0] : undefined),
+    });
+    
+    // Add to cart
     if (selectedOptionIndex !== null && product.options && product.options[selectedOptionIndex]) {
       const selectedOption = product.options[selectedOptionIndex];
       const productWithOption: Product = {
@@ -141,10 +162,6 @@ export default function ProductDetail() {
     }
   };
 
-  const handleBuyNow = () => {
-    handleAddToCart();
-    navigate('/checkout');
-  };
 
   const displayImage = (product.images && product.images.length > 0) ? product.images[0] : (product.imageUrl || 'https://design.duolingo.com/images/brand/duo-happy.svg');
 
@@ -252,14 +269,17 @@ export default function ProductDetail() {
             {/* Action Buttons */}
             <div className="flex gap-4 pt-6">
               <button
-                onClick={() => addItem(product)}
+                onClick={(e) => handleAddToCart(e)}
                 className="p-4 rounded-xl border-2 border-slate-200 bg-white text-slate-400 hover:border-[#F05A28] hover:text-[#F05A28] hover:bg-orange-50 transition-all flex items-center justify-center min-w-[64px]"
                 disabled={isOutOfStock}
               >
                 <i className="fas fa-cart-plus text-xl"></i>
               </button>
               <button
-                onClick={handleBuyNow}
+                onClick={(e) => {
+                  handleAddToCart(e);
+                  navigate('/checkout');
+                }}
                 disabled={isOutOfStock}
                 className="flex-1 bg-gradient-to-r from-[#F05A28] to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-bold py-4 px-8 rounded-xl shadow-[0_10px_30px_rgba(240,90,40,0.3)] hover:shadow-[0_15px_35px_rgba(240,90,40,0.4)] transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg tracking-wide"
               >

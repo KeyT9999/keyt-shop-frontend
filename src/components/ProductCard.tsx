@@ -4,6 +4,7 @@ import type { Product } from '../types/product';
 import { formatPrice } from '../utils/formatPrice';
 import { useCartContext } from '../context/useCartContext';
 import { useWishlistContext } from '../context/useWishlistContext';
+import { useAddToCartAnimation } from '../context/AddToCartAnimationContext';
 
 interface ProductCardProps {
   product: Product;
@@ -12,7 +13,25 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCartContext();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistContext();
+  const { triggerAnimation } = useAddToCartAnimation();
   const isOutOfStock = product.status === 'out_of_stock' || product.status === 'discontinued' || (product.stock !== undefined && product.stock <= 0);
+
+  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (isOutOfStock) return;
+    
+    const buttonRect = e.currentTarget.getBoundingClientRect();
+    const startX = buttonRect.left + buttonRect.width / 2;
+    const startY = buttonRect.top + buttonRect.height / 2;
+    
+    triggerAnimation({
+      id: `product-${product._id}-${Date.now()}`,
+      startX,
+      startY,
+      productImage: product.imageUrl,
+    });
+    
+    addItem(product);
+  };
 
   return (
     <article className="group relative flex flex-col h-full bg-white border border-slate-200 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-brand-orange/30">
@@ -98,7 +117,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
               : 'bg-brand-navy text-white hover:bg-brand-orange'
               }`}
-            onClick={() => !isOutOfStock && addItem(product)}
+            onClick={handleAddToCart}
             disabled={isOutOfStock}
           >
             <ShoppingCart size={16} />

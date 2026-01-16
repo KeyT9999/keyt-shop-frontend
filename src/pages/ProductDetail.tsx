@@ -226,7 +226,7 @@ export default function ProductDetail() {
     showNotification(`Đã thêm ${currentName} vào giỏ hàng`, 'success');
   };
 
-  const handleBuyNow = (e?: React.MouseEvent<HTMLButtonElement>) => {
+  const handleBuyNow = (_e?: React.MouseEvent<HTMLButtonElement>) => {
     // Clear existing cart first
     clearCart();
     

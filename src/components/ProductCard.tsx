@@ -42,7 +42,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     showNotification(`Đã thêm ${product.name} vào giỏ hàng`, 'success');
   };
 
-  const handleBuyNow = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleBuyNow = (_e: React.MouseEvent<HTMLButtonElement>) => {
     if (isOutOfStock) return;
     
     // Clear existing cart first

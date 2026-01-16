@@ -39,11 +39,6 @@ const styleOptions = [
   },
 ];
 
-const suggestionChips = [
-  { label: 'Tóm tắt TED Talk', icon: '🎤', url: 'https://www.youtube.com/watch?v=R1vskiVDwl4' },
-  { label: 'Review iPhone 16', icon: '📱', url: 'https://www.youtube.com/watch?v=GHhD4rO5C9I' },
-  { label: 'Học ReactJS', icon: '⚛️', url: 'https://www.youtube.com/watch?v=SqcY0GlETPk' },
-];
 
 const YoutubeSummarizerPage: React.FC = () => {
   const { user } = useAuthContext();
@@ -304,24 +299,6 @@ const YoutubeSummarizerPage: React.FC = () => {
       {/* Results Section */}
       <section className="ys-results-section">
 
-        {/* Empty State */}
-        {!metadata && appState !== 'analyzing' && (
-          <div className="ys-empty-state">
-            <div className="ys-illustration">
-              <Youtube size={64} strokeWidth={1} />
-            </div>
-            <h3>Sẵn sàng tóm tắt</h3>
-            <p>Dán link video YouTube để AI giúp bạn nắm bắt nội dung chính ngay lập tức.</p>
-            <div className="ys-suggestions">
-              <span>Thử ngay:</span>
-              {suggestionChips.map((chip, idx) => (
-                <button key={idx} onClick={() => { setUrlInput(chip.url); setTimeout(handleAnalyze, 100); }}>
-                  {chip.icon} {chip.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Content Flow */}
         {metadata && (

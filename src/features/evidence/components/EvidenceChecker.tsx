@@ -263,33 +263,35 @@ export default function EvidenceChecker() {
         {/* Input Form */}
         <div className="ec-input-section">
           <label className="ec-input-label">Nhập thông tin cần kiểm tra</label>
-          <div className="ec-input-wrapper">
-            <textarea
-              id="query"
-              className="ec-textarea-input"
-              placeholder="Ví dụ: AI đã thay đổi cách con người làm việc trong thập kỷ qua"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              rows={1}
-              required
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e as any);
-                }
-              }}
-            />
-            <button type="submit" className="ec-check-btn" disabled={loading}>
-              {loading ? (
-                <div className="ec-spinner"></div>
-              ) : (
-                <>
-                  <Search size={18} />
-                  <span>Kiểm tra</span>
-                </>
-              )}
-            </button>
-          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="ec-input-wrapper">
+              <textarea
+                id="query"
+                className="ec-textarea-input"
+                placeholder="Ví dụ: AI đã thay đổi cách con người làm việc trong thập kỷ qua"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                rows={1}
+                required
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e as any);
+                  }
+                }}
+              />
+              <button type="submit" className="ec-check-btn" disabled={loading}>
+                {loading ? (
+                  <div className="ec-spinner"></div>
+                ) : (
+                  <>
+                    <Search size={18} />
+                    <span>Kiểm tra</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
           <p className="ec-input-hint">
             Nhập bất kỳ thông tin, tin tức hoặc tuyên bố nào bạn muốn xác minh
           </p>
@@ -309,50 +311,6 @@ export default function EvidenceChecker() {
             <div className="results-header">
               <div className="results-title">
                 <h2>Kết quả phân tích <span className="count-badge">{evidence.length}</span></h2>
-              </div>
-
-              <div className="filter-bar">
-                <div className="filter-group">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as any)}
-                    className="filter-select"
-                  >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="verified">Verified</option>
-                    <option value="trusted">Trusted</option>
-                    <option value="unverified">Unverified</option>
-                    <option value="unknown">Unknown</option>
-                  </select>
-
-                  <div className="search-filter">
-                    <Search size={14} className="search-icon" />
-                    <input
-                      type="text"
-                      placeholder="Lọc kết quả..."
-                      value={textFilter}
-                      onChange={(e) => setTextFilter(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="sort-toggle">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={sortByScore}
-                      onChange={(e) => setSortByScore(e.target.checked)}
-                    />
-                    <span>Ưu tiên nguồn uy tín</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="stats-row">
-                {statusCounts.verified > 0 && <span className="stat-tag success">Verified: {statusCounts.verified}</span>}
-                {statusCounts.trusted > 0 && <span className="stat-tag info">Trusted: {statusCounts.trusted}</span>}
-                {statusCounts.unverified > 0 && <span className="stat-tag warning">Unverified: {statusCounts.unverified}</span>}
-                {statusCounts.unknown > 0 && <span className="stat-tag neutral">Unknown: {statusCounts.unknown}</span>}
               </div>
             </div>
 
@@ -417,22 +375,7 @@ export default function EvidenceChecker() {
               })}
             </div>
           </>
-        ) : (
-          !loading && (
-            <div className="empty-state">
-              <div className="illustration">
-                <FileSearch size={64} strokeWidth={1} />
-              </div>
-              <h3>Sẵn sàng tìm kiếm</h3>
-              <p>Nhập nhận định y khoa của bạn để AI đối chiếu với hàng triệu tài liệu khoa học.</p>
-              <div className="suggestions">
-                <span>Gợi ý:</span>
-                <button type="button" onClick={() => setQuery("Vitamin D liều cao có giảm nguy cơ cúm không?")}>Vitamin D & Cúm</button>
-                <button type="button" onClick={() => setQuery("Intermittent Fasting ảnh hưởng thế nào đến cơ bắp?")}>IF & Cơ bắp</button>
-              </div>
-            </div>
-          )
-        )}
+        ) : null}
       </section>
     </div>
   );

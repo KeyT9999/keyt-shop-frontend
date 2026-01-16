@@ -13,7 +13,6 @@ import {
   Key,
   Eye,
   EyeOff,
-  Search,
   AlertTriangle,
   Youtube,
   Sparkles,

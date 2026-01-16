@@ -135,7 +135,7 @@ export default function InvoiceView() {
             </h3>
             <div style={{ fontSize: '0.875rem', color: '#374151', lineHeight: '1.75' }}>
               <p style={{ margin: 0, fontWeight: 600 }}>Tiệm Tạp Hóa KeyT</p>
-              <p style={{ margin: 0 }}>Email: support@keytshop.com</p>
+              <p style={{ margin: 0 }}>Email: trankimthang0207@gmail.com</p>
               <p style={{ margin: 0 }}>Website: keytshop.com</p>
             </div>
           </div>

@@ -7,18 +7,22 @@ import { formatPrice } from '../utils/formatPrice';
 import { profileService } from '../services/profileService';
 import type { Product } from '../types/product';
 import API_BASE_URL from '../config/api';
+import { CreditCard, User, CheckCircle2 } from 'lucide-react';
 
 export default function CheckoutPage() {
   const { cart, totalAmount, clearCart, updateCartItem, updateQuantity } = useCartContext();
   const { user, token } = useAuthContext();
   const navigate = useNavigate();
-  const [customer, setCustomer] = useState({ name: '', email: '', phone: '' });
+  const [customer, setCustomer] = useState({ 
+    name: '', 
+    email: '', 
+    phone: ''
+  });
   const [note, setNote] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  
   // State để lưu dữ liệu requiredFields cho mỗi sản phẩm
-  // Format: { productId: { fieldLabel: value } }
-  // Khởi tạo với data từ cart nếu có
   const [requiredFieldsData, setRequiredFieldsData] = useState<Record<string, Record<string, string>>>(() => {
     const initialData: Record<string, Record<string, string>> = {};
     cart.forEach(item => {
@@ -88,7 +92,6 @@ export default function CheckoutPage() {
     }
   };
 
-
   const handleChange = (field: keyof typeof customer, value: string) => {
     setCustomer((prev) => ({ ...prev, [field]: value }));
   };
@@ -118,12 +121,11 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Validate requiredFields - lấy từ cart hoặc state
+    // Validate requiredFields
     for (const item of cart) {
       if (item.requiredFields && item.requiredFields.length > 0) {
         for (const field of item.requiredFields) {
           if (field.required) {
-            // Kiểm tra cả data từ cart và state checkout
             const value = item.requiredFieldsData?.[field.label] || requiredFieldsData[item._id]?.[field.label];
             if (!value?.trim()) {
               setStatus('error');
@@ -148,14 +150,14 @@ export default function CheckoutPage() {
           quantity: item.quantity
         };
 
-        // Thêm requiredFieldsData nếu có - ưu tiên data từ cart
+        // Thêm requiredFieldsData nếu có
         if (item.requiredFields && item.requiredFields.length > 0) {
           itemData.requiredFieldsData = item.requiredFields
             .map(field => ({
               label: field.label,
               value: item.requiredFieldsData?.[field.label] || requiredFieldsData[item._id]?.[field.label] || ''
             }))
-            .filter(field => field.value.trim()); // Chỉ lưu field có giá trị
+            .filter(field => field.value.trim());
         }
 
         return itemData;
@@ -196,307 +198,302 @@ export default function CheckoutPage() {
 
   if (!user) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h2>Bạn cần đăng nhập</h2>
-        <p>Đăng nhập để tiếp tục đặt đơn hàng.</p>
-        <Link to="/login" style={{ display: 'inline-block', marginTop: '1rem', padding: '0.75rem 2rem', background: '#2563eb', color: 'white', borderRadius: '6px', textDecoration: 'none' }}>
-          Đăng nhập ngay
-        </Link>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Bạn cần đăng nhập</h2>
+          <p className="text-gray-600 mb-6">Đăng nhập để tiếp tục đặt đơn hàng.</p>
+          <Link 
+            to="/login" 
+            className="inline-block px-6 py-3 bg-[#F05A28] text-white rounded-lg hover:bg-orange-600 transition"
+          >
+            Đăng nhập ngay
+          </Link>
+        </div>
       </div>
     );
   }
 
   if (cart.length === 0) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h2>Giỏ hàng trống</h2>
-        <p>Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán.</p>
-        <Link to="/products" style={{ display: 'inline-block', marginTop: '1rem', padding: '0.75rem 2rem', background: '#2563eb', color: 'white', borderRadius: '6px', textDecoration: 'none' }}>
-          Xem sản phẩm
-        </Link>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Giỏ hàng trống</h2>
+          <p className="text-gray-600 mb-6">Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán.</p>
+          <Link 
+            to="/products" 
+            className="inline-block px-6 py-3 bg-[#F05A28] text-white rounded-lg hover:bg-orange-600 transition"
+          >
+            Xem sản phẩm
+          </Link>
+        </div>
       </div>
     );
   }
 
-  // Debug: Log cart items để kiểm tra requiredFields
-  useEffect(() => {
-    console.log('🛒 Cart items:', cart);
-    cart.forEach(item => {
-      console.log(`Product ${item.name}:`, {
-        hasRequiredFields: !!item.requiredFields,
-        requiredFields: item.requiredFields
-      });
-    });
-  }, [cart]);
+  // Calculate subtotal and total
+  const subtotal = totalAmount;
+  const shippingFee = 0; // Free shipping
+  const finalTotal = subtotal + shippingFee;
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem', background: '#f5f5f5', minHeight: '100vh' }}>
-      <div style={{ marginTop: '2rem' }}>
-          {/* Order Summary */}
-          <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1.5rem', marginBottom: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
-              Đơn hàng của bạn ({cart.length} sản phẩm)
-            </h2>
-            <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '1rem' }}>
-              {cart.map((item) => (
-                <div key={item._id} style={{ padding: '0.75rem 0', borderBottom: '1px solid #f3f4f6' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>{item.name}</div>
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
-                        {formatPrice(item.price, item.currency)}
-                      </div>
-                      {/* Debug info */}
-                      {item.requiredFields && item.requiredFields.length > 0 && (
-                        <div style={{ fontSize: '0.75rem', color: '#059669', marginTop: '0.25rem' }}>
-                          ⚠️ Cần thông tin bổ sung
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ fontWeight: 600, color: '#1f2937', fontSize: '1.125rem' }}>
-                      {formatPrice(item.price * item.quantity, item.currency)}
-                    </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Back to Cart Link */}
+        <Link 
+          to="/cart" 
+          className="inline-flex items-center text-gray-600 hover:text-[#F05A28] mb-6 transition"
+        >
+          <span className="mr-2">←</span>
+          <span>Quay lại giỏ hàng</span>
+        </Link>
+
+        {/* Page Title */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Thanh toán</h1>
+          <p className="text-gray-600">Hoàn tất đơn hàng của bạn</p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Customer Info, Shipping, Payment */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Customer Information Card */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                    <User className="w-5 h-5 text-[#F05A28]" />
                   </div>
-                  {/* Quantity Control */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    <span style={{ fontSize: '0.875rem', color: '#6b7280', marginRight: '0.25rem' }}>Số lượng:</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <button
-                        onClick={() => updateQuantity(item._id, Math.max(1, item.quantity - 1))}
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '4px',
-                          border: '1px solid #d1d5db',
-                          background: '#f3f4f6',
-                          color: '#1f2937',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1.125rem',
-                          transition: 'background 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        value={item.quantity}
-                        min={1}
-                        onChange={(e) => updateQuantity(item._id, Math.max(1, Number(e.target.value) || 1))}
-                        style={{
-                          width: '60px',
-                          textAlign: 'center',
-                          borderRadius: '4px',
-                          border: '1px solid #d1d5db',
-                          padding: '0.25rem',
-                          fontSize: '0.875rem',
-                          fontWeight: 500
-                        }}
-                      />
-                      <button
-                        onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '4px',
-                          border: '1px solid #d1d5db',
-                          background: '#f3f4f6',
-                          color: '#1f2937',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1.125rem',
-                          transition: 'background 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
-                      >
-                        +
-                      </button>
-                    </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">Thông tin khách hàng</h2>
+                    <p className="text-sm text-gray-500">Điền thông tin giao hàng</p>
                   </div>
                 </div>
-              ))}
-            </div>
-            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '2px solid #e5e5e5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1f2937' }}>Tổng tiền</span>
-              <strong style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2563eb' }}>
-                {formatPrice(totalAmount, 'VNĐ')}
-              </strong>
-            </div>
-          </div>
 
-          {/* Payment Information Form */}
-          <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
-              Thông tin thanh toán
-            </h2>
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#374151' }}>
-                  Tên <span style={{ color: 'red' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={customer.name}
-                  onChange={(event) => handleChange('name', event.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    fontSize: '1rem'
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#374151' }}>
-                  Số điện thoại <span style={{ color: 'red' }}>*</span>
-                </label>
-                <input
-                  type="tel"
-                  value={customer.phone}
-                  onChange={(event) => handleChange('phone', event.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    fontSize: '1rem'
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#374151' }}>
-                  Email <span style={{ color: 'red' }}>*</span>
-                </label>
-                <input
-                  type="email"
-                  value={customer.email}
-                  onChange={(event) => handleChange('email', event.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    fontSize: '1rem'
-                  }}
-                />
-              </div>
-
-              {/* Required Fields cho từng sản phẩm - CHỈ HIỂN THỊ NẾU CHƯA NHẬP Ở CART */}
-              {cart.map((item) => {
-                // Bỏ qua nếu không có requiredFields
-                if (!item.requiredFields || item.requiredFields.length === 0) {
-                  return null;
-                }
-
-                // Kiểm tra xem đã nhập đủ thông tin ở cart chưa
-                const hasAllRequiredData = item.requiredFields.every(field => {
-                  if (!field.required) return true;
-                  const value = item.requiredFieldsData?.[field.label] || requiredFieldsData[item._id]?.[field.label];
-                  return value && value.trim() !== '';
-                });
-
-                // Nếu đã nhập đủ ở cart, không hiển thị nữa
-                if (hasAllRequiredData) {
-                  return null;
-                }
-
-                return (
-                  <div key={item._id} style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e5e5' }}>
-                    <h3 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1rem', fontWeight: 600 }}>
-                      Thông tin bổ sung cho: {item.name}
-                    </h3>
-                    {item.requiredFields.map((field, fieldIndex) => (
-                      <div key={fieldIndex} style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#374151' }}>
-                          {field.label} {field.required && <span style={{ color: 'red' }}>*</span>}
-                        </label>
-                        <input
-                          type={field.type === 'email' ? 'email' : 'text'}
-                          value={requiredFieldsData[item._id]?.[field.label] || ''}
-                          onChange={(e) => handleRequiredFieldChange(item._id, field.label, e.target.value)}
-                          placeholder={field.placeholder || ''}
-                          required={field.required}
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            fontSize: '1rem'
-                          }}
-                        />
-                      </div>
-                    ))}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Họ và tên <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={customer.name}
+                      onChange={(e) => handleChange('name', e.target.value)}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F05A28] focus:border-transparent"
+                      placeholder="Nguyễn Văn A"
+                    />
                   </div>
-                );
-              })}
 
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#374151' }}>
-                  Ghi chú về đơn hàng
-                </label>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
-                  rows={4}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    fontSize: '1rem',
-                    resize: 'vertical',
-                    fontFamily: 'inherit'
-                  }}
-                />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={customer.email}
+                      onChange={(e) => handleChange('email', e.target.value)}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F05A28] focus:border-transparent"
+                      placeholder="email@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Số điện thoại <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={customer.phone}
+                      onChange={(e) => handleChange('phone', e.target.value)}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F05A28] focus:border-transparent"
+                      placeholder="0912345678"
+                    />
+                  </div>
+
+                  {/* Required Fields cho từng sản phẩm */}
+                  {cart.map((item) => {
+                    if (!item.requiredFields || item.requiredFields.length === 0) {
+                      return null;
+                    }
+
+                    const hasAllRequiredData = item.requiredFields.every(field => {
+                      if (!field.required) return true;
+                      const value = item.requiredFieldsData?.[field.label] || requiredFieldsData[item._id]?.[field.label];
+                      return value && value.trim() !== '';
+                    });
+
+                    if (hasAllRequiredData) {
+                      return null;
+                    }
+
+                    return (
+                      <div key={item._id} className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                          Thông tin bổ sung cho: {item.name}
+                        </h3>
+                        {item.requiredFields.map((field, fieldIndex) => (
+                          <div key={fieldIndex} className="mb-3">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              {field.label} {field.required && <span className="text-red-500">*</span>}
+                            </label>
+                            <input
+                              type={field.type === 'email' ? 'email' : 'text'}
+                              value={requiredFieldsData[item._id]?.[field.label] || ''}
+                              onChange={(e) => handleRequiredFieldChange(item._id, field.label, e.target.value)}
+                              placeholder={field.placeholder || ''}
+                              required={field.required}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F05A28] focus:border-transparent"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ghi chú đơn hàng (tùy chọn)
+                    </label>
+                    <textarea
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="Ghi chú về đơn hàng, ví dụ: thời gian giao hàng"
+                      rows={4}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F05A28] focus:border-transparent resize-none"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={status === 'submitting'}
-                style={{
-                  width: '100%',
-                  padding: '0.875rem',
-                  background: status === 'submitting' ? '#9ca3af' : '#2563eb',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: status === 'submitting' ? 'not-allowed' : 'pointer',
-                  transition: 'background 0.2s'
-                }}
-              >
-                {status === 'submitting' ? 'Đang xử lý...' : 'Thanh toán bằng chuyển khoản'}
-              </button>
+              {/* Payment Method Card */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+                    <CreditCard className="w-5 h-5 text-[#F05A28]" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">Phương thức thanh toán</h2>
+                    <p className="text-sm text-gray-500">Chọn cách thanh toán</p>
+                  </div>
+                </div>
 
-              {status === 'error' && (
-                <p style={{ marginTop: '1rem', padding: '0.75rem', background: '#fee2e2', color: '#dc2626', borderRadius: '6px', textAlign: 'center' }}>
-                  {message}
-                </p>
-              )}
-              {status === 'success' && (
-                <p style={{ marginTop: '1rem', padding: '0.75rem', background: '#d1fae5', color: '#059669', borderRadius: '6px', textAlign: 'center' }}>
-                  {message}
-                </p>
-              )}
-            </form>
+                <div className="space-y-3">
+                  <label className="flex items-center p-4 border-2 border-[#F05A28] rounded-lg cursor-pointer bg-orange-50">
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="bank_transfer"
+                      defaultChecked
+                      className="w-4 h-4 text-[#F05A28] focus:ring-[#F05A28]"
+                    />
+                    <div className="ml-4 flex-1">
+                      <div className="font-semibold text-gray-900">Chuyển khoản ngân hàng</div>
+                      <div className="text-sm text-gray-600">Chuyển khoản trực tiếp</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Order Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
+                <h2 className="text-lg font-bold text-gray-900 mb-6">Tóm tắt đơn hàng</h2>
+
+                {/* Items List */}
+                <div className="space-y-4 mb-6">
+                  {cart.map((item) => (
+                    <div key={item._id} className="flex items-start gap-3 pb-4 border-b border-gray-200">
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover rounded-lg" />
+                        ) : (
+                          <span className="text-gray-400 text-xs">IMG</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 text-sm mb-1">{item.name}</div>
+                        <div className="text-xs text-gray-500">Số lượng: {item.quantity}</div>
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        {formatPrice(item.price * item.quantity, item.currency || 'VNĐ')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Price Breakdown */}
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Tạm tính</span>
+                    <span className="text-gray-900 font-medium">{formatPrice(subtotal, 'VNĐ')}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Phí vận chuyển</span>
+                    <span className="text-green-600 font-medium">Miễn phí</span>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="border-t border-gray-200 pt-4 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-bold text-gray-900">Tổng cộng</span>
+                    <span className="text-2xl font-bold text-[#F05A28]">{formatPrice(finalTotal, 'VNĐ')}</span>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={status === 'submitting'}
+                  className="w-full bg-[#F05A28] hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {status === 'submitting' ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Đang xử lý...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-5 h-5" />
+                      <span>Đặt hàng ngay</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Guarantees */}
+                <div className="mt-6 space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    <span>Thanh toán an toàn & bảo mật</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    <span>Giao hàng tức thì sau thanh toán</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    <span>Hoàn tiền 100% nếu có lỗi</span>
+                  </div>
+                </div>
+
+                {/* Error/Success Messages */}
+                {status === 'error' && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                    {message}
+                  </div>
+                )}
+                {status === 'success' && (
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                    {message}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+        </form>
       </div>
     </div>
   );

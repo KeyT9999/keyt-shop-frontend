@@ -82,63 +82,23 @@ export default function AdminOrderDetailPage() {
     window.print();
   };
 
-  const getOrderStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return '#059669';
-      case 'processing':
-        return '#2563eb';
-      case 'confirmed':
-        return '#7c3aed';
-      case 'pending':
-        return '#d97706';
-      case 'cancelled':
-        return '#dc2626';
-      default:
-        return '#6b7280';
-    }
-  };
-
   const getOrderStatusText = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'Chờ xử lý';
-      case 'confirmed':
-        return 'Đã xác nhận';
-      case 'processing':
-        return 'Đang xử lý';
-      case 'completed':
-        return 'Hoàn thành';
-      case 'cancelled':
-        return 'Đã hủy';
-      default:
-        return status;
-    }
-  };
-
-  const getPaymentStatusColor = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return '#059669';
-      case 'pending':
-        return '#d97706';
-      case 'failed':
-        return '#dc2626';
-      default:
-        return '#6b7280';
+      case 'pending': return 'Chờ xử lý';
+      case 'confirmed': return 'Đã xác nhận';
+      case 'processing': return 'Đang xử lý';
+      case 'completed': return 'Hoàn thành';
+      case 'cancelled': return 'Đã hủy';
+      default: return status;
     }
   };
 
   const getPaymentStatusText = (status: string) => {
     switch (status) {
-      case 'paid':
-        return 'Đã thanh toán';
-      case 'pending':
-        return 'Chờ thanh toán';
-      case 'failed':
-        return 'Thanh toán thất bại';
-      default:
-        return status;
+      case 'paid': return 'Đã thanh toán';
+      case 'pending': return 'Chờ thanh toán';
+      case 'failed': return 'Thanh toán thất bại';
+      default: return status;
     }
   };
 
@@ -194,216 +154,206 @@ export default function AdminOrderDetailPage() {
             display: none !important;
           }
         }
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .action-btn:active {
+            transform: translateY(0);
+        }
+        .action-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        /* Button Variants */
+        .btn-confirm { background: #F05A28; color: white; }
+        .btn-process { background: #1E293B; color: white; }
+        .btn-complete { background: #059669; color: white; }
+        .btn-cancel { 
+            background: white; 
+            color: #EF4444; 
+            border: 1px solid #EF4444; 
+            box-shadow: none;
+        }
+        .btn-cancel:hover { background: #FEF2F2; }
       `}</style>
-      <div className="main-content print-content">
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div className="main-content print-content" style={{ background: '#F8FAFC', minHeight: '100vh', padding: '40px 20px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+
+          {/* Top Bar */}
+          <div style={{ marginBottom: '24px' }}>
+            <button
+              onClick={() => navigate('/admin/orders')}
+              className="no-print"
+              style={{
+                background: 'white',
+                border: '1px solid #E2E8F0',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                color: '#64748B',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.9rem',
+                fontWeight: 500,
+                transition: 'all 0.2s'
+              }}
+            >
+              ← Quay lại
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
             <div>
-              <button
-                onClick={() => navigate('/admin/orders')}
-                className="no-print"
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: '#ffffff',
-                  color: '#374151',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  marginBottom: '1rem',
-                  fontSize: '0.875rem'
-                }}
-              >
-                ← Quay lại
-              </button>
-              <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <h1 style={{ color: '#1f2937', margin: 0, fontSize: '2rem' }}>HÓA ĐƠN BÁN HÀNG</h1>
-                <p style={{ color: '#1f2937', fontSize: '1.5rem', fontWeight: 'bold', margin: '1rem 0 0.5rem 0' }}>
-                  Mã đơn hàng: <span style={{ color: '#2563eb' }}>#{order.orderCode || order._id.slice(-8).toUpperCase()}</span>
-                </p>
-                <p style={{ color: '#9ca3af', fontSize: '0.75rem', fontFamily: 'monospace', marginTop: '0.25rem' }}>
-                  ID: {order._id.slice(-8).toUpperCase()}
-                </p>
-                <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                  Ngày tạo: {new Date(order.createdAt).toLocaleString('vi-VN')}
-                </p>
+              <h1 style={{ color: '#1E293B', margin: '0 0 8px 0', fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.025em' }}>
+                HÓA ĐƠN BÁN HÀNG
+              </h1>
+              <div style={{ fontSize: '1.25rem', color: '#1E293B', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                Mã đơn hàng: <span style={{ color: '#F05A28' }}>#{order.orderCode || order._id.slice(-8).toUpperCase()}</span>
+              </div>
+              <div style={{ color: '#94A3B8', fontSize: '0.875rem', marginTop: '4px', fontFamily: 'monospace' }}>
+                ID: {order._id}
+              </div>
+              <div style={{ color: '#64748B', fontSize: '0.95rem', marginTop: '8px' }}>
+                Ngày tạo: {new Date(order.createdAt).toLocaleString('vi-VN')}
               </div>
             </div>
+
             <button
               onClick={handlePrintInvoice}
               className="no-print"
               style={{
-                padding: '0.75rem 1.5rem',
-                background: '#059669',
+                padding: '10px 20px',
+                background: '#1E293B',
                 color: '#ffffff',
                 border: 'none',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 cursor: 'pointer',
                 fontWeight: 600,
-                fontSize: '0.875rem'
+                fontSize: '0.95rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 6px -1px rgba(30, 41, 59, 0.2)'
               }}
             >
               🖨️ In hóa đơn
             </button>
           </div>
 
-          {/* Status Cards */}
-          <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Trạng thái đơn hàng</div>
-              <div
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  background: getOrderStatusColor(order.orderStatus),
-                  color: '#ffffff',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  display: 'inline-block'
-                }}
-              >
+          {/* Status Cards Grid */}
+          <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
+            {/* Order Status */}
+            <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <div style={{ fontSize: '0.95rem', color: '#64748B', marginBottom: '12px', fontWeight: 500 }}>Trạng thái đơn hàng</div>
+              <span className="status-badge" style={{
+                background: order.orderStatus === 'pending' ? '#FFF7ED' : order.orderStatus === 'completed' ? '#ECFDF5' : '#EFF6FF',
+                color: order.orderStatus === 'pending' ? '#C2410C' : order.orderStatus === 'completed' ? '#047857' : '#1D4ED8'
+              }}>
                 {getOrderStatusText(order.orderStatus)}
-              </div>
+              </span>
             </div>
 
-            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Trạng thái thanh toán</div>
-              <div
-                style={{
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  background: getPaymentStatusColor(order.paymentStatus),
-                  color: '#ffffff',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  display: 'inline-block'
-                }}
-              >
+            {/* Payment Status */}
+            <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <div style={{ fontSize: '0.95rem', color: '#64748B', marginBottom: '12px', fontWeight: 500 }}>Trạng thái thanh toán</div>
+              <span className="status-badge" style={{
+                background: order.paymentStatus === 'paid' ? '#ECFDF5' : '#FFF7ED',
+                color: order.paymentStatus === 'paid' ? '#047857' : '#C2410C'
+              }}>
                 {getPaymentStatusText(order.paymentStatus)}
-              </div>
+              </span>
             </div>
 
-            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>Tổng tiền</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>
+            {/* Total Amount */}
+            <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <div style={{ fontSize: '0.95rem', color: '#64748B', marginBottom: '8px', fontWeight: 500 }}>Tổng tiền</div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#F05A28', letterSpacing: '-0.025em' }}>
                 {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}
               </div>
             </div>
           </div>
 
-          {/* Timeline */}
-          {(order.confirmedAt || order.processingAt || order.completedAt) && (
-            <div className="no-print" style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '2rem' }}>
-              <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Lịch sử đơn hàng</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#059669' }}></div>
-                  <div>
-                    <div style={{ fontWeight: 600, color: '#1f2937' }}>Tạo đơn hàng</div>
-                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                      {new Date(order.createdAt).toLocaleString('vi-VN')}
-                    </div>
-                  </div>
-                </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '70% 30%', gap: '24px' }}>
 
-                {order.confirmedAt && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#7c3aed' }}></div>
-                    <div>
-                      <div style={{ fontWeight: 600, color: '#1f2937' }}>Đã xác nhận</div>
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                        {new Date(order.confirmedAt).toLocaleString('vi-VN')}
-                        {typeof order.confirmedBy === 'object' && order.confirmedBy && (
-                          <span> bởi {order.confirmedBy.username}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
+            {/* LEFT COLUMN */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
-                {order.processingAt && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#2563eb' }}></div>
-                    <div>
-                      <div style={{ fontWeight: 600, color: '#1f2937' }}>Bắt đầu xử lý</div>
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                        {new Date(order.processingAt).toLocaleString('vi-VN')}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {order.completedAt && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#059669' }}></div>
-                    <div>
-                      <div style={{ fontWeight: 600, color: '#1f2937' }}>Hoàn thành</div>
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                        {new Date(order.completedAt).toLocaleString('vi-VN')}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
-            {/* Left Column - Customer Info & Items */}
-            <div>
               {/* Customer Info */}
-              <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '1.5rem' }}>
-                <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Thông tin khách hàng</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <div>
-                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Tên</div>
-                    <div style={{ fontWeight: 600, color: '#1f2937' }}>{order.customer.name}</div>
+              <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                <h2 style={{ margin: '0 0 20px 0', color: '#1E293B', fontSize: '1.1rem', fontWeight: 700 }}>Thông tin khách hàng</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
+                    <div style={{ fontSize: '0.9rem', color: '#64748B' }}>Tên</div>
+                    <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '1rem' }}>{order.customer.name}</div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Email</div>
-                    <div style={{ fontWeight: 600, color: '#1f2937' }}>{order.customer.email}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
+                    <div style={{ fontSize: '0.9rem', color: '#64748B' }}>Email</div>
+                    <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '1rem' }}>{order.customer.email}</div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Số điện thoại</div>
-                    <div style={{ fontWeight: 600, color: '#1f2937' }}>{order.customer.phone}</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
+                    <div style={{ fontSize: '0.9rem', color: '#64748B' }}>Số điện thoại</div>
+                    <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '1rem' }}>{order.customer.phone}</div>
                   </div>
                 </div>
               </div>
 
-              {/* Items */}
-              <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5' }}>
-                <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Sản phẩm</h2>
-                <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '1rem' }}>
+              {/* Products */}
+              <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                <h2 style={{ margin: '0 0 20px 0', color: '#1E293B', fontSize: '1.1rem', fontWeight: 700 }}>Sản phẩm</h2>
+                <div style={{ borderTop: '1px solid #F1F5F9' }}>
                   {order.items.map((item, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        padding: '1rem 0',
-                        borderBottom: index < order.items.length - 1 ? '1px solid #f3f4f6' : 'none'
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: item.requiredFieldsData && item.requiredFieldsData.length > 0 ? '0.75rem' : '0' }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>
-                            {item.name}
-                          </div>
-                          <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                            Số lượng: {item.quantity} x {formatPrice(item.price, item.currency)}
+                    <div key={index} style={{ padding: '20px 0', borderBottom: index < order.items.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                        <div>
+                          <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '1rem', marginBottom: '4px' }}>{item.name}</div>
+                          <div style={{ fontSize: '0.9rem', color: '#64748B' }}>
+                            Số lượng: {item.quantity} × {formatPrice(item.price, item.currency)}
                           </div>
                         </div>
-                        <div style={{ fontWeight: 600, color: '#1f2937' }}>
+                        <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '1rem' }}>
                           {formatPrice(item.price * item.quantity, item.currency)}
                         </div>
                       </div>
-                      {/* Hiển thị requiredFieldsData nếu có */}
+
+                      {/* Additional Fields */}
                       {item.requiredFieldsData && item.requiredFieldsData.length > 0 && (
-                        <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#f0f9ff', borderRadius: '6px', borderLeft: '3px solid #2563eb' }}>
-                          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1e40af', marginBottom: '0.5rem' }}>
+                        <div style={{
+                          background: '#F1F5F9',
+                          borderRadius: '8px',
+                          padding: '16px',
+                          border: '1px solid #E2E8F0'
+                        }}>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1E293B', marginBottom: '8px' }}>
                             Thông tin bổ sung:
                           </div>
                           {item.requiredFieldsData.map((fieldData, fieldIndex) => (
-                            <div key={fieldIndex} style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '0.25rem' }}>
-                              <strong>{fieldData.label}:</strong> {fieldData.value}
+                            <div key={fieldIndex} style={{ fontSize: '0.9rem', color: '#334155', marginBottom: '4px' }}>
+                              <span style={{ fontWeight: 600 }}>{fieldData.label}:</span> {fieldData.value}
                             </div>
                           ))}
                         </div>
@@ -411,45 +361,21 @@ export default function AdminOrderDetailPage() {
                     </div>
                   ))}
                 </div>
-                <div
-                  style={{
-                    marginTop: '1rem',
-                    paddingTop: '1rem',
-                    borderTop: '2px solid #e5e5e5',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}
-                >
-                  <span style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1f2937' }}>Tổng tiền</span>
-                  <strong style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2563eb' }}>
-                    {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}
-                  </strong>
-                </div>
               </div>
             </div>
 
-            {/* Right Column - Actions & Notes */}
-            <div>
-              {/* Actions */}
-              <div className="no-print" style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '1.5rem' }}>
-                <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Thao tác</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {/* RIGHT COLUMN */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+              {/* Actions Card */}
+              <div className="no-print" style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                <h2 style={{ margin: '0 0 20px 0', color: '#1E293B', fontSize: '1.1rem', fontWeight: 700 }}>Thao tác</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {order.orderStatus === 'pending' && (
                     <button
                       onClick={() => handleAction('confirm', 'xác nhận')}
                       disabled={actionLoading !== null}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: actionLoading === 'confirm' ? '#9ca3af' : '#7c3aed',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: actionLoading === 'confirm' ? 'not-allowed' : 'pointer',
-                        fontWeight: 600,
-                        fontSize: '0.875rem'
-                      }}
+                      className="action-btn btn-confirm"
                     >
                       {actionLoading === 'confirm' ? 'Đang xử lý...' : '✓ Xác nhận đơn hàng'}
                     </button>
@@ -459,17 +385,7 @@ export default function AdminOrderDetailPage() {
                     <button
                       onClick={() => handleAction('processing', 'bắt đầu xử lý')}
                       disabled={actionLoading !== null}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: actionLoading === 'processing' ? '#9ca3af' : '#2563eb',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: actionLoading === 'processing' ? 'not-allowed' : 'pointer',
-                        fontWeight: 600,
-                        fontSize: '0.875rem'
-                      }}
+                      className="action-btn btn-process"
                     >
                       {actionLoading === 'processing' ? 'Đang xử lý...' : '⚙️ Bắt đầu xử lý'}
                     </button>
@@ -479,17 +395,7 @@ export default function AdminOrderDetailPage() {
                     <button
                       onClick={() => handleAction('complete', 'hoàn thành')}
                       disabled={actionLoading !== null}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: actionLoading === 'complete' ? '#9ca3af' : '#059669',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: actionLoading === 'complete' ? 'not-allowed' : 'pointer',
-                        fontWeight: 600,
-                        fontSize: '0.875rem'
-                      }}
+                      className="action-btn btn-complete"
                     >
                       {actionLoading === 'complete' ? 'Đang xử lý...' : '✅ Hoàn thành đơn hàng'}
                     </button>
@@ -499,49 +405,29 @@ export default function AdminOrderDetailPage() {
                     <button
                       onClick={() => handleAction('cancel', 'hủy')}
                       disabled={actionLoading !== null}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: actionLoading === 'cancel' ? '#9ca3af' : '#dc2626',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: actionLoading === 'cancel' ? 'not-allowed' : 'pointer',
-                        fontWeight: 600,
-                        fontSize: '0.875rem'
-                      }}
+                      className="action-btn btn-cancel"
                     >
-                      {actionLoading === 'cancel' ? 'Đang xử lý...' : '❌ Hủy đơn hàng'}
+                      {actionLoading === 'cancel' ? 'Đang xử lý...' : '✕ Hủy đơn hàng'}
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* Customer Note */}
-              {order.note && (
-                <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '1.5rem', pageBreakInside: 'avoid' }}>
-                  <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Ghi chú khách hàng</h2>
-                  <div style={{ padding: '1rem', background: '#f9fafb', borderRadius: '6px', color: '#374151', whiteSpace: 'pre-line' }}>
-                    {order.note}
-                  </div>
-                </div>
-              )}
-
-              {/* Admin Notes */}
-              <div className="no-print" style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h2 style={{ margin: 0, color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>Ghi chú nội bộ</h2>
+              {/* Internal Note Card */}
+              <div className="no-print" style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h2 style={{ margin: 0, color: '#1E293B', fontSize: '1.1rem', fontWeight: 700 }}>Ghi chú nội bộ</h2>
                   {!editingNotes && (
                     <button
                       onClick={() => setEditingNotes(true)}
                       style={{
-                        padding: '0.5rem 1rem',
-                        background: '#2563eb',
+                        padding: '6px 12px',
+                        background: '#1E293B',
                         color: '#ffffff',
                         border: 'none',
                         borderRadius: '6px',
                         cursor: 'pointer',
-                        fontSize: '0.875rem',
+                        fontSize: '0.8rem',
                         fontWeight: 600
                       }}
                     >
@@ -549,55 +435,57 @@ export default function AdminOrderDetailPage() {
                     </button>
                   )}
                 </div>
+
                 {editingNotes ? (
-                  <div>
+                  <div style={{ background: '#FEF9C3', padding: '16px', borderRadius: '12px' }}>
                     <textarea
                       value={adminNotes}
                       onChange={(e) => setAdminNotes(e.target.value)}
-                      placeholder="Nhập ghi chú nội bộ..."
-                      rows={6}
+                      placeholder="Nhập ghi chú..."
+                      rows={4}
                       style={{
                         width: '100%',
-                        padding: '0.75rem',
-                        border: '1px solid #e5e5e5',
-                        borderRadius: '6px',
-                        fontSize: '0.875rem',
+                        padding: '12px',
+                        border: '1px solid #CA8A04',
+                        borderRadius: '8px',
+                        fontSize: '0.9rem',
+                        background: 'white',
+                        marginBottom: '12px',
                         fontFamily: 'inherit',
                         resize: 'vertical'
                       }}
                     />
-                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         onClick={handleSaveNotes}
                         disabled={actionLoading === 'notes'}
                         style={{
-                          padding: '0.5rem 1rem',
-                          background: actionLoading === 'notes' ? '#9ca3af' : '#059669',
-                          color: '#ffffff',
+                          padding: '8px 16px',
+                          background: '#CA8A04',
+                          color: 'white',
                           border: 'none',
                           borderRadius: '6px',
-                          cursor: actionLoading === 'notes' ? 'not-allowed' : 'pointer',
-                          fontSize: '0.875rem',
-                          fontWeight: 600
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          fontSize: '0.85rem'
                         }}
                       >
-                        {actionLoading === 'notes' ? 'Đang lưu...' : 'Lưu'}
+                        Lưu lại
                       </button>
                       <button
                         onClick={() => {
                           setEditingNotes(false);
                           setAdminNotes(order.adminNotes || '');
                         }}
-                        disabled={actionLoading === 'notes'}
                         style={{
-                          padding: '0.5rem 1rem',
-                          background: '#ffffff',
-                          color: '#374151',
-                          border: '1px solid #e5e5e5',
+                          padding: '8px 16px',
+                          background: 'white',
+                          color: '#64748B',
+                          border: '1px solid #E2E8F0',
                           borderRadius: '6px',
-                          cursor: actionLoading === 'notes' ? 'not-allowed' : 'pointer',
-                          fontSize: '0.875rem',
-                          fontWeight: 600
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          fontSize: '0.85rem'
                         }}
                       >
                         Hủy
@@ -605,11 +493,22 @@ export default function AdminOrderDetailPage() {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ padding: '1rem', background: '#fef3c7', borderRadius: '6px', color: '#374151', whiteSpace: 'pre-line', borderLeft: '3px solid #f59e0b', minHeight: '60px' }}>
-                    {order.adminNotes || 'Chưa có ghi chú'}
+                  <div style={{
+                    padding: '16px',
+                    background: 'white',
+                    border: '1px solid #E2E8F0',
+                    borderLeft: '4px solid #FACC15',
+                    borderRadius: '8px',
+                    color: '#334155',
+                    minHeight: '60px',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    {order.adminNotes ? order.adminNotes : <span style={{ fontStyle: 'italic', opacity: 0.7, fontSize: '0.9rem' }}>Chưa có ghi chú</span>}
                   </div>
                 )}
               </div>
+
             </div>
           </div>
         </div>
@@ -617,4 +516,3 @@ export default function AdminOrderDetailPage() {
     </>
   );
 }
-

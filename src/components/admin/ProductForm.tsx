@@ -2,13 +2,7 @@ import { useState, useRef } from 'react';
 import { useAuthContext } from '../../context/useAuthContext';
 import { adminService } from '../../services/adminService';
 import { uploadService } from '../../services/uploadService';
-import type { Product, ProductOption } from '../../types/product';
-
-interface Category {
-  _id: string;
-  name: string;
-  description?: string;
-}
+import type { Product, ProductOption, Category } from '../../types/product';
 
 interface ProductFormProps {
   product?: Product | null;
@@ -83,7 +77,7 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!token) {
       setError('Bạn cần đăng nhập để thực hiện thao tác này');
       return;
@@ -118,7 +112,7 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
         ...formData,
         price: Number(formData.price),
         stock: Number(formData.stock),
-        status: formData.status,
+        status: formData.status as 'in_stock' | 'out_of_stock' | 'discontinued',
         lowStockThreshold: Number(formData.lowStockThreshold),
         features: formData.features
           .split('\n')
@@ -132,15 +126,15 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
           name: opt.name.trim(),
           price: Number(opt.price)
         })).filter(opt => opt.name && opt.price > 0) : [],
-        requiredFields: requiredFields.length > 0 
+        requiredFields: requiredFields.length > 0
           ? requiredFields
-              .filter(field => field.label.trim() && field.placeholder.trim())
-              .map(field => ({
-                label: field.label.trim(),
-                type: field.type,
-                placeholder: field.placeholder.trim(),
-                required: field.required
-              }))
+            .filter(field => field.label.trim() && field.placeholder.trim())
+            .map(field => ({
+              label: field.label.trim(),
+              type: field.type,
+              placeholder: field.placeholder.trim(),
+              required: field.required
+            }))
           : []
       };
 
@@ -155,9 +149,9 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
       console.error('Product save error:', err);
       console.error('Error response:', err.response?.data);
       console.error('Token used:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
-      
+
       let errorMessage = 'Có lỗi xảy ra';
-      
+
       if (err.response) {
         if (err.response.status === 401) {
           const errorCode = err.response.data?.code;
@@ -178,7 +172,7 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -186,41 +180,52 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
   };
 
   return (
-    <div>
-      <h2 style={{ color: '#1f2937', marginBottom: '1.5rem' }}>
-        {product ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới'}
+    <div style={{ background: '#fff', padding: '32px', borderRadius: '16px', maxWidth: '900px', margin: '0 auto' }}>
+      <h2 style={{ color: '#1E293B', marginBottom: '24px', fontSize: '1.5rem', fontWeight: 700 }}>
+        {product ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
       </h2>
 
       {error && (
-        <div style={{ padding: '1rem', background: '#fee2e2', color: '#dc2626', borderRadius: '8px', marginBottom: '1rem' }}>
+        <div style={{ padding: '16px', background: '#FEF2F2', color: '#B91C1C', borderRadius: '8px', marginBottom: '24px', border: '1px solid #FECACA' }}>
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '24px' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
-              Tên sản phẩm *
+            <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
+              Tên sản phẩm <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
+              placeholder="Nhập tên sản phẩm..."
               style={{
                 width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #e5e5e5',
+                padding: '12px',
+                border: '1px solid #E2E8F0',
                 borderRadius: '8px',
-                fontSize: '1rem'
+                fontSize: '0.95rem',
+                outline: 'none',
+                transition: 'all 0.2s'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#F05A28';
+                e.target.style.boxShadow = '0 0 0 1px #F05A28';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#E2E8F0';
+                e.target.style.boxShadow = 'none';
               }}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
-              Danh mục *
+            <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
+              Danh mục <span style={{ color: '#EF4444' }}>*</span>
             </label>
             {categories.length > 0 ? (
               <select
@@ -229,11 +234,15 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                 required
                 style={{
                   width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
+                  padding: '12px',
+                  border: '1px solid #E2E8F0',
                   borderRadius: '8px',
-                  fontSize: '1rem'
+                  fontSize: '0.95rem',
+                  outline: 'none',
+                  background: 'white'
                 }}
+                onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+                onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
               >
                 <option value="">-- Chọn danh mục --</option>
                 {categories.map((cat) => (
@@ -251,18 +260,21 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                 placeholder="Nhập danh mục"
                 style={{
                   width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
+                  padding: '12px',
+                  border: '1px solid #E2E8F0',
                   borderRadius: '8px',
-                  fontSize: '1rem'
+                  fontSize: '0.95rem',
+                  outline: 'none'
                 }}
+                onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+                onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
               />
             )}
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
-              Giá *
+            <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
+              Giá bán <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <input
               type="number"
@@ -273,17 +285,20 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               step="0.01"
               style={{
                 width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #e5e5e5',
+                padding: '12px',
+                border: '1px solid #E2E8F0',
                 borderRadius: '8px',
-                fontSize: '1rem'
+                fontSize: '0.95rem',
+                outline: 'none'
               }}
+              onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+              onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
-              Đơn vị tiền tệ *
+            <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
+              Đơn vị tiền tệ <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <select
               value={formData.currency}
@@ -291,11 +306,15 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               required
               style={{
                 width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #e5e5e5',
+                padding: '12px',
+                border: '1px solid #E2E8F0',
                 borderRadius: '8px',
-                fontSize: '1rem'
+                fontSize: '0.95rem',
+                outline: 'none',
+                background: 'white'
               }}
+              onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+              onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
             >
               <option value="VND">VND</option>
               <option value="USD">USD</option>
@@ -303,8 +322,8 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
-              Chu kỳ thanh toán *
+            <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
+              Chu kỳ thanh toán <span style={{ color: '#EF4444' }}>*</span>
             </label>
             <select
               value={formData.billingCycle}
@@ -312,29 +331,26 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               required
               style={{
                 width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #e5e5e5',
+                padding: '12px',
+                border: '1px solid #E2E8F0',
                 borderRadius: '8px',
-                fontSize: '1rem'
+                fontSize: '0.95rem',
+                outline: 'none',
+                background: 'white'
               }}
+              onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+              onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
             >
               <option value="1 tháng">1 tháng</option>
-              <option value="2 tháng">2 tháng</option>
               <option value="3 tháng">3 tháng</option>
-              <option value="4 tháng">4 tháng</option>
-              <option value="5 tháng">5 tháng</option>
               <option value="6 tháng">6 tháng</option>
-              <option value="7 tháng">7 tháng</option>
-              <option value="8 tháng">8 tháng</option>
-              <option value="9 tháng">9 tháng</option>
-              <option value="10 tháng">10 tháng</option>
-              <option value="11 tháng">11 tháng</option>
               <option value="1 năm">1 năm</option>
+              <option value="Vĩnh viễn">Vĩnh viễn</option>
             </select>
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
               Tồn kho
             </label>
             <input
@@ -344,18 +360,21 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               min="0"
               style={{
                 width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #e5e5e5',
+                padding: '12px',
+                border: '1px solid #E2E8F0',
                 borderRadius: '8px',
-                fontSize: '1rem'
+                fontSize: '0.95rem',
+                outline: 'none'
               }}
+              onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+              onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
             />
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '24px' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
               Trạng thái
             </label>
             <select
@@ -363,20 +382,24 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
               style={{
                 width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #e5e5e5',
+                padding: '12px',
+                border: '1px solid #E2E8F0',
                 borderRadius: '8px',
-                fontSize: '1rem'
+                fontSize: '0.95rem',
+                outline: 'none',
+                background: 'white'
               }}
+              onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+              onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
             >
-              <option value="in_stock">Còn hàng</option>
-              <option value="out_of_stock">Hết hàng</option>
-              <option value="discontinued">Ngừng kinh doanh</option>
+              <option value="in_stock">🟢 Còn hàng</option>
+              <option value="out_of_stock">🔴 Hết hàng</option>
+              <option value="discontinued">⚪ Ngừng kinh doanh</option>
             </select>
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
               Ngưỡng cảnh báo tồn kho thấp
             </label>
             <input
@@ -386,86 +409,96 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               min="0"
               style={{
                 width: '100%',
-                padding: '0.75rem',
-                border: '1px solid #e5e5e5',
+                padding: '12px',
+                border: '1px solid #E2E8F0',
                 borderRadius: '8px',
-                fontSize: '1rem'
+                fontSize: '0.95rem',
+                outline: 'none'
               }}
+              onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+              onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
             />
           </div>
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1E293B', fontWeight: '600', cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={formData.isHot}
               onChange={(e) => setFormData({ ...formData, isHot: e.target.checked })}
+              style={{ width: '16px', height: '16px', accentColor: '#F05A28' }}
             />
-            Sản phẩm Hot
+            🔥 Sản phẩm Hot (Hiển thị nổi bật)
           </label>
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
-            Mô tả
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
+            Mô tả sản phẩm
           </label>
           <textarea
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            rows={3}
+            rows={4}
+            placeholder="Nhập mô tả chi tiết..."
             style={{
               width: '100%',
-              padding: '0.75rem',
-              border: '1px solid #e5e5e5',
+              padding: '12px',
+              border: '1px solid #E2E8F0',
               borderRadius: '8px',
-              fontSize: '1rem',
-              fontFamily: 'inherit'
+              fontSize: '0.95rem',
+              outline: 'none',
+              fontFamily: 'inherit',
+              resize: 'vertical'
             }}
+            onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+            onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
           />
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
-            Khuyến mãi
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
+            Khuyến mãi / Tag (Optional)
           </label>
           <input
             type="text"
             value={formData.promotion}
             onChange={(e) => setFormData({ ...formData, promotion: e.target.value })}
-            placeholder="VD: Giảm 20%"
+            placeholder="VD: Giảm 20%, Mua 1 Tặng 1"
             style={{
               width: '100%',
-              padding: '0.75rem',
-              border: '1px solid #e5e5e5',
+              padding: '12px',
+              border: '1px solid #E2E8F0',
               borderRadius: '8px',
-              fontSize: '1rem'
+              fontSize: '0.95rem',
+              outline: 'none'
             }}
+            onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+            onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
           />
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
-            Hình ảnh sản phẩm (có thể chọn nhiều ảnh)
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', marginBottom: '12px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
+            Hình ảnh sản phẩm
           </label>
-          
+
           {imagePreviews.length > 0 && (
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', 
-              gap: '1rem',
-              marginBottom: '1rem'
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+              gap: '12px',
+              marginBottom: '16px'
             }}>
               {imagePreviews.map((preview, index) => (
-                <div key={index} style={{ position: 'relative' }}>
+                <div key={index} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
                   <img
                     src={preview}
                     alt={`Preview ${index + 1}`}
                     style={{
                       width: '100%',
-                      height: '120px',
-                      borderRadius: '8px',
-                      border: '1px solid #e5e5e5',
+                      height: '100px',
                       objectFit: 'cover'
                     }}
                   />
@@ -476,7 +509,7 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                       position: 'absolute',
                       top: '4px',
                       right: '4px',
-                      background: '#ef4444',
+                      background: 'rgba(239, 68, 68, 0.9)',
                       color: '#ffffff',
                       border: 'none',
                       borderRadius: '50%',
@@ -487,7 +520,8 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontWeight: 'bold'
+                      fontWeight: 'bold',
+                      transition: 'all 0.2s'
                     }}
                   >
                     ×
@@ -505,60 +539,73 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
             onChange={handleFileChange}
             style={{ display: 'none' }}
           />
-          
+
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             style={{
-              padding: '0.75rem 1.5rem',
-              background: '#f3f4f6',
-              color: '#1f2937',
-              border: '1px solid #e5e5e5',
+              padding: '10px 20px',
+              background: '#F1F5F9',
+              color: '#1E293B',
+              border: '1px dashed #94A3B8',
               borderRadius: '8px',
               cursor: 'pointer',
-              fontWeight: '600'
+              fontWeight: '600',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              width: '100%',
+              justifyContent: 'center',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#E2E8F0';
+              e.currentTarget.style.borderColor = '#64748B';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#F1F5F9';
+              e.currentTarget.style.borderColor = '#94A3B8';
             }}
           >
-            + Thêm ảnh
+            <span>📷</span> Thêm hình ảnh
           </button>
         </div>
 
         {/* Options Section */}
-        <div style={{ marginBottom: '1.5rem', padding: '1.5rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e5e5' }}>
-          <label style={{ display: 'block', marginBottom: '1rem', color: '#1f2937', fontWeight: '600', fontSize: '1rem' }}>
-            Options (VD: 1 tháng, 5 tháng, 12 tháng)
+        <div style={{ marginBottom: '24px', padding: '24px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+          <label style={{ display: 'block', marginBottom: '16px', color: '#1E293B', fontWeight: 600, fontSize: '1rem' }}>
+            Các gói tùy chọn (Options)
           </label>
-          
+
           {options.length > 0 && (
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {options.map((option, index) => (
-                <div key={index} style={{ 
-                  display: 'flex', 
-                  gap: '0.5rem', 
-                  marginBottom: '0.5rem',
+                <div key={index} style={{
+                  display: 'flex',
+                  gap: '12px',
                   alignItems: 'center',
-                  padding: '0.75rem',
+                  padding: '12px',
                   background: '#ffffff',
-                  borderRadius: '6px',
-                  border: '1px solid #e5e5e5'
+                  borderRadius: '8px',
+                  border: '1px solid #E2E8F0'
                 }}>
-                  <div style={{ flex: 1 }}>
-                    <strong style={{ color: '#1f2937' }}>{option.name}</strong>
-                  </div>
-                  <div style={{ color: '#2563eb', fontWeight: '600' }}>
+                  <div style={{ flex: 1, fontWeight: 500, color: '#1E293B' }}>{option.name}</div>
+                  <div style={{ color: '#F05A28', fontWeight: '700' }}>
                     {option.price.toLocaleString('vi-VN')} {formData.currency}
                   </div>
                   <button
                     type="button"
                     onClick={() => setOptions(options.filter((_, i) => i !== index))}
                     style={{
-                      padding: '0.5rem',
-                      background: '#ef4444',
-                      color: '#ffffff',
-                      border: 'none',
+                      padding: '6px 12px',
+                      background: '#FEF2F2',
+                      color: '#EF4444',
+                      border: '1px solid #FECACA',
                       borderRadius: '6px',
                       cursor: 'pointer',
-                      fontSize: '0.85rem'
+                      fontSize: '0.85rem',
+                      fontWeight: 500
                     }}
                   >
                     Xóa
@@ -568,10 +615,10 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '0.5rem', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '12px', alignItems: 'end' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>
-                Tên option (VD: 1 tháng)
+              <label style={{ display: 'block', marginBottom: '4px', color: '#64748B', fontSize: '0.85rem', fontWeight: 500 }}>
+                Tên gói (VD: 12 tháng)
               </label>
               <input
                 type="text"
@@ -579,16 +626,17 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                 placeholder="VD: 1 tháng"
                 style={{
                   width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
+                  padding: '10px',
+                  border: '1px solid #E2E8F0',
                   borderRadius: '8px',
-                  fontSize: '1rem'
+                  fontSize: '0.95rem',
+                  outline: 'none'
                 }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>
-                Giá
+              <label style={{ display: 'block', marginBottom: '4px', color: '#64748B', fontSize: '0.85rem', fontWeight: 500 }}>
+                Giá (+{formData.currency})
               </label>
               <input
                 type="number"
@@ -598,10 +646,11 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                 step="0.01"
                 style={{
                   width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
+                  padding: '10px',
+                  border: '1px solid #E2E8F0',
                   borderRadius: '8px',
-                  fontSize: '1rem'
+                  fontSize: '0.95rem',
+                  outline: 'none'
                 }}
               />
             </div>
@@ -617,17 +666,19 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                   setOptions([...options, { name, price }]);
                   nameInput.value = '';
                   priceInput.value = '';
+                  nameInput.focus();
                 }
               }}
               style={{
-                padding: '0.75rem 1.5rem',
-                background: '#22c55e',
+                padding: '10px 20px',
+                background: '#1E293B',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontWeight: '600',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                height: '42px'
               }}
             >
               + Thêm
@@ -636,59 +687,56 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
         </div>
 
         {/* Required Fields Section */}
-        <div style={{ marginBottom: '1.5rem', padding: '1.5rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e5e5' }}>
-          <label style={{ display: 'block', marginBottom: '1rem', color: '#1f2937', fontWeight: '600', fontSize: '1rem' }}>
-            Điều kiện cần (Required Fields)
-            <span style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: 'normal', marginLeft: '0.5rem' }}>
-              - Thông tin bổ sung khách hàng cần nhập khi mua sản phẩm
-            </span>
-          </label>
-          
+        <div style={{ marginBottom: '24px', padding: '24px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', color: '#1E293B', fontWeight: 600, fontSize: '1rem' }}>
+              Trường thông tin bắt buộc (Required Fields)
+            </label>
+            <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748B' }}>
+              Thông tin khách hàng cần cung cấp khi đặt hàng (VD: Email, ID tài khoản)
+            </p>
+          </div>
+
           {requiredFields.length > 0 && (
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {requiredFields.map((field, index) => (
-                <div key={index} style={{ 
-                  display: 'flex', 
-                  gap: '0.5rem', 
-                  marginBottom: '0.5rem',
+                <div key={index} style={{
+                  display: 'flex',
+                  gap: '12px',
                   alignItems: 'center',
-                  padding: '0.75rem',
+                  padding: '12px',
                   background: '#ffffff',
-                  borderRadius: '6px',
-                  border: '1px solid #e5e5e5'
+                  borderRadius: '8px',
+                  border: '1px solid #E2E8F0'
                 }}>
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      <strong style={{ color: '#1f2937', fontSize: '0.9rem' }}>{field.label}</strong>
-                      <span style={{ 
-                        padding: '0.25rem 0.5rem', 
-                        background: field.type === 'email' ? '#dbeafe' : field.type === 'account' ? '#fef3c7' : '#f3f4f6',
-                        color: field.type === 'email' ? '#1e40af' : field.type === 'account' ? '#92400e' : '#374151',
-                        borderRadius: '4px',
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 600, color: '#1E293B' }}>{field.label}</span>
+                      <span style={{
                         fontSize: '0.75rem',
-                        fontWeight: '600'
-                      }}>
-                        {field.type}
-                      </span>
-                      {field.required && (
-                        <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>*</span>
-                      )}
+                        padding: '2px 8px',
+                        background: '#F1F5F9',
+                        color: '#64748B',
+                        borderRadius: '4px',
+                        textTransform: 'uppercase',
+                        fontWeight: 600
+                      }}>{field.type}</span>
+                      {field.required && <span style={{ color: '#EF4444', fontSize: '0.75rem' }}>REQUIRED</span>}
                     </div>
-                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                      {field.placeholder}
-                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#94A3B8', marginTop: '2px' }}>{field.placeholder}</div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setRequiredFields(requiredFields.filter((_, i) => i !== index))}
                     style={{
-                      padding: '0.5rem',
-                      background: '#ef4444',
-                      color: '#ffffff',
-                      border: 'none',
+                      padding: '6px 12px',
+                      background: '#FEF2F2',
+                      color: '#EF4444',
+                      border: '1px solid #FECACA',
                       borderRadius: '6px',
                       cursor: 'pointer',
-                      fontSize: '0.85rem'
+                      fontSize: '0.85rem',
+                      fontWeight: 500
                     }}
                   >
                     Xóa
@@ -698,10 +746,10 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr auto auto', gap: '0.5rem', alignItems: 'end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr auto auto', gap: '12px', alignItems: 'end' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>
-                Label (VD: Email Canva)
+              <label style={{ display: 'block', marginBottom: '4px', color: '#64748B', fontSize: '0.85rem', fontWeight: 500 }}>
+                Nhãn (VD: Email Canva)
               </label>
               <input
                 type="text"
@@ -709,25 +757,28 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                 placeholder="VD: Email Canva"
                 style={{
                   width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
+                  padding: '10px',
+                  border: '1px solid #E2E8F0',
                   borderRadius: '8px',
-                  fontSize: '1rem'
+                  fontSize: '0.95rem',
+                  outline: 'none'
                 }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>
-                Type
+              <label style={{ display: 'block', marginBottom: '4px', color: '#64748B', fontSize: '0.85rem', fontWeight: 500 }}>
+                Loại
               </label>
               <select
                 id="required-field-type"
                 style={{
                   width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
+                  padding: '10px',
+                  border: '1px solid #E2E8F0',
                   borderRadius: '8px',
-                  fontSize: '1rem'
+                  fontSize: '0.95rem',
+                  outline: 'none',
+                  background: 'white'
                 }}
               >
                 <option value="text">Text</option>
@@ -736,31 +787,31 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>
-                Placeholder
+              <label style={{ display: 'block', marginBottom: '4px', color: '#64748B', fontSize: '0.85rem', fontWeight: 500 }}>
+                Gợi ý (Placeholder)
               </label>
               <input
                 type="text"
                 id="required-field-placeholder"
-                placeholder="VD: Vui lòng nhập email Canva"
+                placeholder="VD: Nhập email..."
                 style={{
                   width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
+                  padding: '10px',
+                  border: '1px solid #E2E8F0',
                   borderRadius: '8px',
-                  fontSize: '1rem'
+                  fontSize: '0.95rem',
+                  outline: 'none'
                 }}
               />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '0.5rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280', fontSize: '0.9rem', fontWeight: '500', cursor: 'pointer' }}>
+            <div style={{ paddingBottom: '10px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '0.85rem', color: '#1E293B', fontWeight: 500 }}>
                 <input
                   type="checkbox"
                   id="required-field-required"
                   defaultChecked={true}
-                  style={{ cursor: 'pointer' }}
                 />
-                Required
+                Bắt buộc
               </label>
             </div>
             <button
@@ -770,7 +821,7 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                 const typeInput = document.getElementById('required-field-type') as HTMLSelectElement;
                 const placeholderInput = document.getElementById('required-field-placeholder') as HTMLInputElement;
                 const requiredInput = document.getElementById('required-field-required') as HTMLInputElement;
-                
+
                 const label = labelInput.value.trim();
                 const type = typeInput.value as 'email' | 'text' | 'account';
                 const placeholder = placeholderInput.value.trim();
@@ -782,17 +833,19 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                   typeInput.value = 'text';
                   placeholderInput.value = '';
                   requiredInput.checked = true;
+                  labelInput.focus();
                 }
               }}
               style={{
-                padding: '0.75rem 1.5rem',
-                background: '#22c55e',
+                padding: '10px 20px',
+                background: '#1E293B',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontWeight: '600',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                height: '42px'
               }}
             >
               + Thêm
@@ -800,61 +853,59 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
           </div>
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: '600' }}>
-            Tính năng (mỗi dòng một tính năng)
-          </label>
-          <textarea
-            value={formData.features}
-            onChange={(e) => setFormData({ ...formData, features: e.target.value })}
-            rows={5}
-            placeholder="Tính năng 1&#10;Tính năng 2&#10;Tính năng 3"
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              border: '1px solid #e5e5e5',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              fontFamily: 'inherit'
-            }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+        <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end', gap: '16px', paddingTop: '20px', borderTop: '1px solid #F1F5F9' }}>
           <button
             type="button"
             onClick={onClose}
             style={{
-              padding: '0.75rem 1.5rem',
-              background: '#f3f4f6',
-              color: '#1f2937',
-              border: 'none',
-              borderRadius: '8px',
+              padding: '12px 24px',
+              background: '#ffffff',
+              color: '#64748B',
+              border: '1px solid #E2E8F0',
+              borderRadius: '9999px',
               cursor: 'pointer',
-              fontWeight: '600'
+              fontWeight: 600,
+              fontSize: '1rem',
+              transition: 'all 0.2s'
             }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
           >
-            Hủy
+            Hủy bỏ
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || uploading}
             style={{
-              padding: '0.75rem 1.5rem',
-              background: '#2563eb',
+              padding: '12px 32px',
+              background: (loading || uploading) ? '#94A3B8' : '#F05A28',
               color: '#ffffff',
               border: 'none',
-              borderRadius: '8px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontWeight: '600',
-              opacity: loading ? 0.6 : 1
+              borderRadius: '9999px',
+              cursor: (loading || uploading) ? 'not-allowed' : 'pointer',
+              fontWeight: 700,
+              fontSize: '1rem',
+              boxShadow: '0 4px 6px -1px rgba(240, 90, 40, 0.2)',
+              transition: 'all 0.2s',
+              minWidth: '160px'
+            }}
+            onMouseEnter={(e) => {
+              if (!loading && !uploading) {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 6px 8px -1px rgba(240, 90, 40, 0.3)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading && !uploading) {
+                e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(240, 90, 40, 0.2)';
+              }
             }}
           >
-            {uploading ? 'Đang upload ảnh...' : loading ? 'Đang lưu...' : product ? 'Cập nhật' : 'Tạo mới'}
+            {loading ? 'Đang lưu...' : uploading ? 'Đang upload...' : product ? 'Cập nhật' : 'Tạo sản phẩm'}
           </button>
         </div>
       </form>
     </div>
   );
 }
-

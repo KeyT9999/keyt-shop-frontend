@@ -18,7 +18,16 @@ export default function CheckoutPage() {
   const [message, setMessage] = useState('');
   // State để lưu dữ liệu requiredFields cho mỗi sản phẩm
   // Format: { productId: { fieldLabel: value } }
-  const [requiredFieldsData, setRequiredFieldsData] = useState<Record<string, Record<string, string>>>({});
+  // Khởi tạo với data từ cart nếu có
+  const [requiredFieldsData, setRequiredFieldsData] = useState<Record<string, Record<string, string>>>(() => {
+    const initialData: Record<string, Record<string, string>> = {};
+    cart.forEach(item => {
+      if (item.requiredFieldsData) {
+        initialData[item._id] = item.requiredFieldsData;
+      }
+    });
+    return initialData;
+  });
 
   useEffect(() => {
     if (user) {
@@ -109,15 +118,18 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Validate requiredFields
+    // Validate requiredFields - lấy từ cart hoặc state
     for (const item of cart) {
       if (item.requiredFields && item.requiredFields.length > 0) {
-        const productFieldsData = requiredFieldsData[item._id] || {};
         for (const field of item.requiredFields) {
-          if (field.required && !productFieldsData[field.label]?.trim()) {
-            setStatus('error');
-            setMessage(`Vui lòng điền đầy đủ thông tin: ${field.label}`);
-            return;
+          if (field.required) {
+            // Kiểm tra cả data từ cart và state checkout
+            const value = item.requiredFieldsData?.[field.label] || requiredFieldsData[item._id]?.[field.label];
+            if (!value?.trim()) {
+              setStatus('error');
+              setMessage(`Vui lòng điền đầy đủ thông tin: ${field.label} cho sản phẩm ${item.name}`);
+              return;
+            }
           }
         }
       }
@@ -136,13 +148,12 @@ export default function CheckoutPage() {
           quantity: item.quantity
         };
 
-        // Thêm requiredFieldsData nếu có
+        // Thêm requiredFieldsData nếu có - ưu tiên data từ cart
         if (item.requiredFields && item.requiredFields.length > 0) {
-          const productFieldsData = requiredFieldsData[item._id] || {};
           itemData.requiredFieldsData = item.requiredFields
             .map(field => ({
               label: field.label,
-              value: productFieldsData[field.label] || ''
+              value: item.requiredFieldsData?.[field.label] || requiredFieldsData[item._id]?.[field.label] || ''
             }))
             .filter(field => field.value.trim()); // Chỉ lưu field có giá trị
         }
@@ -385,16 +396,22 @@ export default function CheckoutPage() {
                 />
               </div>
 
-              {/* Required Fields cho từng sản phẩm */}
+              {/* Required Fields cho từng sản phẩm - CHỈ HIỂN THỊ NẾU CHƯA NHẬP Ở CART */}
               {cart.map((item) => {
-                // Debug log
-                console.log(`🔍 Checking requiredFields for product ${item.name}:`, {
-                  hasRequiredFields: !!item.requiredFields,
-                  requiredFields: item.requiredFields,
-                  requiredFieldsLength: item.requiredFields?.length || 0
+                // Bỏ qua nếu không có requiredFields
+                if (!item.requiredFields || item.requiredFields.length === 0) {
+                  return null;
+                }
+
+                // Kiểm tra xem đã nhập đủ thông tin ở cart chưa
+                const hasAllRequiredData = item.requiredFields.every(field => {
+                  if (!field.required) return true;
+                  const value = item.requiredFieldsData?.[field.label] || requiredFieldsData[item._id]?.[field.label];
+                  return value && value.trim() !== '';
                 });
 
-                if (!item.requiredFields || item.requiredFields.length === 0) {
+                // Nếu đã nhập đủ ở cart, không hiển thị nữa
+                if (hasAllRequiredData) {
                   return null;
                 }
 

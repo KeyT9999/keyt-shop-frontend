@@ -85,6 +85,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const updateCartItemOption = (productId: string, optionIndex: number) => {
+    setCart((prev) =>
+      prev.map((item) => {
+        if (item._id === productId && item.options && item.options[optionIndex]) {
+          return {
+            ...item,
+            selectedOptionIndex: optionIndex,
+            price: item.options[optionIndex].price
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  const updateCartItemRequiredField = (productId: string, fieldLabel: string, value: string) => {
+    setCart((prev) =>
+      prev.map((item) => {
+        if (item._id === productId) {
+          return {
+            ...item,
+            requiredFieldsData: {
+              ...item.requiredFieldsData,
+              [fieldLabel]: value
+            }
+          };
+        }
+        return item;
+      })
+    );
+  };
+
   const totalItems = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
   const totalAmount = useMemo(
@@ -98,7 +130,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ cart, totalItems, totalAmount, addItem, removeItem, updateQuantity, updateCartItem, clearCart }}
+      value={{ cart, totalItems, totalAmount, addItem, removeItem, updateQuantity, updateCartItem, updateCartItemOption, updateCartItemRequiredField, clearCart }}
     >
       {children}
     </CartContext.Provider>

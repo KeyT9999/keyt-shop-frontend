@@ -179,80 +179,104 @@ const YoutubeSummarizerPage: React.FC = () => {
 
   // Render Logic
   return (
-    <div className="ys-page">
-      {/* Header Section */}
-      <header className="ys-header">
-        <div className="ys-header-content">
-          <div>
-            <p className="ys-eyebrow">AI Video Assistant</p>
-            <h1>YouTube Summarizer</h1>
-            <p className="ys-lede">
-              Tóm tắt video YouTube, tạo ghi chú học tập và hỏi đáp với video trong vài giây.
+    <div className="ys-page-new">
+      {/* Settings Button - Floating */}
+      <button
+        className={`ys-settings-floating-btn ${showSettingsPanel ? 'active' : ''}`}
+        onClick={() => setShowSettingsPanel(!showSettingsPanel)}
+        title="Cấu hình API Key"
+      >
+        <Settings size={20} />
+      </button>
+
+      {/* Settings Panel (Collapsible) */}
+      {showSettingsPanel && (
+        <div className="ys-settings-panel">
+          <div className="ys-setting-group">
+            <label className="ys-setting-label">
+              <Key size={14} /> Google AI Studio API Key
+            </label>
+            <div className="ys-input-group">
+              <input
+                type={showApiKey ? 'text' : 'password'}
+                placeholder="Paste your API key here..."
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
+              />
+              <button
+                type="button"
+                className="ys-icon-btn"
+                onClick={() => setShowApiKey(!showApiKey)}
+                title={showApiKey ? 'Ẩn key' : 'Hiện key'}
+              >
+                {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+              <button
+                type="button"
+                className="ys-icon-btn"
+                onClick={handleSaveApiKey}
+                title="Lưu key"
+                style={{ backgroundColor: '#e0f2fe', color: '#0369a1' }}
+              >
+                <CheckCircle2 size={16} />
+              </button>
+            </div>
+            <p className="ys-hint">
+              Chưa có key? <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">Lấy key tại đây</a>. Key được lưu bảo mật.
             </p>
           </div>
-          <button
-            className={`ys-settings-btn ${showSettingsPanel ? 'active' : ''}`}
-            onClick={() => setShowSettingsPanel(!showSettingsPanel)}
-            title="Cấu hình API Key"
-          >
-            <Settings size={20} />
-            <span>Settings</span>
-          </button>
+        </div>
+      )}
+
+      {/* Hero Section */}
+      <div className="ys-hero">
+        {/* YouTube Icon */}
+        <div className="ys-youtube-icon">
+          <Youtube size={40} />
         </div>
 
-        {/* Settings Panel (Collapsible) */}
-        {showSettingsPanel && (
-          <div className="ys-settings-panel">
-            <div className="ys-setting-group">
-              <label className="ys-setting-label">
-                <Key size={14} /> Google AI Studio API Key
-              </label>
-              <div className="ys-input-group">
-                <input
-                  type={showApiKey ? 'text' : 'password'}
-                  placeholder="Paste your API key here..."
-                  value={apiKeyInput}
-                  onChange={(e) => setApiKeyInput(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="ys-icon-btn"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  title={showApiKey ? 'Ẩn key' : 'Hiện key'}
-                >
-                  {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-                <button
-                  type="button"
-                  className="ys-icon-btn"
-                  onClick={handleSaveApiKey}
-                  title="Lưu key"
-                  style={{ backgroundColor: '#e0f2fe', color: '#0369a1' }}
-                >
-                  <CheckCircle2 size={16} />
-                </button>
-              </div>
-              <p className="ys-hint">
-                Chưa có key? <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">Lấy key tại đây</a>. Key được lưu bảo mật.
-              </p>
-            </div>
-          </div>
-        )}
-      </header>
+        {/* Title */}
+        <h1 className="ys-hero-title">YouTube Summarizer</h1>
+        <p className="ys-hero-subtitle">
+          Tóm tắt nội dung video YouTube một cách nhanh chóng và chính xác với AI
+        </p>
 
-      {/* Main Search Section */}
-      <section className="ys-search-section">
-        <div className="ys-form">
-          <div className="ys-search-container">
+        {/* Compact How to Use */}
+        <div className="ys-compact-steps">
+          <div className="ys-compact-step">
+            <span className="ys-compact-number">1</span>
+            <span>Sao chép URL</span>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M7 10l5 0M12 10l-2 -2M12 10l-2 2"/>
+          </svg>
+          <div className="ys-compact-step">
+            <span className="ys-compact-number">2</span>
+            <span>Dán và xử lý</span>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M7 10l5 0M12 10l-2 -2M12 10l-2 2"/>
+          </svg>
+          <div className="ys-compact-step">
+            <span className="ys-compact-number">3</span>
+            <span>Nhận kết quả</span>
+          </div>
+        </div>
+
+        {/* Input Form */}
+        <div className="ys-input-section">
+          <label className="ys-input-label">Nhập URL video YouTube</label>
+          <div className="ys-input-wrapper">
             <input
-              className="ys-search-input"
-              placeholder="Dán link YouTube (ví dụ: https://youtu.be/abc123)"
+              className="ys-url-input"
+              type="text"
+              placeholder="https://www.youtube.com/watch?v=..."
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
             />
             <button
-              className="ys-search-btn"
+              className="ys-summarize-btn"
               onClick={handleAnalyze}
               disabled={appState === 'analyzing' || !urlInput.trim()}
             >
@@ -260,15 +284,23 @@ const YoutubeSummarizerPage: React.FC = () => {
                 <div className="ys-spinner"></div>
               ) : (
                 <>
-                  <Search size={18} />
-                  <span>Phân tích</span>
+                  <Sparkles size={18} />
+                  <span>Tóm tắt</span>
                 </>
               )}
             </button>
           </div>
-          {error && <div className="ys-alert ys-alert--error" style={{ marginTop: '12px' }}><AlertTriangle size={16} /> {error}</div>}
+          <p className="ys-input-hint">
+            Ví dụ: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+          </p>
+          {error && (
+            <div className="ys-error-alert">
+              <AlertTriangle size={16} />
+              {error}
+            </div>
+          )}
         </div>
-      </section>
+      </div>
 
       {/* Results Section */}
       <section className="ys-results-section">

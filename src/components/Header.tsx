@@ -188,14 +188,14 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                         </div>
 
                         <div className="icon-actions">
-                            {/* User - Hover Dropdown */}
-                            <div className="action-item user-action">
-                                <Link to={user ? "/profile" : "/login"} className="icon-btn">
-                                    <User size={22} strokeWidth={1.5} />
-                                </Link>
-                                <div className="user-dropdown-menu">
-                                    {user ? (
-                                        <>
+                            {user ? (
+                                <>
+                                    {/* User - Hover Dropdown */}
+                                    <div className="action-item user-action">
+                                        <Link to="/profile" className="icon-btn">
+                                            <User size={22} strokeWidth={1.5} />
+                                        </Link>
+                                        <div className="user-dropdown-menu">
                                             <div className="user-welcome">Hi, {user.username || 'User'}</div>
                                             {user.admin && (
                                                 <>
@@ -206,25 +206,29 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                             <Link to="/profile">My Profile</Link>
                                             <Link to={user.admin ? "/admin/orders" : "/orders"}>Orders</Link>
                                             <button onClick={handleLogout}>Logout</button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Link to="/login" className="login-btn">Login</Link>
-                                            <Link to="/register">Register</Link>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
+                                        </div>
+                                    </div>
 
-                            <Link to="/wishlist" className="action-item icon-btn" title="Wishlist">
-                                <Heart size={22} strokeWidth={1.5} />
-                                <span className="badge">{wishlist.length}</span>
-                            </Link>
+                                    <Link to="/wishlist" className="action-item icon-btn" title="Wishlist">
+                                        <Heart size={22} strokeWidth={1.5} />
+                                        <span className="badge">{wishlist.length}</span>
+                                    </Link>
 
-                            <Link to="/cart" className="action-item icon-btn" title="Cart">
-                                <ShoppingBag size={22} strokeWidth={1.5} />
-                                <span className="badge">{totalItems}</span>
-                            </Link>
+                                    <Link to="/cart" className="action-item icon-btn" title="Cart">
+                                        <ShoppingBag size={22} strokeWidth={1.5} />
+                                        <span className="badge">{totalItems}</span>
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <Link to="/login" className="auth-btn login-btn">
+                                        Đăng nhập
+                                    </Link>
+                                    <Link to="/register" className="auth-btn register-btn">
+                                        Đăng ký
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

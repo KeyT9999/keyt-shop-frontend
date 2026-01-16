@@ -4,6 +4,7 @@ import { useAuthContext } from '../../context/useAuthContext';
 import { adminService } from '../../services/adminService';
 import type { OrderStats, OrdersListResponse, OrderFilters } from '../../types/admin';
 import { formatPrice } from '../../utils/formatPrice';
+import { Eye, ArrowLeft, ArrowRight } from 'lucide-react';
 
 export default function OrdersPage() {
   const { token, user } = useAuthContext();
@@ -65,437 +66,247 @@ export default function OrdersPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const getOrderStatusColor = (status: string) => {
+  const getOrderStatusBadge = (status: string) => {
+    let className = 'status-badge ';
+    let label = status;
+
     switch (status) {
       case 'completed':
-        return '#059669';
+        className += 'status-badge-success';
+        label = 'Completed';
+        break;
       case 'processing':
-        return '#2563eb';
+        className += 'status-badge-warning'; // or Info
+        label = 'Processing';
+        break;
       case 'confirmed':
-        return '#7c3aed';
+        className += 'status-badge-warning';
+        label = 'Confirmed';
+        break;
       case 'pending':
-        return '#d97706';
+        className += 'status-badge-warning';
+        label = 'Pending';
+        break;
       case 'cancelled':
-        return '#dc2626';
+        className += 'status-badge-danger';
+        label = 'Cancelled';
+        break;
       default:
-        return '#6b7280';
+        className += 'status-badge-neutral';
     }
+    return <span className={className}>{label}</span>;
   };
 
-  const getOrderStatusText = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'Chờ xử lý';
-      case 'confirmed':
-        return 'Đã xác nhận';
-      case 'processing':
-        return 'Đang xử lý';
-      case 'completed':
-        return 'Hoàn thành';
-      case 'cancelled':
-        return 'Đã hủy';
-      default:
-        return status;
-    }
-  };
+  const getPaymentStatusBadge = (status: string) => {
+    let className = 'status-badge ';
+    let label = status;
 
-  const getPaymentStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
-        return '#059669';
+        className += 'status-badge-success';
+        label = 'Paid';
+        break;
       case 'pending':
-        return '#d97706';
+        className += 'status-badge-warning';
+        label = 'Unpaid';
+        break;
       case 'failed':
-        return '#dc2626';
+        className += 'status-badge-danger';
+        label = 'Failed';
+        break;
       default:
-        return '#6b7280';
+        className += 'status-badge-neutral';
     }
-  };
-
-  const getPaymentStatusText = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return 'Đã thanh toán';
-      case 'pending':
-        return 'Chờ thanh toán';
-      case 'failed':
-        return 'Thanh toán thất bại';
-      default:
-        return status;
-    }
+    return <span className={className}>{label}</span>;
   };
 
   if (!user?.admin) {
     return (
-      <div className="main-content">
-        <div style={{ textAlign: 'center', padding: '2rem', color: '#1f2937' }}>
-          <h1>403 - Không có quyền truy cập</h1>
-          <p>Bạn cần quyền Admin để truy cập trang này.</p>
-        </div>
-      </div>
+      <div className="p-8 text-center text-red-500">403 - Access Denied</div>
     );
   }
 
   return (
-    <div className="main-content">
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem' }}>
-        <h1 style={{ color: '#1f2937', marginBottom: '2rem' }}>Quản lý Đơn hàng</h1>
-
-        {/* Stats Cards */}
-        {stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ color: '#6b7280', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Đơn hôm nay</h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2563eb', margin: 0 }}>
-                {stats.todayOrders}
-              </p>
-            </div>
-
-            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ color: '#6b7280', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Chờ xác nhận</h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#d97706', margin: 0 }}>
-                {stats.pendingConfirmation}
-              </p>
-            </div>
-
-            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ color: '#6b7280', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Đang xử lý</h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2563eb', margin: 0 }}>
-                {stats.processing}
-              </p>
-            </div>
-
-            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ color: '#6b7280', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Doanh thu hôm nay</h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#059669', margin: 0 }}>
-                {formatPrice(stats.todayRevenue, 'VND')}
-              </p>
-            </div>
-
-            <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <h3 style={{ color: '#6b7280', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600 }}>Doanh thu tháng</h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#059669', margin: 0 }}>
-                {formatPrice(stats.monthRevenue, 'VND')}
-              </p>
-            </div>
-          </div>
-        )}
+    <div className="admin-page-content">
+      <div style={{ maxWidth: '100%', margin: '0 auto' }}>
+        <h1 style={{ color: '#1E293B', marginBottom: '24px', fontSize: '1.25rem' }}>Order Management</h1>
 
         {/* Filters */}
-        <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e5e5', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#374151', fontWeight: 500 }}>Tìm kiếm</label>
+        <div className="table-container" style={{ marginBottom: '24px', padding: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ position: 'relative' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: '#64748B', fontWeight: 500 }}>Search</label>
               <input
                 type="text"
-                placeholder="Mã đơn hàng (6 chữ số), tên, email, SĐT..."
+                placeholder="Order ID, Name, Email..."
                 value={filters.search || ''}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem'
-                }}
+                className="admin-input"
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#374151', fontWeight: 500 }}>Trạng thái đơn</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: '#64748B', fontWeight: 500 }}>Order Status</label>
               <select
                 value={filters.orderStatus || ''}
                 onChange={(e) => handleFilterChange('orderStatus', e.target.value || undefined)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem'
-                }}
+                className="admin-input"
               >
-                <option value="">Tất cả</option>
-                <option value="pending">Chờ xử lý</option>
-                <option value="confirmed">Đã xác nhận</option>
-                <option value="processing">Đang xử lý</option>
-                <option value="completed">Hoàn thành</option>
-                <option value="cancelled">Đã hủy</option>
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="processing">Processing</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
               </select>
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#374151', fontWeight: 500 }}>Trạng thái thanh toán</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: '#64748B', fontWeight: 500 }}>Payment Status</label>
               <select
                 value={filters.paymentStatus || ''}
                 onChange={(e) => handleFilterChange('paymentStatus', e.target.value || undefined)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem'
-                }}
+                className="admin-input"
               >
-                <option value="">Tất cả</option>
-                <option value="pending">Chờ thanh toán</option>
-                <option value="paid">Đã thanh toán</option>
-                <option value="failed">Thanh toán thất bại</option>
+                <option value="">All Payments</option>
+                <option value="pending">Unpaid</option>
+                <option value="paid">Paid</option>
+                <option value="failed">Failed</option>
               </select>
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#374151', fontWeight: 500 }}>Sắp xếp theo</label>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: '#64748B', fontWeight: 500 }}>Sort By</label>
               <select
                 value={filters.sortBy || 'date'}
                 onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem'
-                }}
+                className="admin-input"
               >
-                <option value="date">Ngày tạo</option>
-                <option value="amount">Tổng tiền</option>
-                <option value="status">Trạng thái</option>
+                <option value="date">Date</option>
+                <option value="amount">Amount</option>
+                <option value="status">Status</option>
               </select>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#374151', fontWeight: 500 }}>Thứ tự</label>
-              <select
-                value={filters.sortOrder || 'desc'}
-                onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem'
-                }}
-              >
-                <option value="desc">Giảm dần</option>
-                <option value="asc">Tăng dần</option>
-              </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#374151', fontWeight: 500 }}>Từ ngày</label>
-              <input
-                type="date"
-                value={filters.startDate || ''}
-                onChange={(e) => handleFilterChange('startDate', e.target.value || undefined)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem'
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#374151', fontWeight: 500 }}>Đến ngày</label>
-              <input
-                type="date"
-                value={filters.endDate || ''}
-                onChange={(e) => handleFilterChange('endDate', e.target.value || undefined)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem'
-                }}
-              />
             </div>
           </div>
         </div>
 
+        {/* Stats Row (Optional, maybe smaller than main dashboard) */}
+        {stats && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+            <div className="stats-card" style={{ padding: '16px' }}>
+              <div style={{ fontSize: '0.8rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 600 }}>Today Orders</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1E293B' }}>{stats.todayOrders}</div>
+            </div>
+            <div className="stats-card" style={{ padding: '16px' }}>
+              <div style={{ fontSize: '0.8rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 600 }}>Pending</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#F59E0B' }}>{stats.pendingConfirmation}</div>
+            </div>
+            <div className="stats-card" style={{ padding: '16px' }}>
+              <div style={{ fontSize: '0.8rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 600 }}>Revenue (Today)</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10B981' }}>{formatPrice(stats.todayRevenue, 'VND')}</div>
+            </div>
+            <div className="stats-card" style={{ padding: '16px' }}>
+              <div style={{ fontSize: '0.8rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 600 }}>Revenue (Month)</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10B981' }}>{formatPrice(stats.monthRevenue, 'VND')}</div>
+            </div>
+          </div>
+        )}
+
         {/* Orders Table */}
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: '#1f2937' }}>Đang tải...</div>
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>Loading orders...</div>
         ) : ordersData ? (
-          <>
-            <div style={{ background: '#ffffff', borderRadius: '8px', border: '1px solid #e5e5e5', overflow: 'hidden', marginBottom: '1rem' }}>
-              <div style={{ padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e5e5' }}>
-                <p style={{ margin: 0, color: '#6b7280', fontSize: '0.875rem' }}>
-                  Hiển thị {((ordersData.page - 1) * ordersData.limit) + 1} - {Math.min(ordersData.page * ordersData.limit, ordersData.total)} trong tổng số {ordersData.total} đơn hàng
-                </p>
-              </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e5e5' }}>
-                      <th style={{ padding: '1rem', textAlign: 'left', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Mã đơn hàng</th>
-                      <th style={{ padding: '1rem', textAlign: 'left', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Khách hàng</th>
-                      <th style={{ padding: '1rem', textAlign: 'left', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Sản phẩm</th>
-                      <th style={{ padding: '1rem', textAlign: 'right', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Tổng tiền</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Trạng thái</th>
-                      <th style={{ padding: '1rem', textAlign: 'center', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Thanh toán</th>
-                      <th style={{ padding: '1rem', textAlign: 'left', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Ngày tạo</th>
-                      <th style={{ padding: '1rem', textAlign: 'right', color: '#1f2937', fontWeight: '600', fontSize: '0.875rem' }}>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ordersData.orders.length === 0 ? (
-                      <tr>
-                        <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
-                          Không tìm thấy đơn hàng nào
-                        </td>
-                      </tr>
-                    ) : (
-                      ordersData.orders.map((order) => (
-                        <tr key={order._id} style={{ borderBottom: '1px solid #e5e5e5', cursor: 'pointer' }} onClick={() => navigate(`/admin/orders/${order._id}`)}>
-                          <td style={{ padding: '1rem', color: '#1f2937', fontSize: '0.875rem' }}>
-                            <div style={{ fontWeight: 600, fontSize: '1rem', color: '#2563eb' }}>#{order.orderCode || order._id.slice(-8).toUpperCase()}</div>
-                            <div style={{ color: '#9ca3af', fontSize: '0.75rem', fontFamily: 'monospace' }}>ID: {order._id.slice(-8)}</div>
-                          </td>
-                          <td style={{ padding: '1rem', color: '#1f2937', fontSize: '0.875rem' }}>
-                            <div style={{ fontWeight: 600 }}>{order.customer.name}</div>
-                            <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>{order.customer.email}</div>
-                            <div style={{ color: '#6b7280', fontSize: '0.75rem' }}>{order.customer.phone}</div>
-                          </td>
-                          <td style={{ padding: '1rem', color: '#1f2937', fontSize: '0.875rem' }}>
-                            {order.items.length} sản phẩm
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'right', color: '#1f2937', fontSize: '0.875rem', fontWeight: 600 }}>
-                            {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center' }}>
-                            <span
-                              style={{
-                                padding: '0.25rem 0.75rem',
-                                borderRadius: '12px',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                background: getOrderStatusColor(order.orderStatus),
-                                color: '#ffffff',
-                                display: 'inline-block'
-                              }}
-                            >
-                              {getOrderStatusText(order.orderStatus)}
-                            </span>
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'center' }}>
-                            <span
-                              style={{
-                                padding: '0.25rem 0.75rem',
-                                borderRadius: '12px',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                background: getPaymentStatusColor(order.paymentStatus),
-                                color: '#ffffff',
-                                display: 'inline-block'
-                              }}
-                            >
-                              {getPaymentStatusText(order.paymentStatus)}
-                            </span>
-                          </td>
-                          <td style={{ padding: '1rem', color: '#6b7280', fontSize: '0.875rem' }}>
-                            {new Date(order.createdAt).toLocaleDateString('vi-VN')}
-                          </td>
-                          <td style={{ padding: '1rem', textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() => navigate(`/admin/orders/${order._id}`)}
-                              style={{
-                                padding: '0.5rem 1rem',
-                                background: '#2563eb',
-                                color: '#ffffff',
-                                border: 'none',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontSize: '0.875rem',
-                                fontWeight: 600
-                              }}
-                            >
-                              Xem
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+          <div className="table-container">
+            <div style={{ padding: '16px 24px', borderBottom: '1px solid #E2E8F0', color: '#64748B', fontSize: '0.875rem' }}>
+              Showing {((ordersData.page - 1) * ordersData.limit) + 1} - {Math.min(ordersData.page * ordersData.limit, ordersData.total)} of {ordersData.total} orders
             </div>
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th style={{ textAlign: 'right' }}>Total</th>
+                  <th style={{ textAlign: 'center' }}>Status</th>
+                  <th style={{ textAlign: 'center' }}>Payment</th>
+                  <th>Date</th>
+                  <th style={{ textAlign: 'right' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ordersData.orders.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ padding: '48px', textAlign: 'center', color: '#94A3B8' }}>
+                      No orders found
+                    </td>
+                  </tr>
+                ) : (
+                  ordersData.orders.map((order) => (
+                    <tr key={order._id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/admin/orders/${order._id}`)}>
+                      <td>
+                        <div style={{ fontWeight: 600, color: '#1E293B' }}>#{order.orderCode || order._id.slice(-8).toUpperCase()}</div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{order.customer.name}</div>
+                        <div style={{ color: '#94A3B8', fontSize: '0.8rem' }}>{order.customer.email}</div>
+                      </td>
+                      <td>
+                        {order.items.length} items
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                        {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {getOrderStatusBadge(order.orderStatus)}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {getPaymentStatusBadge(order.paymentStatus)}
+                      </td>
+                      <td style={{ color: '#64748B' }}>
+                        {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                      </td>
+                      <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => navigate(`/admin/orders/${order._id}`)}
+                          className="btn-admin btn-admin-ghost"
+                        >
+                          <Eye size={16} /> View
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
 
-            {/* Pagination */}
+            {/* Pagination inside container */}
             {ordersData.totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '24px', gap: '8px', borderTop: '1px solid #E2E8F0' }}>
                 <button
                   onClick={() => handlePageChange(ordersData.page - 1)}
                   disabled={ordersData.page === 1}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: ordersData.page === 1 ? '#e5e5e5' : '#2563eb',
-                    color: ordersData.page === 1 ? '#9ca3af' : '#ffffff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: ordersData.page === 1 ? 'not-allowed' : 'pointer',
-                    fontSize: '0.875rem'
-                  }}
+                  className="btn-admin btn-admin-ghost"
+                  style={{ opacity: ordersData.page === 1 ? 0.5 : 1 }}
                 >
-                  Trước
+                  <ArrowLeft size={16} /> Previous
                 </button>
-
-                {Array.from({ length: ordersData.totalPages }, (_, i) => i + 1)
-                  .filter(page => {
-                    // Show first page, last page, current page, and pages around current
-                    return page === 1 ||
-                      page === ordersData.totalPages ||
-                      (page >= ordersData.page - 1 && page <= ordersData.page + 1);
-                  })
-                  .map((page, index, array) => {
-                    // Add ellipsis if there's a gap
-                    const showEllipsisBefore = index > 0 && array[index - 1] < page - 1;
-                    return (
-                      <span key={page}>
-                        {showEllipsisBefore && <span style={{ padding: '0 0.5rem' }}>...</span>}
-                        <button
-                          onClick={() => handlePageChange(page)}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            background: page === ordersData.page ? '#2563eb' : '#ffffff',
-                            color: page === ordersData.page ? '#ffffff' : '#1f2937',
-                            border: '1px solid #e5e5e5',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '0.875rem',
-                            fontWeight: page === ordersData.page ? 600 : 400
-                          }}
-                        >
-                          {page}
-                        </button>
-                      </span>
-                    );
-                  })}
-
+                {/* Simplified pagination for now */}
+                <span style={{ display: 'flex', alignItems: 'center', padding: '0 16px', fontWeight: 600, color: '#64748B' }}>
+                  Page {ordersData.page} of {ordersData.totalPages}
+                </span>
                 <button
                   onClick={() => handlePageChange(ordersData.page + 1)}
                   disabled={ordersData.page === ordersData.totalPages}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: ordersData.page === ordersData.totalPages ? '#e5e5e5' : '#2563eb',
-                    color: ordersData.page === ordersData.totalPages ? '#9ca3af' : '#ffffff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: ordersData.page === ordersData.totalPages ? 'not-allowed' : 'pointer',
-                    fontSize: '0.875rem'
-                  }}
+                  className="btn-admin btn-admin-ghost"
+                  style={{ opacity: ordersData.page === ordersData.totalPages ? 0.5 : 1 }}
                 >
-                  Sau
+                  Next <ArrowRight size={16} />
                 </button>
               </div>
             )}
-          </>
+          </div>
         ) : null}
       </div>
     </div>
   );
 }
-

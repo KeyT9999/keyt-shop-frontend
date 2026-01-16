@@ -7,7 +7,12 @@ import './i18n/i18n'; // Import i18n config
 import { CartProvider } from './context/CartContext';
 import { AuthProvider } from './context/AuthContext';
 import { WishlistProvider } from './context/WishlistContext';
+
+import { NotificationProvider } from './context/NotificationContext';
+import NotificationContainer from './components/NotificationContainer';
+
 import { AddToCartAnimationProvider } from './context/AddToCartAnimationContext';
+
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -17,6 +22,16 @@ createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
             <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
                 <AuthProvider>
+
+                    <NotificationProvider>
+                        <CartProvider>
+                            <WishlistProvider>
+                                <App />
+                                <NotificationContainer />
+                            </WishlistProvider>
+                        </CartProvider>
+                    </NotificationProvider>
+
                     <CartProvider>
                         <AddToCartAnimationProvider>
                             <WishlistProvider>
@@ -24,6 +39,7 @@ createRoot(document.getElementById('root')!).render(
                             </WishlistProvider>
                         </AddToCartAnimationProvider>
                     </CartProvider>
+
                 </AuthProvider>
             </GoogleOAuthProvider>
         </BrowserRouter>

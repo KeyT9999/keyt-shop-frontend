@@ -86,16 +86,15 @@ export default function PersonalInfoTab({ profile, onUpdate }: PersonalInfoTabPr
 
   return (
     <div className="profile-tab">
-      <div className="profile-tab__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', borderBottom: '1px solid #f3f4f6', paddingBottom: '24px' }}>
+      <div className="profile-tab__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#111827', margin: 0 }}>Thông tin cá nhân</h2>
-          <p style={{ margin: '4px 0 0 0', color: '#6b7280', fontSize: '14px' }}>Quản lý thông tin cá nhân và liên hệ của bạn.</p>
+          <h2>Thông tin cá nhân</h2>
+          <p>Quản lý thông tin cá nhân và liên hệ của bạn.</p>
         </div>
         {!isEditing && (
           <button
-            className="profile-button primary"
+            className="profile-button primary small"
             onClick={() => setIsEditing(true)}
-            style={{ borderRadius: '99px', padding: '10px 24px' }}
           >
             ✏️ Chỉnh sửa
           </button>
@@ -110,7 +109,7 @@ export default function PersonalInfoTab({ profile, onUpdate }: PersonalInfoTabPr
           <div className="profile-form__group">
             <label>Username</label>
             <input type="text" value={profile.username} disabled />
-            <small>Username không thể thay đổi</small>
+            <small style={{ color: '#64748B', fontSize: '12px', marginTop: '4px' }}>Username không thể thay đổi</small>
           </div>
 
           <div className="profile-form__group">
@@ -183,4 +182,3 @@ export default function PersonalInfoTab({ profile, onUpdate }: PersonalInfoTabPr
     </div>
   );
 }
-

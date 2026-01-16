@@ -4,7 +4,12 @@ import axios from 'axios';
 import type { Product } from '../types/product';
 import { formatPrice } from '../utils/formatPrice';
 import { useCartContext } from '../context/useCartContext';
+
+
+import { useNotification } from '../context/NotificationContext';
+
 import { useAddToCartAnimation } from '../context/AddToCartAnimationContext';
+
 import { reviewService, type Review, type ReviewStats } from '../services/reviewService';
 import './ProductDetail.css';
 import API_BASE_URL from '../config/api';
@@ -25,7 +30,10 @@ export default function ProductDetail() {
   const [reviewsLoading, setReviewsLoading] = useState(false);
 
   const { addItem, clearCart } = useCartContext();
+  const { showNotification } = useNotification();
   const { triggerAnimation } = useAddToCartAnimation();
+
+  
   const navigate = useNavigate();
 
   const isOutOfStock = useMemo(() => {
@@ -160,6 +168,7 @@ export default function ProductDetail() {
     } else {
       addItem(product);
     }
+    showNotification(`Đã thêm ${currentName} vào giỏ hàng`, 'success');
   };
 
   const handleBuyNow = (e?: React.MouseEvent<HTMLButtonElement>) => {
@@ -175,8 +184,10 @@ export default function ProductDetail() {
         name: `${product.name} - ${selectedOption.name}`
       };
       addItem(productWithOption);
+      showNotification(`Đã thêm ${productWithOption.name} vào giỏ hàng`, 'success');
     } else {
       addItem(product);
+      showNotification(`Đã thêm ${currentName} vào giỏ hàng`, 'success');
     }
     
     // Navigate to checkout

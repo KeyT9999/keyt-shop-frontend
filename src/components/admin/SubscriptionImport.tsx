@@ -50,7 +50,9 @@ export default function SubscriptionImport({ onSuccess, onCancel }: Subscription
     >
       <h3 style={{ color: '#1f2937', marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 600 }}>Import Subscriptions</h3>
       <p style={{ color: '#6b7280', marginBottom: '1rem', fontSize: '0.9rem' }}>
-        Format: email | serviceName | startDate (dd/MM/yyyy) | endDate (dd/MM/yyyy) | zalo (optional) | instagram (optional)
+        Format: <strong>email</strong> (tab hoặc nhiều spaces) <strong>serviceName</strong> (tab hoặc nhiều spaces) <strong>startDate (dd/MM/yyyy)</strong> (tab hoặc nhiều spaces) <strong>endDate (dd/MM/yyyy)</strong>
+        <br />
+        Ví dụ: <code style={{ background: '#F3F4F6', padding: '2px 6px', borderRadius: '4px', fontSize: '0.85rem' }}>phamvy1589@gmail.com	Canva Pro 1 Năm 	1/3/2025	1/3/2026</code>
       </p>
 
       <textarea
@@ -58,7 +60,7 @@ export default function SubscriptionImport({ onSuccess, onCancel }: Subscription
         onChange={(e) => setData(e.target.value)}
         required
         rows={10}
-        placeholder="email@example.com | Netflix Premium | 01/01/2025 | 31/01/2025 | 0868899104 | @instagram"
+        placeholder="phamvy1589@gmail.com	Canva Pro 1 Năm 	1/3/2025	1/3/2026&#10;aryalok@finmail.com	Canva Pro 1 Năm 	1/3/2025	1/3/2026&#10;cttnguyen27@gmail.com	Canva Pro 1 Năm 	1/3/2025	1/3/2026"
         style={{
           width: '100%',
           padding: '0.75rem',

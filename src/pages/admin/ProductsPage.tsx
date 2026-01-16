@@ -103,21 +103,19 @@ export default function ProductsPage() {
   );
 
   return (
-    <div className="admin-page-content" style={{ paddingBottom: '40px' }}>
+    <div className="admin-page-content" style={{ paddingBottom: '40px', padding: '20px 16px' }}>
       <div style={{ maxWidth: '100%', margin: '0 auto' }}>
 
         {/* Header & Toolbar */}
         <div style={{
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-          gap: '16px',
-          flexWrap: 'wrap'
+          flexDirection: 'column',
+          gap: '12px',
+          marginBottom: '24px'
         }}>
-          {/* Left: Search & Filter */}
-          <div style={{ display: 'flex', gap: '12px', flex: 1, minWidth: '300px' }}>
-            <div style={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
+          {/* Search & Filter */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ position: 'relative', width: '100%' }}>
               <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
               <input
                 type="text"
@@ -125,15 +123,15 @@ export default function ProductsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="admin-input"
-                style={{ paddingLeft: '40px' }}
+                style={{ paddingLeft: '40px', width: '100%' }}
               />
             </div>
 
-            <div style={{ position: 'relative', minWidth: '180px' }}>
+            <div style={{ position: 'relative', width: '100%' }}>
               <Filter size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
               <select
                 className="admin-input"
-                style={{ paddingLeft: '36px' }}
+                style={{ paddingLeft: '36px', width: '100%' }}
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -145,12 +143,18 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Right: Actions */}
-          <div style={{ display: 'flex', gap: '12px' }}>
+          {/* Actions */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <button
               onClick={() => setShowCategoryModal(true)}
               className="btn-admin btn-admin-outline"
-              style={{ background: 'white', borderColor: '#F05A28', color: '#F05A28' }}
+              style={{ 
+                background: 'white', 
+                borderColor: '#F05A28', 
+                color: '#F05A28',
+                width: '100%',
+                justifyContent: 'center'
+              }}
             >
               <Settings size={18} /> Manage Categories
             </button>
@@ -160,6 +164,7 @@ export default function ProductsPage() {
                 setEditingProduct(null);
               }}
               className="btn-admin btn-admin-primary"
+              style={{ width: '100%', justifyContent: 'center' }}
             >
               {showAddForm ? 'Cancel' : <><Plus size={18} /> Add Product</>}
             </button>
@@ -168,8 +173,8 @@ export default function ProductsPage() {
 
         {/* Add/Edit Product Form */}
         {(showAddForm || editingProduct) && (
-          <div className="table-container" style={{ marginBottom: '24px', padding: '24px' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#1E293B' }}>
+          <div className="table-container" style={{ marginBottom: '24px', padding: '16px' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#1E293B', fontSize: '1.1rem' }}>
               {editingProduct ? `Edit Product: ${editingProduct.name}` : 'Add New Product'}
             </h3>
             <ProductForm
@@ -184,8 +189,10 @@ export default function ProductsPage() {
         {loading ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>Loading products...</div>
         ) : (
-          <div className="table-container">
-            <table className="admin-table">
+          <>
+            {/* Desktop Table View */}
+            <div className="table-container" style={{ overflowX: 'auto', display: 'none' }} id="desktop-products-table">
+              <table className="admin-table" style={{ minWidth: '800px', width: '100%' }}>
               <thead>
                 <tr>
                   <th style={{ width: '80px', textAlign: 'center' }}>Image</th>
@@ -286,7 +293,168 @@ export default function ProductsPage() {
                 )}
               </tbody>
             </table>
-          </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} id="mobile-products-cards">
+              {filteredProducts.length === 0 ? (
+                <div style={{ padding: '48px', textAlign: 'center', color: '#94A3B8', background: 'white', borderRadius: '12px' }}>
+                  <Search size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                  <p>No products found matching "{searchQuery}"</p>
+                </div>
+              ) : (
+                filteredProducts.map((product) => (
+                  <div
+                    key={product._id}
+                    style={{
+                      background: 'white',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      border: '1px solid #F1F5F9',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    {/* Header with Image and Name */}
+                    <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                      <div style={{
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '8px',
+                        background: '#F1F5F9',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        border: '1px solid #E2E8F0',
+                        flexShrink: 0
+                      }}>
+                        {product.imageUrl || (product.images && product.images[0]) ? (
+                          <img
+                            src={product.imageUrl || (product.images && product.images[0]) || undefined}
+                            alt={product.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <ImageIcon size={24} color="#94A3B8" />
+                        )}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '1rem', marginBottom: '4px', wordBreak: 'break-word' }}>
+                          {product.name}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '8px' }}>
+                          {product.billingCycle}
+                        </div>
+                        <span className="status-badge" style={{ background: '#E0F2FE', color: '#0369A1', fontSize: '0.8rem' }}>
+                          {product.category}
+                        </span>
+                      </div>
+                      {product.isHot && (
+                        <div style={{ flexShrink: 0 }}>
+                          <Flame size={24} color="#F05A28" fill="#F05A28" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Price and Stock Row */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      padding: '12px 0',
+                      borderTop: '1px solid #F1F5F9',
+                      borderBottom: '1px solid #F1F5F9',
+                      marginBottom: '12px'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '4px' }}>Price</div>
+                        <span style={{ fontWeight: 700, color: '#F05A28', fontSize: '1.1rem' }}>
+                          {product.price.toLocaleString('vi-VN')} {product.currency}
+                        </span>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '4px' }}>Stock</div>
+                        <span style={{
+                          fontWeight: 600,
+                          color: product.stock > 0 ? '#1E293B' : '#EF4444',
+                          background: product.stock > 0 ? '#F1F5F9' : '#FEF2F2',
+                          padding: '4px 12px',
+                          borderRadius: '6px',
+                          fontSize: '0.9rem'
+                        }}>
+                          {product.stock}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => handleEdit(product)}
+                        style={{
+                          flex: 1,
+                          padding: '10px',
+                          background: '#1E293B',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          fontWeight: 600,
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        <Edit size={16} /> Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDelete(product._id, product.name)}
+                        style={{
+                          flex: 1,
+                          padding: '10px',
+                          background: '#FEF2F2',
+                          color: '#EF4444',
+                          border: '1px solid #FECACA',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          fontWeight: 600,
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        <Trash2 size={16} /> Xóa
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* CSS for responsive */}
+            <style>{`
+              @media (min-width: 768px) {
+                #desktop-products-table {
+                  display: block !important;
+                }
+                #mobile-products-cards {
+                  display: none !important;
+                }
+              }
+              @media (max-width: 767px) {
+                #desktop-products-table {
+                  display: none !important;
+                }
+                #mobile-products-cards {
+                  display: flex !important;
+                }
+              }
+            `}</style>
+          </>
         )}
 
         {/* Categories Modal */}
@@ -306,10 +474,13 @@ export default function ProductsPage() {
           }}>
             <div style={{
               background: 'white',
-              padding: '24px',
+              padding: '16px',
               borderRadius: '16px',
               width: '100%',
               maxWidth: '450px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              margin: '20px',
               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>

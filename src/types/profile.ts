@@ -69,6 +69,7 @@ export interface Order {
       label: string;
       value: string;
     }>;
+    deliveredAccount?: string; // Format: "username:password" for preloaded accounts
     feedback?: {
       rating: number;
       comment: string;

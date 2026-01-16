@@ -200,7 +200,7 @@ export default function AdminOrderDetailPage() {
         }
         .btn-cancel:hover { background: #FEF2F2; }
       `}</style>
-      <div className="main-content print-content" style={{ background: '#F8FAFC', minHeight: '100vh', padding: '40px 20px' }}>
+      <div className="main-content print-content" style={{ background: '#F8FAFC', minHeight: '100vh', padding: '20px 16px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
 
           {/* Top Bar */}
@@ -227,18 +227,23 @@ export default function AdminOrderDetailPage() {
             </button>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            gap: '16px',
+            marginBottom: '24px'
+          }}>
             <div>
-              <h1 style={{ color: '#1E293B', margin: '0 0 8px 0', fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.025em' }}>
+              <h1 style={{ color: '#1E293B', margin: '0 0 8px 0', fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.025em' }}>
                 HÓA ĐƠN BÁN HÀNG
               </h1>
-              <div style={{ fontSize: '1.25rem', color: '#1E293B', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontSize: '1rem', color: '#1E293B', fontWeight: 600, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px' }}>
                 Mã đơn hàng: <span style={{ color: '#F05A28' }}>#{order.orderCode || order._id.slice(-8).toUpperCase()}</span>
               </div>
-              <div style={{ color: '#94A3B8', fontSize: '0.875rem', marginTop: '4px', fontFamily: 'monospace' }}>
+              <div style={{ color: '#94A3B8', fontSize: '0.75rem', marginTop: '4px', fontFamily: 'monospace', wordBreak: 'break-all' }}>
                 ID: {order._id}
               </div>
-              <div style={{ color: '#64748B', fontSize: '0.95rem', marginTop: '8px' }}>
+              <div style={{ color: '#64748B', fontSize: '0.875rem', marginTop: '8px' }}>
                 Ngày tạo: {new Date(order.createdAt).toLocaleString('vi-VN')}
               </div>
             </div>
@@ -247,18 +252,20 @@ export default function AdminOrderDetailPage() {
               onClick={handlePrintInvoice}
               className="no-print"
               style={{
-                padding: '10px 20px',
+                padding: '10px 16px',
                 background: '#1E293B',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontWeight: 600,
-                fontSize: '0.95rem',
+                fontSize: '0.875rem',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 6px -1px rgba(30, 41, 59, 0.2)'
+                justifyContent: 'center',
+                gap: '6px',
+                boxShadow: '0 4px 6px -1px rgba(30, 41, 59, 0.2)',
+                alignSelf: 'flex-start'
               }}
             >
               🖨️ In hóa đơn
@@ -266,10 +273,15 @@ export default function AdminOrderDetailPage() {
           </div>
 
           {/* Status Cards Grid */}
-          <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '32px' }}>
+          <div className="no-print" style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+            gap: '12px', 
+            marginBottom: '24px' 
+          }}>
             {/* Order Status */}
-            <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-              <div style={{ fontSize: '0.95rem', color: '#64748B', marginBottom: '12px', fontWeight: 500 }}>Trạng thái đơn hàng</div>
+            <div style={{ background: '#ffffff', padding: '16px', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '8px', fontWeight: 500 }}>Trạng thái đơn hàng</div>
               <span className="status-badge" style={{
                 background: order.orderStatus === 'pending' ? '#FFF7ED' : order.orderStatus === 'completed' ? '#ECFDF5' : '#EFF6FF',
                 color: order.orderStatus === 'pending' ? '#C2410C' : order.orderStatus === 'completed' ? '#047857' : '#1D4ED8'
@@ -279,8 +291,8 @@ export default function AdminOrderDetailPage() {
             </div>
 
             {/* Payment Status */}
-            <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-              <div style={{ fontSize: '0.95rem', color: '#64748B', marginBottom: '12px', fontWeight: 500 }}>Trạng thái thanh toán</div>
+            <div style={{ background: '#ffffff', padding: '16px', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '8px', fontWeight: 500 }}>Trạng thái thanh toán</div>
               <span className="status-badge" style={{
                 background: order.paymentStatus === 'paid' ? '#ECFDF5' : '#FFF7ED',
                 color: order.paymentStatus === 'paid' ? '#047857' : '#C2410C'
@@ -290,53 +302,59 @@ export default function AdminOrderDetailPage() {
             </div>
 
             {/* Total Amount */}
-            <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-              <div style={{ fontSize: '0.95rem', color: '#64748B', marginBottom: '8px', fontWeight: 500 }}>Tổng tiền</div>
-              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#F05A28', letterSpacing: '-0.025em' }}>
+            <div style={{ background: '#ffffff', padding: '16px', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '8px', fontWeight: 500 }}>Tổng tiền</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F05A28', letterSpacing: '-0.025em', wordBreak: 'break-word' }}>
                 {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '70% 30%', gap: '24px' }}>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '20px' 
+          }}>
 
             {/* LEFT COLUMN */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
               {/* Customer Info */}
-              <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-                <h2 style={{ margin: '0 0 20px 0', color: '#1E293B', fontSize: '1.1rem', fontWeight: 700 }}>Thông tin khách hàng</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
-                    <div style={{ fontSize: '0.9rem', color: '#64748B' }}>Tên</div>
-                    <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '1rem' }}>{order.customer.name}</div>
+              <div style={{ background: '#ffffff', padding: '16px', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                <h2 style={{ margin: '0 0 16px 0', color: '#1E293B', fontSize: '1rem', fontWeight: 700 }}>Thông tin khách hàng</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>Tên</div>
+                    <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '0.95rem', wordBreak: 'break-word' }}>{order.customer.name}</div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
-                    <div style={{ fontSize: '0.9rem', color: '#64748B' }}>Email</div>
-                    <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '1rem' }}>{order.customer.email}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>Email</div>
+                    <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '0.95rem', wordBreak: 'break-word' }}>{order.customer.email}</div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', alignItems: 'center' }}>
-                    <div style={{ fontSize: '0.9rem', color: '#64748B' }}>Số điện thoại</div>
-                    <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '1rem' }}>{order.customer.phone}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B' }}>Số điện thoại</div>
+                    <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '0.95rem', wordBreak: 'break-word' }}>{order.customer.phone}</div>
                   </div>
                 </div>
               </div>
 
               {/* Products */}
-              <div style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-                <h2 style={{ margin: '0 0 20px 0', color: '#1E293B', fontSize: '1.1rem', fontWeight: 700 }}>Sản phẩm</h2>
+              <div style={{ background: '#ffffff', padding: '16px', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                <h2 style={{ margin: '0 0 16px 0', color: '#1E293B', fontSize: '1rem', fontWeight: 700 }}>Sản phẩm</h2>
                 <div style={{ borderTop: '1px solid #F1F5F9' }}>
                   {order.items.map((item, index) => (
-                    <div key={index} style={{ padding: '20px 0', borderBottom: index < order.items.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                        <div>
-                          <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '1rem', marginBottom: '4px' }}>{item.name}</div>
-                          <div style={{ fontSize: '0.9rem', color: '#64748B' }}>
-                            Số lượng: {item.quantity} × {formatPrice(item.price, item.currency)}
+                    <div key={index} style={{ padding: '16px 0', borderBottom: index < order.items.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.95rem', marginBottom: '4px', wordBreak: 'break-word' }}>{item.name}</div>
+                            <div style={{ fontSize: '0.85rem', color: '#64748B' }}>
+                              Số lượng: {item.quantity} × {formatPrice(item.price, item.currency)}
+                            </div>
                           </div>
-                        </div>
-                        <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '1rem' }}>
-                          {formatPrice(item.price * item.quantity, item.currency)}
+                          <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.95rem', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                            {formatPrice(item.price * item.quantity, item.currency)}
+                          </div>
                         </div>
                       </div>
 
@@ -345,17 +363,55 @@ export default function AdminOrderDetailPage() {
                         <div style={{
                           background: '#F1F5F9',
                           borderRadius: '8px',
-                          padding: '16px',
-                          border: '1px solid #E2E8F0'
+                          padding: '12px',
+                          border: '1px solid #E2E8F0',
+                          marginBottom: '12px'
                         }}>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1E293B', marginBottom: '8px' }}>
+                          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1E293B', marginBottom: '6px' }}>
                             Thông tin bổ sung:
                           </div>
                           {item.requiredFieldsData.map((fieldData, fieldIndex) => (
-                            <div key={fieldIndex} style={{ fontSize: '0.9rem', color: '#334155', marginBottom: '4px' }}>
+                            <div key={fieldIndex} style={{ fontSize: '0.85rem', color: '#334155', marginBottom: '4px', wordBreak: 'break-word' }}>
                               <span style={{ fontWeight: 600 }}>{fieldData.label}:</span> {fieldData.value}
                             </div>
                           ))}
+                        </div>
+                      )}
+
+                      {/* Delivered Account (for preloaded accounts) */}
+                      {item.deliveredAccount && (
+                        <div style={{
+                          background: '#DBEAFE',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          border: '1px solid #93C5FD',
+                          borderLeft: '4px solid #2563EB'
+                        }}>
+                          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1E40AF', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            🔑 Thông tin tài khoản đã gửi:
+                          </div>
+                          {(() => {
+                            const [username, password] = item.deliveredAccount.split(':');
+                            return (
+                              <div style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                                <div style={{ marginBottom: '6px', wordBreak: 'break-word' }}>
+                                  <span style={{ fontWeight: 600, color: '#1E40AF' }}>Username:</span>{' '}
+                                  <span style={{ color: '#1E293B', background: '#EFF6FF', padding: '2px 6px', borderRadius: '4px' }}>
+                                    {username || 'N/A'}
+                                  </span>
+                                </div>
+                                <div style={{ wordBreak: 'break-word' }}>
+                                  <span style={{ fontWeight: 600, color: '#1E40AF' }}>Password:</span>{' '}
+                                  <span style={{ color: '#1E293B', background: '#EFF6FF', padding: '2px 6px', borderRadius: '4px' }}>
+                                    {password || 'N/A'}
+                                  </span>
+                                </div>
+                                <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#1E40AF', fontStyle: 'italic' }}>
+                                  (Format: {item.deliveredAccount})
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>
@@ -365,11 +421,11 @@ export default function AdminOrderDetailPage() {
             </div>
 
             {/* RIGHT COLUMN */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
               {/* Actions Card */}
-              <div className="no-print" style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-                <h2 style={{ margin: '0 0 20px 0', color: '#1E293B', fontSize: '1.1rem', fontWeight: 700 }}>Thao tác</h2>
+              <div className="no-print" style={{ background: '#ffffff', padding: '16px', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                <h2 style={{ margin: '0 0 16px 0', color: '#1E293B', fontSize: '1rem', fontWeight: 700 }}>Thao tác</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {order.orderStatus === 'pending' && (
                     <button
@@ -414,9 +470,10 @@ export default function AdminOrderDetailPage() {
               </div>
 
               {/* Internal Note Card */}
-              <div className="no-print" style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h2 style={{ margin: 0, color: '#1E293B', fontSize: '1.1rem', fontWeight: 700 }}>Ghi chú nội bộ</h2>
+              <div className="no-print" style={{ background: '#ffffff', padding: '16px', borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 style={{ margin: 0, color: '#1E293B', fontSize: '1rem', fontWeight: 700 }}>Ghi chú nội bộ</h2>
                   {!editingNotes && (
                     <button
                       onClick={() => setEditingNotes(true)}
@@ -434,6 +491,7 @@ export default function AdminOrderDetailPage() {
                       {order.adminNotes ? 'Sửa' : 'Thêm ghi chú'}
                     </button>
                   )}
+                  </div>
                 </div>
 
                 {editingNotes ? (

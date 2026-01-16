@@ -58,7 +58,9 @@ export interface OrderStats {
   pendingConfirmation: number;
   processing: number;
   todayRevenue: number;
+  weekRevenue: number;
   monthRevenue: number;
+  yearRevenue: number;
 }
 
 export interface OrdersListResponse {

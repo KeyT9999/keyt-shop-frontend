@@ -11,6 +11,7 @@ import { useNotification } from '../context/NotificationContext';
 import { useAddToCartAnimation } from '../context/AddToCartAnimationContext';
 
 import { reviewService, type Review, type ReviewStats } from '../services/reviewService';
+import { useAuthContext } from '../context/useAuthContext';
 import './ProductDetail.css';
 import API_BASE_URL from '../config/api';
 
@@ -28,6 +29,14 @@ export default function ProductDetail() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  
+  // Admin reply states
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [replying, setReplying] = useState(false);
+  
+  const { user, token } = useAuthContext();
 
   const { addItem, clearCart } = useCartContext();
   const { showNotification } = useNotification();
@@ -82,9 +91,18 @@ export default function ProductDetail() {
     fetchProduct();
   }, [id]);
 
+  // Auto-switch to reviews tab if hash is #reviews
+  useEffect(() => {
+    if (window.location.hash === '#reviews') {
+      setActiveTab('reviews');
+      // Remove hash from URL after switching
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
+
   // Fetch Reviews (Remote Logic)
   useEffect(() => {
-    if (activeTab === 'reviews' && id && !reviewsLoading && reviews.length === 0) {
+    if (activeTab === 'reviews' && id && !reviewsLoading) {
       loadReviews();
     }
   }, [activeTab, id]);
@@ -110,6 +128,43 @@ export default function ProductDetail() {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const handleReplyClick = (review: Review) => {
+    setSelectedReview(review);
+    setReplyContent(review.reply?.content || '');
+    setShowReplyModal(true);
+  };
+
+  const handleSubmitReply = async () => {
+    if (!selectedReview || !replyContent.trim()) {
+      showNotification('Vui lòng nhập nội dung phản hồi', 'error');
+      return;
+    }
+
+    if (!user?.admin) {
+      showNotification('Chỉ admin mới có thể phản hồi đánh giá', 'error');
+      return;
+    }
+
+    try {
+      setReplying(true);
+      if (!token) {
+        showNotification('Bạn cần đăng nhập để phản hồi đánh giá', 'error');
+        return;
+      }
+      await reviewService.replyToReview(selectedReview._id, replyContent.trim(), token);
+      showNotification('✅ Phản hồi thành công!', 'success');
+      setShowReplyModal(false);
+      setSelectedReview(null);
+      setReplyContent('');
+      // Reload reviews to show the new reply
+      await loadReviews();
+    } catch (err: any) {
+      showNotification(err.response?.data?.message || 'Không thể gửi phản hồi', 'error');
+    } finally {
+      setReplying(false);
+    }
   };
 
   if (loading) {
@@ -252,7 +307,7 @@ export default function ProductDetail() {
                 <span>({reviewStats?.totalReviews || 561} reviews)</span>
                 <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
                 <span className="text-slate-500">Đã bán: </span>
-                <span className="font-bold text-slate-700">5.7k</span>
+                <span className="font-bold text-slate-700">39</span>
               </div>
             </div>
 
@@ -317,14 +372,6 @@ export default function ProductDetail() {
                 <i className="fas fa-arrow-right text-sm opacity-90"></i>
               </button>
             </div>
-
-            {/* Trust Text */}
-            <p className="text-xs text-slate-400 flex items-center gap-2 mt-2 pl-1">
-              <div className="w-4 h-4 rounded-full bg-green-100 flex items-center justify-center">
-                <i className="fas fa-check text-[8px] text-green-600"></i>
-              </div>
-              Cam kết hoàn tiền trong 7 ngày nếu không hài lòng.
-            </p>
           </div>
         </div>
 
@@ -470,6 +517,18 @@ export default function ProductDetail() {
                             <p className="text-sm text-slate-600">{review.reply.content}</p>
                           </div>
                         )}
+                        
+                        {/* Admin Reply Button */}
+                        {user?.admin && (
+                          <div className="mt-3">
+                            <button
+                              onClick={() => handleReplyClick(review)}
+                              className="text-xs px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                            >
+                              {review.reply ? '✏️ Sửa phản hồi' : '💬 Phản hồi'}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -534,6 +593,147 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+
+      {/* Admin Reply Modal */}
+      {showReplyModal && selectedReview && user?.admin && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem'
+          }}
+          onClick={() => setShowReplyModal(false)}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: '12px',
+              maxWidth: '600px',
+              width: '100%',
+              padding: '2rem',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#1f2937' }}>
+                {selectedReview.reply ? 'Sửa phản hồi đánh giá' : 'Phản hồi đánh giá'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowReplyModal(false);
+                  setSelectedReview(null);
+                  setReplyContent('');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  padding: '0.25rem',
+                  lineHeight: 1
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            {/* Review Info */}
+            <div style={{ 
+              padding: '1rem', 
+              background: '#f9fafb', 
+              borderRadius: '8px', 
+              marginBottom: '1rem',
+              fontSize: '0.875rem'
+            }}>
+              <div style={{ marginBottom: '0.5rem' }}>
+                <strong>User:</strong> {selectedReview.userId.username}
+              </div>
+              <div style={{ marginBottom: '0.5rem' }}>
+                <strong>Rating:</strong> {[1, 2, 3, 4, 5].map((star) => (
+                  <i key={star} className={star <= selectedReview.rating ? 'fas fa-star text-yellow-400' : 'far fa-star text-slate-300'}></i>
+                ))}
+              </div>
+              <div>
+                <strong>Nội dung:</strong> {selectedReview.comment}
+              </div>
+            </div>
+
+            {/* Reply Input */}
+            <textarea
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              placeholder="Nhập phản hồi của bạn..."
+              rows={5}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '2px solid #e5e7eb',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontFamily: 'inherit',
+                resize: 'vertical',
+                marginBottom: '1rem',
+                outline: 'none'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+              onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+            />
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowReplyModal(false);
+                  setSelectedReview(null);
+                  setReplyContent('');
+                }}
+                disabled={replying}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: replying ? 'not-allowed' : 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  opacity: replying ? 0.5 : 1
+                }}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleSubmitReply}
+                disabled={replying || !replyContent.trim()}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  background: replying || !replyContent.trim() ? '#9ca3af' : '#3b82f6',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: replying || !replyContent.trim() ? 'not-allowed' : 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: 600
+                }}
+              >
+                {replying ? 'Đang gửi...' : selectedReview.reply ? 'Cập nhật phản hồi' : 'Gửi phản hồi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

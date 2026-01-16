@@ -553,25 +553,56 @@ export default function OrdersTab() {
                     <strong>Tổng tiền: {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}</strong>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    {order.orderStatus === 'completed' && (
-                      <button
-                        type="button"
-                        onClick={() => handleReviewClick(order)}
-                        className="profile-button primary"
-                        style={{
-                          background: '#fbbf24',
-                          color: '#1f2937',
-                          border: 'none',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontSize: '0.875rem',
-                          fontWeight: 600
-                        }}
-                      >
-                        ⭐ Đánh giá
-                      </button>
-                    )}
+                    {order.orderStatus === 'completed' && (() => {
+                      // Kiểm tra xem đã đánh giá tất cả sản phẩm chưa
+                      const allItemsReviewed = order.items.every(item => item.feedback && item.feedback.rating > 0);
+                      const firstProductId = order.items[0]?.productId;
+
+                      if (allItemsReviewed && firstProductId) {
+                        // Nếu đã đánh giá hết, hiển thị nút "Xem đánh giá"
+                        return (
+                          <Link
+                            to={`/products/${firstProductId}#reviews`}
+                            className="profile-button primary"
+                            style={{
+                              background: '#f59e0b',
+                              color: '#ffffff',
+                              border: 'none',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '0.875rem',
+                              fontWeight: 600,
+                              textDecoration: 'none',
+                              display: 'inline-block'
+                            }}
+                          >
+                            ⭐ Xem đánh giá
+                          </Link>
+                        );
+                      } else {
+                        // Nếu chưa đánh giá hết, hiển thị nút "Đánh giá"
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => handleReviewClick(order)}
+                            className="profile-button primary"
+                            style={{
+                              background: '#fbbf24',
+                              color: '#1f2937',
+                              border: 'none',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '0.875rem',
+                              fontWeight: 600
+                            }}
+                          >
+                            ⭐ Đánh giá
+                          </button>
+                        );
+                      }
+                    })()}
                     <Link
                       to={`/orders/${order._id}`}
                       className="profile-button secondary"

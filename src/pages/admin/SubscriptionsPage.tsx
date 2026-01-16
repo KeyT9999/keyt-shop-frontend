@@ -60,16 +60,62 @@ export default function SubscriptionsPage() {
 
   return (
     <div className="main-content" style={{ background: '#F8FAFC', minHeight: '100vh', padding: '40px 20px' }}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <style>{`
+        @media (max-width: 768px) {
+          .main-content {
+            padding: 16px !important;
+          }
+          #desktop-subscriptions-table {
+            display: none !important;
+          }
+          #mobile-subscriptions-cards {
+            display: block !important;
+          }
+          .subscriptions-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+            margin-bottom: 24px !important;
+          }
+          .subscriptions-actions {
+            width: 100% !important;
+            flex-direction: column !important;
+          }
+          .subscriptions-actions button {
+            width: 100% !important;
+          }
+          .subscriptions-filters {
+            flex-direction: column !important;
+            padding: 12px !important;
+            margin-bottom: 24px !important;
+          }
+          .subscriptions-filters select {
+            width: 100% !important;
+            min-width: auto !important;
+          }
+          .subscriptions-title {
+            font-size: 1.5rem !important;
+          }
+        }
+        @media (min-width: 769px) {
+          #desktop-subscriptions-table {
+            display: table !important;
+          }
+          #mobile-subscriptions-cards {
+            display: none !important;
+          }
+        }
+      `}</style>
+      <div style={{ maxWidth: '1400px', margin: '0 auto' }} className="subscriptions-main-container">
 
         {/* Header Section */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <div className="subscriptions-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
           <div>
-            <h1 style={{ color: '#1E293B', fontSize: '2rem', fontWeight: 700, margin: '0 0 8px 0' }}>Quản lý Subscriptions</h1>
+            <h1 className="subscriptions-title" style={{ color: '#1E293B', fontSize: '2rem', fontWeight: 700, margin: '0 0 8px 0' }}>Quản lý Subscriptions</h1>
             <p style={{ color: '#64748B', margin: 0 }}>Theo dõi và quản lý các gói đăng ký dịch vụ</p>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="subscriptions-actions" style={{ display: 'flex', gap: '12px' }}>
             <button
               onClick={() => {
                 setShowImport(!showImport);
@@ -115,7 +161,7 @@ export default function SubscriptionsPage() {
         </div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '32px', background: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+        <div className="subscriptions-filters" style={{ display: 'flex', gap: '16px', marginBottom: '32px', background: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
           <div style={{ flex: 1 }}>
             <input
               type="text"
@@ -169,7 +215,8 @@ export default function SubscriptionsPage() {
         {showAddForm && <div style={{ marginBottom: '32px', background: 'white', padding: '24px', borderRadius: '16px' }}><SubscriptionForm onSuccess={() => { setShowAddForm(false); fetchSubscriptions(); }} onCancel={() => setShowAddForm(false)} /></div>}
         {showImport && <div style={{ marginBottom: '32px', background: 'white', padding: '24px', borderRadius: '16px' }}><SubscriptionImport onSuccess={() => { setShowImport(false); fetchSubscriptions(); }} onCancel={() => setShowImport(false)} /></div>}
 
-        <div style={{ background: '#ffffff', borderRadius: '16px', overflow: 'hidden', border: '1px solid #F1F5F9', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+        {/* Desktop Table */}
+        <div id="desktop-subscriptions-table" style={{ background: '#ffffff', borderRadius: '16px', overflow: 'hidden', border: '1px solid #F1F5F9', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
             <thead>
               <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
@@ -252,6 +299,110 @@ export default function SubscriptionsPage() {
           </table>
           {subscriptions.length === 0 && (
             <div style={{ padding: '48px', textAlign: 'center', color: '#64748B' }}>
+              {loading ? 'Đang tải dữ liệu...' : 'Chưa có bản ghi nào'}
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Cards */}
+        <div id="mobile-subscriptions-cards" style={{ display: 'none' }}>
+          {subscriptions.map((sub) => {
+            const endDate = new Date(sub.endDate);
+            const now = new Date();
+            const isExpired = endDate < now;
+            const isActive = endDate >= now;
+            return (
+              <div
+                key={sub._id}
+                style={{
+                  background: '#ffffff',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '12px',
+                  border: '1px solid #F1F5F9',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                }}
+              >
+                <div style={{ marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #F1F5F9' }}>
+                  <div style={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Email khách hàng</div>
+                  <div style={{ color: '#1E293B', fontWeight: 500, fontSize: '0.9rem', wordBreak: 'break-word' }}>{sub.customerEmail}</div>
+                </div>
+                
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Dịch vụ</div>
+                  <div style={{ color: '#1E293B', fontSize: '0.9rem' }}>{sub.serviceName}</div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                  <div>
+                    <div style={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Ngày bắt đầu</div>
+                    <div style={{ color: '#64748B', fontSize: '0.85rem' }}>{new Date(sub.startDate).toLocaleDateString('vi-VN')}</div>
+                  </div>
+                  <div>
+                    <div style={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Ngày hết hạn</div>
+                    <div style={{ color: isExpired ? '#EF4444' : '#1E293B', fontSize: '0.85rem', fontWeight: isExpired ? 600 : 400 }}>
+                      {endDate.toLocaleDateString('vi-VN')}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <span
+                    style={{
+                      padding: '6px 16px',
+                      borderRadius: '9999px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      background: isActive ? '#ECFDF5' : '#FEF2F2',
+                      color: isActive ? '#047857' : '#B91C1C',
+                      display: 'inline-block'
+                    }}
+                  >
+                    {isActive ? 'Active' : 'Expired'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button
+                    onClick={() => handleSendReminder(sub._id)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 16px',
+                      background: '#F05A28',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    📩 Gửi nhắc
+                  </button>
+                  <button
+                    onClick={() => handleDelete(sub._id)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 16px',
+                      background: '#FEF2F2',
+                      color: '#EF4444',
+                      border: '1px solid #FECACA',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Xóa
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {subscriptions.length === 0 && (
+            <div style={{ padding: '48px', textAlign: 'center', color: '#64748B', background: '#ffffff', borderRadius: '12px' }}>
               {loading ? 'Đang tải dữ liệu...' : 'Chưa có bản ghi nào'}
             </div>
           )}

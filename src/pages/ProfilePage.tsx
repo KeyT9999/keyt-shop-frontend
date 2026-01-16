@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Menu, X } from 'lucide-react';
 import { profileService } from '../services/profileService';
 import type { UserProfile } from '../types/profile';
 import PersonalInfoTab from '../components/profile/PersonalInfoTab';
@@ -15,6 +16,14 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Close sidebar on mobile when tab changes
+  useEffect(() => {
+    if (window.innerWidth <= 768) {
+      setIsSidebarOpen(false);
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     loadProfile();
@@ -76,10 +85,26 @@ export default function ProfilePage() {
 
   return (
     <div className="profile-page">
-      <div className="profile-container">
+      {/* Mobile Menu Button */}
+      <button
+        className="profile-menu-toggle"
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        aria-label="Toggle menu"
+      >
+        {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
 
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="profile-sidebar-overlay"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      <div className="profile-container">
         {/* Left Sidebar */}
-        <div className="profile-sidebar">
+        <div className={`profile-sidebar ${isSidebarOpen ? 'open' : ''}`}>
           {/* User Summary */}
           <div className="sidebar-user">
             <div className="sidebar-avatar">
@@ -97,7 +122,12 @@ export default function ProfilePage() {
               <button
                 key={tab.id}
                 className={`sidebar-nav-item ${activeTab === tab.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  if (window.innerWidth <= 768) {
+                    setIsSidebarOpen(false);
+                  }
+                }}
               >
                 {tab.label}
               </button>
@@ -106,7 +136,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Right Content Area */}
-        <div className="profile-content">
+        <div className="profile-content" style={{ width: '100%', minHeight: '400px' }}>
           {activeTab === 'personal' && (
             <PersonalInfoTab profile={profile} onUpdate={handleProfileUpdate} />
           )}

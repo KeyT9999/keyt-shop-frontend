@@ -34,7 +34,13 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    // Default to open on desktop (> 768px), closed on mobile
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 768;
+    }
+    return true;
+  });
 
   useEffect(() => {
     if (token && user?.admin) {
@@ -64,25 +70,35 @@ export default function AdminDashboard() {
   }
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return renderDashboardHome();
-      case 'users':
-        return <UsersPage />;
-      case 'products':
-        return <ProductsPage />;
-      case 'orders':
-        return <OrdersPage />;
-      case 'reviews':
-        return <ReviewsPage />;
-      case 'chatgpt':
-        return <ChatGptAccountsPage />;
-      case 'subscriptions':
-        return <SubscriptionsPage />;
-      case 'otp':
-        return <OtpRequestsPage />;
-      default:
-        return renderDashboardHome();
+    try {
+      switch (activeTab) {
+        case 'dashboard':
+          return renderDashboardHome();
+        case 'users':
+          return <UsersPage />;
+        case 'products':
+          return <ProductsPage />;
+        case 'orders':
+          return <OrdersPage />;
+        case 'reviews':
+          return <ReviewsPage />;
+        case 'chatgpt':
+          return <ChatGptAccountsPage />;
+        case 'subscriptions':
+          return <SubscriptionsPage />;
+        case 'otp':
+          return <OtpRequestsPage />;
+        default:
+          return renderDashboardHome();
+      }
+    } catch (error) {
+      console.error('Error rendering content:', error);
+      return (
+        <div style={{ padding: '2rem', color: '#EF4444' }}>
+          <h2>Đã có lỗi xảy ra</h2>
+          <p>{error instanceof Error ? error.message : 'Unknown error'}</p>
+        </div>
+      );
     }
   };
 
@@ -93,7 +109,7 @@ export default function AdminDashboard() {
 
     return (
       <div className="admin-dashboard-home">
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '24px', color: '#1E293B' }}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '16px', color: '#1E293B' }}>
           Tổng quan hệ thống
         </h2>
 
@@ -108,7 +124,7 @@ export default function AdminDashboard() {
             </div>
             <p className="value">{stats?.chatGptAccounts.total || 0}</p>
             <div className="sub-text">
-              <TrendingUp size={16} className="text-success" />
+              <TrendingUp size={14} className="text-success" />
               <span className="text-success">+2% this week</span>
             </div>
           </div>
@@ -153,7 +169,7 @@ export default function AdminDashboard() {
             </div>
             <p className="value">{stats?.otpRequests.totalRequests || 0}</p>
             <div className="sub-text">
-              <Users size={14} />
+              <Users size={14} style={{ flexShrink: 0 }} />
               <span>{stats?.otpRequests.totalUsers || 0} users</span>
             </div>
           </div>
@@ -161,12 +177,12 @@ export default function AdminDashboard() {
 
         {/* Quick Actions */}
         <div className="table-container">
-          <h3 style={{ padding: '16px 24px', margin: 0, borderBottom: '1px solid #E2E8F0', color: '#1E293B', fontSize: '1rem' }}>Quick Actions</h3>
-          <div style={{ padding: '24px', display: 'flex', gap: '16px' }}>
-            <button className="btn-admin btn-admin-primary" onClick={() => setActiveTab('users')}>
+          <h3 style={{ padding: '12px 16px', margin: 0, borderBottom: '1px solid #E2E8F0', color: '#1E293B', fontSize: '0.95rem' }}>Quick Actions</h3>
+          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <button className="btn-admin btn-admin-primary" onClick={() => setActiveTab('users')} style={{ width: '100%' }}>
               <Users size={16} /> Manage Users
             </button>
-            <button className="btn-admin btn-admin-outline" onClick={() => setActiveTab('products')}>
+            <button className="btn-admin btn-admin-outline" onClick={() => setActiveTab('products')} style={{ width: '100%' }}>
               <Package size={16} /> Manage Products
             </button>
           </div>
@@ -192,8 +208,22 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-layout">
-      {/* Sidebar */}
-      <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : 'closed'}`} style={{ width: isSidebarOpen ? '260px' : '0', overflow: 'hidden' }}>
+      {/* Sidebar Overlay - only visible on mobile */}
+      <div 
+        className="admin-sidebar-overlay"
+        onClick={() => setIsSidebarOpen(false)}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 999,
+          display: isSidebarOpen ? 'block' : 'none'
+        }}
+      />
+      <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
         <div className="admin-sidebar-header">
           <div className="admin-logo">
             <LayoutDashboard size={24} />
@@ -204,7 +234,12 @@ export default function AdminDashboard() {
         <nav className="admin-sidebar-content">
           <button
             className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Switching to dashboard tab');
+              setActiveTab('dashboard');
+            }}
           >
             <LayoutDashboard size={20} />
             <span>Tổng quan</span>
@@ -214,7 +249,11 @@ export default function AdminDashboard() {
 
           <button
             className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
-            onClick={() => setActiveTab('users')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setActiveTab('users');
+            }}
           >
             <Users size={20} />
             <span>Quản lý Users</span>
@@ -222,7 +261,11 @@ export default function AdminDashboard() {
 
           <button
             className={`admin-nav-item ${activeTab === 'products' ? 'active' : ''}`}
-            onClick={() => setActiveTab('products')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setActiveTab('products');
+            }}
           >
             <Package size={20} />
             <span>Sản phẩm</span>
@@ -230,7 +273,11 @@ export default function AdminDashboard() {
 
           <button
             className={`admin-nav-item ${activeTab === 'orders' ? 'active' : ''}`}
-            onClick={() => setActiveTab('orders')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setActiveTab('orders');
+            }}
           >
             <ShoppingBag size={20} />
             <span>Đơn hàng</span>
@@ -238,7 +285,11 @@ export default function AdminDashboard() {
 
           <button
             className={`admin-nav-item ${activeTab === 'reviews' ? 'active' : ''}`}
-            onClick={() => setActiveTab('reviews')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setActiveTab('reviews');
+            }}
           >
             <Star size={20} />
             <span>Đánh giá</span>
@@ -248,7 +299,11 @@ export default function AdminDashboard() {
 
           <button
             className={`admin-nav-item ${activeTab === 'chatgpt' ? 'active' : ''}`}
-            onClick={() => setActiveTab('chatgpt')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setActiveTab('chatgpt');
+            }}
           >
             <Bot size={20} />
             <span>ChatGPT Accounts</span>
@@ -256,7 +311,11 @@ export default function AdminDashboard() {
 
           <button
             className={`admin-nav-item ${activeTab === 'subscriptions' ? 'active' : ''}`}
-            onClick={() => setActiveTab('subscriptions')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setActiveTab('subscriptions');
+            }}
           >
             <CreditCard size={20} />
             <span>Subscriptions</span>
@@ -264,7 +323,11 @@ export default function AdminDashboard() {
 
           <button
             className={`admin-nav-item ${activeTab === 'otp' ? 'active' : ''}`}
-            onClick={() => setActiveTab('otp')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setActiveTab('otp');
+            }}
           >
             <Key size={20} />
             <span>OTP Requests</span>
@@ -287,14 +350,19 @@ export default function AdminDashboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {/* Toggle Sidebar Button */}
             <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsSidebarOpen(!isSidebarOpen);
+              }}
               style={{
                 border: 'none',
                 background: 'transparent',
                 cursor: 'pointer',
                 padding: '8px',
                 borderRadius: '8px',
-                color: '#334155'
+                color: '#334155',
+                zIndex: 1001,
+                position: 'relative'
               }}
             >
               <Menu size={24} />
@@ -315,10 +383,10 @@ export default function AdminDashboard() {
           {renderContent()}
           <footer style={{
             marginTop: 'auto',
-            padding: '24px',
+            padding: '16px',
             textAlign: 'center',
             color: '#94A3B8',
-            fontSize: '0.8rem',
+            fontSize: '0.75rem',
             borderTop: '1px solid #E2E8F0'
           }}>
             &copy; {new Date().getFullYear()} KeyT Shop Admin. All rights reserved.

@@ -7,7 +7,6 @@ import { formatPrice } from '../utils/formatPrice';
 import { profileService } from '../services/profileService';
 import type { Product } from '../types/product';
 import API_BASE_URL from '../config/api';
-import { CreditCard, User, CheckCircle2 } from 'lucide-react';
 
 export default function CheckoutPage() {
   const { cart, totalAmount, clearCart, updateCartItem } = useCartContext();
@@ -367,192 +366,22 @@ export default function CheckoutPage() {
                     transition: 'all 0.2s'
                   }}
                 />
-
-  // Calculate subtotal and total
-  const subtotal = totalAmount;
-  const shippingFee = 0; // Free shipping
-  const finalTotal = subtotal + shippingFee;
-
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back to Cart Link */}
-        <Link 
-          to="/cart" 
-          className="inline-flex items-center text-gray-600 hover:text-[#F05A28] mb-6 transition"
-        >
-          <span className="mr-2">←</span>
-          <span>Quay lại giỏ hàng</span>
-        </Link>
-
-        {/* Page Title */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Thanh toán</h1>
-          <p className="text-gray-600">Hoàn tất đơn hàng của bạn</p>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Customer Info, Shipping, Payment */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Customer Information Card */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                    <User className="w-5 h-5 text-[#F05A28]" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900">Thông tin khách hàng</h2>
-                    <p className="text-sm text-gray-500">Điền thông tin giao hàng</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Họ và tên <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={customer.name}
-                      onChange={(e) => handleChange('name', e.target.value)}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F05A28] focus:border-transparent"
-                      placeholder="Nguyễn Văn A"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={customer.email}
-                      onChange={(e) => handleChange('email', e.target.value)}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F05A28] focus:border-transparent"
-                      placeholder="email@example.com"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Số điện thoại <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      value={customer.phone}
-                      onChange={(e) => handleChange('phone', e.target.value)}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F05A28] focus:border-transparent"
-                      placeholder="0912345678"
-                    />
-                  </div>
-
-                  {/* Required Fields cho từng sản phẩm */}
-                  {cart.map((item) => {
-                    if (!item.requiredFields || item.requiredFields.length === 0) {
-                      return null;
-                    }
-
-                    const hasAllRequiredData = item.requiredFields.every(field => {
-                      if (!field.required) return true;
-                      const value = item.requiredFieldsData?.[field.label] || requiredFieldsData[item._id]?.[field.label];
-                      return value && value.trim() !== '';
-                    });
-
-                    if (hasAllRequiredData) {
-                      return null;
-                    }
-
-                    return (
-                      <div key={item._id} className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                          Thông tin bổ sung cho: {item.name}
-                        </h3>
-                        {item.requiredFields.map((field, fieldIndex) => (
-                          <div key={fieldIndex} className="mb-3">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              {field.label} {field.required && <span className="text-red-500">*</span>}
-                            </label>
-                            <input
-                              type={field.type === 'email' ? 'email' : 'text'}
-                              value={requiredFieldsData[item._id]?.[field.label] || ''}
-                              onChange={(e) => handleRequiredFieldChange(item._id, field.label, e.target.value)}
-                              placeholder={field.placeholder || ''}
-                              required={field.required}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F05A28] focus:border-transparent"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })}
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ghi chú đơn hàng (tùy chọn)
-                    </label>
-                    <textarea
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      placeholder="Ghi chú về đơn hàng, ví dụ: thời gian giao hàng"
-                      rows={4}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F05A28] focus:border-transparent resize-none"
-                    />
-                  </div>
-                </div>
               </div>
 
-              {/* Payment Method Card */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-[#F05A28]" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900">Phương thức thanh toán</h2>
-                    <p className="text-sm text-gray-500">Chọn cách thanh toán</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="flex items-center p-4 border-2 border-[#F05A28] rounded-lg cursor-pointer bg-orange-50">
-                    <input
-                      type="radio"
-                      name="payment"
-                      value="bank_transfer"
-                      defaultChecked
-                      className="w-4 h-4 text-[#F05A28] focus:ring-[#F05A28]"
-                    />
-                    <div className="ml-4 flex-1">
-                      <div className="font-semibold text-gray-900">Chuyển khoản ngân hàng</div>
-                      <div className="text-sm text-gray-600">Chuyển khoản trực tiếp</div>
-                    </div>
-                  </label>
-                </div>
-
-              </div>
-            </div>
-
-            {/* Right Column - Order Summary */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
-                <h2 className="text-lg font-bold text-gray-900 mb-6">Tóm tắt đơn hàng</h2>
-
-
-              {/* Required Fields Sections */}
+              {/* Required Fields cho từng sản phẩm */}
               {cart.map((item) => {
-                if (!item.requiredFields || item.requiredFields.length === 0) return null;
+                if (!item.requiredFields || item.requiredFields.length === 0) {
+                  return null;
+                }
+
                 return (
-                  <div key={item._id} style={{ marginTop: '24px', padding: '20px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
+                  <div key={item._id} style={{ marginTop: '20px', padding: '20px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
                     <h3 style={{ marginBottom: '16px', color: '#1E293B', fontSize: '1rem', fontWeight: 600 }}>
-                      Thông tin cho: <span style={{ color: '#F05A28' }}>{item.name}</span>
+                      Thông tin bổ sung cho: <span style={{ color: '#F05A28' }}>{item.name}</span>
                     </h3>
                     {item.requiredFields.map((field, fieldIndex) => (
                       <div key={fieldIndex} style={{ marginBottom: '16px' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>
                           {field.label} {field.required && <span style={{ color: '#EF4444' }}>*</span>}
                         </label>
                         <input
@@ -573,37 +402,9 @@ export default function CheckoutPage() {
                             transition: 'all 0.2s'
                           }}
                         />
-
-                {/* Items List */}
-                <div className="space-y-4 mb-6">
-                  {cart.map((item) => (
-                    <div key={item._id} className="flex items-start gap-3 pb-4 border-b border-gray-200">
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        {item.imageUrl ? (
-                          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover rounded-lg" />
-                        ) : (
-                          <span className="text-gray-400 text-xs">IMG</span>
-                        )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 text-sm mb-1">{item.name}</div>
-                        <div className="text-xs text-gray-500">Số lượng: {item.quantity}</div>
-                      </div>
-                      <div className="text-sm font-semibold text-gray-900">
-                        {formatPrice(item.price * item.quantity, item.currency || 'VNĐ')}
-
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Price Breakdown */}
-                <div className="space-y-3 mb-6">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Tạm tính</span>
-                    <span className="text-gray-900 font-medium">{formatPrice(subtotal, 'VNĐ')}</span>
+                    ))}
                   </div>
-
                 );
               })}
 
@@ -637,170 +438,106 @@ export default function CheckoutPage() {
 
           {/* RIGHT COLUMN: ORDER SUMMARY (Sticky) */}
           <div style={{ position: 'sticky', top: '24px' }}>
-            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1E293B', marginBottom: '20px' }}>
-                Đơn hàng của bạn
-              </h2>
+              <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1E293B', marginBottom: '20px' }}>
+                  Đơn hàng của bạn
+                </h2>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
-                {cart.map((item) => (
-                  <div key={item._id} style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    {/* Thumbnail */}
-                    <div style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '8px',
-                      background: '#F1F5F9',
-                      border: '1px solid #E2E8F0',
-                      overflow: 'hidden',
-                      flexShrink: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      {item.imageUrl || (item.images && item.images[0]) ? (
-                        <img
-                          src={item.imageUrl || (item.images && item.images[0]) || undefined}
-                          alt={item.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      ) : (
-                        <span style={{ fontSize: '24px' }}>📦</span>
-                      )}
-                    </div>
-
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '0.95rem', lineHeight: '1.4' }}>
-                        {item.name}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                  {cart.map((item) => (
+                    <div key={item._id} style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                      {/* Thumbnail */}
+                      <div style={{
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '8px',
+                        background: '#F1F5F9',
+                        border: '1px solid #E2E8F0',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {item.imageUrl || (item.images && item.images[0]) ? (
+                          <img
+                            src={item.imageUrl || (item.images && item.images[0]) || undefined}
+                            alt={item.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: '24px' }}>📦</span>
+                        )}
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', alignItems: 'center' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#64748B' }}>
-                          SL: {item.quantity} x {formatPrice(item.price, item.currency)}
+
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '0.95rem', lineHeight: '1.4' }}>
+                          {item.name}
                         </div>
-                        <div style={{ fontWeight: 600, color: '#F05A28', fontSize: '0.95rem' }}>
-                          {formatPrice(item.price * item.quantity, item.currency)}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', alignItems: 'center' }}>
+                          <div style={{ fontSize: '0.85rem', color: '#64748B' }}>
+                            SL: {item.quantity} x {formatPrice(item.price, item.currency)}
+                          </div>
+                          <div style={{ fontWeight: 600, color: '#F05A28', fontSize: '0.95rem' }}>
+                            {formatPrice(item.price * item.quantity, item.currency)}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Divider */}
-              <div style={{ borderTop: '2px dashed #E2E8F0', margin: '20px 0' }}></div>
-
-              {/* Total */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#475569' }}>Tổng tiền</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F05A28' }}>
-                  {formatPrice(totalAmount, 'VNĐ')}
-                </span>
-              </div>
-
-              {/* Status Message */}
-              {status === 'error' && (
-                <div style={{ padding: '12px', background: '#FEF2F2', color: '#B91C1C', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center' }}>
-                  {message}
+                  ))}
                 </div>
-              )}
-              {status === 'success' && (
-                <div style={{ padding: '12px', background: '#ECFDF5', color: '#047857', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center' }}>
-                  {message}
-                </div>
-              )}
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={status === 'submitting'}
-                className="checkout-btn-primary"
-                style={{
-                  width: '100%',
-                  padding: '16px',
-                  background: '#F05A28',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '9999px',
-                  fontSize: '1.1rem',
-                  fontWeight: 700,
-                  cursor: status === 'submitting' ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 6px -1px rgba(240, 90, 40, 0.2)',
-                  opacity: status === 'submitting' ? 0.7 : 1,
-                  transition: 'all 0.2s'
-                }}
-              >
-                {status === 'submitting' ? 'Đang xử lý...' : 'THANH TOÁN NGAY'}
-              </button>
-
-              <div style={{ textAlign: 'center', marginTop: '16px', color: '#64748B', fontSize: '0.8rem' }}>
-                <p>Thông tin thanh toán của bạn được bảo mật an toàn.</p>
-              </div>
-
-
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Phí vận chuyển</span>
-                    <span className="text-green-600 font-medium">Miễn phí</span>
-                  </div>
-                </div>
+                {/* Divider */}
+                <div style={{ borderTop: '2px dashed #E2E8F0', margin: '20px 0' }}></div>
 
                 {/* Total */}
-                <div className="border-t border-gray-200 pt-4 mb-6">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-gray-900">Tổng cộng</span>
-                    <span className="text-2xl font-bold text-[#F05A28]">{formatPrice(finalTotal, 'VNĐ')}</span>
-                  </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                  <span style={{ fontSize: '1rem', fontWeight: 600, color: '#475569' }}>Tổng tiền</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F05A28' }}>
+                    {formatPrice(totalAmount, 'VNĐ')}
+                  </span>
                 </div>
+
+                {/* Status Message */}
+                {status === 'error' && (
+                  <div style={{ padding: '12px', background: '#FEF2F2', color: '#B91C1C', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center' }}>
+                    {message}
+                  </div>
+                )}
+                {status === 'success' && (
+                  <div style={{ padding: '12px', background: '#ECFDF5', color: '#047857', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center' }}>
+                    {message}
+                  </div>
+                )}
 
                 {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={status === 'submitting'}
-                  className="w-full bg-[#F05A28] hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="checkout-btn-primary"
+                  style={{
+                    width: '100%',
+                    padding: '16px',
+                    background: '#F05A28',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '9999px',
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    cursor: status === 'submitting' ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 4px 6px -1px rgba(240, 90, 40, 0.2)',
+                    opacity: status === 'submitting' ? 0.7 : 1,
+                    transition: 'all 0.2s'
+                  }}
                 >
-                  {status === 'submitting' ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Đang xử lý...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-5 h-5" />
-                      <span>Đặt hàng ngay</span>
-                    </>
-                  )}
+                  {status === 'submitting' ? 'Đang xử lý...' : 'THANH TOÁN NGAY'}
                 </button>
 
-                {/* Guarantees */}
-                <div className="mt-6 space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                    <span>Thanh toán an toàn & bảo mật</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                    <span>Giao hàng tức thì sau thanh toán</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                    <span>Hoàn tiền 100% nếu có lỗi</span>
-                  </div>
+                <div style={{ textAlign: 'center', marginTop: '16px', color: '#64748B', fontSize: '0.8rem' }}>
+                  <p>Thông tin thanh toán của bạn được bảo mật an toàn.</p>
                 </div>
-
-                {/* Error/Success Messages */}
-                {status === 'error' && (
-                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                    {message}
-                  </div>
-                )}
-                {status === 'success' && (
-                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-                    {message}
-                  </div>
-                )}
               </div>
-
             </div>
-          </div>
         </form>
       </div>
     </div>

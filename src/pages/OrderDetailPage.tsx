@@ -548,26 +548,59 @@ export default function OrderDetailPage() {
             >
               💬 Liên hệ hỗ trợ Zalo
             </a>
-            {order.orderStatus === 'completed' && (
-              <button
-                onClick={() => setShowFeedbackModal(true)}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: '#10b981',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = '#059669'}
-                onMouseOut={(e) => e.currentTarget.style.background = '#10b981'}
-              >
-                ⭐ Đánh giá sản phẩm
-              </button>
-            )}
+            {order.orderStatus === 'completed' && (() => {
+              // Kiểm tra xem đã đánh giá tất cả sản phẩm chưa
+              const allItemsReviewed = order.items.every(item => item.feedback && item.feedback.rating > 0);
+              const firstProductId = order.items[0]?.productId;
+
+              if (allItemsReviewed && firstProductId) {
+                // Nếu đã đánh giá hết, hiển thị nút "Xem đánh giá"
+                return (
+                  <Link
+                    to={`/products/${firstProductId}#reviews`}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      background: '#f59e0b',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                      cursor: 'pointer',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = '#d97706'}
+                    onMouseOut={(e) => e.currentTarget.style.background = '#f59e0b'}
+                  >
+                    ⭐ Xem đánh giá
+                  </Link>
+                );
+              } else {
+                // Nếu chưa đánh giá hết, hiển thị nút "Đánh giá sản phẩm"
+                return (
+                  <button
+                    onClick={() => setShowFeedbackModal(true)}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      background: '#10b981',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.background = '#059669'}
+                    onMouseOut={(e) => e.currentTarget.style.background = '#10b981'}
+                  >
+                    ⭐ Đánh giá sản phẩm
+                  </button>
+                );
+              }
+            })()}
           </div>
         </div>
 

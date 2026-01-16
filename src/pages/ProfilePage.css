@@ -21,10 +21,106 @@
   align-items: start;
 }
 
+/* Mobile Menu Toggle Button */
+.profile-menu-toggle {
+  display: none;
+  position: fixed;
+  top: 80px;
+  left: 16px;
+  z-index: 1001;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+}
+
+.profile-menu-toggle:hover {
+  background: #F8FAFC;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.profile-menu-toggle svg {
+  color: #1E293B;
+}
+
+/* Mobile Sidebar Overlay */
+.profile-sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
 @media (max-width: 768px) {
+  .profile-page {
+    padding: 16px;
+    padding-top: 70px;
+  }
+
+  .profile-menu-toggle {
+    display: block;
+  }
+
+  .profile-sidebar-overlay {
+    display: block;
+  }
+
   .profile-container {
     grid-template-columns: 1fr;
     gap: 24px;
+  }
+
+  .profile-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    max-width: 85vw;
+    background: #FFFFFF;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    padding: 20px 16px;
+    border-right: 1px solid #E2E8F0;
+  }
+
+  .profile-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .profile-content {
+    padding: 24px 16px;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    margin: 0;
+    margin-top: 0 !important;
+  }
+
+  /* Ensure content is always visible on mobile */
+  .profile-container {
+    position: relative;
+  }
+}
+
+@media (min-width: 769px) {
+  .profile-sidebar-overlay {
+    display: none !important;
+  }
+
+  .profile-sidebar {
+    position: sticky !important;
+    transform: none !important;
   }
 }
 
@@ -35,6 +131,13 @@
   gap: 32px;
   position: sticky;
   top: 40px;
+}
+
+@media (max-width: 768px) {
+  .profile-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+  }
 }
 
 /* User Summary in Sidebar */
@@ -130,6 +233,8 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   border: 1px solid #F1F5F9;
   min-height: 500px;
+  position: relative;
+  z-index: 1;
   /* Ensure visual balance */
 }
 

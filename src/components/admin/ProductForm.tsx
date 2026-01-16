@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuthContext } from '../../context/useAuthContext';
 import { adminService } from '../../services/adminService';
 import { uploadService } from '../../services/uploadService';
@@ -16,7 +16,9 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [imagePreviews, setImagePreviews] = useState<string[]>(product?.images || (product?.imageUrl ? [product.imageUrl] : []));
+  // Tách ảnh hiện có (đã lưu) và ảnh mới (chưa upload)
+  const [existingImages, setExistingImages] = useState<string[]>(product?.images || (product?.imageUrl ? [product.imageUrl] : []));
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [formData, setFormData] = useState({
     name: product?.name || '',
@@ -31,7 +33,9 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
     promotion: product?.promotion || '',
     description: product?.description || '',
     imageUrl: product?.imageUrl || '',
-    features: product?.features?.join('\n') || ''
+    features: product?.features?.join('\n') || '',
+    completionInstructions: product?.completionInstructions || '',
+    isPreloadedAccount: product?.isPreloadedAccount || false
   });
   const [options, setOptions] = useState<ProductOption[]>(product?.options || []);
   const [requiredFields, setRequiredFields] = useState<Array<{
@@ -40,6 +44,51 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
     placeholder: string;
     required: boolean;
   }>>(product?.requiredFields || []);
+  
+  // Preloaded accounts state
+  const [accountsTextArea, setAccountsTextArea] = useState('');
+
+  // Cập nhật state khi product thay đổi (khi mở form edit sản phẩm khác)
+  useEffect(() => {
+    const initialImages = product?.images || (product?.imageUrl ? [product.imageUrl] : []);
+    setExistingImages(initialImages);
+    setNewImagePreviews([]);
+    setSelectedFiles([]);
+    
+    setFormData({
+      name: product?.name || '',
+      price: product?.price || 0,
+      currency: product?.currency || 'VND',
+      billingCycle: product?.billingCycle || '1 tháng',
+      category: product?.category || '',
+      stock: product?.stock || 0,
+      status: product?.status || 'in_stock',
+      lowStockThreshold: product?.lowStockThreshold || 0,
+      isHot: product?.isHot || false,
+      promotion: product?.promotion || '',
+      description: product?.description || '',
+      imageUrl: product?.imageUrl || '',
+      features: product?.features?.join('\n') || '',
+      completionInstructions: product?.completionInstructions || '',
+      isPreloadedAccount: product?.isPreloadedAccount || false
+    });
+    
+    setOptions(product?.options || []);
+    setRequiredFields(product?.requiredFields || []);
+    
+    // Load preloaded accounts từ product
+    if (product?.isPreloadedAccount && product?.preloadedAccounts) {
+      const accountsText = product.preloadedAccounts
+        .map((acc: any) => acc.account)
+        .join('\n');
+      setAccountsTextArea(accountsText);
+      // Tự động đồng bộ stock với số accounts chưa dùng khi load product
+      const unusedAccountsCount = product.preloadedAccounts.filter((acc: any) => !acc.used).length;
+      setFormData(prev => ({ ...prev, stock: unusedAccountsCount }));
+    } else {
+      setAccountsTextArea('');
+    }
+  }, [product?._id]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -60,19 +109,52 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
     setSelectedFiles(prev => [...prev, ...files]);
     setError(null);
 
-    // Create previews for all files
+    // Create previews for all new files
     files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreviews(prev => [...prev, reader.result as string]);
+        setNewImagePreviews(prev => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
     });
   };
 
-  const handleRemoveImage = (index: number) => {
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  const handleRemoveImage = (index: number, isExisting: boolean) => {
+    if (isExisting) {
+      // Xóa ảnh hiện có
+      setExistingImages(prev => prev.filter((_, i) => i !== index));
+    } else {
+      // Xóa ảnh mới (chưa upload)
+      const newIndex = index - existingImages.length;
+      setNewImagePreviews(prev => prev.filter((_, i) => i !== newIndex));
+      setSelectedFiles(prev => prev.filter((_, i) => i !== newIndex));
+    }
+  };
+
+  // Parse accounts từ textarea (format: username:password)
+  const parseAccountsFromText = (text: string) => {
+    const lines = text.split('\n').filter(line => line.trim());
+    const parsedAccounts = lines.map(line => {
+      const trimmed = line.trim();
+      // Tách theo dấu : (chỉ tách dấu : đầu tiên, vì password có thể chứa :)
+      const colonIndex = trimmed.indexOf(':');
+      if (colonIndex === -1) {
+        return null; // Không có dấu :, bỏ qua
+      }
+      const username = trimmed.substring(0, colonIndex).trim();
+      const password = trimmed.substring(colonIndex + 1).trim();
+      
+      if (!username || !password) {
+        return null; // Thiếu username hoặc password, bỏ qua
+      }
+      
+      return {
+        account: `${username}:${password}`,
+        used: false
+      };
+    }).filter(account => account !== null); // Lọc bỏ các dòng không hợp lệ
+    
+    return parsedAccounts;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,7 +169,8 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
     setError(null);
 
     try {
-      let images: string[] = product?.images || (product?.imageUrl ? [product.imageUrl] : []);
+      // Bắt đầu với ảnh hiện có (sau khi người dùng có thể đã xóa một số)
+      let images: string[] = [...existingImages];
 
       // Upload new images if files are selected
       if (selectedFiles.length > 0) {
@@ -95,7 +178,7 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
         try {
           const uploadResult = await uploadService.uploadProductImages(selectedFiles, token);
           const newImageUrls = uploadResult.images.map(img => img.imageUrl);
-          // Merge với ảnh cũ (nếu có)
+          // Thêm ảnh mới vào cuối danh sách
           images = [...images, ...newImageUrls];
         } catch (uploadErr: any) {
           const uploadErrorMsg = uploadErr.response?.data?.message || 'Không thể upload ảnh';
@@ -108,10 +191,37 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
         }
       }
 
+      // Parse preloaded accounts từ textarea
+      const preloadedAccountsData = formData.isPreloadedAccount 
+        ? parseAccountsFromText(accountsTextArea)
+        : [];
+
+      // Nếu là preloaded account, tự động đồng bộ stock với số lượng accounts chưa dùng
+      let finalStock = Number(formData.stock);
+      if (formData.isPreloadedAccount) {
+        if (product?.isPreloadedAccount && product?.preloadedAccounts) {
+          // Khi edit sản phẩm: stock = số accounts chưa dùng từ database + số accounts mới thêm vào textarea (chưa dùng)
+          const existingUnusedCount = product.preloadedAccounts.filter((acc: any) => !acc.used).length;
+          const newAccountsCount = accountsTextArea.trim() 
+            ? parseAccountsFromText(accountsTextArea).length 
+            : 0;
+          // Nếu có textarea mới (đang edit), tính theo accounts trong textarea chưa dùng
+          // Nếu không có textarea (chỉ edit checkbox), giữ nguyên số accounts hiện có chưa dùng
+          if (accountsTextArea.trim()) {
+            finalStock = newAccountsCount;
+          } else {
+            finalStock = existingUnusedCount;
+          }
+        } else {
+          // Khi tạo mới: stock = số accounts trong textarea
+          finalStock = preloadedAccountsData.length;
+        }
+      }
+
       const productData = {
         ...formData,
         price: Number(formData.price),
-        stock: Number(formData.stock),
+        stock: finalStock,
         status: formData.status as 'in_stock' | 'out_of_stock' | 'discontinued',
         lowStockThreshold: Number(formData.lowStockThreshold),
         features: formData.features
@@ -135,7 +245,10 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               placeholder: field.placeholder.trim(),
               required: field.required
             }))
-          : []
+          : [],
+        completionInstructions: formData.completionInstructions || undefined,
+        isPreloadedAccount: formData.isPreloadedAccount || false,
+        preloadedAccounts: preloadedAccountsData.length > 0 ? preloadedAccountsData : undefined
       };
 
       if (product) {
@@ -459,6 +572,33 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
 
         <div style={{ marginBottom: '24px' }}>
           <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
+            Tính năng (mỗi dòng một tính năng)
+          </label>
+          <textarea
+            value={formData.features}
+            onChange={(e) => setFormData({ ...formData, features: e.target.value })}
+            rows={6}
+            placeholder="✓ Tính năng 1&#10;✓ Tính năng 2&#10;✓ Tính năng 3"
+            style={{
+              width: '100%',
+              padding: '12px',
+              border: '1px solid #E2E8F0',
+              borderRadius: '8px',
+              fontSize: '0.95rem',
+              outline: 'none',
+              fontFamily: 'inherit',
+              resize: 'vertical'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+            onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
+          />
+          <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#64748B' }}>
+            💡 Mỗi dòng là một tính năng riêng biệt. Ví dụ: "Google Drive", "Gemini", "NotebookLM"
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
             Khuyến mãi / Tag (Optional)
           </label>
           <input
@@ -484,18 +624,19 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
             Hình ảnh sản phẩm
           </label>
 
-          {imagePreviews.length > 0 && (
+          {(existingImages.length > 0 || newImagePreviews.length > 0) && (
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
               gap: '12px',
               marginBottom: '16px'
             }}>
-              {imagePreviews.map((preview, index) => (
-                <div key={index} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
+              {/* Hiển thị ảnh hiện có (đã lưu) */}
+              {existingImages.map((imageUrl, index) => (
+                <div key={`existing-${index}`} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
                   <img
-                    src={preview}
-                    alt={`Preview ${index + 1}`}
+                    src={imageUrl}
+                    alt={`Existing ${index + 1}`}
                     style={{
                       width: '100%',
                       height: '100px',
@@ -504,7 +645,7 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                   />
                   <button
                     type="button"
-                    onClick={() => handleRemoveImage(index)}
+                    onClick={() => handleRemoveImage(index, true)}
                     style={{
                       position: 'absolute',
                       top: '4px',
@@ -523,6 +664,46 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                       fontWeight: 'bold',
                       transition: 'all 0.2s'
                     }}
+                    title="Xóa ảnh"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {/* Hiển thị ảnh mới (chưa upload) */}
+              {newImagePreviews.map((preview, index) => (
+                <div key={`new-${index}`} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
+                  <img
+                    src={preview}
+                    alt={`New ${index + 1}`}
+                    style={{
+                      width: '100%',
+                      height: '100px',
+                      objectFit: 'cover'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(existingImages.length + index, false)}
+                    style={{
+                      position: 'absolute',
+                      top: '4px',
+                      right: '4px',
+                      background: 'rgba(239, 68, 68, 0.9)',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '24px',
+                      height: '24px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 'bold',
+                      transition: 'all 0.2s'
+                    }}
+                    title="Xóa ảnh"
                   >
                     ×
                   </button>
@@ -660,14 +841,25 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
                 const nameInput = document.getElementById('option-name') as HTMLInputElement;
                 const priceInput = document.getElementById('option-price') as HTMLInputElement;
                 const name = nameInput.value.trim();
-                const price = Number(priceInput.value);
+                const priceValue = priceInput.value.trim();
+                const price = priceValue === '' ? 0 : Number(priceValue);
 
-                if (name && price > 0) {
-                  setOptions([...options, { name, price }]);
-                  nameInput.value = '';
-                  priceInput.value = '';
+                if (!name) {
+                  alert('Vui lòng nhập tên gói');
                   nameInput.focus();
+                  return;
                 }
+
+                if (isNaN(price) || price < 0) {
+                  alert('Vui lòng nhập giá hợp lệ (>= 0)');
+                  priceInput.focus();
+                  return;
+                }
+
+                setOptions([...options, { name, price }]);
+                nameInput.value = '';
+                priceInput.value = '';
+                nameInput.focus();
               }}
               style={{
                 padding: '10px 20px',
@@ -684,6 +876,40 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               + Thêm
             </button>
           </div>
+        </div>
+
+        {/* Completion Instructions Section */}
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
+            Hướng Dẫn Khách Làm Sau Khi Admin Bảo Hoàn Thành Đơn Hàng
+          </label>
+          <textarea
+            value={formData.completionInstructions}
+            onChange={(e) => setFormData({ ...formData, completionInstructions: e.target.value })}
+            rows={6}
+            placeholder="Nhập hướng dẫn cho khách hàng sau khi đơn hàng hoàn thành...&#10;&#10;Ví dụ:&#10;• Vui lòng kiểm tra email để nhận thông tin đăng nhập&#10;• Đăng nhập vào hệ thống với thông tin đã cung cấp&#10;• Nếu có vấn đề, liên hệ Zalo: 0868899104"
+            style={{
+              width: '100%',
+              padding: '12px',
+              border: '1px solid #E2E8F0',
+              borderRadius: '8px',
+              fontSize: '0.95rem',
+              outline: 'none',
+              fontFamily: 'inherit',
+              resize: 'vertical'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#F05A28';
+              e.target.style.boxShadow = '0 0 0 1px #F05A28';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#E2E8F0';
+              e.target.style.boxShadow = 'none';
+            }}
+          />
+          <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#64748B' }}>
+            Hướng dẫn này sẽ được gửi cho khách hàng trong email "Đơn hàng đã hoàn thành"
+          </p>
         </div>
 
         {/* Required Fields Section */}
@@ -851,6 +1077,273 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               + Thêm
             </button>
           </div>
+        </div>
+
+        {/* Preloaded Accounts Section */}
+        <div style={{ marginBottom: '24px', padding: '24px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: '#1E293B', fontWeight: 600, fontSize: '1rem' }}>
+            <input
+              type="checkbox"
+              checked={formData.isPreloadedAccount || false}
+              onChange={(e) => {
+                const isChecked = e.target.checked;
+                setFormData({ ...formData, isPreloadedAccount: isChecked });
+                if (!isChecked) {
+                  setAccountsTextArea('');
+                  // Nếu tắt checkbox, giữ nguyên stock (không tự động đồng bộ nữa)
+                } else {
+                  // Nếu bật checkbox, tự động đồng bộ stock với số accounts
+                  const parsed = parseAccountsFromText(accountsTextArea);
+                  if (parsed.length > 0) {
+                    setFormData(prev => ({ ...prev, isPreloadedAccount: isChecked, stock: parsed.length }));
+                  }
+                }
+              }}
+            />
+            <span>🔑 Đây là sản phẩm Account có sẵn (tự động gửi khi hoàn thành đơn hàng)</span>
+          </label>
+
+          {formData.isPreloadedAccount && (
+            <>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#64748B', fontSize: '0.85rem', fontWeight: 500 }}>
+                  Danh sách Accounts (Format: username:password, mỗi dòng 1 account)
+                </label>
+                <textarea
+                  value={accountsTextArea}
+                  onChange={(e) => {
+                    setAccountsTextArea(e.target.value);
+                    // Tự động đồng bộ stock với số lượng accounts chưa dùng
+                    const parsed = parseAccountsFromText(e.target.value);
+                    if (formData.isPreloadedAccount && parsed.length > 0) {
+                      setFormData(prev => ({ ...prev, stock: parsed.length }));
+                    } else if (formData.isPreloadedAccount && e.target.value.trim() === '') {
+                      // Nếu xóa hết accounts, set stock = 0
+                      setFormData(prev => ({ ...prev, stock: 0 }));
+                    }
+                  }}
+                  placeholder="account1@gmail.com:KeyT@2026!&#10;account2@gmail.com:Canva#Pro16&#10;account3@gmail.com:TestMail_889"
+                  rows={8}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '8px',
+                    fontSize: '0.95rem',
+                    fontFamily: 'monospace',
+                    outline: 'none',
+                    resize: 'vertical'
+                  }}
+                />
+                <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#64748B' }}>
+                  💡 Format: <code style={{ background: '#F1F5F9', padding: '2px 6px', borderRadius: '4px' }}>username:password</code> (mỗi dòng 1 account)
+                </div>
+              </div>
+
+              {/* Thống kê */}
+              {(() => {
+                const parsed = parseAccountsFromText(accountsTextArea);
+                const existingAccounts = product?.preloadedAccounts || [];
+                
+                // Tính toán allAccounts giống như trong danh sách để đảm bảo consistency
+                const allAccounts = parsed.length > 0 
+                  ? parsed.map(parsedAcc => {
+                      const existingAcc = existingAccounts.find((existing: any) => existing.account === parsedAcc.account);
+                      if (existingAcc) {
+                        return {
+                          account: parsedAcc.account,
+                          used: existingAcc.used || false,
+                          usedAt: existingAcc.usedAt || null,
+                          usedForOrder: existingAcc.usedForOrder || null
+                        };
+                      }
+                      return parsedAcc;
+                    })
+                  : existingAccounts.map((acc: any) => ({ 
+                      account: acc.account, 
+                      used: acc.used || false,
+                      usedAt: acc.usedAt || null,
+                      usedForOrder: acc.usedForOrder || null
+                    }));
+                
+                const usedCount = allAccounts.filter((a: any) => a.used).length;
+                const totalCount = allAccounts.length;
+                const remainingCount = totalCount - usedCount;
+                
+                if (totalCount > 0) {
+                  return (
+                    <div style={{ 
+                      padding: '12px', 
+                      background: '#ffffff', 
+                      borderRadius: '8px', 
+                      border: '1px solid #E2E8F0',
+                      marginBottom: '16px'
+                    }}>
+                      <div style={{ display: 'flex', gap: '24px', fontSize: '0.875rem', flexWrap: 'wrap' }}>
+                        <div>
+                          <strong style={{ color: '#1E293B' }}>Tổng:</strong> <span style={{ color: '#64748B' }}>{totalCount} accounts</span>
+                        </div>
+                        <div>
+                          <strong style={{ color: '#10b981' }}>Còn lại:</strong> <span style={{ color: '#64748B' }}>{remainingCount}</span>
+                        </div>
+                        {usedCount > 0 && (
+                          <div>
+                            <strong style={{ color: '#EF4444' }}>Đã dùng:</strong> <span style={{ color: '#64748B' }}>{usedCount}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Danh sách accounts đã parse */}
+              {(() => {
+                const parsed = parseAccountsFromText(accountsTextArea);
+                const existingAccounts = product?.preloadedAccounts || [];
+                
+                // Merge parsed accounts với existing accounts để preserve used status
+                // Nếu account trong parsed match với existing account, giữ used status từ existing
+                const allAccounts = parsed.length > 0 
+                  ? parsed.map(parsedAcc => {
+                      // Tìm account tương ứng trong existing accounts
+                      const existingAcc = existingAccounts.find((existing: any) => existing.account === parsedAcc.account);
+                      if (existingAcc) {
+                        // Giữ nguyên used status và các thông tin khác từ existing
+                        return {
+                          account: parsedAcc.account,
+                          used: existingAcc.used || false,
+                          usedAt: existingAcc.usedAt || null,
+                          usedForOrder: existingAcc.usedForOrder || null
+                        };
+                      }
+                      // Account mới (chưa có trong existing), mặc định used = false
+                      return parsedAcc;
+                    })
+                  : existingAccounts.map((acc: any) => ({ 
+                      account: acc.account, 
+                      used: acc.used || false,
+                      usedAt: acc.usedAt || null,
+                      usedForOrder: acc.usedForOrder || null
+                    }));
+                
+                if (allAccounts.length > 0) {
+                  return (
+                    <div style={{ marginTop: '16px' }}>
+                      <div style={{ marginBottom: '8px', fontSize: '0.875rem', fontWeight: 600, color: '#1E293B' }}>
+                        Danh sách Accounts ({allAccounts.length}):
+                      </div>
+                      <div style={{ 
+                        maxHeight: '300px', 
+                        overflowY: 'auto', 
+                        border: '1px solid #E2E8F0', 
+                        borderRadius: '8px',
+                        background: '#ffffff'
+                      }}>
+                        {allAccounts.map((account: any, index: number) => {
+                          const [username, password] = account.account.split(':');
+                          const isUsed = account.used || false;
+                          const usedAt = account.usedAt ? new Date(account.usedAt).toLocaleString('vi-VN') : null;
+                          
+                          return (
+                            <div
+                              key={index}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '12px',
+                                borderBottom: index < allAccounts.length - 1 ? '1px solid #F1F5F9' : 'none',
+                                background: isUsed ? '#FEF2F2' : 'transparent',
+                                borderLeft: isUsed ? '3px solid #EF4444' : '3px solid transparent'
+                              }}
+                            >
+                              <div style={{ flex: 1, fontFamily: 'monospace', fontSize: '0.875rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                  <span style={{ color: '#1E293B', fontWeight: 500 }}>{username || 'N/A'}</span>
+                                  {isUsed && (
+                                    <span style={{ 
+                                      padding: '2px 8px', 
+                                      background: '#EF4444', 
+                                      color: '#ffffff', 
+                                      borderRadius: '12px', 
+                                      fontSize: '0.7rem', 
+                                      fontWeight: 600,
+                                      textTransform: 'uppercase'
+                                    }}>
+                                      Đã dùng
+                                    </span>
+                                  )}
+                                  {!isUsed && (
+                                    <span style={{ 
+                                      padding: '2px 8px', 
+                                      background: '#10B981', 
+                                      color: '#ffffff', 
+                                      borderRadius: '12px', 
+                                      fontSize: '0.7rem', 
+                                      fontWeight: 600,
+                                      textTransform: 'uppercase'
+                                    }}>
+                                      Còn lại
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{ color: '#64748B', fontSize: '0.75rem', marginTop: '2px' }}>
+                                  {password ? `${password.substring(0, 3)}${'*'.repeat(Math.max(0, password.length - 3))}` : 'N/A'}
+                                </div>
+                                {isUsed && usedAt && (
+                                  <div style={{ color: '#EF4444', fontSize: '0.7rem', marginTop: '4px', fontStyle: 'italic' }}>
+                                    Đã dùng: {usedAt}
+                                  </div>
+                                )}
+                              </div>
+                              {!isUsed && accountsTextArea.trim() && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const lines = accountsTextArea.split('\n').filter((_, i) => i !== index);
+                                    setAccountsTextArea(lines.join('\n'));
+                                  }}
+                                  style={{
+                                    padding: '4px 8px',
+                                    background: '#FEF2F2',
+                                    color: '#EF4444',
+                                    border: '1px solid #FECACA',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 500
+                                  }}
+                                >
+                                  Xóa
+                                </button>
+                              )}
+                              {isUsed && (
+                                <div style={{ 
+                                  padding: '4px 8px',
+                                  background: '#FEF2F2',
+                                  color: '#EF4444',
+                                  border: '1px solid #FECACA',
+                                  borderRadius: '6px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 500,
+                                  opacity: 0.7
+                                }}>
+                                  Đã dùng
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+            </>
+          )}
         </div>
 
         <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end', gap: '16px', paddingTop: '20px', borderTop: '1px solid #F1F5F9' }}>

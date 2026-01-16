@@ -22,24 +22,16 @@ createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
             <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
                 <AuthProvider>
-
                     <NotificationProvider>
                         <CartProvider>
-                            <WishlistProvider>
-                                <App />
-                                <NotificationContainer />
-                            </WishlistProvider>
+                            <AddToCartAnimationProvider>
+                                <WishlistProvider>
+                                    <App />
+                                </WishlistProvider>
+                            </AddToCartAnimationProvider>
                         </CartProvider>
+                        <NotificationContainer />
                     </NotificationProvider>
-
-                    <CartProvider>
-                        <AddToCartAnimationProvider>
-                            <WishlistProvider>
-                                <App />
-                            </WishlistProvider>
-                        </AddToCartAnimationProvider>
-                    </CartProvider>
-
                 </AuthProvider>
             </GoogleOAuthProvider>
         </BrowserRouter>

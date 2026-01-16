@@ -16,6 +16,14 @@ export interface ProductRequiredField {
   required: boolean;
 }
 
+export interface PreloadedAccount {
+  _id?: string;
+  account: string;  // Format: "username:password"
+  used: boolean;
+  usedAt?: string;
+  usedForOrder?: string;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -34,4 +42,7 @@ export interface Product {
   lowStockThreshold?: number;
   options?: ProductOption[];
   requiredFields?: ProductRequiredField[];
+  completionInstructions?: string;
+  isPreloadedAccount?: boolean;
+  preloadedAccounts?: PreloadedAccount[];
 }

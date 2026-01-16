@@ -142,8 +142,12 @@ class ReviewService {
   /**
    * Admin trả lời review
    */
-  async replyToReview(reviewId: string, content: string): Promise<{ message: string; review: Review }> {
-    const response = await axios.post(`${API_BASE_URL}/reviews/${reviewId}/reply`, { content });
+  async replyToReview(reviewId: string, content: string, token?: string): Promise<{ message: string; review: Review }> {
+    const headers: any = {};
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    const response = await axios.post(`${API_BASE_URL}/reviews/${reviewId}/reply`, { content }, { headers });
     return response.data;
   }
 }

@@ -119,17 +119,31 @@ export default function UsersPage() {
   );
 
   return (
-    <div className="admin-page-content" style={{ background: '#F8FAFC', padding: '40px 20px', minHeight: '100vh' }}>
+    <div className="admin-page-content" style={{ background: '#F8FAFC', padding: '20px 16px', minHeight: '100vh' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          gap: '16px',
+          marginBottom: '24px' 
+        }}>
           <div>
-            <h1 style={{ color: '#1E293B', fontSize: '2rem', fontWeight: 700, margin: '0 0 8px 0' }}>Quản lý Users</h1>
-            <p style={{ color: '#64748B', margin: 0 }}>Quản lý tài khoản, phân quyền và lịch sử hoạt động</p>
+            <h1 style={{ color: '#1E293B', fontSize: '1.5rem', fontWeight: 700, margin: '0 0 8px 0' }}>Quản lý Users</h1>
+            <p style={{ color: '#64748B', margin: 0, fontSize: '0.9rem' }}>Quản lý tài khoản, phân quyền và lịch sử hoạt động</p>
           </div>
 
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* Role Filter */}
-            <div style={{ display: 'flex', background: 'white', borderRadius: '9999px', padding: '4px', border: '1px solid #E2E8F0', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }}>
+            <div style={{ 
+              display: 'flex', 
+              background: 'white', 
+              borderRadius: '9999px', 
+              padding: '4px', 
+              border: '1px solid #E2E8F0', 
+              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+              width: '100%',
+              justifyContent: 'center'
+            }}>
               <button
                 onClick={() => setRoleFilter('all')}
                 style={{
@@ -181,7 +195,7 @@ export default function UsersPage() {
             </div>
 
             {/* Search */}
-            <div style={{ position: 'relative', width: '250px' }}>
+            <div style={{ position: 'relative', width: '100%' }}>
               <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
               <input
                 type="text"
@@ -218,8 +232,9 @@ export default function UsersPage() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 gap: '8px',
-                padding: '10px 20px',
+                padding: '12px 20px',
                 background: showAddForm ? '#64748B' : '#F05A28',
                 color: 'white',
                 border: 'none',
@@ -227,7 +242,8 @@ export default function UsersPage() {
                 fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
-                boxShadow: '0 4px 6px -1px rgba(240, 90, 40, 0.2)'
+                boxShadow: '0 4px 6px -1px rgba(240, 90, 40, 0.2)',
+                width: '100%'
               }}
             >
               {showAddForm ? 'Hủy bỏ' : <><Plus size={18} /> Thêm User</>}
@@ -263,8 +279,10 @@ export default function UsersPage() {
         {loading ? (
           <div style={{ textAlign: 'center', padding: '48px', color: '#64748B' }}>Loading users...</div>
         ) : (
-          <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', border: '1px solid #F1F5F9', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
+          <>
+            {/* Desktop Table View */}
+            <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', border: '1px solid #F1F5F9', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', overflowX: 'auto', display: 'none' }} id="desktop-users-table">
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
               <thead>
                 <tr style={{ background: '#F8FAFC', borderBottom: '1px solid #E2E8F0' }}>
                   <th style={{ padding: '20px 24px', textAlign: 'left', color: '#64748B', fontWeight: 600, fontSize: '0.875rem', textTransform: 'uppercase' }}>Username</th>
@@ -445,7 +463,220 @@ export default function UsersPage() {
                 </div>
               </div>
             )}
-          </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} id="mobile-users-cards">
+              {paginatedUsers.map((u) => {
+                const otpInfo = otpInfoMap[u._id];
+                return (
+                  <div
+                    key={u._id}
+                    style={{
+                      background: 'white',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      border: '1px solid #F1F5F9',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    {/* Header */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '1rem', marginBottom: '4px', wordBreak: 'break-word' }}>
+                          {u.username}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: '#64748B', wordBreak: 'break-word' }}>
+                          {u.email}
+                        </div>
+                      </div>
+                      <span style={{
+                        padding: '6px 12px',
+                        background: u.admin ? '#FFF7ED' : '#F1F5F9',
+                        color: u.admin ? '#C2410C' : '#475569',
+                        borderRadius: '9999px',
+                        fontWeight: 600,
+                        fontSize: '0.8rem',
+                        flexShrink: 0
+                      }}>
+                        {u.admin ? 'Admin' : 'User'}
+                      </span>
+                    </div>
+
+                    {/* Info Row */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      padding: '12px 0',
+                      borderTop: '1px solid #F1F5F9',
+                      borderBottom: '1px solid #F1F5F9',
+                      marginBottom: '12px'
+                    }}>
+                      <div style={{ fontSize: '0.85rem', color: '#64748B' }}>OTP Requests</div>
+                      <div style={{ fontWeight: 600, color: '#1E293B' }}>
+                        {otpInfo ? otpInfo.count : '0'}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => handleViewHistory(u)}
+                        style={{
+                          flex: 1,
+                          padding: '10px',
+                          background: '#F05A28',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          fontWeight: 600,
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        <History size={16} /> Lịch sử
+                      </button>
+                      <button
+                        onClick={() => handleEdit(u)}
+                        style={{
+                          flex: 1,
+                          padding: '10px',
+                          background: '#1E293B',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          fontWeight: 600,
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        <Edit size={16} /> Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDelete(u._id, u.username)}
+                        disabled={u._id === currentUser?.id}
+                        style={{
+                          flex: 1,
+                          padding: '10px',
+                          background: u._id === currentUser?.id ? '#F1F5F9' : '#FEF2F2',
+                          color: u._id === currentUser?.id ? '#94A3B8' : '#EF4444',
+                          border: u._id === currentUser?.id ? 'none' : '1px solid #FECACA',
+                          borderRadius: '8px',
+                          cursor: u._id === currentUser?.id ? 'not-allowed' : 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          fontWeight: 600,
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        <Trash2 size={16} /> Xóa
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Empty State for Mobile */}
+              {filteredUsers.length === 0 && (
+                <div style={{ padding: '48px', textAlign: 'center', color: '#94A3B8', background: 'white', borderRadius: '12px' }}>
+                  <Search size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
+                  <p>No users found matching "{searchQuery}"</p>
+                </div>
+              )}
+            </div>
+
+            {/* Pagination for Mobile */}
+            {filteredUsers.length > 0 && (
+              <div style={{
+                padding: '16px',
+                background: 'white',
+                borderRadius: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                marginTop: '12px'
+              }} id="mobile-pagination">
+                <div style={{ color: '#64748B', fontSize: '0.875rem', textAlign: 'center' }}>
+                  Hiển thị <strong>{(currentPage - 1) * itemsPerPage + 1}</strong> - <strong>{Math.min(currentPage * itemsPerPage, filteredUsers.length)}</strong> của <strong>{filteredUsers.length}</strong> kết quả
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #E2E8F0',
+                      background: 'white',
+                      color: currentPage === 1 ? '#CBD5E1' : '#64748B',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    <ChevronLeft size={16} /> Previous
+                  </button>
+                  <span style={{ padding: '0 8px', color: '#64748B', fontSize: '0.875rem' }}>
+                    Trang {currentPage} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #E2E8F0',
+                      background: 'white',
+                      color: currentPage === totalPages ? '#CBD5E1' : '#64748B',
+                      cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    Next <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* CSS for responsive */}
+            <style>{`
+              @media (min-width: 768px) {
+                #desktop-users-table {
+                  display: block !important;
+                }
+                #mobile-users-cards {
+                  display: none !important;
+                }
+                #mobile-pagination {
+                  display: none !important;
+                }
+              }
+              @media (max-width: 767px) {
+                #desktop-users-table {
+                  display: none !important;
+                }
+                #mobile-users-cards {
+                  display: flex !important;
+                }
+              }
+            `}</style>
+          </>
         )}
 
         <div style={{ marginTop: '16px', color: '#94A3B8', fontSize: '0.875rem' }}>

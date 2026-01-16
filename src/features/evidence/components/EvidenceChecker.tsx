@@ -54,9 +54,6 @@ export default function EvidenceChecker() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [evidence, setEvidence] = useState<EvidenceItem[]>([]);
-  const [statusFilter, setStatusFilter] = useState<'all' | EvidenceItem['verification']>('all');
-  const [textFilter, setTextFilter] = useState('');
-  const [sortByScore, setSortByScore] = useState(true);
 
   // Initial load: Try LocalStorage first, then Backend if logged in
   useEffect(() => {
@@ -121,38 +118,19 @@ export default function EvidenceChecker() {
     setApiKey('');
   };
 
-  const statusCounts = evidence.reduce(
-    (acc, item) => {
-      acc[item.verification] = (acc[item.verification] || 0) + 1;
-      return acc;
-    },
-    {} as Record<EvidenceItem['verification'], number>
-  );
-
-  const filteredEvidence = evidence
-    .filter((item) => {
-      const matchStatus = statusFilter === 'all' || item.verification === statusFilter;
-      const matchText =
-        !textFilter ||
-        item.title.toLowerCase().includes(textFilter.toLowerCase()) ||
-        item.snippet.toLowerCase().includes(textFilter.toLowerCase()) ||
-        (item.sourceLabel || '').toLowerCase().includes(textFilter.toLowerCase());
-      return matchStatus && matchText;
-    })
-    .sort((a, b) => {
-      if (!sortByScore) return 0;
-      const order: Record<EvidenceItem['verification'], number> = {
-        verified: 3,
-        trusted: 2,
-        unverified: 1,
-        unknown: 0,
-      };
-      const diffStatus = order[b.verification] - order[a.verification];
-      if (diffStatus !== 0) return diffStatus;
-      const scoreA = a.sourceScore ?? 0;
-      const scoreB = b.sourceScore ?? 0;
-      return scoreB - scoreA;
-    });
+  const filteredEvidence = evidence.sort((a, b) => {
+    const order: Record<EvidenceItem['verification'], number> = {
+      verified: 3,
+      trusted: 2,
+      unverified: 1,
+      unknown: 0,
+    };
+    const diffStatus = order[b.verification] - order[a.verification];
+    if (diffStatus !== 0) return diffStatus;
+    const scoreA = a.sourceScore ?? 0;
+    const scoreB = b.sourceScore ?? 0;
+    return scoreB - scoreA;
+  });
 
   return (
     <div className="evidence-page-new">

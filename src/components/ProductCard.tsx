@@ -27,7 +27,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       id: `product-${product._id}-${Date.now()}`,
       startX,
       startY,
-      productImage: product.imageUrl,
+      productImage: product.imageUrl || undefined,
     });
     
     addItem(product);

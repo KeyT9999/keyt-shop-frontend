@@ -4,7 +4,6 @@ import axios from 'axios';
 import type { Product } from '../types/product';
 import { formatPrice } from '../utils/formatPrice';
 import { useCartContext } from '../context/useCartContext';
-import { useAuthContext } from '../context/useAuthContext';
 import { reviewService, type Review, type ReviewStats } from '../services/reviewService';
 import './ProductDetail.css';
 import API_BASE_URL from '../config/api';
@@ -25,7 +24,6 @@ export default function ProductDetail() {
   const [reviewsLoading, setReviewsLoading] = useState(false);
 
   const { addItem } = useCartContext();
-  const { user } = useAuthContext();
   const navigate = useNavigate();
 
   const isOutOfStock = useMemo(() => {

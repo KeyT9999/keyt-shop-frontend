@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { VideoMetadataCard } from '../features/youtubeSummarizer/components/VideoMetadataCard';
 import { ResultSection } from '../features/youtubeSummarizer/components/ResultSection';
 import { ChatInterface } from '../features/youtubeSummarizer/components/ChatInterface';
@@ -22,32 +23,33 @@ import {
 import './YoutubeSummarizerPage.css';
 import { saveGeminiApiKey as saveToLocal, getGeminiApiKey as getFromLocal, clearGeminiApiKey as clearLocal } from '../utils/geminiApiKey';
 
-const styleOptions = [
-  {
-    label: 'Ngắn gọn',
-    desc: '3-5 câu TL;DR',
-    value: SummaryStyle.BRIEF,
-  },
-  {
-    label: 'Chi tiết',
-    desc: 'Tập trung ý chính & bullet',
-    value: SummaryStyle.DETAILED,
-  },
-  {
-    label: 'Dành cho học tập',
-    desc: 'Giải thích khái niệm, ví dụ',
-    value: SummaryStyle.LEARNING,
-  },
-];
-
-const suggestionChips = [
-  { label: 'Tóm tắt TED Talk', icon: '🎤', url: 'https://www.youtube.com/watch?v=R1vskiVDwl4' },
-  { label: 'Review iPhone 16', icon: '📱', url: 'https://www.youtube.com/watch?v=GHhD4rO5C9I' },
-  { label: 'Học ReactJS', icon: '⚛️', url: 'https://www.youtube.com/watch?v=SqcY0GlETPk' },
-];
-
 const YoutubeSummarizerPage: React.FC = () => {
   const { user } = useAuthContext();
+  const { t } = useTranslation();
+
+  const styleOptions = [
+    {
+      label: t('summarizer.style_brief'),
+      desc: t('summarizer.style_brief_desc'),
+      value: SummaryStyle.BRIEF,
+    },
+    {
+      label: t('summarizer.style_detailed'),
+      desc: t('summarizer.style_detailed_desc'),
+      value: SummaryStyle.DETAILED,
+    },
+    {
+      label: t('summarizer.style_learning'),
+      desc: t('summarizer.style_learning_desc'),
+      value: SummaryStyle.LEARNING,
+    },
+  ];
+
+  const suggestionChips = [
+    { label: t('summarizer.suggest_ted'), icon: '🎤', url: 'https://www.youtube.com/watch?v=R1vskiVDwl4' },
+    { label: t('summarizer.suggest_iphone'), icon: '📱', url: 'https://www.youtube.com/watch?v=GHhD4rO5C9I' },
+    { label: t('summarizer.suggest_react'), icon: '⚛️', url: 'https://www.youtube.com/watch?v=SqcY0GlETPk' },
+  ];
   const [urlInput, setUrlInput] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [showSettingsPanel, setShowSettingsPanel] = useState(false); // Changed from Modal to Panel
@@ -184,19 +186,19 @@ const YoutubeSummarizerPage: React.FC = () => {
       <header className="ys-header">
         <div className="ys-header-content">
           <div>
-            <p className="ys-eyebrow">AI Video Assistant</p>
-            <h1>YouTube Summarizer</h1>
+            <p className="ys-eyebrow">{t('summarizer.eyebrow')}</p>
+            <h1>{t('summarizer.header_title')}</h1>
             <p className="ys-lede">
-              Tóm tắt video YouTube, tạo ghi chú học tập và hỏi đáp với video trong vài giây.
+              {t('summarizer.subtitle')}
             </p>
           </div>
           <button
             className={`ys-settings-btn ${showSettingsPanel ? 'active' : ''}`}
             onClick={() => setShowSettingsPanel(!showSettingsPanel)}
-            title="Cấu hình API Key"
+            title={t('evidence.settings_config')}
           >
             <Settings size={20} />
-            <span>Settings</span>
+            <span>{t('summarizer.settings')}</span>
           </button>
         </div>
 
@@ -205,12 +207,12 @@ const YoutubeSummarizerPage: React.FC = () => {
           <div className="ys-settings-panel">
             <div className="ys-setting-group">
               <label className="ys-setting-label">
-                <Key size={14} /> Google AI Studio API Key
+                <Key size={14} /> {t('summarizer.api_key_label')}
               </label>
               <div className="ys-input-group">
                 <input
                   type={showApiKey ? 'text' : 'password'}
-                  placeholder="Paste your API key here..."
+                  placeholder={t('summarizer.paste_key')}
                   value={apiKeyInput}
                   onChange={(e) => setApiKeyInput(e.target.value)}
                 />
@@ -218,7 +220,7 @@ const YoutubeSummarizerPage: React.FC = () => {
                   type="button"
                   className="ys-icon-btn"
                   onClick={() => setShowApiKey(!showApiKey)}
-                  title={showApiKey ? 'Ẩn key' : 'Hiện key'}
+                  title={showApiKey ? t('summarizer.hide_key') : t('summarizer.show_key')}
                 >
                   {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -226,14 +228,14 @@ const YoutubeSummarizerPage: React.FC = () => {
                   type="button"
                   className="ys-icon-btn"
                   onClick={handleSaveApiKey}
-                  title="Lưu key"
+                  title={t('summarizer.save_key')}
                   style={{ backgroundColor: '#e0f2fe', color: '#0369a1' }}
                 >
                   <CheckCircle2 size={16} />
                 </button>
               </div>
               <p className="ys-hint">
-                Chưa có key? <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">Lấy key tại đây</a>. Key được lưu bảo mật.
+                {t('summarizer.no_key')} <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">{t('summarizer.get_key')}</a>. {t('summarizer.key_secure')}
               </p>
             </div>
           </div>
@@ -246,7 +248,7 @@ const YoutubeSummarizerPage: React.FC = () => {
           <div className="ys-search-container">
             <input
               className="ys-search-input"
-              placeholder="Dán link YouTube (ví dụ: https://youtu.be/abc123)"
+              placeholder={t('summarizer.input_placeholder')}
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}

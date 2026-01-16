@@ -22,6 +22,15 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  position: relative;
+}
+
+.ys-header-content > div:first-child {
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .ys-eyebrow {
@@ -35,10 +44,10 @@
 }
 
 .ys-header h1 {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  margin: 0 0 8px 0;
+  margin: 0 0 12px 0;
   background: linear-gradient(to right, #111827, #4b5563);
   -webkit-background-clip: text;
   background-clip: text;
@@ -46,11 +55,12 @@
 }
 
 .ys-lede {
-  font-size: 15px;
+  font-size: 16px;
   color: #6b7280;
-  max-width: 600px;
+  max-width: 700px;
   line-height: 1.6;
   margin: 0;
+  text-align: center;
 }
 
 /* --- Settings Button --- */
@@ -67,6 +77,9 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .ys-settings-btn:hover {

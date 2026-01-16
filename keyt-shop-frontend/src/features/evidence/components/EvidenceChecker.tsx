@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   XCircle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { fetchEvidence } from '../services/evidenceService';
 import type { EvidenceItem } from '../types';
 import { clearGeminiApiKey, getGeminiApiKey, saveGeminiApiKey } from '../../../utils/geminiApiKey';
@@ -46,6 +47,7 @@ import { profileService } from '../../../services/profileService';
 
 export default function EvidenceChecker() {
   const { user } = useAuthContext();
+  const { t } = useTranslation();
   const [apiKey, setApiKey] = useState('');
   const [query, setQuery] = useState('');
   const [maxResults, setMaxResults] = useState(5);
@@ -92,7 +94,7 @@ export default function EvidenceChecker() {
 
     if (!apiKey) {
       setIsSettingsOpen(true);
-      setError('Vui lòng nhập Google AI Studio API Key để tiếp tục.');
+      setError(t('summarizer.api_key_placeholder'));
       return;
     }
 
@@ -109,7 +111,7 @@ export default function EvidenceChecker() {
       const results = await fetchEvidence({ query, apiKey, maxResults });
       setEvidence(results);
     } catch (err: any) {
-      setError(err?.message || 'Đã xảy ra lỗi khi tìm kiếm evidence.');
+      setError(err?.message || t('common.error'));
       setEvidence([]);
     } finally {
       setLoading(false);
@@ -160,19 +162,19 @@ export default function EvidenceChecker() {
       <header className="evidence-header">
         <div className="header-content">
           <div>
-            <p className="eyebrow">AI Research Assistant</p>
-            <h1>Evidence Finder</h1>
+            <p className="eyebrow">{t('evidence.eyebrow')}</p>
+            <h1>{t('evidence.header_title')}</h1>
             <p className="lede">
-              Xác thực thông tin y học bằng cách đối chiếu nguồn uy tín (PubMed, DOI, Medical Journals).
+              {t('evidence.subtitle')}
             </p>
           </div>
           <button
             className={`settings-btn ${isSettingsOpen ? 'active' : ''}`}
             onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            title="Cấu hình API Key"
+            title={t('evidence.settings_config')}
           >
             <Settings size={20} />
-            <span>Settings</span>
+            <span>{t('evidence.settings')}</span>
           </button>
         </div>
 
@@ -181,13 +183,13 @@ export default function EvidenceChecker() {
           <div className="settings-panel">
             <div className="setting-group">
               <label htmlFor="apiKey" className="setting-label">
-                <Key size={14} /> Google AI Studio API Key
+                <Key size={14} /> {t('evidence.api_key_label')}
               </label>
               <div className="input-group">
                 <input
                   id="apiKey"
                   type={showApiKey ? 'text' : 'password'}
-                  placeholder="Paste your API key here..."
+                  placeholder={t('evidence.api_key_placeholder')}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                 />
@@ -195,7 +197,7 @@ export default function EvidenceChecker() {
                   type="button"
                   className="icon-btn"
                   onClick={() => setShowApiKey(!showApiKey)}
-                  title={showApiKey ? 'Ẩn key' : 'Hiện key'}
+                  title={showApiKey ? t('evidence.hide_key') : t('evidence.show_key')}
                 >
                   {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -203,18 +205,18 @@ export default function EvidenceChecker() {
                   type="button"
                   className="icon-btn danger"
                   onClick={handleClearApiKey}
-                  title="Xóa key đã lưu"
+                  title={t('evidence.delete_key')}
                 >
                   <Trash2 size={16} />
                 </button>
               </div>
               <p className="hint">
-                Chưa có key? <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">Lấy key tại đây</a>. Key chỉ được lưu cục bộ trên trình duyệt của bạn.
+                {t('summarizer.get_key')}? <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">{t('evidence.get_key')}</a>. {t('evidence.key_saved')}
               </p>
             </div>
 
             <div className="setting-group inline">
-              <label htmlFor="maxResults" className="setting-label">Số kết quả tối đa</label>
+              <label htmlFor="maxResults" className="setting-label">{t('evidence.max_results')}</label>
               <input
                 id="maxResults"
                 type="number"
@@ -236,7 +238,7 @@ export default function EvidenceChecker() {
             <textarea
               id="query"
               className="search-input"
-              placeholder="Nhập nhận định y học cần kiểm chứng (Ví dụ: Metformin cải thiện kháng insulin ở bệnh nhân PCOS...)"
+              placeholder={t('evidence.input_placeholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               rows={1}
@@ -254,7 +256,7 @@ export default function EvidenceChecker() {
               ) : (
                 <>
                   <Search size={18} />
-                  <span>Tìm Evidence</span>
+                  <span>{t('evidence.check')}</span>
                 </>
               )}
             </button>
@@ -269,7 +271,7 @@ export default function EvidenceChecker() {
           <>
             <div className="results-header">
               <div className="results-title">
-                <h2>Kết quả phân tích <span className="count-badge">{evidence.length}</span></h2>
+                <h2>{t('evidence.results_analysis')} <span className="count-badge">{evidence.length}</span></h2>
               </div>
 
               <div className="filter-bar">
@@ -279,18 +281,18 @@ export default function EvidenceChecker() {
                     onChange={(e) => setStatusFilter(e.target.value as any)}
                     className="filter-select"
                   >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="verified">Verified</option>
-                    <option value="trusted">Trusted</option>
-                    <option value="unverified">Unverified</option>
-                    <option value="unknown">Unknown</option>
+                    <option value="all">{t('evidence.filter_all')}</option>
+                    <option value="verified">{t('evidence.verified')}</option>
+                    <option value="trusted">{t('evidence.trusted')}</option>
+                    <option value="unverified">{t('evidence.unverified')}</option>
+                    <option value="unknown">{t('evidence.unknown')}</option>
                   </select>
 
                   <div className="search-filter">
                     <Search size={14} className="search-icon" />
                     <input
                       type="text"
-                      placeholder="Lọc kết quả..."
+                      placeholder={t('evidence.filter_results')}
                       value={textFilter}
                       onChange={(e) => setTextFilter(e.target.value)}
                     />
@@ -304,16 +306,16 @@ export default function EvidenceChecker() {
                       checked={sortByScore}
                       onChange={(e) => setSortByScore(e.target.checked)}
                     />
-                    <span>Ưu tiên nguồn uy tín</span>
+                    <span>{t('evidence.sort_by_trust')}</span>
                   </label>
                 </div>
               </div>
 
               <div className="stats-row">
-                {statusCounts.verified > 0 && <span className="stat-tag success">Verified: {statusCounts.verified}</span>}
-                {statusCounts.trusted > 0 && <span className="stat-tag info">Trusted: {statusCounts.trusted}</span>}
-                {statusCounts.unverified > 0 && <span className="stat-tag warning">Unverified: {statusCounts.unverified}</span>}
-                {statusCounts.unknown > 0 && <span className="stat-tag neutral">Unknown: {statusCounts.unknown}</span>}
+                {statusCounts.verified > 0 && <span className="stat-tag success">{t('evidence.verified')}: {statusCounts.verified}</span>}
+                {statusCounts.trusted > 0 && <span className="stat-tag info">{t('evidence.trusted')}: {statusCounts.trusted}</span>}
+                {statusCounts.unverified > 0 && <span className="stat-tag warning">{t('evidence.unverified')}: {statusCounts.unverified}</span>}
+                {statusCounts.unknown > 0 && <span className="stat-tag neutral">{t('evidence.unknown')}: {statusCounts.unknown}</span>}
               </div>
             </div>
 
@@ -334,7 +336,7 @@ export default function EvidenceChecker() {
                           </span>
                         )}
                       </div>
-                      <h3 className="card-title">{item.title || 'Nguồn không xác định'}</h3>
+                      <h3 className="card-title">{item.title || t('evidence.source_unknown')}</h3>
                       {item.url && (
                         <a className="card-link" href={item.url} target="_blank" rel="noreferrer">
                           {item.url} <ExternalLink size={12} />
@@ -345,29 +347,29 @@ export default function EvidenceChecker() {
                     <div className="card-body">
                       {item.snippet && (
                         <div className="snippet-box">
-                          <p>“{item.snippet}”</p>
+                          <p>"{item.snippet}"</p>
                         </div>
                       )}
 
                       <div className="meta-grid">
                         {item.location && (
                           <div className="meta-item">
-                            <span className="label">Vị trí:</span> <span className="value">{item.location}</span>
+                            <span className="label">{t('evidence.location')}</span> <span className="value">{item.location}</span>
                           </div>
                         )}
                         {item.sourceType && (
                           <div className="meta-item">
-                            <span className="label">Loại nguồn:</span> <span className="value">{item.sourceType}</span>
+                            <span className="label">{t('evidence.source_type')}</span> <span className="value">{item.sourceType}</span>
                           </div>
                         )}
                         {item.verificationNote && (
                           <div className="meta-item full">
-                            <span className="label">Ghi chú:</span> <span className="value">{item.verificationNote}</span>
+                            <span className="label">{t('evidence.note')}</span> <span className="value">{item.verificationNote}</span>
                           </div>
                         )}
                         {item.reasoning && (
                           <div className="meta-item full reasoning">
-                            <div className="reasoning-label">💡 AI Reasoning:</div>
+                            <div className="reasoning-label">{t('evidence.ai_reasoning')}</div>
                             <div className="reasoning-text">{item.reasoning}</div>
                           </div>
                         )}
@@ -384,12 +386,12 @@ export default function EvidenceChecker() {
               <div className="illustration">
                 <FileSearch size={64} strokeWidth={1} />
               </div>
-              <h3>Sẵn sàng tìm kiếm</h3>
-              <p>Nhập nhận định y khoa của bạn để AI đối chiếu với hàng triệu tài liệu khoa học.</p>
+              <h3>{t('evidence.empty_state_title')}</h3>
+              <p>{t('evidence.empty_state_desc')}</p>
               <div className="suggestions">
-                <span>Gợi ý:</span>
-                <button type="button" onClick={() => setQuery("Vitamin D liều cao có giảm nguy cơ cúm không?")}>Vitamin D & Cúm</button>
-                <button type="button" onClick={() => setQuery("Intermittent Fasting ảnh hưởng thế nào đến cơ bắp?")}>IF & Cơ bắp</button>
+                <span>{t('evidence.suggestions')}</span>
+                <button type="button" onClick={() => setQuery(t('evidence.suggestion_1'))}>Vitamin D & Flu</button>
+                <button type="button" onClick={() => setQuery(t('evidence.suggestion_2'))}>IF & Muscle</button>
               </div>
             </div>
           )

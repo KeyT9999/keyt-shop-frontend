@@ -185,44 +185,57 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                             <button className="search-btn"><Search size={18} /></button>
                         </div>
 
-                        <div className="icon-actions">
-                            {/* User - Hover Dropdown */}
-                            <div className="action-item user-action">
-                                <Link to={user ? "/profile" : "/login"} className="icon-btn">
-                                    <User size={22} strokeWidth={1.5} />
+                        {/* Sign In & Register Buttons (when not logged in) */}
+                        {!user && (
+                            <>
+                                <Link to="/login" className="sign-in-btn">
+                                    <User size={18} />
+                                    <span>Đăng Nhập</span>
                                 </Link>
-                                <div className="user-dropdown-menu">
-                                    {user ? (
-                                        <>
-                                            <div className="user-welcome">Hi, {user.username || 'User'}</div>
-                                            {user.admin && (
-                                                <>
-                                                    <Link to="/admin/dashboard" className="admin-link">Dashboard</Link>
-                                                    <Link to="/admin/banners" className="admin-link">Banners</Link>
-                                                </>
-                                            )}
-                                            <Link to="/profile">My Profile</Link>
-                                            <Link to={user.admin ? "/admin/orders" : "/orders"}>Orders</Link>
-                                            <button onClick={handleLogout}>Logout</button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Link to="/login" className="login-btn">Login</Link>
-                                            <Link to="/register">Register</Link>
-                                        </>
-                                    )}
+                                <Link to="/register" className="register-btn">
+                                    <User size={18} />
+                                    <span>Đăng Ký</span>
+                                </Link>
+                            </>
+                        )}
+
+                        <div className="icon-actions">
+                            {/* User - Hover Dropdown - Only show when logged in */}
+                            {user && (
+                                <div className="action-item user-action">
+                                    <Link to="/profile" className="icon-btn">
+                                        <User size={22} strokeWidth={1.5} />
+                                    </Link>
+                                    <div className="user-dropdown-menu">
+                                        <div className="user-welcome">Hi, {user.username || 'User'}</div>
+                                        {user.admin && (
+                                            <>
+                                                <Link to="/admin/dashboard" className="admin-link">Dashboard</Link>
+                                                <Link to="/admin/banners" className="admin-link">Banners</Link>
+                                            </>
+                                        )}
+                                        <Link to="/profile">My Profile</Link>
+                                        <Link to={user.admin ? "/admin/orders" : "/orders"}>Orders</Link>
+                                        <button onClick={handleLogout}>Logout</button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
-                            <Link to="#" className="action-item icon-btn" title="Wishlist">
-                                <Heart size={22} strokeWidth={1.5} />
-                                <span className="badge">0</span>
-                            </Link>
+                            {/* Wishlist - Only show when logged in */}
+                            {user && (
+                                <Link to="#" className="action-item icon-btn" title="Wishlist">
+                                    <Heart size={22} strokeWidth={1.5} />
+                                    <span className="badge">0</span>
+                                </Link>
+                            )}
 
-                            <Link to="/cart" className="action-item icon-btn" title="Cart">
-                                <ShoppingBag size={22} strokeWidth={1.5} />
-                                <span className="badge">{totalItems}</span>
-                            </Link>
+                            {/* Cart - Only show when logged in */}
+                            {user && (
+                                <Link to="/cart" className="action-item icon-btn" title="Cart">
+                                    <ShoppingBag size={22} strokeWidth={1.5} />
+                                    <span className="badge">{totalItems}</span>
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>

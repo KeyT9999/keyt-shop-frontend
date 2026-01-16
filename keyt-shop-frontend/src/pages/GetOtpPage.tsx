@@ -1,13 +1,15 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import axios from 'axios';
 import { useAuthContext } from '../context/useAuthContext';
 import { Link } from 'react-router-dom';
 import { Loader2, Mail, Copy, CheckCircle, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import chatgptIcon from '../assets/icon-chatgpt.png';
 import API_BASE_URL from '../config/api';
 
 export default function GetOtpPage() {
   const { user, token } = useAuthContext();
+  const { t } = useTranslation();
   const [chatgptEmail, setChatgptEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,7 +20,7 @@ export default function GetOtpPage() {
     e.preventDefault();
 
     if (!chatgptEmail) {
-      setError('Vui lòng nhập email ChatGPT');
+      setError(t('otp.email_placeholder'));
       return;
     }
 
@@ -48,7 +50,7 @@ export default function GetOtpPage() {
         });
       }, 1000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Không thể lấy mã OTP. Vui lòng thử lại.');
+      setError(err.response?.data?.message || t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -56,7 +58,7 @@ export default function GetOtpPage() {
 
   const handleCopyOtp = () => {
     navigator.clipboard.writeText(otp);
-    alert('✅ Đã sao chép mã OTP!');
+    alert(`✅ ${t('otp.copied')}`);
   };
 
   if (!user) {
@@ -64,13 +66,13 @@ export default function GetOtpPage() {
       <div className="otp-page-container">
         <div className="otp-card">
           <h2 style={{ color: '#1f2937', marginBottom: '1rem', fontSize: 'clamp(1.25rem, 4vw, 1.5rem)' }}>
-            Vui lòng đăng nhập
+            {t('auth.login_title')}
           </h2>
           <p style={{ color: '#6b7280', marginBottom: '2rem', fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}>
-            Bạn cần đăng nhập để sử dụng tính năng Get OTP
+            {t('otp.login_required')}
           </p>
           <Link to="/login" className="btn-primary">
-            Đăng nhập ngay
+            {t('otp.login_now')}
           </Link>
         </div>
       </div>
@@ -85,13 +87,13 @@ export default function GetOtpPage() {
             <div className="brand-icon">
               <img src={chatgptIcon} alt="ChatGPT" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
             </div>
-            <h1 className="otp-title">Get OTP ChatGPT</h1>
-            <p className="otp-subtitle">Nhập email ChatGPT để nhận mã OTP đăng nhập</p>
+            <h1 className="otp-title">{t('otp.title')}</h1>
+            <p className="otp-subtitle">{t('otp.subtitle')}</p>
           </div>
 
           <form onSubmit={handleGetOtp} className="otp-form">
             <div className="form-group">
-              <label className="form-label">Email ChatGPT</label>
+              <label className="form-label">{t('otp.email_placeholder')}</label>
               <div className="input-wrapper">
                 <Mail className="input-icon" size={20} />
                 <input
@@ -120,11 +122,11 @@ export default function GetOtpPage() {
               {loading ? (
                 <div className="btn-content">
                   <Loader2 className="spinner" size={20} />
-                  <span>Đang xử lý...</span>
+                  <span>{t('common.loading')}</span>
                 </div>
               ) : (
                 <div className="btn-content">
-                  <span>🚀 Lấy mã OTP</span>
+                  <span>🚀 {t('otp.get_otp')}</span>
                 </div>
               )}
             </button>
@@ -134,12 +136,12 @@ export default function GetOtpPage() {
             <div className="otp-result">
               <div className="result-header">
                 <CheckCircle size={24} className="success-icon" />
-                <p className="otp-result-label">Lấy mã thành công!</p>
+                <p className="otp-result-label">{t('common.success')}!</p>
               </div>
 
               <div className="otp-display">
                 <span className="otp-code">{otp}</span>
-                <button onClick={handleCopyOtp} className="copy-btn-icon" title="Sao chép">
+                <button onClick={handleCopyOtp} className="copy-btn-icon" title={t('otp.copy')}>
                   <Copy size={20} />
                 </button>
               </div>
@@ -147,7 +149,7 @@ export default function GetOtpPage() {
               {countdown > 0 && (
                 <div className="countdown-bar">
                   <div className="progress" style={{ width: `${(countdown / 30) * 100}%` }}></div>
-                  <p className="countdown-text">Mã hết hạn sau {countdown}s</p>
+                  <p className="countdown-text">Expiring in {countdown}s</p>
                 </div>
               )}
             </div>
@@ -155,7 +157,7 @@ export default function GetOtpPage() {
 
           <div className="back-link-container">
             <Link to="/" className="back-link">
-              ← Quay lại trang chủ
+              ← {t('otp.back_home')}
             </Link>
           </div>
         </div>

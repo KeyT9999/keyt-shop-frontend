@@ -12,9 +12,9 @@ const tokenService = require('../services/token.service');
 const router = express.Router();
 
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 30 * 1000, // 30 seconds
   max: 5,
-  message: { message: 'Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau.' }
+  message: { message: 'Quá nhiều lần thử đăng nhập. Vui lòng thử lại sau 30 giây.' }
 });
 
 const getJwtSecret = () => {

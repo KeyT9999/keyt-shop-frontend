@@ -4,7 +4,7 @@ import { useAuthContext } from '../../context/useAuthContext';
 import { adminService } from '../../services/adminService';
 import type { OrderStats, OrdersListResponse, OrderFilters } from '../../types/admin';
 import { formatPrice } from '../../utils/formatPrice';
-import { Eye, ArrowLeft, ArrowRight, CheckCircle2, XCircle, Download, Calendar, Filter, TrendingUp } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, XCircle, Download, Filter, TrendingUp } from 'lucide-react';
 
 export default function OrdersPage() {
   const { token, user } = useAuthContext();

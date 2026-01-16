@@ -3,7 +3,7 @@ import { useAuthContext } from '../../context/useAuthContext';
 import { adminService } from '../../services/adminService';
 import type { UserOtpInfo } from '../../types/admin';
 import UserForm from '../../components/admin/UserForm';
-import { Plus, Search, Trash2, Edit, History, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Plus, Search, Trash2, Edit, History, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface User {
   _id: string;

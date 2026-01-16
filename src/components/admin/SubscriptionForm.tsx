@@ -93,11 +93,16 @@ export default function SubscriptionForm({ onSuccess, onCancel, initialData }: S
       if (initialData) {
         await subscriptionService.update(initialData._id, formData, token!);
       } else {
+        // Validate required fields for creation
+        if (!formData.startDate || !formData.endDate) {
+          setError('Vui lòng điền đầy đủ ngày bắt đầu và ngày kết thúc');
+          setLoading(false);
+          return;
+        }
         const payload = {
           ...formData,
-          // Ensure dates are valid if not strictly controlled
-          startDate: formData.startDate || undefined,
-          endDate: formData.endDate || undefined
+          startDate: formData.startDate,
+          endDate: formData.endDate
         };
         await subscriptionService.create(payload, token!);
       }

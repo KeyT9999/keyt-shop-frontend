@@ -110,9 +110,17 @@ export default function HomePage() {
                             <Link to={heroBanner?.link || "/products"} className="px-8 py-3 bg-brand-orange text-white rounded-full font-bold hover:bg-orange-600 transition-colors shadow-lg">
                                 {t('home.hero.shop_now')}
                             </Link>
-                            <Link to="/about" className="px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-bold hover:bg-white hover:text-brand-navy transition-colors">
+                            <button
+                                onClick={() => {
+                                    const element = document.getElementById('featured-software');
+                                    if (element) {
+                                        element.scrollIntoView({ behavior: 'smooth' });
+                                    }
+                                }}
+                                className="px-8 py-3 bg-transparent border-2 border-white text-white rounded-full font-bold hover:bg-white hover:text-brand-navy transition-colors cursor-pointer"
+                            >
                                 {t('home.hero.view_collection')}
-                            </Link>
+                            </button>
                         </div>
 
                         {/* Trust Badges - User requested these inside Hero */}
@@ -140,7 +148,7 @@ export default function HomePage() {
 
 
             {/* SECTION 3: FEATURED PRODUCTS */}
-            <section className="py-20 bg-brand-bg-alt">
+            <section id="featured-software" className="py-20 bg-brand-bg-alt">
                 <div className="container mx-auto px-4">
                     <div className="text-center mb-12">
                         <span className="text-brand-orange font-semibold tracking-wider uppercase text-sm">Sản phẩm nổi bật</span>

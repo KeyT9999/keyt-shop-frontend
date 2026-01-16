@@ -148,7 +148,7 @@ export default function OrdersTab() {
   const handleReviewClick = async (order: Order) => {
     try {
       const data = await reviewService.canReviewOrder(order._id);
-      
+
       if (!data.canReview) {
         alert('Đơn hàng chưa hoàn thành hoặc không thể đánh giá');
         return;
@@ -156,7 +156,7 @@ export default function OrdersTab() {
 
       // Find first product that hasn't been reviewed
       const unreviewedProduct = data.products.find(p => !p.hasReviewed);
-      
+
       if (!unreviewedProduct) {
         alert('Bạn đã đánh giá tất cả sản phẩm trong đơn hàng này rồi!');
         return;
@@ -204,7 +204,7 @@ export default function OrdersTab() {
               left: 0,
               height: '100%',
               width: `${progress.percentage}%`,
-              background: progress.percentage === 100 ? '#10b981' : '#3b82f6',
+              background: progress.percentage === 100 ? '#10b981' : '#F05A28',
               transition: 'width 0.3s ease'
             }}
           />
@@ -224,7 +224,7 @@ export default function OrdersTab() {
                     width: '20px',
                     height: '20px',
                     borderRadius: '50%',
-                    background: isCompleted ? '#10b981' : isActive ? '#3b82f6' : '#e5e7eb',
+                    background: isCompleted ? '#10b981' : isActive ? '#F05A28' : '#e5e7eb',
                     margin: '0 auto 0.25rem',
                     display: 'flex',
                     alignItems: 'center',
@@ -515,7 +515,7 @@ export default function OrdersTab() {
                     <h3>
                       <Link
                         to={`/orders/${order._id}`}
-                        style={{ color: '#2563eb', textDecoration: 'none' }}
+                        style={{ color: '#E04815', textDecoration: 'none' }}
                       >
                         Đơn hàng #{order.orderCode || order._id.slice(-8).toUpperCase()}
                       </Link>

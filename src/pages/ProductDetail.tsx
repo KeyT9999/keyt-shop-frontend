@@ -4,7 +4,8 @@ import axios from 'axios';
 import type { Product } from '../types/product';
 import { formatPrice } from '../utils/formatPrice';
 import { useCartContext } from '../context/useCartContext';
-import { useAuthContext } from '../context/useAuthContext';
+
+import { useNotification } from '../context/NotificationContext';
 import { reviewService, type Review, type ReviewStats } from '../services/reviewService';
 import './ProductDetail.css';
 import API_BASE_URL from '../config/api';
@@ -25,7 +26,7 @@ export default function ProductDetail() {
   const [reviewsLoading, setReviewsLoading] = useState(false);
 
   const { addItem } = useCartContext();
-  const { user } = useAuthContext();
+  const { showNotification } = useNotification();
   const navigate = useNavigate();
 
   const isOutOfStock = useMemo(() => {
@@ -141,6 +142,7 @@ export default function ProductDetail() {
     } else {
       addItem(product);
     }
+    showNotification(`Đã thêm ${currentName} vào giỏ hàng`, 'success');
   };
 
   const handleBuyNow = () => {
@@ -254,7 +256,7 @@ export default function ProductDetail() {
             {/* Action Buttons */}
             <div className="flex gap-4 pt-6">
               <button
-                onClick={() => addItem(product)}
+                onClick={handleAddToCart}
                 className="p-4 rounded-xl border-2 border-slate-200 bg-white text-slate-400 hover:border-[#F05A28] hover:text-[#F05A28] hover:bg-orange-50 transition-all flex items-center justify-center min-w-[64px]"
                 disabled={isOutOfStock}
               >

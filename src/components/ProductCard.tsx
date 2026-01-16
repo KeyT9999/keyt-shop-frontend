@@ -4,6 +4,7 @@ import type { Product } from '../types/product';
 import { formatPrice } from '../utils/formatPrice';
 import { useCartContext } from '../context/useCartContext';
 import { useWishlistContext } from '../context/useWishlistContext';
+import { useNotification } from '../context/NotificationContext';
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +13,7 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCartContext();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistContext();
+  const { showNotification } = useNotification();
   const isOutOfStock = product.status === 'out_of_stock' || product.status === 'discontinued' || (product.stock !== undefined && product.stock <= 0);
 
   return (
@@ -45,8 +47,10 @@ export default function ProductCard({ product }: ProductCardProps) {
               e.stopPropagation();
               if (isInWishlist(product._id)) {
                 removeFromWishlist(product._id);
+                showNotification(`Đã xóa ${product.name} khỏi yêu thích`, 'info');
               } else {
                 addToWishlist(product);
+                showNotification(`Đã thêm ${product.name} vào yêu thích`, 'success');
               }
             }}
           >
@@ -98,7 +102,12 @@ export default function ProductCard({ product }: ProductCardProps) {
               ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
               : 'bg-brand-navy text-white hover:bg-brand-orange'
               }`}
-            onClick={() => !isOutOfStock && addItem(product)}
+            onClick={() => {
+              if (!isOutOfStock) {
+                addItem(product);
+                showNotification(`Đã thêm ${product.name} vào giỏ hàng`, 'success');
+              }
+            }}
             disabled={isOutOfStock}
           >
             <ShoppingCart size={16} />

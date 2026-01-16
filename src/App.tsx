@@ -30,6 +30,7 @@ import OrderDetailPage from './pages/OrderDetailPage';
 import UserOrdersPage from './pages/UserOrdersPage';
 import InvoiceView from './components/order/InvoiceView';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import QrPaymentPage from './pages/QrPaymentPage';
 import { useAuthContext } from './context/useAuthContext';
 import Footer from './components/Footer';
 import Header from './components/Header';
@@ -70,6 +71,7 @@ export default function App() {
                     <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
                     <Route path="/orders/:id/invoice" element={<ProtectedRoute><InvoiceView /></ProtectedRoute>} />
                     <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
+                    <Route path="/payment-qr" element={<QrPaymentPage />} />
                     <Route path="/evidence" element={<ProtectedRoute><EvidenceCheckerPage /></ProtectedRoute>} />
                     <Route path="/summarizer" element={<ProtectedRoute><YoutubeSummarizerPage /></ProtectedRoute>} />
                     <Route path="/get-otp" element={<ProtectedRoute><GetOtpPage /></ProtectedRoute>} />

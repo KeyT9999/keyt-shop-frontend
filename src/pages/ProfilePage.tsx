@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { profileService } from '../services/profileService';
 import type { UserProfile } from '../types/profile';
-import ProfileHeader from '../components/profile/ProfileHeader';
 import PersonalInfoTab from '../components/profile/PersonalInfoTab';
 import SecurityTab from '../components/profile/SecurityTab';
 import OrdersTab from '../components/profile/OrdersTab';
@@ -66,36 +65,48 @@ export default function ProfilePage() {
   }
 
   const tabs = [
-    { id: 'personal' as TabType, label: 'Thông tin cá nhân', icon: '👤' },
-    { id: 'security' as TabType, label: 'Bảo mật', icon: '🔒' },
-    { id: 'orders' as TabType, label: 'Đơn hàng', icon: '📦' },
-    { id: 'activity' as TabType, label: 'Hoạt động', icon: '📊' }
+    { id: 'personal' as TabType, label: 'Thông tin cá nhân' },
+    { id: 'security' as TabType, label: 'Bảo mật & Đăng nhập' },
+    { id: 'orders' as TabType, label: 'Đơn hàng của tôi' },
+    { id: 'activity' as TabType, label: 'Hoạt động' }
   ];
+
+  const displayName = profile.displayName || profile.username;
+  const avatarUrl = profile.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=F1F5F9&color=1E293B&size=128`;
 
   return (
     <div className="profile-page">
-      <div className="profile-page-header">
-        <p className="profile-eyebrow">MY ACCOUNT</p>
-        <h1 className="profile-title">Profile Settings</h1>
-      </div>
+      <div className="profile-container">
 
-      <ProfileHeader profile={profile} onUpdate={handleProfileUpdate} />
+        {/* Left Sidebar */}
+        <div className="profile-sidebar">
+          {/* User Summary */}
+          <div className="sidebar-user">
+            <div className="sidebar-avatar">
+              <img src={avatarUrl} alt={displayName} />
+            </div>
+            <div className="sidebar-info">
+              <h3>{displayName}</h3>
+              <p>{profile.email}</p>
+            </div>
+          </div>
 
-      <div className="profile-tabs">
-        <div className="profile-tabs__nav">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={`profile-tabs__button ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <span className="profile-tabs__icon">{tab.icon}</span>
-              <span className="profile-tabs__label">{tab.label}</span>
-            </button>
-          ))}
+          {/* Navigation Menu */}
+          <nav className="sidebar-nav">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={`sidebar-nav-item ${activeTab === tab.id ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
         </div>
 
-        <div className="profile-tabs__content">
+        {/* Right Content Area */}
+        <div className="profile-content">
           {activeTab === 'personal' && (
             <PersonalInfoTab profile={profile} onUpdate={handleProfileUpdate} />
           )}
@@ -108,10 +119,9 @@ export default function ProfilePage() {
           {activeTab === 'activity' && (
             <ActivityTab />
           )}
-
         </div>
+
       </div>
     </div>
   );
 }
-

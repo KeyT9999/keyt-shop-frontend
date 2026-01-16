@@ -12,7 +12,9 @@ import {
   Key,
   LogOut,
   Menu,
-  Star
+  Star,
+  TrendingUp,
+  Clock
 } from 'lucide-react';
 import './AdminStyles.css';
 
@@ -91,46 +93,85 @@ export default function AdminDashboard() {
 
     return (
       <div className="admin-dashboard-home">
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '24px', color: '#111827' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '24px', color: '#1E293B' }}>
           Tổng quan hệ thống
         </h2>
 
         <div className="admin-dashboard-grid">
           {/* Card 1: ChatGPT Accounts */}
           <div className="stats-card">
-            <h3>ChatGPT Accounts</h3>
-            <p className="value text-primary">{stats?.chatGptAccounts.total || 0}</p>
+            <div className="stats-card-header">
+              <h3>ChatGPT Accounts</h3>
+              <div className="icon-wrapper">
+                <Bot size={24} />
+              </div>
+            </div>
+            <p className="value">{stats?.chatGptAccounts.total || 0}</p>
+            <div className="sub-text">
+              <TrendingUp size={16} className="text-success" />
+              <span className="text-success">+2% this week</span>
+            </div>
           </div>
 
           {/* Card 2: Subscriptions */}
           <div className="stats-card">
-            <h3>Subscriptions</h3>
-            <p className="value text-primary">{stats?.subscriptions.total || 0}</p>
+            <div className="stats-card-header">
+              <h3>Subscriptions</h3>
+              <div className="icon-wrapper">
+                <CreditCard size={24} />
+              </div>
+            </div>
+            <p className="value">{stats?.subscriptions.total || 0}</p>
             <div className="sub-text">
               <span className="text-success">Active: {stats?.subscriptions.active || 0}</span>
               <span>•</span>
-              <span className="text-gray-500">Expired: {stats?.subscriptions.expired || 0}</span>
+              <span className="text-secondary">Expired: {stats?.subscriptions.expired || 0}</span>
             </div>
           </div>
 
           {/* Card 3: Ending Tomorrow */}
           <div className="stats-card">
-            <h3>Ending Tomorrow</h3>
+            <div className="stats-card-header">
+              <h3>Expiring Soon</h3>
+              <div className="icon-wrapper" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' }}>
+                <Clock size={24} />
+              </div>
+            </div>
             <p className="value text-danger">{stats?.subscriptions.endingTomorrow || 0}</p>
             <div className="sub-text">
-              Subscriptions expiring in 24h
+              Subscriptions ending in 24h
             </div>
           </div>
 
           {/* Card 4: OTP Requests */}
           <div className="stats-card">
-            <h3>OTP Requests</h3>
-            <p className="value text-primary">{stats?.otpRequests.totalRequests || 0}</p>
+            <div className="stats-card-header">
+              <h3>OTP Requests</h3>
+              <div className="icon-wrapper">
+                <Key size={24} />
+              </div>
+            </div>
+            <p className="value">{stats?.otpRequests.totalRequests || 0}</p>
             <div className="sub-text">
-              From {stats?.otpRequests.totalUsers || 0} users
+              <Users size={14} />
+              <span>{stats?.otpRequests.totalUsers || 0} users</span>
             </div>
           </div>
         </div>
+
+        {/* Quick Actions */}
+        <div className="table-container">
+          <h3 style={{ padding: '16px 24px', margin: 0, borderBottom: '1px solid #E2E8F0', color: '#1E293B', fontSize: '1rem' }}>Quick Actions</h3>
+          <div style={{ padding: '24px', display: 'flex', gap: '16px' }}>
+            <button className="btn-admin btn-admin-primary" onClick={() => setActiveTab('users')}>
+              <Users size={16} /> Manage Users
+            </button>
+            <button className="btn-admin btn-admin-outline" onClick={() => setActiveTab('products')}>
+              <Package size={16} /> Manage Products
+            </button>
+          </div>
+        </div>
+
       </div>
     );
   };
@@ -155,7 +196,7 @@ export default function AdminDashboard() {
       <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : 'closed'}`} style={{ width: isSidebarOpen ? '260px' : '0', overflow: 'hidden' }}>
         <div className="admin-sidebar-header">
           <div className="admin-logo">
-            <LayoutDashboard size={24} className="text-primary" />
+            <LayoutDashboard size={24} />
             <span>KeyT Admin</span>
           </div>
         </div>
@@ -169,7 +210,7 @@ export default function AdminDashboard() {
             <span>Tổng quan</span>
           </button>
 
-          <div style={{ height: '1px', background: '#e5e7eb', margin: '8px 0' }}></div>
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '8px 0' }}></div>
 
           <button
             className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
@@ -203,7 +244,7 @@ export default function AdminDashboard() {
             <span>Đánh giá</span>
           </button>
 
-          <div style={{ height: '1px', background: '#e5e7eb', margin: '8px 0' }}></div>
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '8px 0' }}></div>
 
           <button
             className={`admin-nav-item ${activeTab === 'chatgpt' ? 'active' : ''}`}
@@ -230,9 +271,9 @@ export default function AdminDashboard() {
           </button>
         </nav>
 
-        {/* Sidebar Footer (optional) */}
-        <div style={{ padding: '16px', borderTop: '1px solid #e5e7eb' }}>
-          <button className="admin-nav-item" onClick={logout} style={{ color: '#ef4444' }}>
+        {/* Sidebar Footer */}
+        <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <button className="admin-nav-item" onClick={logout} style={{ color: '#EF4444' }}>
             <LogOut size={20} />
             <span>Đăng xuất</span>
           </button>
@@ -245,8 +286,18 @@ export default function AdminDashboard() {
         <header className="admin-topbar">
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {/* Toggle Sidebar Button */}
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '4px' }}>
-              <Menu size={24} color="#374151" />
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                cursor: 'pointer',
+                padding: '8px',
+                borderRadius: '8px',
+                color: '#334155'
+              }}
+            >
+              <Menu size={24} />
             </button>
             <h1 className="admin-page-title">{getPageTitle()}</h1>
           </div>
@@ -262,6 +313,16 @@ export default function AdminDashboard() {
         {/* Dynamic Content Area */}
         <div className="admin-content-scroll">
           {renderContent()}
+          <footer style={{
+            marginTop: 'auto',
+            padding: '24px',
+            textAlign: 'center',
+            color: '#94A3B8',
+            fontSize: '0.8rem',
+            borderTop: '1px solid #E2E8F0'
+          }}>
+            &copy; {new Date().getFullYear()} KeyT Shop Admin. All rights reserved.
+          </footer>
         </div>
       </main>
     </div>

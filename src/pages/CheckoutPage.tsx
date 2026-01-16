@@ -36,14 +36,14 @@ export default function CheckoutPage() {
 
   const reloadProductsData = async () => {
     if (cart.length === 0) return;
-    
+
     try {
       // Fetch product data cho tất cả items trong cart
       const productPromises = cart.map(async (item) => {
         try {
           const response = await axios.get(`${API_BASE_URL}/products/${item._id}`);
           const productData: Product = response.data;
-          
+
           // Update cart item với product data mới (đặc biệt là requiredFields)
           if (productData.requiredFields && productData.requiredFields.length > 0) {
             updateCartItem(item._id, {
@@ -51,14 +51,14 @@ export default function CheckoutPage() {
             });
             console.log(`✅ Updated product ${item.name} with requiredFields:`, productData.requiredFields);
           }
-          
+
           return productData;
         } catch (err) {
           console.error(`❌ Error loading product ${item._id}:`, err);
           return null;
         }
       });
-      
+
       await Promise.all(productPromises);
     } catch (err) {
       console.error('❌ Error reloading products data:', err);
@@ -157,9 +157,9 @@ export default function CheckoutPage() {
       const response = await axios.post(`${API_BASE_URL}/orders`, payload, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
-      
+
       clearCart();
-      
+
       // If PayOS checkout URL is available, redirect to it immediately
       if (response.data.checkoutUrl) {
         // Redirect to PayOS checkout page immediately
@@ -175,7 +175,7 @@ export default function CheckoutPage() {
       setStatus('error');
       const errorMessage = error.response?.data?.message || error.message || 'Không thể gửi đơn hàng, vui lòng thử lại sau.';
       setMessage(errorMessage);
-      
+
       // If order was created but PayOS failed, show specific message
       if (error.response?.data?._id && !error.response?.data?.checkoutUrl) {
         setMessage('Đơn hàng đã được tạo nhưng chưa thể tạo link thanh toán. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.');
@@ -208,205 +208,155 @@ export default function CheckoutPage() {
   }
 
   // Debug: Log cart items để kiểm tra requiredFields
-  useEffect(() => {
-    console.log('🛒 Cart items:', cart);
-    cart.forEach(item => {
-      console.log(`Product ${item.name}:`, {
-        hasRequiredFields: !!item.requiredFields,
-        requiredFields: item.requiredFields
-      });
-    });
-  }, [cart]);
+  // useEffect(() => {
+  //   console.log('🛒 Cart items:', cart);
+  //   cart.forEach(item => {
+  //     console.log(`Product ${item.name}:`, {
+  //       hasRequiredFields: !!item.requiredFields,
+  //       requiredFields: item.requiredFields
+  //     });
+  //   });
+  // }, [cart]);
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem', background: '#f5f5f5', minHeight: '100vh' }}>
-      <div style={{ marginTop: '2rem' }}>
-          {/* Order Summary */}
-          <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1.5rem', marginBottom: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
-              Đơn hàng của bạn ({cart.length} sản phẩm)
-            </h2>
-            <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: '1rem' }}>
-              {cart.map((item) => (
-                <div key={item._id} style={{ padding: '0.75rem 0', borderBottom: '1px solid #f3f4f6' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>{item.name}</div>
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem' }}>
-                        {formatPrice(item.price, item.currency)}
-                      </div>
-                      {/* Debug info */}
-                      {item.requiredFields && item.requiredFields.length > 0 && (
-                        <div style={{ fontSize: '0.75rem', color: '#059669', marginTop: '0.25rem' }}>
-                          ⚠️ Cần thông tin bổ sung
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ fontWeight: 600, color: '#1f2937', fontSize: '1.125rem' }}>
-                      {formatPrice(item.price * item.quantity, item.currency)}
-                    </div>
-                  </div>
-                  {/* Quantity Control */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    <span style={{ fontSize: '0.875rem', color: '#6b7280', marginRight: '0.25rem' }}>Số lượng:</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <button
-                        onClick={() => updateQuantity(item._id, Math.max(1, item.quantity - 1))}
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '4px',
-                          border: '1px solid #d1d5db',
-                          background: '#f3f4f6',
-                          color: '#1f2937',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1.125rem',
-                          transition: 'background 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        value={item.quantity}
-                        min={1}
-                        onChange={(e) => updateQuantity(item._id, Math.max(1, Number(e.target.value) || 1))}
-                        style={{
-                          width: '60px',
-                          textAlign: 'center',
-                          borderRadius: '4px',
-                          border: '1px solid #d1d5db',
-                          padding: '0.25rem',
-                          fontSize: '0.875rem',
-                          fontWeight: 500
-                        }}
-                      />
-                      <button
-                        onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '4px',
-                          border: '1px solid #d1d5db',
-                          background: '#f3f4f6',
-                          color: '#1f2937',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1.125rem',
-                          transition: 'background 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
+    <div style={{ background: '#F8FAFC', minHeight: '100vh', padding: '40px 20px' }}>
+      <style>
+        {`
+          .checkout-input:focus {
+            border-color: #F05A28 !important;
+            box-shadow: 0 0 0 1px #F05A28 !important;
+            outline: none;
+          }
+          .checkout-btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(240, 90, 40, 0.3);
+          }
+          .checkout-btn-primary:active {
+            transform: translateY(0);
+          }
+          @media (max-width: 768px) {
+            .checkout-grid {
+              grid-template-columns: 1fr !important;
+            }
+            .checkout-form-row {
+              flex-direction: column !important;
+            }
+          }
+        `}
+      </style>
+
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <h1 style={{
+          fontSize: '2rem',
+          fontWeight: 700,
+          color: '#1E293B',
+          marginBottom: '32px',
+          textAlign: 'center'
+        }}>
+          Thanh toán
+        </h1>
+
+        <form onSubmit={handleSubmit} className="checkout-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: '65% 35%',
+          gap: '32px',
+          alignItems: 'start'
+        }}>
+
+          {/* LEFT COLUMN: BILLING DETAILS */}
+          <div>
+            <div style={{ background: 'white', borderRadius: '16px', padding: '32px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1E293B', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #E2E8F0' }}>
+                Thông tin thanh toán
+              </h2>
+
+              {/* Name & Phone Row */}
+              <div className="checkout-form-row" style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>
+                    Họ và tên <span style={{ color: '#EF4444' }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={customer.name}
+                    onChange={(event) => handleChange('name', event.target.value)}
+                    required
+                    className="checkout-input"
+                    placeholder="Nhập họ tên của bạn"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '8px',
+                      fontSize: '0.95rem',
+                      color: '#1E293B',
+                      background: '#FFFFFF',
+                      transition: 'all 0.2s'
+                    }}
+                  />
                 </div>
-              ))}
-            </div>
-            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '2px solid #e5e5e5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1f2937' }}>Tổng tiền</span>
-              <strong style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2563eb' }}>
-                {formatPrice(totalAmount, 'VNĐ')}
-              </strong>
-            </div>
-          </div>
-
-          {/* Payment Information Form */}
-          <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.25rem', fontWeight: 600 }}>
-              Thông tin thanh toán
-            </h2>
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#374151' }}>
-                  Tên <span style={{ color: 'red' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={customer.name}
-                  onChange={(event) => handleChange('name', event.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    fontSize: '1rem'
-                  }}
-                />
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>
+                    Số điện thoại <span style={{ color: '#EF4444' }}>*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={customer.phone}
+                    onChange={(event) => handleChange('phone', event.target.value)}
+                    required
+                    className="checkout-input"
+                    placeholder="Nhập số điện thoại"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '8px',
+                      fontSize: '0.95rem',
+                      color: '#1E293B',
+                      background: '#FFFFFF',
+                      transition: 'all 0.2s'
+                    }}
+                  />
+                </div>
               </div>
 
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#374151' }}>
-                  Số điện thoại <span style={{ color: 'red' }}>*</span>
-                </label>
-                <input
-                  type="tel"
-                  value={customer.phone}
-                  onChange={(event) => handleChange('phone', event.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    fontSize: '1rem'
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#374151' }}>
-                  Email <span style={{ color: 'red' }}>*</span>
+              {/* Email - Full Width */}
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>
+                  Email <span style={{ color: '#EF4444' }}>*</span>
                 </label>
                 <input
                   type="email"
                   value={customer.email}
                   onChange={(event) => handleChange('email', event.target.value)}
                   required
+                  className="checkout-input"
+                  placeholder="Nhập địa chỉ email"
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    fontSize: '1rem'
+                    padding: '12px 16px',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '8px',
+                    fontSize: '0.95rem',
+                    color: '#1E293B',
+                    background: '#FFFFFF',
+                    transition: 'all 0.2s'
                   }}
                 />
               </div>
 
-              {/* Required Fields cho từng sản phẩm */}
+              {/* Required Fields Sections */}
               {cart.map((item) => {
-                // Debug log
-                console.log(`🔍 Checking requiredFields for product ${item.name}:`, {
-                  hasRequiredFields: !!item.requiredFields,
-                  requiredFields: item.requiredFields,
-                  requiredFieldsLength: item.requiredFields?.length || 0
-                });
-
-                if (!item.requiredFields || item.requiredFields.length === 0) {
-                  return null;
-                }
-
+                if (!item.requiredFields || item.requiredFields.length === 0) return null;
                 return (
-                  <div key={item._id} style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e5e5' }}>
-                    <h3 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1rem', fontWeight: 600 }}>
-                      Thông tin bổ sung cho: {item.name}
+                  <div key={item._id} style={{ marginTop: '24px', padding: '20px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #F1F5F9' }}>
+                    <h3 style={{ marginBottom: '16px', color: '#1E293B', fontSize: '1rem', fontWeight: 600 }}>
+                      Thông tin cho: <span style={{ color: '#F05A28' }}>{item.name}</span>
                     </h3>
                     {item.requiredFields.map((field, fieldIndex) => (
-                      <div key={fieldIndex} style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#374151' }}>
-                          {field.label} {field.required && <span style={{ color: 'red' }}>*</span>}
+                      <div key={fieldIndex} style={{ marginBottom: '16px' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>
+                          {field.label} {field.required && <span style={{ color: '#EF4444' }}>*</span>}
                         </label>
                         <input
                           type={field.type === 'email' ? 'email' : 'text'}
@@ -414,12 +364,16 @@ export default function CheckoutPage() {
                           onChange={(e) => handleRequiredFieldChange(item._id, field.label, e.target.value)}
                           placeholder={field.placeholder || ''}
                           required={field.required}
+                          className="checkout-input"
                           style={{
                             width: '100%',
-                            padding: '0.75rem',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            fontSize: '1rem'
+                            padding: '12px 16px',
+                            border: '1px solid #E2E8F0',
+                            borderRadius: '8px',
+                            fontSize: '0.95rem',
+                            color: '#1E293B',
+                            background: '#FFFFFF',
+                            transition: 'all 0.2s'
                           }}
                         />
                       </div>
@@ -428,58 +382,138 @@ export default function CheckoutPage() {
                 );
               })}
 
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#374151' }}>
-                  Ghi chú về đơn hàng
+              {/* Additional Note */}
+              <div style={{ marginTop: '24px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, color: '#334155', fontSize: '0.9rem' }}>
+                  Ghi chú đơn hàng (Tùy chọn)
                 </label>
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn địa điểm giao hàng chi tiết hơn."
+                  placeholder="Ví dụ: Thời gian giao hàng, địa chỉ chi tiết..."
                   rows={4}
+                  className="checkout-input"
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '6px',
-                    fontSize: '1rem',
+                    padding: '12px 16px',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '8px',
+                    fontSize: '0.95rem',
+                    color: '#1E293B',
+                    background: '#FFFFFF',
+                    transition: 'all 0.2s',
                     resize: 'vertical',
                     fontFamily: 'inherit'
                   }}
                 />
               </div>
+            </div>
+          </div>
 
+          {/* RIGHT COLUMN: ORDER SUMMARY (Sticky) */}
+          <div style={{ position: 'sticky', top: '24px' }}>
+            <div style={{ background: 'white', borderRadius: '16px', padding: '24px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1E293B', marginBottom: '20px' }}>
+                Đơn hàng của bạn
+              </h2>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                {cart.map((item) => (
+                  <div key={item._id} style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    {/* Thumbnail */}
+                    <div style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '8px',
+                      background: '#F1F5F9',
+                      border: '1px solid #E2E8F0',
+                      overflow: 'hidden',
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {item.imageUrl || (item.images && item.images[0]) ? (
+                        <img
+                          src={item.imageUrl || (item.images && item.images[0]) || undefined}
+                          alt={item.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: '24px' }}>📦</span>
+                      )}
+                    </div>
+
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, color: '#1E293B', fontSize: '0.95rem', lineHeight: '1.4' }}>
+                        {item.name}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', alignItems: 'center' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#64748B' }}>
+                          SL: {item.quantity} x {formatPrice(item.price, item.currency)}
+                        </div>
+                        <div style={{ fontWeight: 600, color: '#F05A28', fontSize: '0.95rem' }}>
+                          {formatPrice(item.price * item.quantity, item.currency)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Divider */}
+              <div style={{ borderTop: '2px dashed #E2E8F0', margin: '20px 0' }}></div>
+
+              {/* Total */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#475569' }}>Tổng tiền</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F05A28' }}>
+                  {formatPrice(totalAmount, 'VNĐ')}
+                </span>
+              </div>
+
+              {/* Status Message */}
+              {status === 'error' && (
+                <div style={{ padding: '12px', background: '#FEF2F2', color: '#B91C1C', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center' }}>
+                  {message}
+                </div>
+              )}
+              {status === 'success' && (
+                <div style={{ padding: '12px', background: '#ECFDF5', color: '#047857', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center' }}>
+                  {message}
+                </div>
+              )}
+
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={status === 'submitting'}
+                className="checkout-btn-primary"
                 style={{
                   width: '100%',
-                  padding: '0.875rem',
-                  background: status === 'submitting' ? '#9ca3af' : '#2563eb',
-                  color: '#ffffff',
+                  padding: '16px',
+                  background: '#F05A28',
+                  color: 'white',
                   border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '1rem',
-                  fontWeight: 600,
+                  borderRadius: '9999px',
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
                   cursor: status === 'submitting' ? 'not-allowed' : 'pointer',
-                  transition: 'background 0.2s'
+                  boxShadow: '0 4px 6px -1px rgba(240, 90, 40, 0.2)',
+                  opacity: status === 'submitting' ? 0.7 : 1,
+                  transition: 'all 0.2s'
                 }}
               >
-                {status === 'submitting' ? 'Đang xử lý...' : 'Thanh toán bằng chuyển khoản'}
+                {status === 'submitting' ? 'Đang xử lý...' : 'THANH TOÁN NGAY'}
               </button>
 
-              {status === 'error' && (
-                <p style={{ marginTop: '1rem', padding: '0.75rem', background: '#fee2e2', color: '#dc2626', borderRadius: '6px', textAlign: 'center' }}>
-                  {message}
-                </p>
-              )}
-              {status === 'success' && (
-                <p style={{ marginTop: '1rem', padding: '0.75rem', background: '#d1fae5', color: '#059669', borderRadius: '6px', textAlign: 'center' }}>
-                  {message}
-                </p>
-              )}
-            </form>
+              <div style={{ textAlign: 'center', marginTop: '16px', color: '#64748B', fontSize: '0.8rem' }}>
+                <p>Thông tin thanh toán của bạn được bảo mật an toàn.</p>
+              </div>
+
+            </div>
           </div>
+        </form>
       </div>
     </div>
   );

@@ -96,90 +96,108 @@ export default function ChatGptAccountForm({ onSuccess, onCancel, initialData, a
     <form
       onSubmit={handleSubmit}
       style={{
-        marginBottom: '2rem',
-        padding: '1.5rem',
         background: '#ffffff',
-        borderRadius: '8px',
-        border: '1px solid #e5e5e5',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        /* No wrapping styles needed here as parent handles container */
       }}
     >
-      <h3 style={{ color: '#1f2937', marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 600 }}>
-        {isEditMode ? 'Sửa Email ChatGPT' : 'Thêm Email ChatGPT'}
+      <h3 style={{ color: '#1E293B', marginBottom: '24px', fontSize: '1.1rem', fontWeight: 700 }}>
+        {isEditMode ? 'Chỉnh sửa tài khoản' : 'Thêm Email ChatGPT'}
       </h3>
-      
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: 500 }}>
-          Email ChatGPT:
+
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{ display: 'block', marginBottom: '8px', color: '#64748B', fontWeight: 500, fontSize: '0.9rem' }}>
+          Email ChatGPT
         </label>
         <input
           type="email"
           value={formData.chatgptEmail}
           onChange={(e) => setFormData({ ...formData, chatgptEmail: e.target.value })}
           required
+          placeholder="example@email.com"
           style={{
             width: '100%',
-            padding: '0.75rem',
-            borderRadius: '6px',
-            border: '1px solid #d1d5db',
+            padding: '12px',
+            borderRadius: '8px',
+            border: '1px solid #E2E8F0',
             background: '#ffffff',
-            color: '#1f2937',
-            fontSize: '1rem'
+            color: '#1E293B',
+            fontSize: '0.95rem',
+            transition: 'all 0.2s',
+            outline: 'none'
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = '#F05A28';
+            e.target.style.boxShadow = '0 0 0 1px #F05A28';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = '#E2E8F0';
+            e.target.style.boxShadow = 'none';
           }}
         />
       </div>
-      
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#1f2937', fontWeight: 500 }}>
-          Secret Key:
+
+      <div style={{ marginBottom: '24px' }}>
+        <label style={{ display: 'block', marginBottom: '8px', color: '#64748B', fontWeight: 500, fontSize: '0.9rem' }}>
+          Secret Key (2FA)
         </label>
         <input
           type="text"
           value={formData.secretKey}
           onChange={(e) => setFormData({ ...formData, secretKey: e.target.value })}
           required
+          placeholder="Nhập mã bí mật..."
           style={{
             width: '100%',
-            padding: '0.75rem',
-            borderRadius: '6px',
-            border: '1px solid #d1d5db',
+            padding: '12px',
+            borderRadius: '8px',
+            border: '1px solid #E2E8F0',
             background: '#ffffff',
-            color: '#1f2937',
+            color: '#1E293B',
             fontFamily: 'monospace',
-            fontSize: '1rem'
+            fontSize: '0.95rem',
+            transition: 'all 0.2s',
+            outline: 'none'
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = '#F05A28';
+            e.target.style.boxShadow = '0 0 0 1px #F05A28';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = '#E2E8F0';
+            e.target.style.boxShadow = 'none';
           }}
         />
       </div>
 
       {error && (
-        <div style={{ padding: '0.75rem', background: '#fee2e2', borderRadius: '6px', color: '#dc2626', marginBottom: '1rem', border: '1px solid #fecaca' }}>
+        <div style={{ padding: '12px', background: '#FEF2F2', borderRadius: '8px', color: '#B91C1C', marginBottom: '20px', border: '1px solid #FECACA', fontSize: '0.9rem' }}>
           {error}
         </div>
       )}
 
       {otp && (
-        <div style={{ 
-          padding: '1.5rem', 
-          background: '#eff6ff', 
-          borderRadius: '8px', 
-          marginBottom: '1rem', 
-          border: '2px solid #2563eb',
+        <div style={{
+          padding: '24px',
+          background: '#FFF7ED',
+          borderRadius: '12px',
+          marginBottom: '24px',
+          border: '1px solid #FFEDD5',
           textAlign: 'center'
         }}>
-          <p style={{ color: '#1e40af', marginBottom: '0.75rem', fontWeight: 600, fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Mã 2FA hiện tại:
+          <p style={{ color: '#9A3412', marginBottom: '12px', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Mã xác thực 2FA
           </p>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
-            gap: '1rem',
-            marginBottom: '1rem'
+            gap: '16px',
+            marginBottom: '16px'
           }}>
-            <p style={{ 
-              fontSize: '2rem', 
-              fontWeight: 'bold', 
-              color: '#2563eb', 
+            <p style={{
+              fontSize: '2rem',
+              fontWeight: 'bold',
+              color: '#F05A28',
               fontFamily: 'monospace',
               letterSpacing: '0.25rem',
               margin: 0
@@ -190,114 +208,109 @@ export default function ChatGptAccountForm({ onSuccess, onCancel, initialData, a
               type="button"
               onClick={handleCopyOtp}
               style={{
-                padding: '0.5rem 1rem',
-                background: copied ? '#10b981' : '#2563eb',
+                padding: '8px 16px',
+                background: copied ? '#10B981' : '#F05A28',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                fontWeight: 500,
-                fontSize: '0.875rem',
-                transition: 'background 0.2s',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                transition: 'all 0.2s',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem'
-              }}
-              onMouseEnter={(e) => {
-                if (!copied) e.currentTarget.style.background = '#1d4ed8';
-              }}
-              onMouseLeave={(e) => {
-                if (!copied) e.currentTarget.style.background = '#2563eb';
+                gap: '6px'
               }}
             >
               {copied ? '✓ Đã copy' : '📋 Copy'}
             </button>
           </div>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
-            gap: '0.5rem',
-            color: countdown && countdown <= 10 ? '#dc2626' : '#6b7280',
-            fontSize: '0.875rem',
+            gap: '8px',
+            color: countdown && countdown <= 10 ? '#EF4444' : '#64748B',
+            fontSize: '0.9rem',
             fontWeight: countdown && countdown <= 10 ? 600 : 400
           }}>
             <span>⏱️</span>
             <span>
-              {countdown !== null 
-                ? `Mã còn hiệu lực trong ${countdown} giây` 
+              {countdown !== null
+                ? `Mã còn hiệu lực trong ${countdown} giây`
                 : 'Mã này có hiệu lực trong 30 giây'}
             </span>
           </div>
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '1rem' }}>
+      <div style={{ display: 'flex', gap: '12px', paddingTop: '12px', borderTop: '1px solid #F1F5F9' }}>
         <button
           type="submit"
           disabled={loading}
           style={{
             flex: 1,
-            padding: '0.75rem',
-            background: loading ? '#9ca3af' : '#2563eb',
+            padding: '12px',
+            background: loading ? '#94A3B8' : '#F05A28',
             color: '#ffffff',
             border: 'none',
-            borderRadius: '6px',
+            borderRadius: '8px',
             cursor: loading ? 'not-allowed' : 'pointer',
             fontWeight: '600',
             fontSize: '1rem',
-            transition: 'background 0.2s'
+            transition: 'all 0.2s',
+            boxShadow: '0 4px 6px -1px rgba(240, 90, 40, 0.2)'
           }}
           onMouseEnter={(e) => {
-            if (!loading) e.currentTarget.style.background = '#1d4ed8';
+            if (!loading) e.currentTarget.style.transform = 'translateY(-1px)';
           }}
           onMouseLeave={(e) => {
-            if (!loading) e.currentTarget.style.background = '#2563eb';
+            if (!loading) e.currentTarget.style.transform = 'none';
           }}
         >
-          {loading ? 'Đang xử lý...' : isEditMode ? 'Cập nhật' : 'Thêm'}
+          {loading ? 'Đang xử lý...' : isEditMode ? 'Cập nhật tài khoản' : 'Thêm tài khoản'}
         </button>
+
         {otp && (
           <button
             type="button"
             onClick={handleSuccess}
             style={{
-              padding: '0.75rem 1.5rem',
-              background: '#10b981',
+              padding: '12px 24px',
+              background: '#10B981',
               color: '#ffffff',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '8px',
               cursor: 'pointer',
               fontWeight: 600,
               fontSize: '1rem',
-              transition: 'background 0.2s'
+              transition: 'all 0.2s'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
           >
             Hoàn tất
           </button>
         )}
+
         <button
           type="button"
           onClick={onCancel}
           style={{
-            padding: '0.75rem 1.5rem',
+            padding: '12px 24px',
             background: '#ffffff',
-            color: '#1f2937',
-            border: '1px solid #d1d5db',
-            borderRadius: '6px',
+            color: '#64748B',
+            border: '1px solid #E2E8F0',
+            borderRadius: '8px',
             cursor: 'pointer',
-            fontWeight: 500,
-            transition: 'background 0.2s'
+            fontWeight: 600,
+            fontSize: '1rem',
+            transition: 'all 0.2s'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.background = '#f9fafb'}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
           onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
         >
-          Hủy
+          Hủy bỏ
         </button>
       </div>
     </form>
   );
 }
-

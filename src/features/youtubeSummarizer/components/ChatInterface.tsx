@@ -68,25 +68,25 @@ export const ChatInterface: React.FC<Props> = ({ videoContext, apiKey, onApiKeyE
       setMessages((prev) => [...prev, botMsg]);
     } catch (error: any) {
       let errorMessage = 'Xin lỗi, tôi đang gặp sự cố khi trả lời câu hỏi này.';
-      
+
       // Handle GeminiApiError specifically
       if (error instanceof GeminiApiError) {
         errorMessage = error.message;
-        
+
         // Notify parent component about API key error
         if (error.isApiKeyError && onApiKeyError) {
           onApiKeyError();
         }
       } else if (error.message) {
         errorMessage = error.message;
-        
+
         // Check if error message contains API key related keywords
         const errorMsgLower = error.message.toLowerCase();
         if ((errorMsgLower.includes('api key') || errorMsgLower.includes('api_key')) && onApiKeyError) {
           onApiKeyError();
         }
       }
-      
+
       const fallbackMsg: ChatMessage = {
         id: `${Date.now()}-error`,
         role: 'model',

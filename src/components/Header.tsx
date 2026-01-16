@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Globe } from 'lucide-react'; // Added Globe
 import { useCartContext } from '../context/useCartContext';
 import { useAuthContext } from '../context/useAuthContext';
+import { useWishlistContext } from '../context/useWishlistContext';
 import { useTranslation } from 'react-i18next'; // Added hook
 import logo from '../assets/logo.png';
 import './Header.css';
@@ -14,6 +15,7 @@ interface HeaderProps {
 
 export default function Header({ onSearch, searchValue }: HeaderProps) {
     const { totalItems } = useCartContext();
+    const { wishlist } = useWishlistContext();
     const { user, logout } = useAuthContext();
     const { i18n } = useTranslation(); // Init hook
     const location = useLocation();
@@ -77,7 +79,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
         { label: 'GET OTP GPT', href: '/get-otp', hasDropdown: false },
 
-       
+
 
     ];
 
@@ -146,9 +148,9 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                                     <ul>
                                                         {item.simpleDropdown.map((subItem, sIdx) => (
                                                             <li key={sIdx}>
-                                                                <a 
-                                                                    href={subItem.href} 
-                                                                    target="_blank" 
+                                                                <a
+                                                                    href={subItem.href}
+                                                                    target="_blank"
                                                                     rel="noopener noreferrer"
                                                                 >
                                                                     {subItem.label}
@@ -214,9 +216,9 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                 </div>
                             </div>
 
-                            <Link to="#" className="action-item icon-btn" title="Wishlist">
+                            <Link to="/wishlist" className="action-item icon-btn" title="Wishlist">
                                 <Heart size={22} strokeWidth={1.5} />
-                                <span className="badge">0</span>
+                                <span className="badge">{wishlist.length}</span>
                             </Link>
 
                             <Link to="/cart" className="action-item icon-btn" title="Cart">
@@ -251,34 +253,34 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                     {navItems.map(item => (
                         <div key={item.label}>
                             {!item.hasDropdown ? (
-                                <Link 
-                                    to={item.href} 
-                                    className="mobile-nav-item" 
+                                <Link
+                                    to={item.href}
+                                    className="mobile-nav-item"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     {item.label}
                                 </Link>
                             ) : item.simpleDropdown ? (
                                 <div>
-                                    <button 
+                                    <button
                                         className="mobile-nav-item mobile-nav-dropdown-btn"
                                         onClick={() => setActiveDropdown(activeDropdown === item.label ? null : item.label)}
                                     >
                                         <span>{item.label}</span>
-                                        <ChevronDown 
-                                            size={16} 
-                                            style={{ 
+                                        <ChevronDown
+                                            size={16}
+                                            style={{
                                                 transform: activeDropdown === item.label ? 'rotate(180deg)' : 'rotate(0deg)',
                                                 transition: 'transform 0.2s'
-                                            }} 
+                                            }}
                                         />
                                     </button>
                                     {activeDropdown === item.label && (
                                         <div className="mobile-dropdown-submenu">
                                             {item.simpleDropdown.map((subItem, sIdx) => (
-                                                <a 
+                                                <a
                                                     key={sIdx}
-                                                    href={subItem.href} 
+                                                    href={subItem.href}
                                                     className="mobile-dropdown-item"
                                                     target="_blank"
                                                     rel="noopener noreferrer"
@@ -291,9 +293,9 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                     )}
                                 </div>
                             ) : (
-                                <Link 
-                                    to={item.href} 
-                                    className="mobile-nav-item" 
+                                <Link
+                                    to={item.href}
+                                    className="mobile-nav-item"
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     {item.label}

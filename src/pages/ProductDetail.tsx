@@ -24,7 +24,7 @@ export default function ProductDetail() {
   const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
   const [reviewsLoading, setReviewsLoading] = useState(false);
 
-  const { addItem } = useCartContext();
+  const { addItem, clearCart } = useCartContext();
   const { triggerAnimation } = useAddToCartAnimation();
   const navigate = useNavigate();
 
@@ -162,6 +162,26 @@ export default function ProductDetail() {
     }
   };
 
+  const handleBuyNow = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    // Clear existing cart first
+    clearCart();
+    
+    // Add only this product to cart
+    if (selectedOptionIndex !== null && product.options && product.options[selectedOptionIndex]) {
+      const selectedOption = product.options[selectedOptionIndex];
+      const productWithOption: Product = {
+        ...product,
+        price: selectedOption.price,
+        name: `${product.name} - ${selectedOption.name}`
+      };
+      addItem(productWithOption);
+    } else {
+      addItem(product);
+    }
+    
+    // Navigate to checkout
+    navigate('/checkout');
+  };
 
   const displayImage = (product.images && product.images.length > 0) ? product.images[0] : (product.imageUrl || 'https://design.duolingo.com/images/brand/duo-happy.svg');
 
@@ -270,16 +290,15 @@ export default function ProductDetail() {
             <div className="flex gap-4 pt-6">
               <button
                 onClick={(e) => handleAddToCart(e)}
-                className="p-4 rounded-xl border-2 border-slate-200 bg-white text-slate-400 hover:border-[#F05A28] hover:text-[#F05A28] hover:bg-orange-50 transition-all flex items-center justify-center min-w-[64px]"
+                className="flex-1 bg-white border-2 border-slate-200 text-slate-700 hover:border-[#F05A28] hover:text-[#F05A28] hover:bg-orange-50 transition-all flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isOutOfStock}
+                title="Thêm vào giỏ hàng"
               >
                 <i className="fas fa-cart-plus text-xl"></i>
+                <span className="hidden sm:inline">{isOutOfStock ? 'Hết hàng' : 'Thêm vào giỏ hàng'}</span>
               </button>
               <button
-                onClick={(e) => {
-                  handleAddToCart(e);
-                  navigate('/checkout');
-                }}
+                onClick={(e) => handleBuyNow(e)}
                 disabled={isOutOfStock}
                 className="flex-1 bg-gradient-to-r from-[#F05A28] to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-bold py-4 px-8 rounded-xl shadow-[0_10px_30px_rgba(240,90,40,0.3)] hover:shadow-[0_15px_35px_rgba(240,90,40,0.4)] transition-all transform hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg tracking-wide"
               >

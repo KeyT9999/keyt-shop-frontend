@@ -1,3 +1,10 @@
+# Cursor
+.cursor/
+
+# OS
+.DS_Store
+Thumbs.db
+
 # Logs
 logs
 *.log
@@ -9,7 +16,9 @@ lerna-debug.log*
 
 # Dependencies
 node_modules
+node_modules/
 dist
+dist/
 dist-ssr
 *.local
 
@@ -17,7 +26,6 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
@@ -27,6 +35,7 @@ dist-ssr
 # Environment variables
 .env
 .env.local
+.env.*.local
 .env.development.local
 .env.test.local
 .env.production.local

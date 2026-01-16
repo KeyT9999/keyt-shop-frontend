@@ -54,9 +54,6 @@ export default function EvidenceChecker() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [evidence, setEvidence] = useState<EvidenceItem[]>([]);
-  const [statusFilter, setStatusFilter] = useState<'all' | EvidenceItem['verification']>('all');
-  const [textFilter, setTextFilter] = useState('');
-  const [sortByScore, setSortByScore] = useState(true);
 
   // Initial load: Try LocalStorage first, then Backend if logged in
   useEffect(() => {
@@ -121,147 +118,169 @@ export default function EvidenceChecker() {
     setApiKey('');
   };
 
-  const statusCounts = evidence.reduce(
-    (acc, item) => {
-      acc[item.verification] = (acc[item.verification] || 0) + 1;
-      return acc;
-    },
-    {} as Record<EvidenceItem['verification'], number>
-  );
-
-  const filteredEvidence = evidence
-    .filter((item) => {
-      const matchStatus = statusFilter === 'all' || item.verification === statusFilter;
-      const matchText =
-        !textFilter ||
-        item.title.toLowerCase().includes(textFilter.toLowerCase()) ||
-        item.snippet.toLowerCase().includes(textFilter.toLowerCase()) ||
-        (item.sourceLabel || '').toLowerCase().includes(textFilter.toLowerCase());
-      return matchStatus && matchText;
-    })
-    .sort((a, b) => {
-      if (!sortByScore) return 0;
-      const order: Record<EvidenceItem['verification'], number> = {
-        verified: 3,
-        trusted: 2,
-        unverified: 1,
-        unknown: 0,
-      };
-      const diffStatus = order[b.verification] - order[a.verification];
-      if (diffStatus !== 0) return diffStatus;
-      const scoreA = a.sourceScore ?? 0;
-      const scoreB = b.sourceScore ?? 0;
-      return scoreB - scoreA;
-    });
+  const filteredEvidence = evidence.sort((a, b) => {
+    const order: Record<EvidenceItem['verification'], number> = {
+      verified: 3,
+      trusted: 2,
+      unverified: 1,
+      unknown: 0,
+    };
+    const diffStatus = order[b.verification] - order[a.verification];
+    if (diffStatus !== 0) return diffStatus;
+    const scoreA = a.sourceScore ?? 0;
+    const scoreB = b.sourceScore ?? 0;
+    return scoreB - scoreA;
+  });
 
   return (
-    <div className="evidence-page">
-      {/* Header Section */}
-      <header className="evidence-header">
-        <div className="header-content">
-          <div>
-            <p className="eyebrow">AI Research Assistant</p>
-            <h1>Evidence Finder</h1>
-            <p className="lede">
-              Xác thực thông tin y học bằng cách đối chiếu nguồn uy tín (PubMed, DOI, Medical Journals).
+    <div className="evidence-page-new">
+      {/* Settings Button - Floating */}
+      <button
+        className={`ec-settings-floating-btn ${isSettingsOpen ? 'active' : ''}`}
+        onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+        title="Cấu hình API Key"
+      >
+        <Settings size={20} />
+      </button>
+
+      {/* Settings Panel (Collapsible) */}
+      {isSettingsOpen && (
+        <div className="ec-settings-panel">
+          <div className="ec-setting-group">
+            <label htmlFor="apiKey" className="ec-setting-label">
+              <Key size={14} /> Google AI Studio API Key
+            </label>
+            <div className="ec-input-group">
+              <input
+                id="apiKey"
+                type={showApiKey ? 'text' : 'password'}
+                placeholder="Paste your API key here..."
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+              />
+              <button
+                type="button"
+                className="ec-icon-btn"
+                onClick={() => setShowApiKey(!showApiKey)}
+                title={showApiKey ? 'Ẩn key' : 'Hiện key'}
+              >
+                {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+              <button
+                type="button"
+                className="ec-icon-btn"
+                onClick={handleClearApiKey}
+                title="Xóa key đã lưu"
+                style={{ backgroundColor: '#fee2e2', color: '#991b1b' }}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+            <p className="ec-hint">
+              Chưa có key? <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">Lấy key tại đây</a>. Key được lưu bảo mật.
             </p>
           </div>
-          <button
-            className={`settings-btn ${isSettingsOpen ? 'active' : ''}`}
-            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            title="Cấu hình API Key"
-          >
-            <Settings size={20} />
-            <span>Settings</span>
-          </button>
+
+          <div className="ec-setting-group-inline">
+            <label htmlFor="maxResults" className="ec-setting-label">Số kết quả</label>
+            <input
+              id="maxResults"
+              type="number"
+              min={1}
+              max={10}
+              className="ec-small-input"
+              value={maxResults}
+              onChange={(e) => setMaxResults(Number(e.target.value))}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Hero Section */}
+      <div className="ec-hero">
+        {/* Search Icon */}
+        <div className="ec-search-icon">
+          <FileSearch size={40} />
         </div>
 
-        {/* Settings Panel (Collapsible) */}
-        {isSettingsOpen && (
-          <div className="settings-panel">
-            <div className="setting-group">
-              <label htmlFor="apiKey" className="setting-label">
-                <Key size={14} /> Google AI Studio API Key
-              </label>
-              <div className="input-group">
-                <input
-                  id="apiKey"
-                  type={showApiKey ? 'text' : 'password'}
-                  placeholder="Paste your API key here..."
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="icon-btn"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  title={showApiKey ? 'Ẩn key' : 'Hiện key'}
-                >
-                  {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-                <button
-                  type="button"
-                  className="icon-btn danger"
-                  onClick={handleClearApiKey}
-                  title="Xóa key đã lưu"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-              <p className="hint">
-                Chưa có key? <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">Lấy key tại đây</a>. Key chỉ được lưu cục bộ trên trình duyệt của bạn.
-              </p>
-            </div>
+        {/* Title */}
+        <h1 className="ec-hero-title">Evidence Checker</h1>
+        <p className="ec-hero-subtitle">
+          Kiểm tra độ chính xác của thông tin với AI và nguồn tin đáng tin cậy
+        </p>
 
-            <div className="setting-group inline">
-              <label htmlFor="maxResults" className="setting-label">Số kết quả tối đa</label>
-              <input
-                id="maxResults"
-                type="number"
-                min={1}
-                max={10}
-                className="small-input"
-                value={maxResults}
-                onChange={(e) => setMaxResults(Number(e.target.value))}
+        {/* Compact Steps */}
+        <div className="ec-compact-steps">
+          <div className="ec-compact-step">
+            <span className="ec-compact-number">1</span>
+            <span>Thu thập</span>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M7 10l5 0M12 10l-2 -2M12 10l-2 2"/>
+          </svg>
+          <div className="ec-compact-step">
+            <span className="ec-compact-number">2</span>
+            <span>Phân tích</span>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M7 10l5 0M12 10l-2 -2M12 10l-2 2"/>
+          </svg>
+          <div className="ec-compact-step">
+            <span className="ec-compact-number">3</span>
+            <span>Đánh giá</span>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M7 10l5 0M12 10l-2 -2M12 10l-2 2"/>
+          </svg>
+          <div className="ec-compact-step">
+            <span className="ec-compact-number">4</span>
+            <span>Kết luận</span>
+          </div>
+        </div>
+
+        {/* Input Form */}
+        <div className="ec-input-section">
+          <label className="ec-input-label">Nhập thông tin cần kiểm tra</label>
+          <form onSubmit={handleSubmit}>
+            <div className="ec-input-wrapper">
+              <textarea
+                id="query"
+                className="ec-textarea-input"
+                placeholder="Ví dụ: AI đã thay đổi cách con người làm việc trong thập kỷ qua"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                rows={1}
+                required
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e as any);
+                  }
+                }}
               />
+              <button type="submit" className="ec-check-btn" disabled={loading}>
+                {loading ? (
+                  <div className="ec-spinner"></div>
+                ) : (
+                  <>
+                    <Search size={18} />
+                    <span>Kiểm tra</span>
+                  </>
+                )}
+              </button>
             </div>
-          </div>
-        )}
-      </header>
-
-      {/* Main Search Section */}
-      <section className="search-section">
-        <form className="evidence-form" onSubmit={handleSubmit}>
-          <div className="search-container">
-            <textarea
-              id="query"
-              className="search-input"
-              placeholder="Nhập nhận định y học cần kiểm chứng (Ví dụ: Metformin cải thiện kháng insulin ở bệnh nhân PCOS...)"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              rows={1}
-              required
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e as any);
-                }
-              }}
-            />
-            <button type="submit" className="evidence-search-btn" disabled={loading}>
-              {loading ? (
-                <div className="spinner"></div>
-              ) : (
-                <>
-                  <Search size={18} />
-                  <span>Tìm Evidence</span>
-                </>
-              )}
-            </button>
-          </div>
-          {error && <div className="alert alert--error"><AlertTriangle size={16} /> {error}</div>}
-        </form>
-      </section>
+          </form>
+          <p className="ec-input-hint">
+            Nhập bất kỳ thông tin, tin tức hoặc tuyên bố nào bạn muốn xác minh
+          </p>
+          {error && (
+            <div className="ec-error-alert">
+              <AlertTriangle size={16} />
+              {error}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Results Section */}
       <section className="results-section">
@@ -270,50 +289,6 @@ export default function EvidenceChecker() {
             <div className="results-header">
               <div className="results-title">
                 <h2>Kết quả phân tích <span className="count-badge">{evidence.length}</span></h2>
-              </div>
-
-              <div className="filter-bar">
-                <div className="filter-group">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as any)}
-                    className="filter-select"
-                  >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="verified">Verified</option>
-                    <option value="trusted">Trusted</option>
-                    <option value="unverified">Unverified</option>
-                    <option value="unknown">Unknown</option>
-                  </select>
-
-                  <div className="search-filter">
-                    <Search size={14} className="search-icon" />
-                    <input
-                      type="text"
-                      placeholder="Lọc kết quả..."
-                      value={textFilter}
-                      onChange={(e) => setTextFilter(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="sort-toggle">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={sortByScore}
-                      onChange={(e) => setSortByScore(e.target.checked)}
-                    />
-                    <span>Ưu tiên nguồn uy tín</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="stats-row">
-                {statusCounts.verified > 0 && <span className="stat-tag success">Verified: {statusCounts.verified}</span>}
-                {statusCounts.trusted > 0 && <span className="stat-tag info">Trusted: {statusCounts.trusted}</span>}
-                {statusCounts.unverified > 0 && <span className="stat-tag warning">Unverified: {statusCounts.unverified}</span>}
-                {statusCounts.unknown > 0 && <span className="stat-tag neutral">Unknown: {statusCounts.unknown}</span>}
               </div>
             </div>
 
@@ -378,22 +353,7 @@ export default function EvidenceChecker() {
               })}
             </div>
           </>
-        ) : (
-          !loading && (
-            <div className="empty-state">
-              <div className="illustration">
-                <FileSearch size={64} strokeWidth={1} />
-              </div>
-              <h3>Sẵn sàng tìm kiếm</h3>
-              <p>Nhập nhận định y khoa của bạn để AI đối chiếu với hàng triệu tài liệu khoa học.</p>
-              <div className="suggestions">
-                <span>Gợi ý:</span>
-                <button type="button" onClick={() => setQuery("Vitamin D liều cao có giảm nguy cơ cúm không?")}>Vitamin D & Cúm</button>
-                <button type="button" onClick={() => setQuery("Intermittent Fasting ảnh hưởng thế nào đến cơ bắp?")}>IF & Cơ bắp</button>
-              </div>
-            </div>
-          )
-        )}
+        ) : null}
       </section>
     </div>
   );

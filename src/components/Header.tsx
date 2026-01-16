@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Globe } from 'lucide-react'; // Added Globe
 import { useCartContext } from '../context/useCartContext';
 import { useAuthContext } from '../context/useAuthContext';
 import { useWishlistContext } from '../context/useWishlistContext';
+import { useAddToCartAnimation } from '../context/AddToCartAnimationContext';
 import { useTranslation } from 'react-i18next'; // Added hook
 import logo from '../assets/logo.png';
 import './Header.css';
@@ -18,11 +19,13 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     const { wishlist } = useWishlistContext();
     const { user, logout } = useAuthContext();
     const { i18n } = useTranslation(); // Init hook
+    const { setCartIconRef } = useAddToCartAnimation();
     const location = useLocation();
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+    const cartIconRef = useRef<HTMLAnchorElement>(null);
 
     const toggleLanguage = () => {
         const newLang = i18n.language === 'vi' ? 'en' : 'vi';
@@ -37,6 +40,13 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    // Set cart icon ref for animation
+    useEffect(() => {
+        if (cartIconRef.current) {
+            setCartIconRef(cartIconRef.current);
+        }
+    }, [setCartIconRef]);
 
     const navItems = [
         { label: 'HOME', href: '/', hasDropdown: false },
@@ -188,14 +198,14 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                         </div>
 
                         <div className="icon-actions">
-                            {/* User - Hover Dropdown */}
-                            <div className="action-item user-action">
-                                <Link to={user ? "/profile" : "/login"} className="icon-btn">
-                                    <User size={22} strokeWidth={1.5} />
-                                </Link>
-                                <div className="user-dropdown-menu">
-                                    {user ? (
-                                        <>
+                            {user ? (
+                                <>
+                                    {/* User - Hover Dropdown */}
+                                    <div className="action-item user-action">
+                                        <Link to="/profile" className="icon-btn">
+                                            <User size={22} strokeWidth={1.5} />
+                                        </Link>
+                                        <div className="user-dropdown-menu">
                                             <div className="user-welcome">Hi, {user.username || 'User'}</div>
                                             {user.admin && (
                                                 <>
@@ -206,25 +216,29 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                             <Link to="/profile">My Profile</Link>
                                             <Link to={user.admin ? "/admin/orders" : "/orders"}>Orders</Link>
                                             <button onClick={handleLogout}>Logout</button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Link to="/login" className="login-btn">Login</Link>
-                                            <Link to="/register">Register</Link>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
+                                        </div>
+                                    </div>
 
-                            <Link to="/wishlist" className="action-item icon-btn" title="Wishlist">
-                                <Heart size={22} strokeWidth={1.5} />
-                                <span className="badge">{wishlist.length}</span>
-                            </Link>
+                                    <Link to="/wishlist" className="action-item icon-btn" title="Wishlist">
+                                        <Heart size={22} strokeWidth={1.5} />
+                                        <span className="badge">{wishlist.length}</span>
+                                    </Link>
 
-                            <Link to="/cart" className="action-item icon-btn" title="Cart">
-                                <ShoppingBag size={22} strokeWidth={1.5} />
-                                <span className="badge">{totalItems}</span>
-                            </Link>
+                                    <Link to="/cart" ref={cartIconRef} className="action-item icon-btn" title="Cart" data-cart-icon>
+                                        <ShoppingBag size={22} strokeWidth={1.5} />
+                                        <span className="badge">{totalItems}</span>
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <Link to="/login" className="auth-btn login-btn">
+                                        Đăng nhập
+                                    </Link>
+                                    <Link to="/register" className="auth-btn register-btn">
+                                        Đăng ký
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

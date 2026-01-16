@@ -41,8 +41,6 @@ export default function App() {
     const { user } = useAuthContext();
     const [searchQuery, setSearchQuery] = useState('');
 
-
-
     // Debug: Log user admin status
     useEffect(() => {
         if (user) {

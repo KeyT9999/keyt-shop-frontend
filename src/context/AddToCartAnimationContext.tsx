@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
 interface AnimationItem {
   id: string;
@@ -91,13 +91,13 @@ function AddToCartAnimation({
           transform: 'translate(-50%, -50%)',
           zIndex: 9999,
           pointerEvents: 'none',
-          '--target-x': `${targetX}px`,
-          '--target-y': `${targetY}px`,
-          '--mid-x': `${midX}px`,
-          '--mid-y': `${midY}px`,
-          '--start-x': `${startX}px`,
-          '--start-y': `${startY}px`,
-        } as React.CSSProperties & { [key: string]: string }}
+          ['--target-x' as any]: `${targetX}px`,
+          ['--target-y' as any]: `${targetY}px`,
+          ['--mid-x' as any]: `${midX}px`,
+          ['--mid-y' as any]: `${midY}px`,
+          ['--start-x' as any]: `${startX}px`,
+          ['--start-y' as any]: `${startY}px`,
+        } as React.CSSProperties}
       >
         <div className="animation-item">
           {productImage ? (

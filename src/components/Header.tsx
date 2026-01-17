@@ -82,6 +82,12 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             simpleDropdown: [
                 { label: 'Khóa Học Capcut Quạ HD', href: 'https://drive.google.com/drive/folders/1qBVyGif2u7qChuQIvQmt51MwxGsuLojp?usp=drive_link', external: true },
                 { label: 'Khóa Học Canva', href: 'https://drive.google.com/drive/folders/1clQOT7Zf99HjXOuqKZMZtLp_WNkGL5zq?usp=drive_link', external: true },
+                { label: 'Khóa Học TOEIC PREP', href: 'https://drive.google.com/drive/folders/1NTQPZU-TbubeIWsd0_zfeshvvwDC22p_?usp=sharing', external: true },
+                { label: 'Chỉnh sửa ảnh camera raw từ A đến Z', href: 'https://drive.google.com/drive/folders/1r-TeSN2lld0ZlG0fkLseO2-4DgeRDTYT?usp=sharing', external: true },
+                { label: 'Nhạc Dựng Phim', href: 'https://drive.google.com/drive/folders/1UzR27ps5oXPMrVrmnYqIAFf8NXw0yxFz?usp=sharing', external: true },
+                { label: 'Khóa Học Photoshop', href: 'https://drive.google.com/drive/folders/170hnr50w7quc2uJenhmkk4WQLnmEubc9?usp=sharing', external: true },
+                { label: 'Kho Tài liệu Tiếng Anh Bất Tận', href: 'https://drive.google.com/drive/folders/1gqgwnDQDuhVsdV60x8JAveVl7CGrwZ9J?usp=sharing', external: true },
+                { label: 'Khóa Học Tiếng Trung', href: 'https://drive.google.com/drive/folders/1aZrnUlK4M3LGnqBmP6My-sPqG8z8Ch6O?usp=drive_link', external: true },
                 { label: 'Cách Tạo AI GPT Hiểu Bạn Nhất Trên Đời', href: 'https://www.canva.com/design/DAGw3EKPBqg/Jdv5m9tA62BK5U93ijCfKw/view?utm_content=DAGw3EKPBqg&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hec974d0021', external: true },
                 { label: 'Cách Up Font Chữ Lên Canva', href: 'https://linhhhh.my.canva.site/cachupfontchu', external: true }
             ]

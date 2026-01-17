@@ -323,11 +323,7 @@ export default function ProductDetail() {
               </div>
               <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-100 shadow-[0_2px_10px_rgb(0,0,0,0.03)] hover:border-orange-200 hover:shadow-orange-100/50 transition-all">
                 <i className="fas fa-infinity text-purple-500"></i>
-                <span className="text-sm font-medium text-slate-600">Bảo hành trọn đời</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-100 shadow-[0_2px_10px_rgb(0,0,0,0.03)] hover:border-orange-200 hover:shadow-orange-100/50 transition-all">
-                <i className="fas fa-globe text-green-500"></i>
-                <span className="text-sm font-medium text-slate-600">Chính chủ</span>
+                <span className="text-sm font-medium text-slate-600">Bảo hành trong thời gian sử dụng</span>
               </div>
             </div>
 

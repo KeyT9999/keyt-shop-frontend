@@ -454,6 +454,8 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               onFocus={(e) => e.target.style.borderColor = '#F05A28'}
               onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
             >
+              <option value="7 ngày">7 ngày</option>
+              <option value="14 ngày">14 ngày</option>
               <option value="1 tháng">1 tháng</option>
               <option value="3 tháng">3 tháng</option>
               <option value="6 tháng">6 tháng</option>

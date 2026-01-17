@@ -372,43 +372,43 @@ export default function OrdersPage() {
                 {/* Desktop Table View - Hidden on mobile */}
                 <div className="table-container" style={{ overflowX: 'auto', display: 'none' }} id="desktop-table">
                   <table className="admin-table" style={{ minWidth: '800px', width: '100%' }}>
-                    <thead>
-                      <tr>
-                        <th>Order ID</th>
-                        <th>Customer</th>
-                        <th>Items</th>
-                        <th style={{ textAlign: 'right' }}>Total</th>
-                        <th style={{ textAlign: 'center' }}>Status</th>
-                        <th style={{ textAlign: 'center' }}>Payment</th>
-                        <th>Date</th>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th style={{ textAlign: 'right' }}>Total</th>
+                  <th style={{ textAlign: 'center' }}>Status</th>
+                  <th style={{ textAlign: 'center' }}>Payment</th>
+                  <th>Date</th>
                         <th style={{ textAlign: 'center' }}>Thao tác</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                </tr>
+              </thead>
+              <tbody>
                       {ordersData.orders.map((order) => (
-                        <tr key={order._id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/admin/orders/${order._id}`)}>
-                          <td>
-                            <div style={{ fontWeight: 600, color: '#1E293B' }}>#{order.orderCode || order._id.slice(-8).toUpperCase()}</div>
-                          </td>
-                          <td>
-                            <div style={{ fontWeight: 600 }}>{order.customer.name}</div>
-                            <div style={{ color: '#94A3B8', fontSize: '0.8rem' }}>{order.customer.email}</div>
-                          </td>
-                          <td>
-                            {order.items.length} items
-                          </td>
-                          <td style={{ textAlign: 'right', fontWeight: 600 }}>
-                            {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}
-                          </td>
-                          <td style={{ textAlign: 'center' }}>
-                            {getOrderStatusBadge(order.orderStatus)}
-                          </td>
-                          <td style={{ textAlign: 'center' }}>
-                            {getPaymentStatusBadge(order.paymentStatus)}
-                          </td>
-                          <td style={{ color: '#64748B' }}>
-                            {new Date(order.createdAt).toLocaleDateString('vi-VN')}
-                          </td>
+                    <tr key={order._id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/admin/orders/${order._id}`)}>
+                      <td>
+                        <div style={{ fontWeight: 600, color: '#1E293B' }}>#{order.orderCode || order._id.slice(-8).toUpperCase()}</div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{order.customer.name}</div>
+                        <div style={{ color: '#94A3B8', fontSize: '0.8rem' }}>{order.customer.email}</div>
+                      </td>
+                      <td>
+                        {order.items.length} items
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                        {formatPrice(order.totalAmount, order.items[0]?.currency || 'VND')}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {getOrderStatusBadge(order.orderStatus)}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {getPaymentStatusBadge(order.paymentStatus)}
+                      </td>
+                      <td style={{ color: '#64748B' }}>
+                        {new Date(order.createdAt).toLocaleDateString('vi-VN')}
+                      </td>
                           <td style={{ textAlign: 'center', minWidth: '140px' }} onClick={(e) => e.stopPropagation()}>
                             {order.orderStatus !== 'cancelled' && order.orderStatus !== 'completed' ? (
                               <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -431,7 +431,7 @@ export default function OrdersPage() {
                                 >
                                   <CheckCircle2 size={14} /> Xác nhận
                                 </button>
-                                <button
+                        <button
                                   onClick={(e) => handleCancelOrder(order._id, e)}
                                   className="btn-admin btn-admin-danger"
                                   style={{ 
@@ -447,18 +447,18 @@ export default function OrdersPage() {
                                     cursor: 'pointer',
                                     whiteSpace: 'nowrap'
                                   }}
-                                >
+                        >
                                   <XCircle size={14} /> Hủy
-                                </button>
+                        </button>
                               </div>
                             ) : (
                               <span style={{ color: '#94A3B8', fontSize: '0.875rem' }}>-</span>
                             )}
-                          </td>
-                        </tr>
+                      </td>
+                    </tr>
                       ))}
-                    </tbody>
-                  </table>
+              </tbody>
+            </table>
                 </div>
 
                 {/* Mobile Card View - Hidden on desktop */}

@@ -199,9 +199,57 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem', background: '#f5f5f5', minHeight: '100vh' }}>
+    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '1rem', background: '#f5f5f5', minHeight: '100vh' }}>
+      <style>{`
+        @media (min-width: 768px) {
+          .order-detail-container {
+            padding: 2rem !important;
+          }
+          .order-detail-header h1 {
+            font-size: 1.875rem !important;
+          }
+          .order-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+          .timeline-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+          }
+        }
+        @media (max-width: 767px) {
+          .order-detail-container {
+            padding: 1rem !important;
+          }
+          .order-detail-header h1 {
+            font-size: 1.5rem !important;
+          }
+          .order-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .timeline-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 0.75rem !important;
+          }
+          .timeline-step {
+            font-size: 0.75rem !important;
+          }
+          .action-buttons {
+            flex-direction: column !important;
+          }
+          .action-buttons button,
+          .action-buttons a {
+            width: 100% !important;
+          }
+          .bottom-links {
+            flex-direction: column !important;
+          }
+          .bottom-links a {
+            width: 100% !important;
+            text-align: center !important;
+          }
+        }
+      `}</style>
       {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
+      <div className="order-detail-header" style={{ marginBottom: '1.5rem' }}>
         <Link
           to="/profile"
           style={{
@@ -209,19 +257,19 @@ export default function OrderDetailPage() {
             alignItems: 'center',
             color: '#2563eb',
             textDecoration: 'none',
-            marginBottom: '1rem',
+            marginBottom: '0.75rem',
             fontSize: '0.875rem'
           }}
         >
           ← Quay lại danh sách đơn hàng
         </Link>
-        <h1 style={{ color: '#1f2937', fontSize: '1.875rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+        <h1 className="order-detail-header" style={{ color: '#1f2937', fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>
           Chi tiết đơn hàng
         </h1>
-        <p style={{ color: '#1f2937', fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-          Mã đơn hàng: <span style={{ color: '#2563eb', fontSize: '1.25rem' }}>#{order.orderCode || order._id.slice(-8).toUpperCase()}</span>
+        <p style={{ color: '#1f2937', fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+          Mã đơn hàng: <span style={{ color: '#2563eb', fontSize: '1.125rem' }}>#{order.orderCode || order._id.slice(-8).toUpperCase()}</span>
         </p>
-        <p style={{ color: '#9ca3af', fontSize: '0.75rem', fontFamily: 'monospace' }}>
+        <p style={{ color: '#9ca3af', fontSize: '0.7rem', fontFamily: 'monospace', wordBreak: 'break-all' }}>
           ID: {order._id.slice(-8).toUpperCase()}
         </p>
       </div>
@@ -231,8 +279,8 @@ export default function OrderDetailPage() {
         style={{
           background: '#ffffff',
           borderRadius: '8px',
-          padding: '1.5rem',
-          marginBottom: '1.5rem',
+          padding: '1rem',
+          marginBottom: '1rem',
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           borderLeft: `4px solid ${getOrderStatusColor(order.orderStatus)}`
         }}
@@ -337,24 +385,24 @@ export default function OrderDetailPage() {
                 </div>
 
                 {/* Timeline Steps */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+                <div className="timeline-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
                   {steps.map((step, index) => {
                     const isActive = step.key === order.orderStatus;
                     const isCompleted = step.completed && index <= currentStepIndex;
 
                     return (
-                      <div key={step.key} style={{ textAlign: 'center' }}>
+                      <div key={step.key} className="timeline-step" style={{ textAlign: 'center' }}>
                         <div
                           style={{
-                            width: '48px',
-                            height: '48px',
+                            width: '40px',
+                            height: '40px',
                             borderRadius: '50%',
                             background: isCompleted ? '#10b981' : isActive ? '#3b82f6' : '#e5e7eb',
                             margin: '0 auto 0.5rem',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: '1.25rem',
+                            fontSize: '1rem',
                             color: isCompleted || isActive ? '#ffffff' : '#9ca3af',
                             fontWeight: 600,
                             border: isActive && !isCompleted ? '3px solid #93c5fd' : 'none',
@@ -363,11 +411,11 @@ export default function OrderDetailPage() {
                         >
                           {isCompleted ? '✓' : step.icon}
                         </div>
-                        <div style={{ fontSize: '0.875rem', fontWeight: isActive ? 600 : 400, color: isActive || isCompleted ? '#374151' : '#9ca3af', marginBottom: '0.25rem' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: isActive ? 600 : 400, color: isActive || isCompleted ? '#374151' : '#9ca3af', marginBottom: '0.25rem' }}>
                           {step.label}
                         </div>
                         {step.date && (
-                          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                          <div style={{ fontSize: '0.65rem', color: '#6b7280' }}>
                             {new Date(step.date).toLocaleDateString('vi-VN', {
                               day: '2-digit',
                               month: '2-digit',
@@ -376,7 +424,7 @@ export default function OrderDetailPage() {
                           </div>
                         )}
                         {step.by && (
-                          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                          <div style={{ fontSize: '0.65rem', color: '#6b7280', marginTop: '0.25rem' }}>
                             bởi {step.by}
                           </div>
                         )}
@@ -390,7 +438,7 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div className="order-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
         {/* Left Column - Order Items */}
         <div>
           <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
@@ -444,7 +492,7 @@ export default function OrderDetailPage() {
         {/* Right Column - Customer Info & Note */}
         <div>
           {/* Customer Info */}
-          <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1.5rem', marginBottom: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1rem', marginBottom: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>
               Thông tin khách hàng
             </h2>
@@ -466,7 +514,7 @@ export default function OrderDetailPage() {
 
           {/* Note */}
           {order.note && (
-            <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1.5rem', marginBottom: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1rem', marginBottom: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
               <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>
                 Ghi chú khách hàng
               </h2>
@@ -478,7 +526,7 @@ export default function OrderDetailPage() {
 
           {/* Admin Notes */}
           {order.adminNotes && (
-            <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
               <h2 style={{ marginBottom: '1rem', color: '#1f2937', fontSize: '1.125rem', fontWeight: 600 }}>
                 Ghi chú nội bộ
               </h2>
@@ -501,12 +549,12 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Actions */}
-      <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.125rem', fontWeight: 600, color: '#1f2937' }}>
+      <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ background: '#ffffff', borderRadius: '8px', padding: '1rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
             Thao tác
           </h3>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <div className="action-buttons" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <button
               onClick={() => {
                 window.open(`/orders/${order._id}/invoice`, '_blank');
@@ -604,7 +652,7 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+        <div className="bottom-links" style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
           <Link
             to="/profile"
             style={{

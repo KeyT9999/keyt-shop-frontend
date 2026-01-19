@@ -258,22 +258,38 @@ export default function SubscriptionsPage() {
                     </td>
                     <td style={{ padding: '20px 24px', textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                        <button
-                          onClick={() => handleSendReminder(sub._id)}
-                          style={{
-                            padding: '8px 12px',
-                            background: '#F05A28',
-                            color: '#ffffff',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem',
-                            fontWeight: 600,
-                            transition: 'all 0.2s',
-                          }}
-                        >
-                          📩 Gửi nhắc
-                        </button>
+                        {sub.manualReminderSentAt ? (
+                          <span
+                            style={{
+                              padding: '8px 12px',
+                              background: '#ECFDF5',
+                              color: '#047857',
+                              border: '1px solid #A7F3D0',
+                              borderRadius: '8px',
+                              fontSize: '0.85rem',
+                              fontWeight: 600,
+                            }}
+                          >
+                            ✓ Đã gửi nhắc
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleSendReminder(sub._id)}
+                            style={{
+                              padding: '8px 12px',
+                              background: '#F05A28',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '0.85rem',
+                              fontWeight: 600,
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            📩 Gửi nhắc
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDelete(sub._id)}
                           style={{
@@ -363,23 +379,41 @@ export default function SubscriptionsPage() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <button
-                    onClick={() => handleSendReminder(sub._id)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 16px',
-                      background: '#F05A28',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    📩 Gửi nhắc
-                  </button>
+                  {sub.manualReminderSentAt ? (
+                    <div
+                      style={{
+                        width: '100%',
+                        padding: '10px 16px',
+                        background: '#ECFDF5',
+                        color: '#047857',
+                        border: '1px solid #A7F3D0',
+                        borderRadius: '8px',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        textAlign: 'center'
+                      }}
+                    >
+                      ✓ Đã gửi nhắc
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleSendReminder(sub._id)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 16px',
+                        background: '#F05A28',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      📩 Gửi nhắc
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDelete(sub._id)}
                     style={{

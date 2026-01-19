@@ -7,6 +7,7 @@ export interface ServiceSubscription {
   startDate: string;
   endDate: string;
   preExpiryNotified: boolean;
+  manualReminderSentAt?: string;
   createdAt: string;
   updatedAt: string;
 }

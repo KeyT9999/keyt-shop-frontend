@@ -210,7 +210,7 @@ const YoutubeSummarizerPage: React.FC = () => {
                 className="ys-icon-btn"
                 onClick={handleSaveApiKey}
                 title="Lưu key"
-                style={{ backgroundColor: '#e0f2fe', color: '#0369a1' }}
+                style={{ backgroundColor: '#fff7ed', color: '#f97316' }}
               >
                 <CheckCircle2 size={16} />
               </button>
@@ -335,7 +335,7 @@ const YoutubeSummarizerPage: React.FC = () => {
             {/* Loading State */}
             {appState === 'summarizing' && (
               <div className="ys-card" style={{ textAlign: 'center', padding: '40px' }}>
-                <div className="ys-spinner" style={{ width: '32px', height: '32px', margin: '0 auto 16px', borderColor: '#d1d5db', borderTopColor: '#6366f1' }}></div>
+                <div className="ys-spinner" style={{ width: '32px', height: '32px', margin: '0 auto 16px', borderColor: '#d1d5db', borderTopColor: '#f97316' }}></div>
                 <p style={{ color: '#4b5563', fontWeight: 500 }}>Gemini đang xem video và tổng hợp nội dung...</p>
               </div>
             )}

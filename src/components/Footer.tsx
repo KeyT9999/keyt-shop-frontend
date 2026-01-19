@@ -9,7 +9,7 @@ export default function Footer() {
 
           {/* Cột 1: Thương hiệu */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-yellow-500 tracking-wide uppercase">KEYT STORE</h2>
+            <h2 className="text-xl font-bold text-yellow-500 tracking-wide uppercase">TIỆM TẠP HÓA KEYT</h2>
             <p className="text-gray-400 text-sm leading-relaxed">
               Kho dịch vụ số đa dạng, uy tín, hỗ trợ tận tâm. Nâng tầm trải nghiệm số của bạn với chi phí tối ưu nhất.
             </p>
@@ -61,19 +61,19 @@ export default function Footer() {
             <h3 className="text-white font-bold mb-6 text-sm uppercase tracking-wider">Hỗ trợ</h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <Link to="#" className="hover:text-yellow-500 transition-colors">Bảo hành & Hoàn tiền</Link>
+                <Link to="/warranty-refund" className="hover:text-yellow-500 transition-colors">Bảo hành & Hoàn tiền</Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-yellow-500 transition-colors">Hướng dẫn mua hàng</Link>
+                <Link to="/purchase-guide" className="hover:text-yellow-500 transition-colors">Hướng dẫn mua hàng</Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-yellow-500 transition-colors">Câu hỏi thường gặp</Link>
+                <Link to="/faq" className="hover:text-yellow-500 transition-colors">Câu hỏi thường gặp</Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-yellow-500 transition-colors">Chính sách bảo mật</Link>
+                <Link to="/privacy-policy" className="hover:text-yellow-500 transition-colors">Chính sách bảo mật</Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-yellow-500 transition-colors">Điều khoản dịch vụ</Link>
+                <Link to="/terms-of-service" className="hover:text-yellow-500 transition-colors">Điều khoản dịch vụ</Link>
               </li>
             </ul>
           </div>
@@ -115,7 +115,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-12 pt-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} <span className="text-gray-300 font-medium">KeyT Store</span>. All rights reserved.
+            © {new Date().getFullYear()} <span className="text-gray-300 font-medium">Tiệm Tạp Hóa KeyT</span>. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-gray-500">
             <span className="hover:text-gray-300 cursor-pointer">Privacy</span>

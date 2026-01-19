@@ -31,6 +31,11 @@ import UserOrdersPage from './pages/UserOrdersPage';
 import InvoiceView from './components/order/InvoiceView';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import QrPaymentPage from './pages/QrPaymentPage';
+import WarrantyRefundPage from './pages/WarrantyRefundPage';
+import PurchaseGuidePage from './pages/PurchaseGuidePage';
+import FAQPage from './pages/FAQPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
 import { useAuthContext } from './context/useAuthContext';
 import Footer from './components/Footer';
 import Header from './components/Header';
@@ -79,6 +84,11 @@ export default function App() {
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/warranty-refund" element={<WarrantyRefundPage />} />
+                    <Route path="/purchase-guide" element={<PurchaseGuidePage />} />
+                    <Route path="/faq" element={<FAQPage />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                    <Route path="/terms-of-service" element={<TermsOfServicePage />} />
                     <Route path="/admin/dashboard" element={<AdminDashboard />} />
                     <Route path="/admin/chatgpt-accounts" element={<ChatGptAccountsPage />} />
                     <Route path="/admin/subscriptions" element={<SubscriptionsPage />} />

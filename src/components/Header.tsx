@@ -28,7 +28,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-    const [products, setProducts] = useState<Product[]>([]);
     const [productsByCategory, setProductsByCategory] = useState<Record<string, Product[]>>({});
     const cartIconRef = useRef<HTMLAnchorElement>(null);
 
@@ -59,7 +58,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             try {
                 const response = await axios.get(`${API_BASE_URL}/products`);
                 const fetchedProducts = response.data;
-                setProducts(fetchedProducts);
 
                 // Group products by category (keep original category name from database)
                 const grouped: Record<string, Product[]> = {};

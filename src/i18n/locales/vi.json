@@ -17,10 +17,10 @@
     "home": {
         "hero": {
             "title": "Nâng Tầm <br/> Cuộc Sống Số",
-            "desc": "Sở hữu key phần mềm, tài khoản premium và tài sản số với giá tốt nhất. Cam kết giao hàng tức thì.",
+            "desc": "Sở hữu key phần mềm, tài khoản premium và tài sản số với giá tốt nhất. Kích hoạt nhanh, hỗ trợ 24/7.",
             "shop_now": "Mua Ngay",
             "view_collection": "Xem Bộ Sưu Tập",
-            "instant_delivery": "Giao Hàng Tức Thì",
+            "instant_delivery": "Kích Hoạt Nhanh",
             "secure_payment": "Bảo Mật 100%"
         },
         "categories": {
@@ -45,8 +45,8 @@
         },
         "trust": {
             "instant_delivery": {
-                "title": "Giao Hàng Tức Thì",
-                "desc": "Nhận mã ngay qua email sau khi thanh toán."
+                "title": "Kích Hoạt Nhanh",
+                "desc": "Nhận mã kích hoạt sớm nhất có thể sau khi thanh toán."
             },
             "secure_payment": {
                 "title": "Thanh Toán An Toàn",

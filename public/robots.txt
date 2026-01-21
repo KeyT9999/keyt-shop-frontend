@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /orders
+Disallow: /cart
+Disallow: /wishlist
+
+Sitemap: https://taphoakeyt.vercel.app/sitemap.xml

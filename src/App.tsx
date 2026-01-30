@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import ProductList from './pages/ProductList';
 import HomePage from './pages/HomePage';
@@ -41,10 +41,13 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import FloatingContact from './components/FloatingContact';
 import ProtectedRoute from './components/ProtectedRoute';
+import Seo from './components/Seo';
+import StructuredData from './components/StructuredData';
 
 export default function App() {
     const { user } = useAuthContext();
     const [searchQuery, setSearchQuery] = useState('');
+    const location = useLocation();
 
     // Debug: Log user admin status
     useEffect(() => {
@@ -56,8 +59,76 @@ export default function App() {
 
 
 
+    const seoConfig = useMemo(() => {
+        const path = location.pathname;
+        const base = {
+            title: 'Tiệm Tạp Hóa KeyT | Dịch vụ Premium Chính Hãng - Canva Pro, CapCut Pro, ChatGPT Plus',
+            description:
+                'Kho dịch vụ số đa dạng, uy tín, hỗ trợ tận tâm. Mua Canva Pro, CapCut Pro, ChatGPT Plus, Microsoft 365, Netflix, Spotify Premium và nhiều tài khoản premium chính hãng với giá tốt nhất. Bảo hành đầy đủ, hỗ trợ 24/7. Đăng ký ngay nhận mã giảm giá 10% cho đơn hàng đầu tiên!',
+            canonicalPath: path,
+            type: 'website' as const,
+        };
+
+        if (path === '/') {
+            return {
+                ...base,
+                title: 'Tiệm Tạp Hóa KeyT – Canva Pro, CapCut Pro, ChatGPT Plus, Office Premium Chính Hãng',
+                description: 'Kho dịch vụ số đa dạng, uy tín, hỗ trợ tận tâm. Mua Canva Pro, CapCut Pro, ChatGPT Plus, Microsoft 365, Netflix, Spotify Premium và nhiều tài khoản premium chính hãng với giá tốt nhất. Bảo hành đầy đủ, hỗ trợ 24/7. Đăng ký ngay nhận mã giảm giá 10% cho đơn hàng đầu tiên!',
+                canonicalPath: '/',
+            };
+        }
+
+        if (path.startsWith('/products/')) {
+            return {
+                ...base,
+                title: 'Chi tiết dịch vụ premium | Tiệm Tạp Hóa KeyT',
+                description:
+                    'Xem mô tả, gói và chính sách bảo hành cho dịch vụ premium (Canva Pro, CapCut Pro, ChatGPT Plus, Microsoft 365...).',
+            };
+        }
+
+        if (path === '/products') {
+            return {
+                ...base,
+                title: 'Danh sách dịch vụ premium | Canva Pro, CapCut Pro, ChatGPT Plus, Office',
+                canonicalPath: '/products',
+            };
+        }
+
+        if (path === '/purchase-guide') {
+            return {
+                ...base,
+                title: 'Hướng dẫn mua dịch vụ premium KeyT – Canva Pro, CapCut Pro, ChatGPT Plus',
+                description:
+                    'Các bước mua và kích hoạt dịch vụ premium tại Tiệm Tạp Hóa KeyT: chọn gói, thanh toán, nhận và sử dụng.',
+                canonicalPath: '/purchase-guide',
+            };
+        }
+
+        if (path === '/faq') {
+            return {
+                ...base,
+                title: 'FAQ Tiệm Tạp Hóa KeyT – Canva Pro, CapCut Pro, ChatGPT Plus, Office',
+                canonicalPath: '/faq',
+            };
+        }
+
+        if (path === '/warranty-refund') {
+            return {
+                ...base,
+                title: 'Bảo hành & hoàn tiền – Tiệm Tạp Hóa KeyT',
+                canonicalPath: '/warranty-refund',
+            };
+        }
+
+        return base;
+    }, [location.pathname]);
+
+
     return (
         <div className="app">
+            <Seo {...seoConfig} />
+            <StructuredData />
             <FloatingContact />
 
             <Header onSearch={setSearchQuery} searchValue={searchQuery} />

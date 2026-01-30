@@ -75,7 +75,7 @@ git push origin main
 
 ### 4.2. Kiểm tra trong Browser
 
-1. Mở website: https://taphoakeyt.vercel.app
+1. Mở website: https://www.taphoakeyt.com
 2. Mở Developer Tools (F12)
 3. Vào tab **Console**
 4. Gõ lệnh sau để kiểm tra:
@@ -99,7 +99,7 @@ console.log('API URL:', import.meta.env.VITE_API_BASE_URL);
 
 Sau khi redeploy xong:
 
-1. Mở https://taphoakeyt.vercel.app
+1. Mở https://www.taphoakeyt.com
 2. Thử login bằng username/password
 3. Thử login bằng Google
 4. Kiểm tra Console và Network tab xem có lỗi gì không

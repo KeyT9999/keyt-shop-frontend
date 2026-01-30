@@ -9,7 +9,7 @@ type SeoProps = {
     noIndex?: boolean;
 };
 
-const SITE_URL = 'https://taphoakeyt.vercel.app';
+const SITE_URL = 'https://www.taphoakeyt.com';
 const DEFAULT_IMAGE = `${SITE_URL}/favicon.png`;
 
 function upsertMeta(attr: 'name' | 'property', key: string, content: string) {
@@ -32,10 +32,10 @@ export default function Seo({
     noIndex = false,
 }: SeoProps) {
     useEffect(() => {
-        const resolvedTitle = title || 'Tiệm Tạp Hóa KeyT | Dịch vụ premium chính hãng';
+        const resolvedTitle = title || 'Tiệm Tạp Hóa KeyT | Dịch vụ Premium Chính Hãng - Canva Pro, CapCut Pro, ChatGPT Plus';
         const resolvedDesc =
             description ||
-            'Mua Canva Pro, CapCut Pro, ChatGPT Plus, Microsoft 365/Office và nhiều tài khoản premium chính hãng, bảo hành, hỗ trợ nhanh.';
+            'Kho dịch vụ số đa dạng, uy tín, hỗ trợ tận tâm. Mua Canva Pro, CapCut Pro, ChatGPT Plus, Microsoft 365, Netflix, Spotify Premium và nhiều tài khoản premium chính hãng với giá tốt nhất. Bảo hành đầy đủ, hỗ trợ 24/7. Đăng ký ngay nhận mã giảm giá 10% cho đơn hàng đầu tiên!';
         const resolvedImage = image || DEFAULT_IMAGE;
         const canonicalUrl = `${SITE_URL}${canonicalPath || window.location.pathname}`;
 
@@ -47,6 +47,8 @@ export default function Seo({
         upsertMeta('property', 'og:image', resolvedImage);
         upsertMeta('property', 'og:type', type);
         upsertMeta('property', 'og:url', canonicalUrl);
+        upsertMeta('property', 'og:site_name', 'Tiệm Tạp Hóa KeyT');
+        upsertMeta('property', 'og:locale', 'vi_VN');
 
         upsertMeta('name', 'twitter:card', 'summary_large_image');
         upsertMeta('name', 'twitter:title', resolvedTitle);

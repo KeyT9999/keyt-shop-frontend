@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://taphoakeyt.vercel.app/</loc>
+    <loc>https://www.taphoakeyt.com/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://taphoakeyt.vercel.app/products</loc>
+    <loc>https://www.taphoakeyt.com/products</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://taphoakeyt.vercel.app/purchase-guide</loc>
+    <loc>https://www.taphoakeyt.com/purchase-guide</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://taphoakeyt.vercel.app/faq</loc>
+    <loc>https://www.taphoakeyt.com/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://taphoakeyt.vercel.app/warranty-refund</loc>
+    <loc>https://www.taphoakeyt.com/warranty-refund</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://taphoakeyt.vercel.app/privacy-policy</loc>
+    <loc>https://www.taphoakeyt.com/privacy-policy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://taphoakeyt.vercel.app/terms-of-service</loc>
+    <loc>https://www.taphoakeyt.com/terms-of-service</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>

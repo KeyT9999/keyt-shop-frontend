@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 
-const SITE_URL = 'https://taphoakeyt.vercel.app';
+const SITE_URL = 'https://www.taphoakeyt.com';
 const LOGO_URL = `${SITE_URL}/logo.png`;
 
 function ScriptTag({ data }: { data: Record<string, unknown> }) {
@@ -104,7 +104,7 @@ export default function StructuredData() {
                 },
             ],
             sameAs: [
-                'https://taphoakeyt.vercel.app',
+                'https://www.taphoakeyt.com',
                 'https://zalo.me/84868899104',
             ],
         };

@@ -62,9 +62,9 @@ export default function App() {
     const seoConfig = useMemo(() => {
         const path = location.pathname;
         const base = {
-            title: 'Tiệm Tạp Hóa KeyT | Dịch vụ premium chính hãng',
+            title: 'Tiệm Tạp Hóa KeyT | Dịch vụ Premium Chính Hãng - Canva Pro, CapCut Pro, ChatGPT Plus',
             description:
-                'Mua Canva Pro, CapCut Pro, ChatGPT Plus, Microsoft 365/Office và tài khoản premium chính hãng, bảo hành, hỗ trợ nhanh.',
+                'Kho dịch vụ số đa dạng, uy tín, hỗ trợ tận tâm. Mua Canva Pro, CapCut Pro, ChatGPT Plus, Microsoft 365, Netflix, Spotify Premium và nhiều tài khoản premium chính hãng với giá tốt nhất. Bảo hành đầy đủ, hỗ trợ 24/7. Đăng ký ngay nhận mã giảm giá 10% cho đơn hàng đầu tiên!',
             canonicalPath: path,
             type: 'website' as const,
         };
@@ -72,7 +72,8 @@ export default function App() {
         if (path === '/') {
             return {
                 ...base,
-                title: 'Tiệm Tạp Hóa KeyT – Canva Pro, CapCut Pro, ChatGPT Plus, Office chính hãng',
+                title: 'Tiệm Tạp Hóa KeyT – Canva Pro, CapCut Pro, ChatGPT Plus, Office Premium Chính Hãng',
+                description: 'Kho dịch vụ số đa dạng, uy tín, hỗ trợ tận tâm. Mua Canva Pro, CapCut Pro, ChatGPT Plus, Microsoft 365, Netflix, Spotify Premium và nhiều tài khoản premium chính hãng với giá tốt nhất. Bảo hành đầy đủ, hỗ trợ 24/7. Đăng ký ngay nhận mã giảm giá 10% cho đơn hàng đầu tiên!',
                 canonicalPath: '/',
             };
         }

@@ -6,4 +6,4 @@ Disallow: /orders
 Disallow: /cart
 Disallow: /wishlist
 
-Sitemap: https://taphoakeyt.vercel.app/sitemap.xml
+Sitemap: https://www.taphoakeyt.com/sitemap.xml

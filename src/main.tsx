@@ -18,6 +18,15 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
+// Log environment info (always log in production for debugging)
+console.log('🔧 App Environment:', {
+    mode: import.meta.env.MODE,
+    isProduction: import.meta.env.PROD,
+    apiUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api (default)',
+    hasGoogleClientId: !!GOOGLE_CLIENT_ID,
+    hasRootElement: !!document.getElementById('root'),
+});
+
 // Wrapper component để xử lý GoogleOAuthProvider một cách an toàn
 function AppProviders({ children }: { children: ReactNode }) {
     const providers = (
@@ -48,14 +57,35 @@ function AppProviders({ children }: { children: ReactNode }) {
     return providers;
 }
 
-createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-        <ErrorBoundary>
-            <BrowserRouter>
-                <AppProviders>
-                    <App />
-                </AppProviders>
-            </BrowserRouter>
-        </ErrorBoundary>
-    </StrictMode>
-);
+// Ensure root element exists before rendering
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+    console.error('❌ Root element not found! Cannot render app.');
+    document.body.innerHTML = '<div style="padding: 2rem; text-align: center; font-family: sans-serif;"><h1>Lỗi: Không tìm thấy root element</h1><p>Vui lòng kiểm tra file index.html</p></div>';
+} else {
+    try {
+        createRoot(rootElement).render(
+            <StrictMode>
+                <ErrorBoundary>
+                    <BrowserRouter>
+                        <AppProviders>
+                            <App />
+                        </AppProviders>
+                    </BrowserRouter>
+                </ErrorBoundary>
+            </StrictMode>
+        );
+        console.log('✅ App rendered successfully');
+    } catch (error) {
+        console.error('❌ Error rendering app:', error);
+        rootElement.innerHTML = `
+            <div style="padding: 2rem; text-align: center; font-family: sans-serif;">
+                <h1 style="color: #dc2626;">Lỗi khi render ứng dụng</h1>
+                <p>Vui lòng mở Developer Tools (F12) để xem chi tiết lỗi.</p>
+                <pre style="text-align: left; background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+${error instanceof Error ? error.message : String(error)}
+                </pre>
+            </div>
+        `;
+    }
+}

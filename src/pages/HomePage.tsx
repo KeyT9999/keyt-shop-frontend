@@ -32,10 +32,22 @@ export default function HomePage() {
                     axios.get(`${API_BASE_URL}/products`),
                     getBanners()
                 ]);
-                setProducts(productsRes.data);
-                setBanners(bannersRes);
-            } catch (err) {
+                setProducts(productsRes.data || []);
+                setBanners(bannersRes || []);
+            } catch (err: any) {
                 console.error('Error fetching data:', err);
+                // Set empty arrays để app vẫn render được
+                setProducts([]);
+                setBanners([]);
+                // Log chi tiết lỗi để debug
+                if (err?.response) {
+                    console.error('API Error Response:', err.response.status, err.response.data);
+                } else if (err?.request) {
+                    console.error('API Request failed - có thể do CORS hoặc network issue');
+                    console.error('API URL đang dùng:', API_BASE_URL);
+                } else {
+                    console.error('API Error:', err.message);
+                }
             } finally {
                 setLoading(false);
             }

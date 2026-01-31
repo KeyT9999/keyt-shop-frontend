@@ -1,4 +1,4 @@
-import React, { StrictMode } from 'react';
+import { StrictMode, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import './index.css';
@@ -19,7 +19,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 // Wrapper component để xử lý GoogleOAuthProvider một cách an toàn
-function AppProviders({ children }: { children: React.ReactNode }) {
+function AppProviders({ children }: { children: ReactNode }) {
     const providers = (
         <AuthProvider>
             <NotificationProvider>

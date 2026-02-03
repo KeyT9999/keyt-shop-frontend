@@ -39,7 +39,14 @@ export default function ProductList({ searchQuery = '', showHero = true }: Produ
       try {
         setLoading(true);
         const response = await axios.get(`${API_BASE_URL}/products`);
-        setProducts(response.data);
+        // Sort products by sortOrder (lower number = higher priority)
+        // Backend already sorts by sortOrder, but we sort again here for safety
+        const sortedProducts = (response.data || []).sort((a: Product, b: Product) => {
+          const orderA = a.sortOrder ?? 999;
+          const orderB = b.sortOrder ?? 999;
+          return orderA - orderB;
+        });
+        setProducts(sortedProducts);
         setError(null);
       } catch (err) {
         console.error('❌ Lỗi khi gọi API:', err);

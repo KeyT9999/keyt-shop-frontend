@@ -45,4 +45,5 @@ export interface Product {
   completionInstructions?: string;
   isPreloadedAccount?: boolean;
   preloadedAccounts?: PreloadedAccount[];
+  sortOrder?: number; // Thứ tự hiển thị (số càng nhỏ càng hiển thị trước)
 }

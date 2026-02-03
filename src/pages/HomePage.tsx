@@ -32,7 +32,14 @@ export default function HomePage() {
                     axios.get(`${API_BASE_URL}/products`),
                     getBanners()
                 ]);
-                setProducts(productsRes.data || []);
+                // Sort products by sortOrder (lower number = higher priority)
+                // Backend already sorts by sortOrder, but we sort again here for safety
+                const sortedProducts = (productsRes.data || []).sort((a: Product, b: Product) => {
+                  const orderA = a.sortOrder ?? 999;
+                  const orderB = b.sortOrder ?? 999;
+                  return orderA - orderB;
+                });
+                setProducts(sortedProducts);
                 setBanners(bannersRes || []);
             } catch (err: any) {
                 console.error('Error fetching data:', err);

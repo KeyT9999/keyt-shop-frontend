@@ -35,7 +35,8 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
     imageUrl: product?.imageUrl || '',
     features: product?.features?.join('\n') || '',
     completionInstructions: product?.completionInstructions || '',
-    isPreloadedAccount: product?.isPreloadedAccount || false
+    isPreloadedAccount: product?.isPreloadedAccount || false,
+    sortOrder: product?.sortOrder ?? 999
   });
   const [options, setOptions] = useState<ProductOption[]>(product?.options || []);
   const [requiredFields, setRequiredFields] = useState<Array<{
@@ -70,7 +71,8 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
       imageUrl: product?.imageUrl || '',
       features: product?.features?.join('\n') || '',
       completionInstructions: product?.completionInstructions || '',
-      isPreloadedAccount: product?.isPreloadedAccount || false
+      isPreloadedAccount: product?.isPreloadedAccount || false,
+      sortOrder: product?.sortOrder ?? 999
     });
     
     setOptions(product?.options || []);
@@ -248,7 +250,8 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
           : [],
         completionInstructions: formData.completionInstructions || undefined,
         isPreloadedAccount: formData.isPreloadedAccount || false,
-        preloadedAccounts: preloadedAccountsData.length > 0 ? preloadedAccountsData : undefined
+        preloadedAccounts: preloadedAccountsData.length > 0 ? preloadedAccountsData : undefined,
+        sortOrder: formData.sortOrder !== undefined ? Number(formData.sortOrder) : 999
       };
 
       if (product) {
@@ -484,6 +487,32 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               onFocus={(e) => e.target.style.borderColor = '#F05A28'}
               onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
             />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', color: '#1E293B', fontWeight: 600, fontSize: '0.95rem' }}>
+              Thứ tự hiển thị
+            </label>
+            <input
+              type="number"
+              value={formData.sortOrder}
+              onChange={(e) => setFormData({ ...formData, sortOrder: Number(e.target.value) })}
+              min="0"
+              placeholder="999"
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #E2E8F0',
+                borderRadius: '8px',
+                fontSize: '0.95rem',
+                outline: 'none'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+              onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
+            />
+            <div style={{ marginTop: '4px', fontSize: '0.85rem', color: '#64748B' }}>
+              💡 Số càng nhỏ càng hiển thị trước (mặc định: 999)
+            </div>
           </div>
         </div>
 

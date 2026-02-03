@@ -89,6 +89,16 @@ export default function ProductsPage() {
     loadProducts();
   };
 
+  const handleSortOrderChange = async (productId: string, newSortOrder: number) => {
+    if (!token) return;
+    try {
+      await adminService.updateProduct(productId, { sortOrder: newSortOrder }, token);
+      loadProducts(); // Reload để cập nhật thứ tự
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Không thể cập nhật thứ tự');
+    }
+  };
+
   if (!currentUser?.admin) {
     return (
       <div className="p-8 text-center text-red-500">403 - Access Denied</div>
@@ -200,6 +210,7 @@ export default function ProductsPage() {
                   <th>Category</th>
                   <th style={{ textAlign: 'right' }}>Price</th>
                   <th style={{ textAlign: 'center' }}>Stock</th>
+                  <th style={{ textAlign: 'center' }}>Thứ tự</th>
                   <th style={{ textAlign: 'center' }}>Hot</th>
                   <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
@@ -207,7 +218,7 @@ export default function ProductsPage() {
               <tbody>
                 {filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ padding: '48px', textAlign: 'center', color: '#94A3B8' }}>
+                    <td colSpan={8} style={{ padding: '48px', textAlign: 'center', color: '#94A3B8' }}>
                       <Search size={48} style={{ opacity: 0.2, marginBottom: '16px' }} />
                       <p>No products found matching "{searchQuery}"</p>
                     </td>
@@ -264,6 +275,31 @@ export default function ProductsPage() {
                         }}>
                           {product.stock}
                         </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <input
+                          type="number"
+                          value={product.sortOrder ?? 999}
+                          onChange={(e) => {
+                            const newValue = Number(e.target.value);
+                            if (!isNaN(newValue) && newValue >= 0) {
+                              handleSortOrderChange(product._id, newValue);
+                            }
+                          }}
+                          min="0"
+                          style={{
+                            width: '70px',
+                            padding: '6px 8px',
+                            border: '1px solid #E2E8F0',
+                            borderRadius: '6px',
+                            fontSize: '0.85rem',
+                            textAlign: 'center',
+                            outline: 'none'
+                          }}
+                          onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+                          onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
+                          title="Số càng nhỏ càng hiển thị trước"
+                        />
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         {product.isHot && <Flame size={20} color="#F05A28" fill="#F05A28" />}
@@ -356,11 +392,11 @@ export default function ProductsPage() {
                       )}
                     </div>
 
-                    {/* Price and Stock Row */}
+                    {/* Price, Stock and Sort Order Row */}
                     <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center',
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr 1fr',
+                      gap: '12px',
                       padding: '12px 0',
                       borderTop: '1px solid #F1F5F9',
                       borderBottom: '1px solid #F1F5F9',
@@ -368,22 +404,48 @@ export default function ProductsPage() {
                     }}>
                       <div>
                         <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '4px' }}>Price</div>
-                        <span style={{ fontWeight: 700, color: '#F05A28', fontSize: '1.1rem' }}>
+                        <span style={{ fontWeight: 700, color: '#F05A28', fontSize: '1rem' }}>
                           {product.price.toLocaleString('vi-VN')} {product.currency}
                         </span>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
+                      <div>
                         <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '4px' }}>Stock</div>
                         <span style={{
                           fontWeight: 600,
                           color: product.stock > 0 ? '#1E293B' : '#EF4444',
                           background: product.stock > 0 ? '#F1F5F9' : '#FEF2F2',
-                          padding: '4px 12px',
+                          padding: '4px 8px',
                           borderRadius: '6px',
-                          fontSize: '0.9rem'
+                          fontSize: '0.85rem'
                         }}>
                           {product.stock}
                         </span>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '4px' }}>Thứ tự</div>
+                        <input
+                          type="number"
+                          value={product.sortOrder ?? 999}
+                          onChange={(e) => {
+                            const newValue = Number(e.target.value);
+                            if (!isNaN(newValue) && newValue >= 0) {
+                              handleSortOrderChange(product._id, newValue);
+                            }
+                          }}
+                          min="0"
+                          style={{
+                            width: '100%',
+                            padding: '6px 8px',
+                            border: '1px solid #E2E8F0',
+                            borderRadius: '6px',
+                            fontSize: '0.85rem',
+                            textAlign: 'center',
+                            outline: 'none'
+                          }}
+                          onFocus={(e) => e.target.style.borderColor = '#F05A28'}
+                          onBlur={(e) => e.target.style.borderColor = '#E2E8F0'}
+                          title="Số càng nhỏ càng hiển thị trước"
+                        />
                       </div>
                     </div>
 

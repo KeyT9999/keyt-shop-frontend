@@ -43,6 +43,7 @@ import FloatingContact from './components/FloatingContact';
 import ProtectedRoute from './components/ProtectedRoute';
 import Seo from './components/Seo';
 import StructuredData from './components/StructuredData';
+import VisitTracker from './components/VisitTracker';
 
 export default function App() {
     const { user } = useAuthContext();
@@ -127,6 +128,7 @@ export default function App() {
 
     return (
         <div className="app">
+            <VisitTracker />
             <Seo {...seoConfig} />
             <StructuredData />
             <FloatingContact />

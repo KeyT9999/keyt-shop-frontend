@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import axios from 'axios';
 import { AuthContext } from './auth-context';
 import type { AuthState } from './auth-context';
@@ -22,6 +22,75 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  const logoutRef = useRef<(() => void) | null>(null);
+  const isLoggingOutRef = useRef(false); // Flag to prevent multiple logout calls
+
+  const logout = () => {
+    // Prevent multiple logout calls
+    if (isLoggingOutRef.current) return;
+    isLoggingOutRef.current = true;
+
+    setState({ user: null, token: null });
+    // Clear localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEY);
+      // Redirect to login page
+      const currentPath = window.location.pathname;
+      // Don't redirect if already on login/register page
+      if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+        window.location.href = '/login';
+      }
+    }
+  };
+
+  // Store logout function in ref for use in interceptor
+  logoutRef.current = logout;
+
+  // Setup axios interceptor for token expiration
+  useEffect(() => {
+    // Reset logout flag when token changes
+    isLoggingOutRef.current = false;
+
+    const interceptorId = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        const response = error?.response;
+        
+        // Check if it's a 401 Unauthorized error
+        if (response?.status === 401) {
+          const errorCode = response?.data?.code;
+          const errorMessage = response?.data?.message || '';
+          
+          // Check if token is expired or invalid
+          if (
+            errorCode === 'TOKEN_EXPIRED' || 
+            errorCode === 'TOKEN_INVALID' || 
+            errorCode === 'TOKEN_ERROR' ||
+            errorMessage.toLowerCase().includes('hết hạn') ||
+            errorMessage.toLowerCase().includes('token') ||
+            errorMessage.toLowerCase().includes('expired')
+          ) {
+            // Only logout if user is actually logged in and not already logging out
+            if (state.token && logoutRef.current && !isLoggingOutRef.current) {
+              console.warn('🔒 Token đã hết hạn hoặc không hợp lệ. Tự động đăng xuất...');
+              // Show alert to user
+              if (typeof window !== 'undefined') {
+                alert('Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại.');
+              }
+              logoutRef.current();
+            }
+          }
+        }
+        
+        return Promise.reject(error);
+      }
+    );
+
+    // Cleanup interceptor on unmount
+    return () => {
+      axios.interceptors.response.eject(interceptorId);
+    };
+  }, [state.token]);
 
   useEffect(() => {
     if (state.token) {
@@ -86,9 +155,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setState({ user: null, token: null });
-  };
 
   const value = useMemo(
     () => ({

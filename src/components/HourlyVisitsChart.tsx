@@ -69,7 +69,7 @@ export default function HourlyVisitsChart({ hourlyData }: HourlyVisitsChartProps
           padding: 15,
           font: {
             size: 12,
-            weight: '600' as const
+            weight: 600
           }
         }
       },
@@ -78,7 +78,7 @@ export default function HourlyVisitsChart({ hourlyData }: HourlyVisitsChartProps
         padding: 12,
         titleFont: {
           size: 14,
-          weight: '600' as const
+          weight: 600
         },
         bodyFont: {
           size: 13

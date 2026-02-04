@@ -44,11 +44,16 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Seo from './components/Seo';
 import StructuredData from './components/StructuredData';
 import VisitTracker from './components/VisitTracker';
+import AnnouncementModal from './components/AnnouncementModal';
+import { announcementService } from './services/announcementService';
 
 export default function App() {
-    const { user } = useAuthContext();
+    const { user, token } = useAuthContext();
     const [searchQuery, setSearchQuery] = useState('');
     const location = useLocation();
+    const [announcementOpen, setAnnouncementOpen] = useState(false);
+    const [announcementTitle, setAnnouncementTitle] = useState('');
+    const [announcementMessage, setAnnouncementMessage] = useState('');
 
     // Debug: Log user admin status
     useEffect(() => {
@@ -57,6 +62,32 @@ export default function App() {
             console.log('Is admin:', user.admin);
         }
     }, [user]);
+
+    // Fetch active announcement once after login; dismissal is session-only (no localStorage)
+    useEffect(() => {
+        let cancelled = false;
+
+        const run = async () => {
+            if (!token || !user) return;
+            try {
+                const announcement = await announcementService.getActiveAnnouncement(token);
+                if (cancelled) return;
+                if (announcement && announcement.isActive) {
+                    setAnnouncementTitle(announcement.title || '');
+                    setAnnouncementMessage(announcement.message || '');
+                    setAnnouncementOpen(true);
+                }
+            } catch (err) {
+                // non-blocking
+                console.warn('Failed to load announcement:', err);
+            }
+        };
+
+        run();
+        return () => {
+            cancelled = true;
+        };
+    }, [token, user]);
 
 
 
@@ -132,6 +163,12 @@ export default function App() {
             <Seo {...seoConfig} />
             <StructuredData />
             <FloatingContact />
+            <AnnouncementModal
+                open={announcementOpen}
+                title={announcementTitle}
+                message={announcementMessage}
+                onClose={() => setAnnouncementOpen(false)}
+            />
 
             <Header onSearch={setSearchQuery} searchValue={searchQuery} />
 

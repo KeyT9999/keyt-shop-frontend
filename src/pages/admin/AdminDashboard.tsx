@@ -15,6 +15,7 @@ import {
   LogOut,
   Menu,
   Star,
+  Bell,
   TrendingUp,
   TrendingDown,
   Clock,
@@ -36,8 +37,9 @@ import ChatGptAccountsPage from './ChatGptAccountsPage';
 import SubscriptionsPage from './SubscriptionsPage';
 import OtpRequestsPage from './OtpRequestsPage';
 import ReviewsPage from './ReviewsPage';
+import AnnouncementPage from './AnnouncementPage';
 
-type AdminTab = 'dashboard' | 'users' | 'products' | 'orders' | 'chatgpt' | 'subscriptions' | 'otp' | 'reviews';
+type AdminTab = 'dashboard' | 'users' | 'products' | 'orders' | 'chatgpt' | 'subscriptions' | 'otp' | 'reviews' | 'announcement';
 
 export default function AdminDashboard() {
   const { token, user, logout } = useAuthContext();
@@ -120,6 +122,8 @@ export default function AdminDashboard() {
           return <SubscriptionsPage />;
         case 'otp':
           return <OtpRequestsPage />;
+        case 'announcement':
+          return <AnnouncementPage />;
         default:
           return renderDashboardHome();
       }
@@ -546,6 +550,7 @@ export default function AdminDashboard() {
       case 'chatgpt': return 'ChatGPT Accounts';
       case 'subscriptions': return 'Subscriptions';
       case 'otp': return 'OTP Requests';
+      case 'announcement': return 'Thông báo';
       default: return 'Admin';
     }
   };
@@ -675,6 +680,18 @@ export default function AdminDashboard() {
           >
             <Key size={20} />
             <span>OTP Requests</span>
+          </button>
+
+          <button
+            className={`admin-nav-item ${activeTab === 'announcement' ? 'active' : ''}`}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setActiveTab('announcement');
+            }}
+          >
+            <Bell size={20} />
+            <span>Thông báo</span>
           </button>
         </nav>
 

@@ -11,6 +11,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import YoutubeSummarizerPage from './pages/YoutubeSummarizerPage';
 import GetOtpPage from './pages/GetOtpPage';
+import Get2faPage from './pages/Get2faPage';
 import ProfilePage from './pages/ProfilePage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
@@ -188,6 +189,7 @@ export default function App() {
                     <Route path="/evidence" element={<ProtectedRoute><EvidenceCheckerPage /></ProtectedRoute>} />
                     <Route path="/summarizer" element={<ProtectedRoute><YoutubeSummarizerPage /></ProtectedRoute>} />
                     <Route path="/get-otp" element={<ProtectedRoute><GetOtpPage /></ProtectedRoute>} />
+                    <Route path="/2falive" element={<ProtectedRoute><Get2faPage /></ProtectedRoute>} />
                     <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/verify-email" element={<VerifyEmailPage />} />

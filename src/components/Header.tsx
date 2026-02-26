@@ -91,31 +91,31 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     const shopMegaMenu = useMemo(() => {
         // Predefined order for categories (case-insensitive matching)
         const categoryOrder = ['Giải Trí', 'Giải trí', 'Thiết Kế', 'Thiết kế', 'Năng Suất', 'Năng suất', 'Học Tập', 'Học tập'];
-        
+
         // Get all categories from products
         const allCategories = Object.keys(productsByCategory);
-        
+
         // Helper to check if category matches any in order (case-insensitive)
         const matchesOrder = (cat: string): boolean => {
-            return categoryOrder.some(orderCat => 
+            return categoryOrder.some(orderCat =>
                 cat.toLowerCase() === orderCat.toLowerCase()
             );
         };
-        
+
         // Sort categories: predefined ones first (in order), then others alphabetically
         const orderedCategories: string[] = [];
         const otherCategories: string[] = [];
-        
+
         // First, add categories in predefined order
         categoryOrder.forEach(orderCat => {
-            const found = allCategories.find(cat => 
+            const found = allCategories.find(cat =>
                 cat.toLowerCase() === orderCat.toLowerCase()
             );
             if (found && !orderedCategories.includes(found)) {
                 orderedCategories.push(found);
             }
         });
-        
+
         // Then add other categories alphabetically
         allCategories.forEach(cat => {
             if (!matchesOrder(cat)) {
@@ -123,7 +123,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             }
         });
         otherCategories.sort();
-        
+
         const sortedCategories = [...orderedCategories, ...otherCategories];
 
         return sortedCategories.map(category => {
@@ -167,6 +167,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
         },
 
         { label: 'GET OTP GPT', href: '/get-otp', hasDropdown: false },
+        { label: 'GET 2FA', href: '/2falive', hasDropdown: false },
     ], [shopMegaMenu]);
 
     const handleLogout = () => {
@@ -221,7 +222,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                                             <ul>
                                                                 {section.items.map((subItem, sIdx) => (
                                                                     <li key={sIdx}>
-                                                                        <Link 
+                                                                        <Link
                                                                             to={`/products/${subItem.id}`}
                                                                             onClick={() => setActiveDropdown(null)}
                                                                         >

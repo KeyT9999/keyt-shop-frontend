@@ -100,6 +100,20 @@ export const subscriptionService = {
         headers: { Authorization: `Bearer ${token}` }
       }
     );
+  },
+
+  /**
+   * Renew subscription - update endDate and reset flags (Admin only)
+   */
+  async renew(id: string, newEndDate: string, token: string): Promise<ServiceSubscription> {
+    const response = await axios.post(
+      `${API_BASE_URL}/subscriptions/${id}/renew`,
+      { newEndDate },
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    return response.data;
   }
 };
 

@@ -13,6 +13,8 @@ export default function SubscriptionsPage() {
   const [showImport, setShowImport] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [renewingId, setRenewingId] = useState<string | null>(null);
+  const [renewDate, setRenewDate] = useState('');
 
   useEffect(() => {
     if (token && user?.admin) {
@@ -51,6 +53,19 @@ export default function SubscriptionsPage() {
       fetchSubscriptions();
     } catch (err) {
       alert('Có lỗi xảy ra');
+    }
+  };
+
+  const handleRenew = async (id: string) => {
+    if (!renewDate) { alert('Vui lòng chọn ngày hết hạn mới'); return; }
+    try {
+      await subscriptionService.renew(id, renewDate, token!);
+      setRenewingId(null);
+      setRenewDate('');
+      alert('✅ Đã gia hạn thành công!');
+      fetchSubscriptions();
+    } catch (err) {
+      alert('Có lỗi xảy ra khi gia hạn');
     }
   };
 
@@ -257,55 +272,56 @@ export default function SubscriptionsPage() {
                       </span>
                     </td>
                     <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                        {sub.manualReminderSentAt ? (
-                          <span
-                            style={{
-                              padding: '8px 12px',
-                              background: '#ECFDF5',
-                              color: '#047857',
-                              border: '1px solid #A7F3D0',
-                              borderRadius: '8px',
-                              fontSize: '0.85rem',
-                              fontWeight: 600,
-                            }}
-                          >
-                            ✓ Đã gửi nhắc
-                          </span>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap' }}>
+                        {renewingId === sub._id ? (
+                          <>
+                            <input
+                              type="date"
+                              value={renewDate}
+                              onChange={(e) => setRenewDate(e.target.value)}
+                              style={{ padding: '7px 10px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.85rem' }}
+                            />
+                            <button
+                              onClick={() => handleRenew(sub._id)}
+                              style={{ padding: '8px 12px', background: '#047857', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+                            >
+                              ✓ Xác nhận
+                            </button>
+                            <button
+                              onClick={() => { setRenewingId(null); setRenewDate(''); }}
+                              style={{ padding: '8px 12px', background: '#F1F5F9', color: '#64748B', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+                            >
+                              ✕
+                            </button>
+                          </>
                         ) : (
-                          <button
-                            onClick={() => handleSendReminder(sub._id)}
-                            style={{
-                              padding: '8px 12px',
-                              background: '#F05A28',
-                              color: '#ffffff',
-                              border: 'none',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontSize: '0.85rem',
-                              fontWeight: 600,
-                              transition: 'all 0.2s',
-                            }}
-                          >
-                            📩 Gửi nhắc
-                          </button>
+                          <>
+                            <button
+                              onClick={() => { setRenewingId(sub._id); setRenewDate(''); }}
+                              style={{ padding: '8px 12px', background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s' }}
+                            >
+                              🔄 Gia hạn
+                            </button>
+                            {sub.manualReminderSentAt ? (
+                              <span style={{ padding: '8px 12px', background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600 }}>
+                                ✓ Đã gửi nhắc
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleSendReminder(sub._id)}
+                                style={{ padding: '8px 12px', background: '#F05A28', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s' }}
+                              >
+                                📩 Gửi nhắc
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDelete(sub._id)}
+                              style={{ padding: '8px 12px', background: '#FEF2F2', color: '#EF4444', border: '1px solid #FECACA', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s' }}
+                            >
+                              Xóa
+                            </button>
+                          </>
                         )}
-                        <button
-                          onClick={() => handleDelete(sub._id)}
-                          style={{
-                            padding: '8px 12px',
-                            background: '#FEF2F2',
-                            color: '#EF4444',
-                            border: '1px solid #FECACA',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem',
-                            fontWeight: 600,
-                            transition: 'all 0.2s'
-                          }}
-                        >
-                          Xóa
-                        </button>
                       </div>
                     </td>
                   </tr>
@@ -343,7 +359,7 @@ export default function SubscriptionsPage() {
                   <div style={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Email khách hàng</div>
                   <div style={{ color: '#1E293B', fontWeight: 500, fontSize: '0.9rem', wordBreak: 'break-word' }}>{sub.customerEmail}</div>
                 </div>
-                
+
                 <div style={{ marginBottom: '12px' }}>
                   <div style={{ color: '#64748B', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Dịch vụ</div>
                   <div style={{ color: '#1E293B', fontSize: '0.9rem' }}>{sub.serviceName}</div>
@@ -379,58 +395,57 @@ export default function SubscriptionsPage() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {sub.manualReminderSentAt ? (
-                    <div
-                      style={{
-                        width: '100%',
-                        padding: '10px 16px',
-                        background: '#ECFDF5',
-                        color: '#047857',
-                        border: '1px solid #A7F3D0',
-                        borderRadius: '8px',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        textAlign: 'center'
-                      }}
-                    >
-                      ✓ Đã gửi nhắc
-                    </div>
+                  {renewingId === sub._id ? (
+                    <>
+                      <input
+                        type="date"
+                        value={renewDate}
+                        onChange={(e) => setRenewDate(e.target.value)}
+                        style={{ width: '100%', padding: '10px 16px', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.9rem' }}
+                      />
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => handleRenew(sub._id)}
+                          style={{ flex: 1, padding: '10px 16px', background: '#047857', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+                        >
+                          ✓ Xác nhận
+                        </button>
+                        <button
+                          onClick={() => { setRenewingId(null); setRenewDate(''); }}
+                          style={{ flex: 1, padding: '10px 16px', background: '#F1F5F9', color: '#64748B', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+                        >
+                          ✕ Hủy
+                        </button>
+                      </div>
+                    </>
                   ) : (
-                    <button
-                      onClick={() => handleSendReminder(sub._id)}
-                      style={{
-                        width: '100%',
-                        padding: '10px 16px',
-                        background: '#F05A28',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      📩 Gửi nhắc
-                    </button>
+                    <>
+                      <button
+                        onClick={() => { setRenewingId(sub._id); setRenewDate(''); }}
+                        style={{ width: '100%', padding: '10px 16px', background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s' }}
+                      >
+                        🔄 Gia hạn
+                      </button>
+                      {sub.manualReminderSentAt ? (
+                        <div style={{ width: '100%', padding: '10px 16px', background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
+                          ✓ Đã gửi nhắc
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleSendReminder(sub._id)}
+                          style={{ width: '100%', padding: '10px 16px', background: '#F05A28', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s' }}
+                        >
+                          📩 Gửi nhắc
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(sub._id)}
+                        style={{ width: '100%', padding: '10px 16px', background: '#FEF2F2', color: '#EF4444', border: '1px solid #FECACA', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s' }}
+                      >
+                        Xóa
+                      </button>
+                    </>
                   )}
-                  <button
-                    onClick={() => handleDelete(sub._id)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 16px',
-                      background: '#FEF2F2',
-                      color: '#EF4444',
-                      border: '1px solid #FECACA',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    Xóa
-                  </button>
                 </div>
               </div>
             );

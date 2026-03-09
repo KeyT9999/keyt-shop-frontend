@@ -26,19 +26,19 @@ export default function FAQPage() {
       questions: [
         {
           q: 'Mất bao lâu để nhận được dịch vụ sau khi thanh toán?',
-          a: 'Thường trong vòng 24 giờ. Một số dịch vụ tự động sẽ được gửi ngay sau khi thanh toán thành công.'
+          a: 'Thường trong vòng 24 giờ. Một số dịch vụ tự động như <a href="/products/netflix" style="color:#0ea5e9;text-decoration:underline;">Netflix</a> hay <a href="/products/spotify" style="color:#0ea5e9;text-decoration:underline;">Spotify</a> sẽ được gửi ngay sau khi thanh toán thành công.'
         },
         {
           q: 'Dịch vụ có bảo hành không?',
-          a: 'Có, tất cả dịch vụ được bảo hành trong suốt thời gian sử dụng gói đã mua. Xem chi tiết tại trang "Bảo hành & Hoàn tiền".'
+          a: 'Có, tất cả dịch vụ được bảo hành trong suốt thời gian sử dụng gói đã mua. Xem chi tiết tại trang <a href="/warranty-refund" style="color:#0ea5e9;text-decoration:underline;">Bảo hành & Hoàn tiền</a>.'
         },
         {
           q: 'Tôi có thể gia hạn dịch vụ không?',
-          a: 'Có, bạn có thể đặt mua lại gói dịch vụ trước khi hết hạn để gia hạn liên tục.'
+          a: 'Có, bạn có thể đặt mua lại gói dịch vụ, ví dụ như <a href="/products/canva-pro" style="color:#0ea5e9;text-decoration:underline;">Canva Pro</a>, trước khi hết hạn để gia hạn liên tục.'
         },
         {
           q: 'Dịch vụ có thể sử dụng trên nhiều thiết bị không?',
-          a: 'Tùy thuộc vào từng dịch vụ. Vui lòng xem chi tiết trong mô tả sản phẩm hoặc liên hệ hỗ trợ để biết thêm.'
+          a: 'Tùy thuộc vào từng dịch vụ, chẳng hạn như <a href="/products/chatgpt-plus" style="color:#0ea5e9;text-decoration:underline;">ChatGPT Plus</a>. Vui lòng xem chi tiết trong mô tả sản phẩm hoặc liên hệ hỗ trợ để biết thêm.'
         }
       ]
     },
@@ -85,6 +85,21 @@ export default function FAQPage() {
       ]
     }
   ];
+
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.flatMap(category =>
+      category.questions.map(q => ({
+        '@type': 'Question',
+        name: q.q,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: q.a,
+        },
+      }))
+    ),
+  };
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '3rem 1.5rem', minHeight: '60vh' }}>
@@ -134,6 +149,12 @@ export default function FAQPage() {
           </a>
         </div>
       </div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqSchema),
+        }}
+      />
     </div>
   );
 }

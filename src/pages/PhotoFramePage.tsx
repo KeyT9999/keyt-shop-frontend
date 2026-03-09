@@ -522,6 +522,7 @@ export default function PhotoFramePage() {
       </header>
 
       <main className="app-main">
+        <h1 className="sr-only">Công Cụ Tạo Khung Ảnh EXIF Chuyên Nghiệp</h1>
         {photos.length === 0 ? (
           <div className="upload-wrapper">
             <Upload onUpload={handleUpload} />

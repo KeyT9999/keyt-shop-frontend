@@ -79,6 +79,24 @@ export default function StructuredData() {
             });
         }
 
+        if (location.pathname === '/privacy-policy') {
+            baseBreadcrumb.push({
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Chính sách bảo mật',
+                item: `${SITE_URL}/privacy-policy`,
+            });
+        }
+
+        if (location.pathname === '/terms-of-service') {
+            baseBreadcrumb.push({
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Điều khoản dịch vụ',
+                item: `${SITE_URL}/terms-of-service`,
+            });
+        }
+
         const breadcrumbSchema =
             baseBreadcrumb.length > 1
                 ? {

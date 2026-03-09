@@ -34,7 +34,7 @@ export default function PurchaseGuidePage() {
           </h2>
           <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
             <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#475569', lineHeight: '1.8' }}>
-              <li>Duyệt danh mục dịch vụ: Canva Pro, CapCut Pro, ChatGPT Plus, Microsoft 365/Office, streaming.</li>
+              <li>Duyệt danh mục dịch vụ: <a href="/products/canva-pro" style={{ color: '#0ea5e9', fontWeight: 600 }}>Canva Pro</a>, <a href="/products/capcut-pro" style={{ color: '#0ea5e9', fontWeight: 600 }}>CapCut Pro</a>, <a href="/products/chatgpt-plus" style={{ color: '#0ea5e9', fontWeight: 600 }}>ChatGPT Plus</a>, Microsoft 365/Office, streaming.</li>
               <li>Nhấn vào dịch vụ để xem chi tiết gói (cá nhân/team), thời hạn, chính sách bảo hành.</li>
               <li>Ưu tiên gói đúng nhu cầu: thiết kế (Canva), dựng video (CapCut), AI (ChatGPT), văn phòng (Office).</li>
             </ul>

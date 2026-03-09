@@ -32,10 +32,10 @@ export default function Seo({
     noIndex = false,
 }: SeoProps) {
     useEffect(() => {
-        const resolvedTitle = title || 'Tiệm Tạp Hóa KeyT | Dịch vụ Premium Chính Hãng - Canva Pro, CapCut Pro, ChatGPT Plus';
+        const resolvedTitle = title || 'Mua Tài Khoản Premium Chính Hãng, Giá Rẻ | Tiệm Tạp Hóa KeyT';
         const resolvedDesc =
             description ||
-            'Kho dịch vụ số đa dạng, uy tín, hỗ trợ tận tâm. Mua Canva Pro, CapCut Pro, ChatGPT Plus, Microsoft 365, Netflix, Spotify Premium và nhiều tài khoản premium chính hãng với giá tốt nhất. Bảo hành đầy đủ, hỗ trợ 24/7. Đăng ký ngay nhận mã giảm giá 10% cho đơn hàng đầu tiên!';
+            'Tiệm Tạp Hóa KeyT - Đại lý bán tài khoản Premium giá siêu rẻ: Canva Pro, CapCut Pro, ChatGPT, Netflix, Spotify. Bảo hành trọn đời 1 đổi 1, hỗ trợ 24/7 tức thì ✓';
         const resolvedImage = image || DEFAULT_IMAGE;
         const canonicalUrl = `${SITE_URL}${canonicalPath || window.location.pathname}`;
 

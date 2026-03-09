@@ -148,6 +148,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
         },
         { label: 'SUMMARIZER', href: '/summarizer', hasDropdown: false },
         { label: 'EVIDENCE', href: '/evidence', hasDropdown: false },
+        { label: 'PHOTO FRAME', href: '/photo-frame', hasDropdown: false },
         {
             label: 'TIP FREE',
             href: '#',

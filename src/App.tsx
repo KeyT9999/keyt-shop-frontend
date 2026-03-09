@@ -47,6 +47,7 @@ import StructuredData from './components/StructuredData';
 import VisitTracker from './components/VisitTracker';
 import AnnouncementModal from './components/AnnouncementModal';
 import { announcementService } from './services/announcementService';
+import PhotoFramePage from './pages/PhotoFramePage';
 
 export default function App() {
     const { user, token } = useAuthContext();
@@ -201,6 +202,7 @@ export default function App() {
                     <Route path="/faq" element={<FAQPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                     <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+                    <Route path="/photo-frame" element={<PhotoFramePage />} />
                     <Route path="/admin/dashboard" element={<AdminDashboard />} />
                     <Route path="/admin/chatgpt-accounts" element={<ChatGptAccountsPage />} />
                     <Route path="/admin/subscriptions" element={<SubscriptionsPage />} />

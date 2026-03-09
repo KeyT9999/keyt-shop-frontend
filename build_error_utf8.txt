@@ -1,0 +1,40 @@
+﻿
+> keyt-shop-frontend@0.0.0 build
+> tsc -b && vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 1928 modules transformed.
+node.exe : [31mΓ£ù[39m Build failed in 
+4.23s
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified:  
+   ([31mΓ£ù[39m Build failed in 4.23s:Str  
+  ing) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandE 
+   rror
+ 
+[31merror during build:
+[31mCould not resolve 
+"../utils/formatMetadata" from "src/component
+s/PhotoFrame/ui/FrameCanvas.tsx"[31m
+file: [36mD:/TiemTapHoaKeyT/keyt-shop-fronte
+nd/src/components/PhotoFrame/ui/FrameCanvas.t
+sx[31m
+    at getRollupError (file:///D:/TiemTapHoaK
+eyT/keyt-shop-frontend/node_modules/rollup/di
+st/es/shared/parseAst.js:401:41)
+    at error (file:///D:/TiemTapHoaKeyT/keyt-
+shop-frontend/node_modules/rollup/dist/es/sha
+red/parseAst.js:397:42)
+    at ModuleLoader.handleInvalidResolvedId (
+file:///D:/TiemTapHoaKeyT/keyt-shop-frontend/
+node_modules/rollup/dist/es/shared/node-entry
+.js:21710:24)
+    at file:///D:/TiemTapHoaKeyT/keyt-shop-fr
+ontend/node_modules/rollup/dist/es/shared/nod
+e-entry.js:21670:26[39m

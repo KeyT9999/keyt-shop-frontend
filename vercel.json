@@ -6,6 +6,10 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "https://api.taphoakeyt.com/api/sitemap"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

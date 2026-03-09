@@ -14,6 +14,9 @@ import { reviewService, type Review, type ReviewStats } from '../services/review
 import { useAuthContext } from '../context/useAuthContext';
 import './ProductDetail.css';
 import API_BASE_URL from '../config/api';
+import Seo from '../components/Seo';
+
+const SITE_URL = 'https://www.taphoakeyt.com';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -269,7 +272,7 @@ export default function ProductDetail() {
 
             <img
               src={displayImage}
-              alt={product.name}
+              alt={`Tài khoản ${currentName} chính hãng giá rẻ tại Tiệm Tạp Hóa KeyT`}
               className="relative w-64 md:w-96 object-contain drop-shadow-[0_20px_40px_rgba(240,90,40,0.15)] transform hover:-translate-y-2 transition-transform duration-500 z-10"
             />
 
@@ -370,6 +373,51 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        {/* Dynamic SEO Tags */}
+        <Seo
+          title={`Mua ${currentName} Chính Hãng Giá Rẻ – Giao Nhanh, Bảo Hành Uy Tín | Tiệm Tạp Hóa KeyT`}
+          description={
+            product.description?.substring(0, 160) ||
+            `Mua tài khoản Premium ${currentName} chính hãng tại Tiệm Tạp Hóa KeyT – giá rẻ, kích hoạt nhanh, bảo hành rõ ràng, hỗ trợ Zalo 24/7.`
+          }
+          image={displayImage}
+          type="product"
+          canonicalPath={id ? `/products/${id}` : undefined}
+        />
+
+        {/* Product Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org/",
+              "@type": "Product",
+              name: currentName,
+              image: displayImage,
+              description: product.description?.substring(0, 200) || `Tài khoản Premium ${currentName} chính hãng`,
+              brand: {
+                "@type": "Brand",
+                name: "Tiệm Tạp Hóa KeyT"
+              },
+              offers: {
+                "@type": "Offer",
+                url: id ? `${SITE_URL}/products/${id}` : window.location.href,
+                priceCurrency: product.currency || 'VND',
+                price: currentPrice,
+                availability: isOutOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+                itemCondition: "https://schema.org/NewCondition"
+              },
+              ...(reviewStats && reviewStats.totalReviews > 0 ? {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: reviewStats.averageRating.toFixed(1),
+                  reviewCount: reviewStats.totalReviews
+                }
+              } : {})
+            })
+          }}
+        />
 
         {/* CONTENT & DETAILS SECTION */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8">

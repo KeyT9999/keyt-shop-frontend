@@ -119,8 +119,11 @@ class ProfileService {
   /**
    * Request password reset OTP
    */
-  async forgotPassword(email: string): Promise<{ message: string }> {
-    const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
+  async forgotPassword(email: string, recaptchaToken: string): Promise<{ message: string }> {
+    const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
+      email,
+      recaptchaToken
+    });
     return response.data;
   }
 
@@ -140,8 +143,11 @@ class ProfileService {
     return response.data;
   }
 
-  async resendVerification(email: string): Promise<{ message: string }> {
-    const response = await axios.post(`${API_BASE_URL}/auth/resend-verification`, { email });
+  async resendVerification(email: string, recaptchaToken: string): Promise<{ message: string }> {
+    const response = await axios.post(`${API_BASE_URL}/auth/resend-verification`, {
+      email,
+      recaptchaToken
+    });
     return response.data;
   }
 

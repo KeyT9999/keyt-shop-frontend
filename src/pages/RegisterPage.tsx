@@ -1,9 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
+import RecaptchaNotice from '../components/RecaptchaNotice';
 import { useAuthContext } from '../context/useAuthContext';
+import { executeRecaptcha } from '../utils/recaptcha';
 
-// Ripple effect hook
 const useRipple = () => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -12,8 +13,8 @@ const useRipple = () => {
     const circle = document.createElement('span');
     const diameter = Math.max(button.clientWidth, button.clientHeight);
     const radius = diameter / 2;
-
     const rect = button.getBoundingClientRect();
+
     circle.style.width = circle.style.height = `${diameter}px`;
     circle.style.left = `${event.clientX - rect.left - radius}px`;
     circle.style.top = `${event.clientY - rect.top - radius}px`;
@@ -36,9 +37,11 @@ export default function RegisterPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [cardVisible, setCardVisible] = useState(false);
   const [successEmail, setSuccessEmail] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const submitRipple = useRipple();
   const backRipple = useRipple();
+  const isBusy = loading || submitting;
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setCardVisible(true));
@@ -47,16 +50,25 @@ export default function RegisterPage() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     if (!form.username || !form.email || !form.password) {
       setFormError('Điền đầy đủ thông tin');
       return;
     }
+
     setFormError(null);
+    setSubmitting(true);
+
     try {
-      await register(form);
+      const recaptchaToken = await executeRecaptcha('register');
+      await register({ ...form, recaptchaToken });
       setSuccessEmail(form.email);
-    } catch {
-      // context đã set error
+    } catch (err: any) {
+      if (!err?.response) {
+        setFormError(err?.message || 'Không thể xác minh reCAPTCHA. Vui lòng thử lại.');
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -67,12 +79,18 @@ export default function RegisterPage() {
     }
 
     setFormError(null);
+    setSubmitting(true);
+
     try {
-      await loginWithGoogle(response.credential);
-      // Google registration/login thành công, chuyển về trang chủ
+      const recaptchaToken = await executeRecaptcha('google_login');
+      await loginWithGoogle(response.credential, recaptchaToken);
       navigate('/');
-    } catch {
-      // Axios error already handled inside AuthContext
+    } catch (err: any) {
+      if (!err?.response) {
+        setFormError(err?.message || 'Không thể xác minh reCAPTCHA. Vui lòng thử lại.');
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -92,16 +110,16 @@ export default function RegisterPage() {
         <div className="auth-form-wrapper auth-form-wrapper--open">
           {successEmail ? (
             <div className="auth-success-box">
-              <h3>🎉 Đăng ký thành công!</h3>
+              <h3>Đăng ký thành công!</h3>
               <p>
-                Vui lòng kiểm tra hộp thư <strong>{successEmail}</strong> và nhấn vào link xác minh để kích
-                hoạt tài khoản. Liên kết có hiệu lực trong 24 giờ.
+                Vui lòng kiểm tra hộp thư <strong>{successEmail}</strong> và nhấn vào link xác minh để kích hoạt tài
+                khoản. Liên kết có hiệu lực trong 24 giờ.
               </p>
               <button
                 type="button"
                 className="auth-submit"
-                onClick={(e) => {
-                  backRipple.createRipple(e);
+                onClick={(event) => {
+                  backRipple.createRipple(event);
                   setTimeout(() => navigate('/login'), 200);
                 }}
                 ref={backRipple.buttonRef}
@@ -139,14 +157,15 @@ export default function RegisterPage() {
               </label>
               {formError && <p className="auth-error">{formError}</p>}
               {error && <p className="auth-error">{error}</p>}
+              <RecaptchaNotice className="rounded-xl bg-slate-50 border border-slate-200 p-3" />
               <button
                 type="submit"
                 className="auth-submit"
-                disabled={loading}
+                disabled={isBusy}
                 ref={submitRipple.buttonRef}
                 onClick={submitRipple.createRipple}
               >
-                {loading ? 'Đang xử lý...' : 'Đăng ký'}
+                {isBusy ? 'Đang xử lý...' : 'Đăng ký'}
               </button>
               <div className="divider">
                 <span>hoặc</span>
@@ -163,4 +182,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-

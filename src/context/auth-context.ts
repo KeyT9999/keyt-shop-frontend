@@ -12,9 +12,9 @@ export interface AuthState {
 }
 
 export interface AuthContextValue extends AuthState {
-  login: (payload: { username: string; password: string }) => Promise<void>;
-  register: (payload: { username: string; email: string; password: string }) => Promise<void>;
-  loginWithGoogle: (credential: string) => Promise<void>;
+  login: (payload: { username: string; password: string; recaptchaToken: string }) => Promise<void>;
+  register: (payload: { username: string; email: string; password: string; recaptchaToken: string }) => Promise<void>;
+  loginWithGoogle: (credential: string, recaptchaToken: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
   error: string | null;

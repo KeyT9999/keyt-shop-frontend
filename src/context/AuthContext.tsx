@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [state]);
 
-  const login = async (payload: { username: string; password: string }) => {
+  const login = async (payload: { username: string; password: string; recaptchaToken: string }) => {
     setLoading(true);
     setError(null);
     setErrorCode(null);
@@ -121,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (payload: { username: string; email: string; password: string }) => {
+  const register = async (payload: { username: string; email: string; password: string; recaptchaToken: string }) => {
     setLoading(true);
     setError(null);
     setErrorCode(null);
@@ -138,12 +138,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loginWithGoogle = async (credential: string) => {
+  const loginWithGoogle = async (credential: string, recaptchaToken: string) => {
     setLoading(true);
     setError(null);
     setErrorCode(null);
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/google`, { credential });
+      const response = await axios.post(`${API_BASE_URL}/auth/google`, {
+        credential,
+        recaptchaToken
+      });
       setState({ user: response.data.user, token: response.data.token });
     } catch (err: unknown) {
       const message = (err as any)?.response?.data?.message || 'Không thể đăng nhập bằng Google';

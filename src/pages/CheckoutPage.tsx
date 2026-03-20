@@ -7,6 +7,7 @@ import { formatPrice } from '../utils/formatPrice';
 import { profileService } from '../services/profileService';
 import type { Product } from '../types/product';
 import API_BASE_URL from '../config/api';
+import { getStoredAffiliateReferral } from '../utils/affiliateReferral';
 
 export default function CheckoutPage() {
   const { cart, totalAmount, clearCart, updateCartItem } = useCartContext();
@@ -137,6 +138,7 @@ export default function CheckoutPage() {
     }
 
     setStatus('submitting');
+    const referralCode = getStoredAffiliateReferral();
 
     const payload = {
       customer,
@@ -162,7 +164,8 @@ export default function CheckoutPage() {
         return itemData;
       }),
       totalAmount,
-      note: note.trim() || undefined
+      note: note.trim() || undefined,
+      referralCode: referralCode || undefined
     };
 
     try {

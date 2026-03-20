@@ -258,6 +258,11 @@ export default function ProductsPage() {
                               Netflix
                             </span>
                           )}
+                          {product.affiliateEnabled && (Number(product.affiliateCommissionPercent) || 0) > 0 && (
+                            <span className="status-badge" style={{ background: '#DCFCE7', color: '#166534' }}>
+                              HH {product.affiliateCommissionPercent}%
+                            </span>
+                          )}
                         </div>
                         <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{product.billingCycle}</div>
                       </td>
@@ -389,6 +394,11 @@ export default function ProductsPage() {
                           {product.isTiemBanhNetflix && (
                             <span className="status-badge" style={{ background: '#FEF3C7', color: '#B45309', fontSize: '0.75rem' }}>
                               Netflix
+                            </span>
+                          )}
+                          {product.affiliateEnabled && (Number(product.affiliateCommissionPercent) || 0) > 0 && (
+                            <span className="status-badge" style={{ background: '#DCFCE7', color: '#166534', fontSize: '0.75rem' }}>
+                              HH {product.affiliateCommissionPercent}%
                             </span>
                           )}
                         </div>

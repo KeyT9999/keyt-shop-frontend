@@ -10,6 +10,7 @@ import Seo from './components/Seo';
 import StructuredData from './components/StructuredData';
 import VisitTracker from './components/VisitTracker';
 import AnnouncementModal from './components/AnnouncementModal';
+import AffiliateReferralTracker from './components/affiliate/AffiliateReferralTracker';
 import { announcementService } from './services/announcementService';
 
 // Lazy loading pages
@@ -40,6 +41,7 @@ const ProductsPage = lazy(() => import('./pages/admin/ProductsPage'));
 const OrdersPage = lazy(() => import('./pages/admin/OrdersPage'));
 const AdminOrderDetailPage = lazy(() => import('./pages/admin/AdminOrderDetailPage'));
 const NetflixReplacementTicketsPage = lazy(() => import('./pages/admin/NetflixReplacementTicketsPage'));
+const AdminAffiliatePage = lazy(() => import('./pages/admin/AdminAffiliatePage'));
 const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'));
 const UserOrdersPage = lazy(() => import('./pages/UserOrdersPage'));
 const InvoiceView = lazy(() => import('./components/order/InvoiceView'));
@@ -206,6 +208,7 @@ export default function App() {
     return (
         <div className="app">
             <VisitTracker />
+            <AffiliateReferralTracker />
             <Seo {...seoConfig} />
             <StructuredData />
             <FloatingContact />
@@ -260,6 +263,7 @@ export default function App() {
                         <Route path="/admin/products" element={<ProductsPage />} />
                         <Route path="/admin/orders" element={<OrdersPage />} />
                         <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
+                        <Route path="/admin/affiliate" element={<AdminAffiliatePage />} />
                         <Route path="/admin/netflix-replacements" element={<NetflixReplacementTicketsPage />} />
                         <Route path="/admin/user-login-history/:userId" element={<UserLoginHistoryPage />} />
                         <Route path="/admin/otp-requests" element={<OtpRequestsPage />} />

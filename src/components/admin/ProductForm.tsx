@@ -36,6 +36,7 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
     features: product?.features?.join('\n') || '',
     completionInstructions: product?.completionInstructions || '',
     isPreloadedAccount: product?.isPreloadedAccount || false,
+    isTiemBanhNetflix: product?.isTiemBanhNetflix || false,
     sortOrder: product?.sortOrder ?? 999
   });
   const [options, setOptions] = useState<ProductOption[]>(product?.options || []);
@@ -72,6 +73,7 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
       features: product?.features?.join('\n') || '',
       completionInstructions: product?.completionInstructions || '',
       isPreloadedAccount: product?.isPreloadedAccount || false,
+      isTiemBanhNetflix: product?.isTiemBanhNetflix || false,
       sortOrder: product?.sortOrder ?? 999
     });
     
@@ -250,7 +252,11 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
           : [],
         completionInstructions: formData.completionInstructions || undefined,
         isPreloadedAccount: formData.isPreloadedAccount || false,
-        preloadedAccounts: preloadedAccountsData.length > 0 ? preloadedAccountsData : undefined,
+        isTiemBanhNetflix: formData.isTiemBanhNetflix || false,
+        preloadedAccounts:
+          formData.isPreloadedAccount && preloadedAccountsData.length > 0
+            ? preloadedAccountsData
+            : undefined,
         sortOrder: formData.sortOrder !== undefined ? Number(formData.sortOrder) : 999
       };
 
@@ -1110,15 +1116,49 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
           </div>
         </div>
 
+        <div style={{ marginBottom: '24px', padding: '20px', background: '#FFF7ED', borderRadius: '12px', border: '1px solid #FED7AA' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', color: '#9A3412', fontWeight: 700, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={formData.isTiemBanhNetflix || false}
+              onChange={(e) => {
+                const isChecked = e.target.checked;
+                setFormData((prev) => ({
+                  ...prev,
+                  isTiemBanhNetflix: isChecked,
+                  isPreloadedAccount: isChecked ? false : prev.isPreloadedAccount
+                }));
+                if (isChecked) {
+                  setAccountsTextArea('');
+                }
+              }}
+              style={{ width: '16px', height: '16px', marginTop: '2px', accentColor: '#F05A28' }}
+            />
+            <span>
+              ðŸª Sản phẩm Netflix Tiệm Bánh
+              <div style={{ marginTop: '6px', fontWeight: 500, fontSize: '0.9rem', color: '#7C2D12', lineHeight: 1.5 }}>
+                Bật cờ này để đơn hàng sau thanh toán chạy luồng cấp cookie và link đăng nhập tự động qua API Tiệm Bánh.
+              </div>
+            </span>
+          </label>
+
+          {formData.isTiemBanhNetflix && (
+            <div style={{ marginTop: '12px', fontSize: '0.9rem', color: '#9A3412', lineHeight: 1.6 }}>
+              Sản phẩm Netflix sẽ dùng luồng riêng: cấp cookie sau khi PayOS báo đã thanh toán, hỗ trợ làm mới link và đổi cookie theo ticket.
+            </div>
+          )}
+        </div>
+
         {/* Preloaded Accounts Section */}
         <div style={{ marginBottom: '24px', padding: '24px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: '#1E293B', fontWeight: 600, fontSize: '1rem' }}>
             <input
               type="checkbox"
               checked={formData.isPreloadedAccount || false}
+              disabled={formData.isTiemBanhNetflix || false}
               onChange={(e) => {
                 const isChecked = e.target.checked;
-                setFormData({ ...formData, isPreloadedAccount: isChecked });
+                setFormData({ ...formData, isPreloadedAccount: isChecked, isTiemBanhNetflix: isChecked ? false : formData.isTiemBanhNetflix });
                 if (!isChecked) {
                   setAccountsTextArea('');
                   // Nếu tắt checkbox, giữ nguyên stock (không tự động đồng bộ nữa)
@@ -1133,6 +1173,12 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
             />
             <span>🔑 Đây là sản phẩm Account có sẵn (tự động gửi khi hoàn thành đơn hàng)</span>
           </label>
+
+          {formData.isTiemBanhNetflix && (
+            <div style={{ marginBottom: '12px', fontSize: '0.85rem', color: '#64748B' }}>
+              Tùy chọn account có sẵn được tắt vì sản phẩm này đang dùng luồng Netflix Tiệm Bánh.
+            </div>
+          )}
 
           {formData.isPreloadedAccount && (
             <>

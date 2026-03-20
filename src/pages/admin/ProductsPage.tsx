@@ -251,7 +251,14 @@ export default function ProductsPage() {
                         </div>
                       </td>
                       <td>
-                        <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.95rem' }}>{product.name}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.95rem' }}>{product.name}</div>
+                          {product.isTiemBanhNetflix && (
+                            <span className="status-badge" style={{ background: '#FEF3C7', color: '#B45309' }}>
+                              Netflix
+                            </span>
+                          )}
+                        </div>
                         <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{product.billingCycle}</div>
                       </td>
                       <td>
@@ -375,8 +382,15 @@ export default function ProductsPage() {
                         )}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '1rem', marginBottom: '4px', wordBreak: 'break-word' }}>
-                          {product.name}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                          <div style={{ fontWeight: 700, color: '#1E293B', fontSize: '1rem', wordBreak: 'break-word' }}>
+                            {product.name}
+                          </div>
+                          {product.isTiemBanhNetflix && (
+                            <span className="status-badge" style={{ background: '#FEF3C7', color: '#B45309', fontSize: '0.75rem' }}>
+                              Netflix
+                            </span>
+                          )}
                         </div>
                         <div style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '8px' }}>
                           {product.billingCycle}

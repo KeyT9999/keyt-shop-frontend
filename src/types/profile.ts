@@ -50,6 +50,34 @@ export interface ChangePasswordData {
   newPassword: string;
 }
 
+export interface TiemBanhNetflixSlot {
+  logId?: string;
+  cookie?: string;
+  cookieNumber?: number;
+  pcLoginLink?: string;
+  mobileLoginLink?: string;
+  tokenExpires?: number;
+  timeRemaining?: number;
+  provisionStatus?: 'pending' | 'ok' | 'failed';
+  provisionedAt?: string;
+  lastRegenAt?: string;
+  regenFallbackCount?: number;
+}
+
+export interface NetflixReplacementTicketSummary {
+  _id: string;
+  orderId: string;
+  itemIndex: number;
+  slotIndex: number;
+  status: 'pending' | 'approved' | 'rejected';
+  consumed: boolean;
+  decisionReason?: string;
+  approvedAt?: string;
+  rejectedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Order {
   _id: string;
   orderCode?: number; // 6-digit order code for customer reference
@@ -70,6 +98,7 @@ export interface Order {
       value: string;
     }>;
     deliveredAccount?: string; // Format: "username:password" for preloaded accounts
+    tiemBanhSlots?: TiemBanhNetflixSlot[];
     feedback?: {
       rating: number;
       comment: string;

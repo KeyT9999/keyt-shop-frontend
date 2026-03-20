@@ -71,6 +71,71 @@ export interface OrdersListResponse {
   totalPages: number;
 }
 
+export interface AdminNetflixReplacementTicket {
+  _id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  consumed: boolean;
+  evidence: string;
+  decisionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+  approvedAt?: string | null;
+  rejectedAt?: string | null;
+  itemIndex: number;
+  slotIndex: number;
+  requester: {
+    _id: string;
+    username: string;
+    email: string;
+  } | null;
+  handledBy: {
+    _id: string;
+    username: string;
+    email: string;
+  } | null;
+  order: {
+    _id: string;
+    orderCode?: number;
+    orderStatus?: Order['orderStatus'];
+    paymentStatus?: Order['paymentStatus'];
+    totalAmount?: number;
+    createdAt?: string;
+    customer?: Order['customer'];
+  };
+  item: {
+    index: number;
+    name: string;
+    quantity: number;
+    price: number;
+    currency: string;
+  } | null;
+  slot: {
+    index: number;
+    logId?: string;
+    cookieNumber?: number;
+    provisionStatus?: 'pending' | 'ok' | 'failed';
+    tokenExpires?: number;
+    provisionedAt?: string | null;
+    lastRegenAt?: string | null;
+    regenFallbackCount?: number;
+    pcLoginLink?: string;
+    mobileLoginLink?: string;
+  } | null;
+}
+
+export interface AdminNetflixReplacementTicketsResponse {
+  tickets: AdminNetflixReplacementTicket[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  counts: {
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
+}
+
 export interface OrderFilters {
   orderStatus?: 'pending' | 'confirmed' | 'processing' | 'completed' | 'cancelled';
   paymentStatus?: 'pending' | 'paid' | 'failed';

@@ -6,6 +6,7 @@ import { formatPrice } from '../utils/formatPrice';
 import { profileService } from '../services/profileService';
 import { payosService } from '../services/payosService';
 import OrderFeedbackModal from '../components/order/OrderFeedbackModal';
+import NetflixOrderItemSlots from '../components/order/NetflixOrderItemSlots';
 import type { Order } from '../types/profile';
 import API_BASE_URL from '../config/api';
 
@@ -457,7 +458,7 @@ export default function OrderDetailPage() {
                     borderBottom: index < order.items.length - 1 ? '1px solid #f3f4f6' : 'none'
                   }}
                 >
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>
                       {item.name}
                     </div>
@@ -470,6 +471,17 @@ export default function OrderDetailPage() {
                   </div>
                 </div>
               ))}
+              {order.items.map((item, index) =>
+                item.tiemBanhSlots?.length ? (
+                  <NetflixOrderItemSlots
+                    key={`netflix-${index}`}
+                    order={order}
+                    itemIndex={index}
+                    item={item}
+                    onRefresh={loadOrder}
+                  />
+                ) : null
+              )}
             </div>
             <div
               style={{

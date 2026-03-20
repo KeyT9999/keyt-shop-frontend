@@ -44,6 +44,7 @@ export interface Product {
   requiredFields?: ProductRequiredField[];
   completionInstructions?: string;
   isPreloadedAccount?: boolean;
+  isTiemBanhNetflix?: boolean;
   preloadedAccounts?: PreloadedAccount[];
   sortOrder?: number; // Thứ tự hiển thị (số càng nhỏ càng hiển thị trước)
 }

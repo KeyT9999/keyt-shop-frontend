@@ -12,22 +12,33 @@ const base = `${API_BASE_URL}/affiliate`;
 const adminBase = `${API_BASE_URL}/admin/affiliate`;
 
 export const affiliateService = {
-  async getMyDashboard(): Promise<AffiliateDashboardResponse> {
-    const { data } = await axios.get<AffiliateDashboardResponse>(`${base}/me`);
+  async getMyDashboard(token: string): Promise<AffiliateDashboardResponse> {
+    const { data } = await axios.get<AffiliateDashboardResponse>(`${base}/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return data;
   },
 
-  async updateBankInfo(payload: {
-    bankName: string;
-    bankAccountNumber: string;
-    bankAccountHolder: string;
-  }): Promise<AffiliateDashboardResponse['profile']> {
-    const { data } = await axios.put(`${base}/me/bank`, payload);
+  async updateBankInfo(
+    payload: {
+      bankName: string;
+      bankAccountNumber: string;
+      bankAccountHolder: string;
+    },
+    token: string
+  ): Promise<AffiliateDashboardResponse['profile']> {
+    const { data } = await axios.put(`${base}/me/bank`, payload, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return data.profile;
   },
 
-  async requestWithdrawal(amount: number): Promise<{ message: string; withdrawal: AffiliateWithdrawal }> {
-    const { data } = await axios.post(`${base}/withdrawals`, { amount });
+  async requestWithdrawal(amount: number, token: string): Promise<{ message: string; withdrawal: AffiliateWithdrawal }> {
+    const { data } = await axios.post(
+      `${base}/withdrawals`,
+      { amount },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
     return data;
   },
 

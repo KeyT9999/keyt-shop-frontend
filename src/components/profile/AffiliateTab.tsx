@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { affiliateService } from '../../services/affiliateService';
 import type { AffiliateDashboardResponse } from '../../types/affiliate';
 import { formatPrice } from '../../utils/formatPrice';
+import { useAuthContext } from '../../context/useAuthContext';
 
 function formatDate(value?: string | null) {
   if (!value) return '--';
@@ -39,6 +40,7 @@ function getWithdrawalStatusMeta(status: 'pending' | 'approved' | 'paid' | 'reje
 }
 
 export default function AffiliateTab() {
+  const { token } = useAuthContext();
   const [dashboard, setDashboard] = useState<AffiliateDashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export default function AffiliateTab() {
     try {
       setError(null);
       setLoading(true);
-      const data = await affiliateService.getMyDashboard();
+      const data = await affiliateService.getMyDashboard(token!);
       setDashboard(data);
       setBankForm({
         bankName: data.profile.bankName || '',
@@ -96,7 +98,7 @@ export default function AffiliateTab() {
         bankName: bankForm.bankName.trim(),
         bankAccountNumber: bankForm.bankAccountNumber.trim(),
         bankAccountHolder: bankForm.bankAccountHolder.trim()
-      });
+      }, token!);
       setDashboard((prev) =>
         prev
           ? {
@@ -139,7 +141,7 @@ export default function AffiliateTab() {
 
     try {
       setWithdrawLoading(true);
-      await affiliateService.requestWithdrawal(amount);
+      await affiliateService.requestWithdrawal(amount, token!);
       setWithdrawAmount('');
       setFlashNotice('Đã gửi yêu cầu rút tiền cho admin.', 'success');
       await loadDashboard();

@@ -37,6 +37,8 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
     completionInstructions: product?.completionInstructions || '',
     isPreloadedAccount: product?.isPreloadedAccount || false,
     isTiemBanhNetflix: product?.isTiemBanhNetflix || false,
+    affiliateEnabled: product?.affiliateEnabled || false,
+    affiliateCommissionPercent: product?.affiliateCommissionPercent || 0,
     sortOrder: product?.sortOrder ?? 999
   });
   const [options, setOptions] = useState<ProductOption[]>(product?.options || []);
@@ -74,6 +76,8 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
       completionInstructions: product?.completionInstructions || '',
       isPreloadedAccount: product?.isPreloadedAccount || false,
       isTiemBanhNetflix: product?.isTiemBanhNetflix || false,
+      affiliateEnabled: product?.affiliateEnabled || false,
+      affiliateCommissionPercent: product?.affiliateCommissionPercent || 0,
       sortOrder: product?.sortOrder ?? 999
     });
     
@@ -253,6 +257,10 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
         completionInstructions: formData.completionInstructions || undefined,
         isPreloadedAccount: formData.isPreloadedAccount || false,
         isTiemBanhNetflix: formData.isTiemBanhNetflix || false,
+        affiliateEnabled: formData.affiliateEnabled || false,
+        affiliateCommissionPercent: formData.affiliateEnabled
+          ? Number(formData.affiliateCommissionPercent || 0)
+          : 0,
         preloadedAccounts:
           formData.isPreloadedAccount && preloadedAccountsData.length > 0
             ? preloadedAccountsData
@@ -1147,6 +1155,73 @@ export default function ProductForm({ product, categories = [], onClose }: Produ
               Sản phẩm Netflix sẽ dùng luồng riêng: cấp cookie sau khi PayOS báo đã thanh toán, hỗ trợ làm mới link và đổi cookie theo ticket.
             </div>
           )}
+        </div>
+
+        <div style={{ marginBottom: '24px', padding: '24px', background: '#F0FDF4', borderRadius: '12px', border: '1px solid #BBF7D0' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', color: '#166534', fontWeight: 700, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={formData.affiliateEnabled || false}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  affiliateEnabled: e.target.checked,
+                  affiliateCommissionPercent: e.target.checked ? prev.affiliateCommissionPercent || 0 : 0
+                }))
+              }
+              style={{ width: '16px', height: '16px', marginTop: '2px', accentColor: '#16A34A' }}
+            />
+            <span>
+              Bật affiliate / hoa hồng cho sản phẩm này
+              <div style={{ marginTop: '6px', fontWeight: 500, fontSize: '0.9rem', color: '#166534', lineHeight: 1.5 }}>
+                Khi khách chia sẻ link riêng và có người mua qua link đó, hệ thống sẽ tự tính hoa hồng dựa trên phần trăm bạn đặt bên dưới.
+              </div>
+            </span>
+          </label>
+
+          <div style={{ marginTop: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', color: '#166534', fontWeight: 600, fontSize: '0.95rem' }}>
+                Phần trăm hoa hồng (%)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                disabled={!formData.affiliateEnabled}
+                value={formData.affiliateEnabled ? formData.affiliateCommissionPercent : 0}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    affiliateCommissionPercent: Number(e.target.value)
+                  }))
+                }
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #BBF7D0',
+                  borderRadius: '8px',
+                  fontSize: '0.95rem',
+                  outline: 'none',
+                  background: formData.affiliateEnabled ? '#ffffff' : '#F8FAFC',
+                  color: '#1E293B'
+                }}
+              />
+            </div>
+
+            <div style={{ alignSelf: 'end', color: '#166534', fontSize: '0.9rem', lineHeight: 1.6 }}>
+              {formData.affiliateEnabled ? (
+                <>
+                  Mỗi đơn hợp lệ sẽ được tính hoa hồng theo số tiền thực trả của line item.
+                  <br />
+                  Gợi ý: 5% - 30% là mức dễ vận hành cho cộng tác viên.
+                </>
+              ) : (
+                <>Tắt affiliate thì sản phẩm này sẽ không hiện box chia sẻ và không phát sinh hoa hồng.</>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Preloaded Accounts Section */}

@@ -536,6 +536,9 @@ export default function AdminDashboard() {
             <button className="btn-admin btn-admin-outline" onClick={() => setActiveTab('products')} style={{ width: '100%' }}>
               <Package size={16} /> Manage Products
             </button>
+            <button className="btn-admin btn-admin-outline" onClick={() => navigate('/admin/affiliate')} style={{ width: '100%' }}>
+              <TrendingUp size={16} /> Affiliate & Rut tien
+            </button>
           </div>
         </div>
 
@@ -645,6 +648,18 @@ export default function AdminDashboard() {
           >
             <RefreshCw size={20} />
             <span>Đổi cookie Netflix</span>
+          </button>
+
+          <button
+            className="admin-nav-item"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate('/admin/affiliate');
+            }}
+          >
+            <TrendingUp size={20} />
+            <span>Affiliate & Rut tien</span>
           </button>
 
           <button

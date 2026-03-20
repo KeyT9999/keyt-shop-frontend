@@ -6,10 +6,11 @@ import PersonalInfoTab from '../components/profile/PersonalInfoTab';
 import SecurityTab from '../components/profile/SecurityTab';
 import OrdersTab from '../components/profile/OrdersTab';
 import ActivityTab from '../components/profile/ActivityTab';
+import AffiliateTab from '../components/profile/AffiliateTab';
 
 import './ProfilePage.css';
 
-type TabType = 'personal' | 'security' | 'orders' | 'activity';
+type TabType = 'personal' | 'security' | 'orders' | 'activity' | 'affiliate';
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>('personal');
@@ -77,7 +78,8 @@ export default function ProfilePage() {
     { id: 'personal' as TabType, label: 'Thông tin cá nhân' },
     { id: 'security' as TabType, label: 'Bảo mật & Đăng nhập' },
     { id: 'orders' as TabType, label: 'Đơn hàng của tôi' },
-    { id: 'activity' as TabType, label: 'Hoạt động' }
+    { id: 'activity' as TabType, label: 'Hoạt động' },
+    { id: 'affiliate' as TabType, label: 'Hoa hồng' }
   ];
 
   const displayName = profile.displayName || profile.username;
@@ -148,6 +150,9 @@ export default function ProfilePage() {
           )}
           {activeTab === 'activity' && (
             <ActivityTab />
+          )}
+          {activeTab === 'affiliate' && (
+            <AffiliateTab />
           )}
         </div>
 

@@ -45,6 +45,8 @@ export interface Product {
   completionInstructions?: string;
   isPreloadedAccount?: boolean;
   isTiemBanhNetflix?: boolean;
+  affiliateEnabled?: boolean;
+  affiliateCommissionPercent?: number;
   preloadedAccounts?: PreloadedAccount[];
   sortOrder?: number; // Thứ tự hiển thị (số càng nhỏ càng hiển thị trước)
 }

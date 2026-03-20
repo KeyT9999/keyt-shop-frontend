@@ -16,6 +16,7 @@ import './ProductDetail.css';
 import API_BASE_URL from '../config/api';
 import Seo from '../components/Seo';
 import NetflixLoginGuide from '../components/netflix/NetflixLoginGuide';
+import AffiliateShareBox from '../components/affiliate/AffiliateShareBox';
 
 const SITE_URL = 'https://www.taphoakeyt.com';
 const NETFLIX_PRODUCT_ID = import.meta.env.VITE_NETFLIX_PRODUCT_ID as string | undefined;
@@ -376,6 +377,8 @@ export default function ProductDetail() {
                 <i className="fas fa-arrow-right text-sm opacity-90"></i>
               </button>
             </div>
+
+            <AffiliateShareBox product={product} currentPrice={currentPrice} />
           </div>
         </div>
 

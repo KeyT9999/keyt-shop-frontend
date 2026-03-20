@@ -11,7 +11,7 @@ interface AffiliateShareBoxProps {
 }
 
 export default function AffiliateShareBox({ product, currentPrice }: AffiliateShareBoxProps) {
-  const { user } = useAuthContext();
+  const { user, token } = useAuthContext();
   const [referralCode, setReferralCode] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export default function AffiliateShareBox({ product, currentPrice }: AffiliateSh
       try {
         setLoading(true);
         setError(null);
-        const data = await affiliateService.getMyDashboard();
+        const data = await affiliateService.getMyDashboard(token!);
         if (!cancelled) {
           setReferralCode(data.profile.referralCode);
         }

@@ -31,6 +31,18 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     const [productsByCategory, setProductsByCategory] = useState<Record<string, Product[]>>({});
     const cartIconRef = useRef<HTMLAnchorElement>(null);
 
+    // Handle click outside to close dropdown
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest('.nav-item')) {
+                setActiveDropdown(null);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
+
     const toggleLanguage = () => {
         const newLang = i18n.language === 'vi' ? 'en' : 'vi';
         i18n.changeLanguage(newLang);
@@ -146,8 +158,15 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             hasDropdown: true,
             megaMenu: shopMegaMenu
         },
-        { label: 'SUMMARIZER', href: '/summarizer', hasDropdown: false },
-        { label: 'EVIDENCE', href: '/evidence', hasDropdown: false },
+        {
+            label: 'STUDY',
+            href: '#',
+            hasDropdown: true,
+            simpleDropdown: [
+                { label: 'SUMMARIZER', href: '/summarizer', external: false },
+                { label: 'EVIDENCE', href: '/evidence', external: false }
+            ]
+        },
         { label: 'PHOTO FRAME', href: '/photo-frame', hasDropdown: false },
         {
             label: 'TIP FREE',
@@ -201,12 +220,28 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                 <li
                                     key={item.label}
                                     className="nav-item"
-                                    onMouseEnter={() => item.hasDropdown && setActiveDropdown(item.label)}
-                                    onMouseLeave={() => setActiveDropdown(null)}
                                 >
                                     <Link
                                         to={item.href}
                                         className={`nav-link ${location.pathname === item.href ? 'active' : ''}`}
+                                        onClick={(e) => {
+                                            if (item.hasDropdown) {
+                                                if (item.href === '#') {
+                                                    e.preventDefault();
+                                                    setActiveDropdown(activeDropdown === item.label ? null : item.label);
+                                                } else {
+                                                    if (activeDropdown !== item.label) {
+                                                        e.preventDefault(); // Click to open dropdown
+                                                        setActiveDropdown(item.label);
+                                                    } else {
+                                                        // Second click goes to link
+                                                        setActiveDropdown(null);
+                                                    }
+                                                }
+                                            } else {
+                                                setActiveDropdown(null);
+                                            }
+                                        }}
                                     >
                                         {item.label}
                                         {item.hasDropdown && <ChevronDown size={14} className="dropdown-arrow" />}
@@ -241,13 +276,22 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                                     <ul>
                                                         {item.simpleDropdown.map((subItem, sIdx) => (
                                                             <li key={sIdx}>
-                                                                <a
-                                                                    href={subItem.href}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                >
-                                                                    {subItem.label}
-                                                                </a>
+                                                                {subItem.external === false ? (
+                                                                    <Link
+                                                                        to={subItem.href}
+                                                                        onClick={() => setActiveDropdown(null)}
+                                                                    >
+                                                                        {subItem.label}
+                                                                    </Link>
+                                                                ) : (
+                                                                    <a
+                                                                        href={subItem.href}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                    >
+                                                                        {subItem.label}
+                                                                    </a>
+                                                                )}
                                                             </li>
                                                         ))}
                                                     </ul>
@@ -375,16 +419,27 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                     {activeDropdown === item.label && (
                                         <div className="mobile-dropdown-submenu">
                                             {item.simpleDropdown.map((subItem, sIdx) => (
-                                                <a
-                                                    key={sIdx}
-                                                    href={subItem.href}
-                                                    className="mobile-dropdown-item"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    onClick={() => setIsMobileMenuOpen(false)}
-                                                >
-                                                    {subItem.label}
-                                                </a>
+                                                subItem.external === false ? (
+                                                    <Link
+                                                        key={sIdx}
+                                                        to={subItem.href}
+                                                        className="mobile-dropdown-item"
+                                                        onClick={() => setIsMobileMenuOpen(false)}
+                                                    >
+                                                        {subItem.label}
+                                                    </Link>
+                                                ) : (
+                                                    <a
+                                                        key={sIdx}
+                                                        href={subItem.href}
+                                                        className="mobile-dropdown-item"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        onClick={() => setIsMobileMenuOpen(false)}
+                                                    >
+                                                        {subItem.label}
+                                                    </a>
+                                                )
                                             ))}
                                         </div>
                                     )}

@@ -15,8 +15,10 @@ import { useAuthContext } from '../context/useAuthContext';
 import './ProductDetail.css';
 import API_BASE_URL from '../config/api';
 import Seo from '../components/Seo';
+import NetflixLoginGuide from '../components/netflix/NetflixLoginGuide';
 
 const SITE_URL = 'https://www.taphoakeyt.com';
+const NETFLIX_PRODUCT_ID = import.meta.env.VITE_NETFLIX_PRODUCT_ID as string | undefined;
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -253,6 +255,9 @@ export default function ProductDetail() {
   };
 
   const displayImage = (product.images && product.images.length > 0) ? product.images[0] : (product.imageUrl || 'https://design.duolingo.com/images/brand/duo-happy.svg');
+  const showNetflixLoginGuide =
+    Boolean(product.isTiemBanhNetflix) ||
+    (Boolean(NETFLIX_PRODUCT_ID) && product._id === NETFLIX_PRODUCT_ID);
 
   return (
     <div className="bg-[#fff9f5] text-slate-800 min-h-screen w-full font-sans overflow-x-hidden selection:bg-[#F05A28]/20 pb-20 relative">
@@ -373,6 +378,13 @@ export default function ProductDetail() {
             </div>
           </div>
         </div>
+
+        {showNetflixLoginGuide && (
+          <NetflixLoginGuide
+            title="Hướng dẫn login Netflix sau khi mua"
+            description="Nếu bạn đang mua gói Netflix login qua cookie, hãy xem trước 2 video này để biết cách đăng nhập đúng trên laptop và điện thoại."
+          />
+        )}
 
         {/* Dynamic SEO Tags */}
         <Seo

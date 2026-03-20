@@ -7,8 +7,11 @@ import { profileService } from '../services/profileService';
 import { payosService } from '../services/payosService';
 import OrderFeedbackModal from '../components/order/OrderFeedbackModal';
 import NetflixOrderItemSlots from '../components/order/NetflixOrderItemSlots';
+import NetflixLoginGuide from '../components/netflix/NetflixLoginGuide';
 import type { Order } from '../types/profile';
 import API_BASE_URL from '../config/api';
+
+const NETFLIX_PRODUCT_ID = import.meta.env.VITE_NETFLIX_PRODUCT_ID as string | undefined;
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -198,6 +201,12 @@ export default function OrderDetailPage() {
       </div>
     );
   }
+
+  const showNetflixLoginGuide = order.items.some((item) => {
+    const matchesEnvProduct =
+      Boolean(NETFLIX_PRODUCT_ID) && String(item.productId) === String(NETFLIX_PRODUCT_ID);
+    return matchesEnvProduct || Boolean(item.tiemBanhSlots?.length);
+  });
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '1rem', background: '#f5f5f5', minHeight: '100vh' }}>
@@ -559,6 +568,15 @@ export default function OrderDetailPage() {
 
         </div>
       </div>
+
+      {showNetflixLoginGuide && (
+        <div style={{ marginTop: '1.25rem' }}>
+          <NetflixLoginGuide
+            title="Video hướng dẫn login Netflix"
+            description="Ngay sau khi nhận cookie hoặc link đăng nhập, bạn có thể xem nhanh 2 video dưới đây để thao tác đúng trên laptop và điện thoại."
+          />
+        </div>
+      )}
 
       {/* Actions */}
       <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/useAuthContext';
 import { adminService } from '../../services/adminService';
 import { visitService } from '../../services/visitService';
@@ -16,6 +17,7 @@ import {
   Menu,
   Star,
   Bell,
+  RefreshCw,
   TrendingUp,
   TrendingDown,
   Clock,
@@ -43,6 +45,7 @@ type AdminTab = 'dashboard' | 'users' | 'products' | 'orders' | 'chatgpt' | 'sub
 
 export default function AdminDashboard() {
   const { token, user, logout } = useAuthContext();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
@@ -630,6 +633,18 @@ export default function AdminDashboard() {
           >
             <ShoppingBag size={20} />
             <span>Đơn hàng</span>
+          </button>
+
+          <button
+            className="admin-nav-item"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate('/admin/netflix-replacements');
+            }}
+          >
+            <RefreshCw size={20} />
+            <span>Đổi cookie Netflix</span>
           </button>
 
           <button

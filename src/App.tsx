@@ -39,6 +39,7 @@ const UsersPage = lazy(() => import('./pages/admin/UsersPage'));
 const ProductsPage = lazy(() => import('./pages/admin/ProductsPage'));
 const OrdersPage = lazy(() => import('./pages/admin/OrdersPage'));
 const AdminOrderDetailPage = lazy(() => import('./pages/admin/AdminOrderDetailPage'));
+const NetflixReplacementTicketsPage = lazy(() => import('./pages/admin/NetflixReplacementTicketsPage'));
 const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'));
 const UserOrdersPage = lazy(() => import('./pages/UserOrdersPage'));
 const InvoiceView = lazy(() => import('./components/order/InvoiceView'));
@@ -259,6 +260,7 @@ export default function App() {
                         <Route path="/admin/products" element={<ProductsPage />} />
                         <Route path="/admin/orders" element={<OrdersPage />} />
                         <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
+                        <Route path="/admin/netflix-replacements" element={<NetflixReplacementTicketsPage />} />
                         <Route path="/admin/user-login-history/:userId" element={<UserLoginHistoryPage />} />
                         <Route path="/admin/otp-requests" element={<OtpRequestsPage />} />
                     </Routes>

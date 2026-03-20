@@ -1,5 +1,14 @@
 import axios from 'axios';
-import type { AdminStats, UserOtpInfo, UserLoginHistoryResponse, OrderStats, OrdersListResponse, OrderFilters } from '../types/admin';
+import type {
+  AdminStats,
+  UserOtpInfo,
+  UserLoginHistoryResponse,
+  OrderStats,
+  OrdersListResponse,
+  OrderFilters,
+  AdminNetflixReplacementTicketsResponse,
+  AdminNetflixReplacementTicket
+} from '../types/admin';
 import type { Product } from '../types/product';
 import type { Order } from '../types/profile';
 import API_BASE_URL from '../config/api';
@@ -284,5 +293,61 @@ export const adminService = {
     return response.data;
   },
 
-};
+  /**
+   * Get Netflix replacement tickets for admin
+   */
+  async getNetflixReplacementTickets(
+    params: { status?: 'pending' | 'approved' | 'rejected'; page?: number; limit?: number },
+    token: string
+  ): Promise<AdminNetflixReplacementTicketsResponse> {
+    const query = new URLSearchParams();
+    if (params.status) query.append('status', params.status);
+    if (params.page) query.append('page', params.page.toString());
+    if (params.limit) query.append('limit', params.limit.toString());
 
+    const response = await axios.get(
+      `${API_BASE_URL}/admin/netflix-replacement-tickets${query.toString() ? `?${query.toString()}` : ''}`,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    return response.data;
+  },
+
+  /**
+   * Approve Netflix replacement ticket
+   */
+  async approveNetflixReplacementTicket(
+    ticketId: string,
+    reason: string,
+    token: string
+  ): Promise<{ message: string; ticket: AdminNetflixReplacementTicket }> {
+    const response = await axios.put(
+      `${API_BASE_URL}/admin/netflix-replacement-tickets/${ticketId}/approve`,
+      { reason },
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    return response.data;
+  },
+
+  /**
+   * Reject Netflix replacement ticket
+   */
+  async rejectNetflixReplacementTicket(
+    ticketId: string,
+    reason: string,
+    token: string
+  ): Promise<{ message: string; ticket: AdminNetflixReplacementTicket }> {
+    const response = await axios.put(
+      `${API_BASE_URL}/admin/netflix-replacement-tickets/${ticketId}/reject`,
+      { reason },
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    return response.data;
+  },
+
+};

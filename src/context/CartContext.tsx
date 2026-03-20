@@ -65,6 +65,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const upsertCartLine = (product: Product, quantity: number) => {
+    const safeQuantity = Math.max(1, quantity);
+    setCart((prev) => {
+      const existing = prev.find((item) => item._id === product._id);
+      if (existing) {
+        return prev.map((item) =>
+          item._id === product._id
+            ? { ...item, ...product, quantity: safeQuantity }
+            : item
+        );
+      }
+      return [...prev, { ...product, quantity: safeQuantity }];
+    });
+  };
+
   const removeItem = (id: string) => {
     setCart((prev) => prev.filter((item) => item._id !== id));
   };
@@ -130,7 +145,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ cart, totalItems, totalAmount, addItem, removeItem, updateQuantity, updateCartItem, updateCartItemOption, updateCartItemRequiredField, clearCart }}
+      value={{ cart, totalItems, totalAmount, addItem, upsertCartLine, removeItem, updateQuantity, updateCartItem, updateCartItemOption, updateCartItemRequiredField, clearCart }}
     >
       {children}
     </CartContext.Provider>

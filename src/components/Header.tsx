@@ -6,9 +6,6 @@ import { useAuthContext } from '../context/useAuthContext';
 import { useWishlistContext } from '../context/useWishlistContext';
 import { useAddToCartAnimation } from '../context/AddToCartAnimationContext';
 import { useTranslation } from 'react-i18next'; // Added hook
-import axios from 'axios';
-import type { Product } from '../types/product';
-import API_BASE_URL from '../config/api';
 import logo from '../assets/logo.png';
 import './Header.css';
 
@@ -28,7 +25,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-    const [productsByCategory, setProductsByCategory] = useState<Record<string, Product[]>>({});
     const cartIconRef = useRef<HTMLAnchorElement>(null);
 
     // Handle click outside to close dropdown
@@ -64,100 +60,10 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
         }
     }, [setCartIconRef]);
 
-    // Fetch products and group by category
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/products`);
-                const fetchedProducts = response.data;
-
-                // Group products by category (keep original category name from database)
-                const grouped: Record<string, Product[]> = {};
-                fetchedProducts.forEach((product: Product) => {
-                    if (product.category) {
-                        const category = product.category.trim();
-                        if (!grouped[category]) {
-                            grouped[category] = [];
-                        }
-                        grouped[category].push(product);
-                    }
-                });
-
-                // Limit to 4 products per category for dropdown
-                const limited: Record<string, Product[]> = {};
-                Object.keys(grouped).forEach(category => {
-                    limited[category] = grouped[category].slice(0, 4);
-                });
-
-                setProductsByCategory(limited);
-            } catch (err) {
-                console.error('Error fetching products for header:', err);
-            }
-        };
-
-        fetchProducts();
-    }, []);
-
-    // Build mega menu from products (memoized)
-    // Show all categories that have products, sorted by predefined order
-    const shopMegaMenu = useMemo(() => {
-        // Predefined order for categories (case-insensitive matching)
-        const categoryOrder = ['Giải Trí', 'Giải trí', 'Thiết Kế', 'Thiết kế', 'Năng Suất', 'Năng suất', 'Học Tập', 'Học tập'];
-
-        // Get all categories from products
-        const allCategories = Object.keys(productsByCategory);
-
-        // Helper to check if category matches any in order (case-insensitive)
-        const matchesOrder = (cat: string): boolean => {
-            return categoryOrder.some(orderCat =>
-                cat.toLowerCase() === orderCat.toLowerCase()
-            );
-        };
-
-        // Sort categories: predefined ones first (in order), then others alphabetically
-        const orderedCategories: string[] = [];
-        const otherCategories: string[] = [];
-
-        // First, add categories in predefined order
-        categoryOrder.forEach(orderCat => {
-            const found = allCategories.find(cat =>
-                cat.toLowerCase() === orderCat.toLowerCase()
-            );
-            if (found && !orderedCategories.includes(found)) {
-                orderedCategories.push(found);
-            }
-        });
-
-        // Then add other categories alphabetically
-        allCategories.forEach(cat => {
-            if (!matchesOrder(cat)) {
-                otherCategories.push(cat);
-            }
-        });
-        otherCategories.sort();
-
-        const sortedCategories = [...orderedCategories, ...otherCategories];
-
-        return sortedCategories.map(category => {
-            const categoryProducts = productsByCategory[category] || [];
-            return {
-                title: category,
-                items: categoryProducts.map(product => ({
-                    name: product.name,
-                    id: product._id
-                }))
-            };
-        }).filter(section => section.items.length > 0); // Only show categories with products
-    }, [productsByCategory]);
 
     const navItems = useMemo(() => [
         { label: 'HOME', href: '/', hasDropdown: false },
-        {
-            label: 'PRODUCT',
-            href: '/products',
-            hasDropdown: true,
-            megaMenu: shopMegaMenu
-        },
+        { label: 'GET OTP GPT', href: '/get-otp', hasDropdown: false },
         {
             label: 'STUDY',
             href: '#',
@@ -188,7 +94,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
         { label: 'GET OTP GPT', href: '/get-otp', hasDropdown: false },
         { label: 'GET 2FA', href: '/2falive', hasDropdown: false },
-    ], [shopMegaMenu]);
+    ], []);
 
     const handleLogout = () => {
         logout();
@@ -250,27 +156,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                     {/* Mega Menu / Dropdown */}
                                     {item.hasDropdown && activeDropdown === item.label && (
                                         <>
-                                            {item.megaMenu && (
-                                                <div className="mega-menu">
-                                                    {item.megaMenu.map((section, idx) => (
-                                                        <div key={idx} className="mega-menu-column">
-                                                            <h4>{section.title}</h4>
-                                                            <ul>
-                                                                {section.items.map((subItem, sIdx) => (
-                                                                    <li key={sIdx}>
-                                                                        <Link
-                                                                            to={`/products/${subItem.id}`}
-                                                                            onClick={() => setActiveDropdown(null)}
-                                                                        >
-                                                                            {subItem.name}
-                                                                        </Link>
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
+
                                             {item.simpleDropdown && (
                                                 <div className="simple-dropdown">
                                                     <ul>

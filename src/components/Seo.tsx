@@ -32,10 +32,10 @@ export default function Seo({
     noIndex = false,
 }: SeoProps) {
     useEffect(() => {
-        const resolvedTitle = title || 'Mua Tài Khoản Premium Chính Hãng, Giá Rẻ | Tiệm Tạp Hóa KeyT';
+        const resolvedTitle = title || 'Tiệm Tạp Hoá KeyT | Công Cụ Hỗ Trợ Học Tập';
         const resolvedDesc =
             description ||
-            'Tiệm Tạp Hóa KeyT - Đại lý bán tài khoản Premium giá siêu rẻ: Canva Pro, CapCut Pro, ChatGPT, Netflix, Spotify. Bảo hành trọn đời 1 đổi 1, hỗ trợ 24/7 tức thì ✓';
+            'Tóm tắt video YouTube tức thì, kiểm tra độ chính xác thông tin bằng AI và nguồn đáng tin cậy. Trực quan hóa nội dung với photo-frame thông minh. Hỗ trợ 24/7 tức thì ✓';
         const resolvedImage = image || DEFAULT_IMAGE;
         const canonicalUrl = `${SITE_URL}${canonicalPath || window.location.pathname}`;
 

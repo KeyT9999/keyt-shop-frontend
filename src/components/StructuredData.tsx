@@ -30,7 +30,7 @@ export default function StructuredData() {
             baseBreadcrumb.push({
                 '@type': 'ListItem',
                 position: 2,
-                name: 'Dịch vụ premium',
+                name: 'Công cụ hỗ trợ học tập',
                 item: `${SITE_URL}/products`,
             });
         }
@@ -40,7 +40,7 @@ export default function StructuredData() {
                 {
                     '@type': 'ListItem',
                     position: 2,
-                    name: 'Dịch vụ premium',
+                    name: 'Công cụ hỗ trợ học tập',
                     item: `${SITE_URL}/products`,
                 },
                 {
@@ -100,10 +100,10 @@ export default function StructuredData() {
         const breadcrumbSchema =
             baseBreadcrumb.length > 1
                 ? {
-                      '@context': 'https://schema.org',
-                      '@type': 'BreadcrumbList',
-                      itemListElement: baseBreadcrumb,
-                  }
+                    '@context': 'https://schema.org',
+                    '@type': 'BreadcrumbList',
+                    itemListElement: baseBreadcrumb,
+                }
                 : null;
 
         const organizationSchema = {

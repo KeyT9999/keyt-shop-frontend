@@ -17,10 +17,10 @@ export default function ProductList({ searchQuery = '', showHero = true }: Produ
   const navigate = useNavigate();
 
   const heroCards = [
-    { title: 'Canva Pro', desc: 'Thiết kế nhanh - chỉ từ 49K', emoji: '🎨', tone: 'blue' },
-    { title: 'Google One 400GB', desc: 'Lưu trữ đám mây an toàn', emoji: '☁️', tone: 'teal' },
-    { title: 'YouTube Premium', desc: 'Không quảng cáo, nghe nền', emoji: '▶️', tone: 'red' },
-    { title: 'Spotify', desc: 'Âm nhạc không giới hạn', emoji: '🎵', tone: 'green' }
+    { title: 'YouTube Summarizer', desc: 'Tóm tắt video nhanh chóng', emoji: '📚', tone: 'blue' },
+    { title: 'Evidence Checker', desc: 'Kiểm tra thông tin', emoji: '🔍', tone: 'teal' },
+    { title: 'Photo Frame', desc: 'Đóng khung ảnh tự động', emoji: '📷', tone: 'red' },
+    { title: 'Công Cụ Học Tập', desc: 'Nâng cao năng suất', emoji: '🎓', tone: 'green' }
   ];
 
   const quickCategories = [
@@ -64,9 +64,9 @@ export default function ProductList({ searchQuery = '', showHero = true }: Produ
       {showHero && (
         <section className="hero-section">
           <div className="hero-banner">
-            <div className="hero-eyebrow">Ưu đãi nổi bật</div>
-            <h1>Kho dịch vụ số đa dạng, giá tốt mỗi ngày</h1>
-            <p>Netflix, Google One, Canva, Spotify, ChatGPT Plus và nhiều hơn nữa.</p>
+            <div className="hero-eyebrow">Tiệm Tạp Hoá KeyT</div>
+            <h1>Tối ưu hóa hiệu suất học tập của bạn</h1>
+            <p>Cung cấp các công cụ Tóm tắt YouTube, Kiểm tra thông tin AI, Photo Frame chuyên nghiệp.</p>
             <div className="hero-actions">
               <button type="button" className="primary" onClick={() => navigate('/products')}>Khám phá ngay</button>
               <button type="button" className="ghost" onClick={() => navigate('/products')}>Xem gói khuyến mãi</button>

@@ -35,20 +35,20 @@ export default function ProductDetail() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewStats, setReviewStats] = useState<ReviewStats | null>(null);
   const [reviewsLoading, setReviewsLoading] = useState(false);
-  
+
   // Admin reply states
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [replying, setReplying] = useState(false);
-  
+
   const { user, token } = useAuthContext();
 
   const { addItem, clearCart } = useCartContext();
   const { showNotification } = useNotification();
   const { triggerAnimation } = useAddToCartAnimation();
 
-  
+
   const navigate = useNavigate();
 
   const isOutOfStock = useMemo(() => {
@@ -202,13 +202,13 @@ export default function ProductDetail() {
     // Get button position for animation
     let startX = window.innerWidth / 2;
     let startY = window.innerHeight / 2;
-    
+
     if (e?.currentTarget) {
       const buttonRect = e.currentTarget.getBoundingClientRect();
       startX = buttonRect.left + buttonRect.width / 2;
       startY = buttonRect.top + buttonRect.height / 2;
     }
-    
+
     // Trigger animation
     triggerAnimation({
       id: `product-${product._id}-${Date.now()}`,
@@ -216,7 +216,7 @@ export default function ProductDetail() {
       startY,
       productImage: product.imageUrl || (product.images && product.images.length > 0 ? product.images[0] : undefined),
     });
-    
+
     // Add to cart
     if (selectedOptionIndex !== null && product.options && product.options[selectedOptionIndex]) {
       const selectedOption = product.options[selectedOptionIndex];
@@ -235,7 +235,7 @@ export default function ProductDetail() {
   const handleBuyNow = (_e?: React.MouseEvent<HTMLButtonElement>) => {
     // Clear existing cart first
     clearCart();
-    
+
     // Add only this product to cart
     if (selectedOptionIndex !== null && product.options && product.options[selectedOptionIndex]) {
       const selectedOption = product.options[selectedOptionIndex];
@@ -250,7 +250,7 @@ export default function ProductDetail() {
       addItem(product);
       showNotification(`Đã thêm ${currentName} vào giỏ hàng`, 'success');
     }
-    
+
     // Navigate to checkout
     navigate('/checkout');
   };
@@ -296,7 +296,7 @@ export default function ProductDetail() {
             <div>
               <div className="flex items-center gap-3 mb-3">
                 <span className="px-3 py-1 rounded-full bg-orange-100/80 border border-orange-200 text-[#F05A28] text-xs font-bold tracking-wider uppercase shadow-sm">
-                  {product.category || 'Premium Package'}
+                  {product.category || 'Công cụ AI / Học tập'}
                 </span>
                 {product.stock && product.stock > 0 && (
                   <span className="px-3 py-1 rounded-full bg-green-100/80 border border-green-200 text-green-600 text-xs font-bold tracking-wider uppercase shadow-sm">
@@ -394,7 +394,7 @@ export default function ProductDetail() {
           title={`Mua ${currentName} Chính Hãng Giá Rẻ – Giao Nhanh, Bảo Hành Uy Tín | Tiệm Tạp Hóa KeyT`}
           description={
             product.description?.substring(0, 160) ||
-            `Mua tài khoản Premium ${currentName} chính hãng tại Tiệm Tạp Hóa KeyT – giá rẻ, kích hoạt nhanh, bảo hành rõ ràng, hỗ trợ Zalo 24/7.`
+            `Mua công cụ ${currentName} chính hãng tại Tiệm Tạp Hóa KeyT – giá rẻ, kích hoạt nhanh, hỗ trợ Zalo 24/7.`
           }
           image={displayImage}
           type="product"
@@ -410,7 +410,7 @@ export default function ProductDetail() {
               "@type": "Product",
               name: currentName,
               image: displayImage,
-              description: product.description?.substring(0, 200) || `Tài khoản Premium ${currentName} chính hãng`,
+              description: product.description?.substring(0, 200) || `Công cụ ${currentName} chính hãng`,
               brand: {
                 "@type": "Brand",
                 name: "Tiệm Tạp Hóa KeyT"
@@ -576,7 +576,7 @@ export default function ProductDetail() {
                             <p className="text-sm text-slate-600">{review.reply.content}</p>
                           </div>
                         )}
-                        
+
                         {/* Admin Reply Button */}
                         {user?.admin && (
                           <div className="mt-3">
@@ -707,12 +707,12 @@ export default function ProductDetail() {
                 ×
               </button>
             </div>
-            
+
             {/* Review Info */}
-            <div style={{ 
-              padding: '1rem', 
-              background: '#f9fafb', 
-              borderRadius: '8px', 
+            <div style={{
+              padding: '1rem',
+              background: '#f9fafb',
+              borderRadius: '8px',
               marginBottom: '1rem',
               fontSize: '0.875rem'
             }}>

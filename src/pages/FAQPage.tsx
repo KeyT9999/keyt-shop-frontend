@@ -26,7 +26,7 @@ export default function FAQPage() {
       questions: [
         {
           q: 'Mất bao lâu để nhận được dịch vụ sau khi thanh toán?',
-          a: 'Thường trong vòng 24 giờ. Một số dịch vụ tự động như <a href="/products/netflix" style="color:#0ea5e9;text-decoration:underline;">Netflix</a> hay <a href="/products/spotify" style="color:#0ea5e9;text-decoration:underline;">Spotify</a> sẽ được gửi ngay sau khi thanh toán thành công.'
+          a: 'Thường trong vòng 24 giờ. Một số dịch vụ tự động như <a href="/summarizer" style="color:#0ea5e9;text-decoration:underline;">YouTube Summarizer</a> sẽ được mở quyền ngay sau khi thanh toán thành công.'
         },
         {
           q: 'Dịch vụ có bảo hành không?',
@@ -34,11 +34,11 @@ export default function FAQPage() {
         },
         {
           q: 'Tôi có thể gia hạn dịch vụ không?',
-          a: 'Có, bạn có thể đặt mua lại gói dịch vụ, ví dụ như <a href="/products/canva-pro" style="color:#0ea5e9;text-decoration:underline;">Canva Pro</a>, trước khi hết hạn để gia hạn liên tục.'
+          a: 'Có, bạn có thể đặt mua lại gói, ví dụ như <a href="/evidence" style="color:#0ea5e9;text-decoration:underline;">Evidence Checker</a>, trước khi hết hạn để gia hạn liên tục.'
         },
         {
           q: 'Dịch vụ có thể sử dụng trên nhiều thiết bị không?',
-          a: 'Tùy thuộc vào từng dịch vụ, chẳng hạn như <a href="/products/chatgpt-plus" style="color:#0ea5e9;text-decoration:underline;">ChatGPT Plus</a>. Vui lòng xem chi tiết trong mô tả sản phẩm hoặc liên hệ hỗ trợ để biết thêm.'
+          a: 'Tùy thuộc vào từng dịch vụ, chẳng hạn như <a href="/summarizer" style="color:#0ea5e9;text-decoration:underline;">YouTube Summarizer</a>. Vui lòng xem chi tiết trong mô tả sản phẩm để biết thêm.'
         }
       ]
     },
@@ -106,7 +106,7 @@ export default function FAQPage() {
       <h1 style={{ fontSize: '2.5rem', fontWeight: 700, color: '#1e293b', marginBottom: '1rem' }}>
         Câu hỏi thường gặp (FAQ)
       </h1>
-      
+
       <div style={{ fontSize: '1.1rem', color: '#64748b', marginBottom: '3rem', lineHeight: '1.6' }}>
         <p>Tìm câu trả lời cho các câu hỏi phổ biến về dịch vụ, thanh toán và hỗ trợ tại Tiệm Tạp Hóa KeyT.</p>
       </div>

@@ -11,7 +11,7 @@ export default function Footer() {
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-yellow-500 tracking-wide uppercase">TIỆM TẠP HÓA KEYT</h2>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Kho dịch vụ số đa dạng, uy tín, hỗ trợ tận tâm. Nâng tầm trải nghiệm số của bạn với chi phí tối ưu nhất.
+              Tiệm Tạp Hoá KeyT - Nâng Tầm Cuộc Sống Số.
             </p>
             <div className="flex items-center gap-4 pt-2">
               <a href="#" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-[#1877F2] hover:text-white transition-all duration-300">
@@ -29,27 +29,22 @@ export default function Footer() {
             <h3 className="text-white font-bold mb-6 text-sm uppercase tracking-wider">Sản phẩm</h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <Link to="#" className="hover:text-yellow-500 transition-colors flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full"></span> Spotify Premium
+                <Link to="/summarizer" className="hover:text-yellow-500 transition-colors flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full"></span> YouTube Summarizer
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-yellow-500 transition-colors flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full"></span> Netflix 4K
+                <Link to="/evidence" className="hover:text-yellow-500 transition-colors flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full"></span> Evidence Checker
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-yellow-500 transition-colors flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full"></span> Youtube Premium
+                <Link to="/photo-frame" className="hover:text-yellow-500 transition-colors flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full"></span> Photo Frame
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-yellow-500 transition-colors flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full"></span> Adobe Creative
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-gray-400 text-gray-500 transition-colors text-xs italic">
+                <Link to="/products" className="hover:text-gray-400 text-gray-500 transition-colors text-xs italic">
                   & nhiều hơn nữa...
                 </Link>
               </li>

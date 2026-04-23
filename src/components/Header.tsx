@@ -63,7 +63,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
     const navItems = useMemo(() => [
         { label: 'HOME', href: '/', hasDropdown: false },
-        { label: 'GET OTP GPT', href: '/get-otp', hasDropdown: false },
         {
             label: 'STUDY',
             href: '#',

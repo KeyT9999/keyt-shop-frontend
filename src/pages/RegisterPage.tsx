@@ -1,76 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
-import RecaptchaNotice from '../components/RecaptchaNotice';
 import { useAuthContext } from '../context/useAuthContext';
 import { executeRecaptcha } from '../utils/recaptcha';
 
-const useRipple = () => {
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  const createRipple = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const button = event.currentTarget;
-    const circle = document.createElement('span');
-    const diameter = Math.max(button.clientWidth, button.clientHeight);
-    const radius = diameter / 2;
-    const rect = button.getBoundingClientRect();
-
-    circle.style.width = circle.style.height = `${diameter}px`;
-    circle.style.left = `${event.clientX - rect.left - radius}px`;
-    circle.style.top = `${event.clientY - rect.top - radius}px`;
-    circle.classList.add('ripple');
-
-    const ripple = button.getElementsByClassName('ripple')[0];
-    if (ripple) {
-      ripple.remove();
-    }
-
-    button.appendChild(circle);
-  };
-
-  return { buttonRef, createRipple };
-};
-
 export default function RegisterPage() {
-  const { register, loginWithGoogle, loading, error } = useAuthContext();
-  const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const { loginWithGoogle } = useAuthContext();
   const [formError, setFormError] = useState<string | null>(null);
   const [cardVisible, setCardVisible] = useState(false);
-  const [successEmail, setSuccessEmail] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
-  const submitRipple = useRipple();
-  const backRipple = useRipple();
-  const isBusy = loading || submitting;
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setCardVisible(true));
     return () => cancelAnimationFrame(id);
   }, []);
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!form.username || !form.email || !form.password) {
-      setFormError('Điền đầy đủ thông tin');
-      return;
-    }
-
-    setFormError(null);
-    setSubmitting(true);
-
-    try {
-      const recaptchaToken = await executeRecaptcha('register');
-      await register({ ...form, recaptchaToken });
-      setSuccessEmail(form.email);
-    } catch (err: any) {
-      if (!err?.response) {
-        setFormError(err?.message || 'Không thể xác minh reCAPTCHA. Vui lòng thử lại.');
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleGoogleSuccess = async (response: CredentialResponse) => {
     if (!response?.credential) {
@@ -95,7 +39,7 @@ export default function RegisterPage() {
   };
 
   const handleGoogleError = () => {
-    setFormError('Không thể đăng ký bằng Google.');
+    setFormError('Không thể đăng nhập bằng Google.');
   };
 
   return (
@@ -108,71 +52,58 @@ export default function RegisterPage() {
         </div>
 
         <div className="auth-form-wrapper auth-form-wrapper--open">
-          {successEmail ? (
-            <div className="auth-success-box">
-              <h3>Đăng ký thành công!</h3>
-              <p>
-                Vui lòng kiểm tra hộp thư <strong>{successEmail}</strong> và nhấn vào link xác minh để kích hoạt tài
-                khoản. Liên kết có hiệu lực trong 24 giờ.
-              </p>
-              <button
-                type="button"
-                className="auth-submit"
-                onClick={(event) => {
-                  backRipple.createRipple(event);
-                  setTimeout(() => navigate('/login'), 200);
-                }}
-                ref={backRipple.buttonRef}
-              >
-                Quay lại đăng nhập
-              </button>
+          <div className="auth-form" style={{ gap: '1rem' }}>
+            {/* Nút Google */}
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="outline"
+                shape="rectangular"
+                text="signin_with"
+                width="100%"
+                locale="vi"
+              />
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="auth-form">
-              <label>
-                Username
-                <input
-                  value={form.username}
-                  onChange={(event) => setForm((prev) => ({ ...prev, username: event.target.value }))}
-                  required
-                />
-              </label>
-              <label>
-                Email
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                  required
-                />
-              </label>
-              <label>
-                Password
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-                  required
-                />
-              </label>
-              {formError && <p className="auth-error">{formError}</p>}
-              {error && <p className="auth-error">{error}</p>}
-              <RecaptchaNotice className="rounded-xl bg-slate-50 border border-slate-200 p-3" />
-              <button
-                type="submit"
-                className="auth-submit"
-                disabled={isBusy}
-                ref={submitRipple.buttonRef}
-                onClick={submitRipple.createRipple}
+
+            {/* Dòng lưu ý */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.5rem',
+                background: '#fff7ed',
+                border: '1px solid #fed7aa',
+                borderRadius: '0.75rem',
+                padding: '0.75rem 1rem',
+                fontSize: '0.875rem',
+                color: '#c2410c',
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ flexShrink: 0, marginTop: '2px', color: '#F05A28' }}
               >
-                {isBusy ? 'Đang xử lý...' : 'Đăng ký'}
-              </button>
-              <div className="divider">
-                <span>hoặc</span>
-              </div>
-              <GoogleLogin onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
-            </form>
-          )}
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <p>
+                <span style={{ fontWeight: 600 }}>Lưu ý:</span> Hãy đăng nhập bằng Google cá nhân của ní
+              </p>
+            </div>
+
+            {/* Error message */}
+            {formError && <p className="auth-error">{formError}</p>}
+          </div>
         </div>
 
         <p className="auth-helper">

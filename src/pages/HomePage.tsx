@@ -7,7 +7,7 @@ import {
     Pencil
 } from 'lucide-react';
 import { useAuthContext } from '../context/useAuthContext';
-
+import ProductList from './ProductList';
 
 import type { Banner } from '../types/banner';
 import API_BASE_URL from '../config/api';
@@ -134,6 +134,18 @@ export default function HomePage() {
             </section>
 
 
+
+            {/* SECTION 2: DANH SÁCH SẢN PHẨM */}
+            <section className="py-16 bg-slate-50">
+                <div className="container mx-auto px-4">
+                    <div className="text-center mb-10">
+                        <p className="text-[#F05A28] font-bold text-xs uppercase tracking-widest mb-2">Cửa hàng</p>
+                        <h2 className="text-3xl md:text-4xl font-bold text-[#1E293B] mb-3">Sản phẩm nổi bật</h2>
+                        <p className="text-gray-500 max-w-xl mx-auto">Khám phá các tài khoản và công cụ số chất lượng cao với giá tốt nhất.</p>
+                    </div>
+                    <ProductList showHero={false} />
+                </div>
+            </section>
 
 
             {/* SECTION 4: FLASH SALE */}

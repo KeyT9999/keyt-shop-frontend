@@ -42,10 +42,17 @@
 
 /* Products */
 .products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 1.1rem;
   margin-top: 0.75rem;
+}
+
+.products-grid > * {
+  flex: 0 0 260px;
+  max-width: 320px;
+  width: 100%;
 }
 
 .product-card {

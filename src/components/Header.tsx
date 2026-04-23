@@ -92,6 +92,8 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
         },
 
         { label: 'GET OTP GPT', href: '/get-otp', hasDropdown: false },
+        { label: 'GET OTP GEMINI', href: '/get-otp-gemini', hasDropdown: false },
+
         { label: 'GET 2FA', href: '/2falive', hasDropdown: false },
     ], []);
 

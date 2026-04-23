@@ -36,12 +36,13 @@ import UsersPage from './UsersPage';
 import ProductsPage from './ProductsPage';
 import OrdersPage from './OrdersPage';
 import ChatGptAccountsPage from './ChatGptAccountsPage';
+import GeminiAccountsPage from './GeminiAccountsPage';
 import SubscriptionsPage from './SubscriptionsPage';
 import OtpRequestsPage from './OtpRequestsPage';
 import ReviewsPage from './ReviewsPage';
 import AnnouncementPage from './AnnouncementPage';
 
-type AdminTab = 'dashboard' | 'users' | 'products' | 'orders' | 'chatgpt' | 'subscriptions' | 'otp' | 'reviews' | 'announcement';
+type AdminTab = 'dashboard' | 'users' | 'products' | 'orders' | 'chatgpt' | 'gemini' | 'subscriptions' | 'otp' | 'reviews' | 'announcement';
 
 export default function AdminDashboard() {
   const { token, user, logout } = useAuthContext();
@@ -121,6 +122,8 @@ export default function AdminDashboard() {
           return <ReviewsPage />;
         case 'chatgpt':
           return <ChatGptAccountsPage />;
+        case 'gemini':
+          return <GeminiAccountsPage />;
         case 'subscriptions':
           return <SubscriptionsPage />;
         case 'otp':
@@ -554,6 +557,7 @@ export default function AdminDashboard() {
       case 'orders': return 'Quản lý Đơn hàng';
       case 'reviews': return 'Quản lý Đánh giá';
       case 'chatgpt': return 'ChatGPT Accounts';
+      case 'gemini': return 'Gemini Accounts';
       case 'subscriptions': return 'Subscriptions';
       case 'otp': return 'OTP Requests';
       case 'announcement': return 'Thông báo';
@@ -678,14 +682,20 @@ export default function AdminDashboard() {
 
           <button
             className={`admin-nav-item ${activeTab === 'chatgpt' ? 'active' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setActiveTab('chatgpt');
-            }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveTab('chatgpt'); }}
           >
             <Bot size={20} />
             <span>ChatGPT Accounts</span>
+          </button>
+
+          <button
+            className={`admin-nav-item ${activeTab === 'gemini' ? 'active' : ''}`}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveTab('gemini'); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M96 0C96 53.0193 53.0193 96 0 96C53.0193 96 96 138.981 96 192C96 138.981 138.981 96 192 96C138.981 96 96 53.0193 96 0Z" fill="currentColor"/>
+            </svg>
+            <span>Gemini Accounts</span>
           </button>
 
           <button

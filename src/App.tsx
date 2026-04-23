@@ -24,6 +24,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const YoutubeSummarizerPage = lazy(() => import('./pages/YoutubeSummarizerPage'));
 const GetOtpPage = lazy(() => import('./pages/GetOtpPage'));
+const GetOtpGeminiPage = lazy(() => import('./pages/GetOtpGeminiPage'));
 const Get2faPage = lazy(() => import('./pages/Get2faPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
@@ -122,6 +123,7 @@ export default function App() {
             '/payment-success',
             '/payment-qr',
             '/get-otp',
+            '/get-otp-gemini',
             '/2falive',
             '/summarizer',
             '/evidence',
@@ -242,6 +244,7 @@ export default function App() {
                         <Route path="/evidence" element={<ProtectedRoute><EvidenceCheckerPage /></ProtectedRoute>} />
                         <Route path="/summarizer" element={<ProtectedRoute><YoutubeSummarizerPage /></ProtectedRoute>} />
                         <Route path="/get-otp" element={<ProtectedRoute><GetOtpPage /></ProtectedRoute>} />
+                        <Route path="/get-otp-gemini" element={<ProtectedRoute><GetOtpGeminiPage /></ProtectedRoute>} />
                         <Route path="/2falive" element={<ProtectedRoute><Get2faPage /></ProtectedRoute>} />
                         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                         <Route path="/forgot-password" element={<ForgotPasswordPage />} />

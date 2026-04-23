@@ -8,19 +8,16 @@ import { profileService } from '../services/profileService';
 import { executeRecaptcha } from '../utils/recaptcha';
 
 export default function LoginPage() {
-  const { user, login, loginWithGoogle, loading, error, errorCode } = useAuthContext();
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const { user, loginWithGoogle, error, errorCode } = useAuthContext();
   const [formError, setFormError] = useState<string | null>(null);
   const [resendEmail, setResendEmail] = useState('');
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
-  const [loginSubmitting, setLoginSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string })?.from || '/';
-  const isLoginBusy = loading || loginSubmitting;
 
   useEffect(() => {
     if (user) {
@@ -32,28 +29,6 @@ export default function LoginPage() {
     setMounted(true);
   }, []);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!credentials.username || !credentials.password) {
-      setFormError('Điền đủ username và password');
-      return;
-    }
-
-    setFormError(null);
-    setLoginSubmitting(true);
-
-    try {
-      const recaptchaToken = await executeRecaptcha('login');
-      await login({ ...credentials, recaptchaToken });
-      navigate(from, { replace: true });
-    } catch (err: any) {
-      if (!err?.response) {
-        setFormError(err?.message || 'Không thể xác minh reCAPTCHA. Vui lòng thử lại.');
-      }
-    } finally {
-      setLoginSubmitting(false);
-    }
-  };
 
   const handleGoogleSuccess = async (response: CredentialResponse) => {
     if (!response?.credential) {
@@ -62,7 +37,6 @@ export default function LoginPage() {
     }
 
     setFormError(null);
-    setLoginSubmitting(true);
 
     try {
       const recaptchaToken = await executeRecaptcha('google_login');
@@ -72,8 +46,6 @@ export default function LoginPage() {
       if (!err?.response) {
         setFormError(err?.message || 'Không thể xác minh reCAPTCHA. Vui lòng thử lại.');
       }
-    } finally {
-      setLoginSubmitting(false);
     }
   };
 

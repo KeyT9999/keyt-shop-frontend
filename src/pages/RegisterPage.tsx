@@ -8,7 +8,6 @@ export default function RegisterPage() {
   const { loginWithGoogle } = useAuthContext();
   const [formError, setFormError] = useState<string | null>(null);
   const [cardVisible, setCardVisible] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,7 +22,6 @@ export default function RegisterPage() {
     }
 
     setFormError(null);
-    setSubmitting(true);
 
     try {
       const recaptchaToken = await executeRecaptcha('google_login');
@@ -33,8 +31,6 @@ export default function RegisterPage() {
       if (!err?.response) {
         setFormError(err?.message || 'Không thể xác minh reCAPTCHA. Vui lòng thử lại.');
       }
-    } finally {
-      setSubmitting(false);
     }
   };
 

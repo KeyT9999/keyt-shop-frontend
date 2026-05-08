@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import './App.css';
 import { useAuthContext } from './context/useAuthContext';
-import Footer from './components/Footer';
+
 import Header from './components/Header';
 import FloatingContact from './components/FloatingContact';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -274,7 +274,6 @@ export default function App() {
                 </Suspense>
             </main>
 
-            <Footer />
         </div>
     );
 }

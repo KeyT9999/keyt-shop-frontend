@@ -1,11 +1,7 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, Globe } from 'lucide-react'; // Added Globe
-import { useCartContext } from '../context/useCartContext';
+import { Search, User, Menu, X, ChevronDown } from 'lucide-react';
 import { useAuthContext } from '../context/useAuthContext';
-import { useWishlistContext } from '../context/useWishlistContext';
-import { useAddToCartAnimation } from '../context/AddToCartAnimationContext';
-import { useTranslation } from 'react-i18next'; // Added hook
 import logo from '../assets/logo.png';
 import './Header.css';
 
@@ -15,17 +11,13 @@ interface HeaderProps {
 }
 
 export default function Header({ onSearch, searchValue }: HeaderProps) {
-    const { totalItems } = useCartContext();
-    const { wishlist } = useWishlistContext();
     const { user, logout } = useAuthContext();
-    const { i18n } = useTranslation(); // Init hook
-    const { setCartIconRef } = useAddToCartAnimation();
     const location = useLocation();
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-    const cartIconRef = useRef<HTMLAnchorElement>(null);
+
 
     // Handle click outside to close dropdown
     useEffect(() => {
@@ -39,11 +31,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
         return () => document.removeEventListener('click', handleClickOutside);
     }, []);
 
-    const toggleLanguage = () => {
-        const newLang = i18n.language === 'vi' ? 'en' : 'vi';
-        i18n.changeLanguage(newLang);
-    };
-
     // Handle scroll effect
     useEffect(() => {
         const handleScroll = () => {
@@ -53,25 +40,13 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Set cart icon ref for animation
-    useEffect(() => {
-        if (cartIconRef.current) {
-            setCartIconRef(cartIconRef.current);
-        }
-    }, [setCartIconRef]);
+
 
 
     const navItems = useMemo(() => [
         { label: 'HOME', href: '/', hasDropdown: false },
-        {
-            label: 'STUDY',
-            href: '#',
-            hasDropdown: true,
-            simpleDropdown: [
-                { label: 'SUMMARIZER', href: '/summarizer', external: false },
-                { label: 'EVIDENCE', href: '/evidence', external: false }
-            ]
-        },
+        { label: 'YOUTUBE SUMMARIZER', href: '/summarizer', hasDropdown: false },
+        { label: 'EVIDENCE CHECKER', href: '/evidence', hasDropdown: false },
         { label: 'PHOTO FRAME', href: '/photo-frame', hasDropdown: false },
         {
             label: 'TIP FREE',
@@ -106,7 +81,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
         <div className="header-wrapper">
             {/* Main Header */}
             <header className={`main-header ${isScrolled ? 'scrolled' : ''}`}>
-                <div className="container header-content">
+                <div className="header-container header-content">
                     {/* Mobile Menu Button */}
                     <button
                         className="mobile-menu-toggle"
@@ -191,26 +166,8 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                         </ul>
                     </nav>
 
-                    {/* Actions & Search */}
+                    {/* Actions */}
                     <div className="header-actions">
-                        {/* Language Toggle */}
-                        <button onClick={toggleLanguage} className="lang-toggle-btn" title="Switch Language">
-                            <Globe size={18} />
-                            <span>{i18n.language === 'vi' ? 'VI' : 'EN'}</span>
-                        </button>
-
-                        {/* Search Bar */}
-                        <div className="search-bar-container">
-                            <input
-                                type="text"
-                                value={searchValue}
-                                onChange={(e) => onSearch(e.target.value)}
-                                placeholder="Search products..."
-                                className="search-input"
-                            />
-                            <button className="search-btn"><Search size={18} /></button>
-                        </div>
-
                         <div className="icon-actions">
                             {user ? (
                                 <>
@@ -233,15 +190,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                         </div>
                                     </div>
 
-                                    <Link to="/wishlist" className="action-item icon-btn" title="Wishlist">
-                                        <Heart size={22} strokeWidth={1.5} />
-                                        <span className="badge">{wishlist.length}</span>
-                                    </Link>
 
-                                    <Link to="/cart" ref={cartIconRef} className="action-item icon-btn" title="Cart" data-cart-icon>
-                                        <ShoppingBag size={22} strokeWidth={1.5} />
-                                        <span className="badge">{totalItems}</span>
-                                    </Link>
                                 </>
                             ) : (
                                 <>

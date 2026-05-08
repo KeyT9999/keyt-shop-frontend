@@ -131,11 +131,7 @@ export default function ProductList({ searchQuery = '', showHero = true }: Produ
           </div>
         )}
 
-        {!loading && !error && products.length === 0 && (
-          <div className="empty-state">
-            <p>📦 Chưa có sản phẩm nào</p>
-          </div>
-        )}
+
 
         {!loading && !error && products.length > 0 && (
           <div className="products-grid">

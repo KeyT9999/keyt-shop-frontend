@@ -1,0 +1,109 @@
+.claim-splitter {
+    margin: 1rem 0;
+    text-align: left;
+}
+
+.claim-splitter__split,
+.claim-splitter__check-all {
+    border: 1.5px solid #7c3aed;
+    background: #7c3aed;
+    color: white;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.claim-splitter__split:hover:not(:disabled),
+.claim-splitter__check-all:hover:not(:disabled) {
+    background: #6d28d9;
+    transform: translateY(-1px);
+}
+
+.claim-splitter__split:disabled,
+.claim-splitter__check-all:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.claim-splitter--expanded {
+    background: #f5f3ff;
+    border: 1.5px solid #ddd6fe;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.claim-splitter__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #4c1d95;
+    margin-bottom: 0.75rem;
+}
+
+.claim-splitter__reset {
+    border: 1px solid #c4b5fd;
+    background: white;
+    color: #6d28d9;
+    border-radius: 8px;
+    padding: 0.4rem 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.claim-splitter__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.claim-splitter__item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    background: white;
+    border: 1px solid #ede9fe;
+    border-radius: 10px;
+    padding: 0.75rem;
+    color: #1e293b;
+}
+
+.claim-splitter__item input {
+    accent-color: #7c3aed;
+}
+
+.claim-splitter__item button {
+    border: 1px solid #7c3aed;
+    background: white;
+    color: #6d28d9;
+    border-radius: 8px;
+    padding: 0.45rem 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.claim-splitter__check-all {
+    margin-top: 0.9rem;
+}
+
+.claim-splitter__error {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #991b1b;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+    .claim-splitter__item {
+        grid-template-columns: auto 1fr;
+    }
+
+    .claim-splitter__item button {
+        grid-column: 1 / -1;
+    }
+}

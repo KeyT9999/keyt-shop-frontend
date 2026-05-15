@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuthContext } from '../../context/useAuthContext';
 import { adminService } from '../../services/adminService';
 import type { UserOtpInfo } from '../../types/admin';
@@ -7,6 +7,7 @@ export default function OtpRequestsPage() {
   const { token, user } = useAuthContext();
   const [otpInfos, setOtpInfos] = useState<UserOtpInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Modal State
   const [selectedUserHistory, setSelectedUserHistory] = useState<UserOtpInfo['user'] | null>(null);
@@ -36,6 +37,24 @@ export default function OtpRequestsPage() {
       setLoading(false);
     }
   };
+
+  // Filter and sort: search by username/email, sort by lastRequest desc
+  const filteredOtpInfos = useMemo(() => {
+    let filtered = otpInfos;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      filtered = otpInfos.filter(info =>
+        (info.user.username || '').toLowerCase().includes(q) ||
+        (info.user.email || '').toLowerCase().includes(q)
+      );
+    }
+    // Sort by lastRequest desc (most recent first)
+    return [...filtered].sort((a, b) => {
+      const timeA = a.lastRequest ? new Date(a.lastRequest).getTime() : 0;
+      const timeB = b.lastRequest ? new Date(b.lastRequest).getTime() : 0;
+      return timeB - timeA;
+    });
+  }, [otpInfos, searchQuery]);
 
   const handleViewHistory = async (userId: string, user: UserOtpInfo['user']) => {
     setSelectedUserHistory(user);
@@ -99,6 +118,30 @@ export default function OtpRequestsPage() {
           <p style={{ color: '#64748B', margin: 0 }}>Thống kê yêu cầu OTP và lịch sử truy cập của người dùng</p>
         </div>
 
+        {/* Search */}
+        <div style={{ marginBottom: '20px' }}>
+          <input
+            type="text"
+            placeholder="Tìm theo tên hoặc email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              maxWidth: '400px',
+              padding: '12px 16px',
+              borderRadius: '10px',
+              border: '1px solid #E2E8F0',
+              fontSize: '0.9rem',
+              color: '#1E293B',
+              background: '#ffffff',
+              outline: 'none',
+              transition: 'border-color 0.2s'
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = '#F05A28'; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = '#E2E8F0'; }}
+          />
+        </div>
+
         {/* Desktop Table */}
         <div id="desktop-otp-table" style={{ background: '#ffffff', borderRadius: '16px', overflow: 'hidden', border: '1px solid #F1F5F9', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
@@ -112,8 +155,8 @@ export default function OtpRequestsPage() {
               </tr>
             </thead>
             <tbody>
-              {otpInfos && otpInfos.length > 0 ? (
-                otpInfos.map((info) => {
+              {filteredOtpInfos && filteredOtpInfos.length > 0 ? (
+                filteredOtpInfos.map((info) => {
                   if (!info || !info.user || !info.user._id) {
                     return null;
                   }
@@ -182,8 +225,8 @@ export default function OtpRequestsPage() {
 
         {/* Mobile Cards */}
         <div id="mobile-otp-cards" style={{ display: 'none' }}>
-          {otpInfos && otpInfos.length > 0 ? (
-            otpInfos.map((info) => {
+          {filteredOtpInfos && filteredOtpInfos.length > 0 ? (
+            filteredOtpInfos.map((info) => {
               if (!info || !info.user || !info.user._id) {
                 return null;
               }

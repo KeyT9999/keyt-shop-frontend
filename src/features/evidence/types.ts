@@ -24,6 +24,17 @@ export interface EvidenceItem {
   sourceScore?: number;
   /** true nếu URL không truy cập được (4xx/5xx/timeout/DNS fail) */
   broken?: boolean;
+  // ── Semantic Scholar metadata ──────────────────────────────
+  /** Danh sách tác giả (tối đa 3 + "et al.") */
+  authors?: string;
+  /** Năm xuất bản */
+  year?: number | string;
+  /** Tên journal/conference */
+  journal?: string;
+  /** true nếu có PDF mở (Open Access) */
+  isOpenAccess?: boolean;
+  /** Semantic Scholar paper ID */
+  paperId?: string;
 }
 
 export interface VerdictResult {

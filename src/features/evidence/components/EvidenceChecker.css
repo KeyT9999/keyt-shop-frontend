@@ -1269,3 +1269,43 @@
     align-items: flex-start;
     margin-bottom: 2rem;
 }
+
+
+/* Badge: Semantic Scholar */
+.badge--s2 {
+    background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+    color: #0f766e;
+    border: 1px solid #5eead4;
+    text-transform: none;
+    font-size: 0.78rem;
+    letter-spacing: 0;
+    font-weight: 600;
+}
+
+/* Badge: Open Access */
+.badge--oa {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+    text-transform: none;
+    font-size: 0.78rem;
+    letter-spacing: 0;
+    font-weight: 600;
+}
+
+/* Badge: Broken link */
+.badge--broken {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+    text-transform: none;
+    font-size: 0.78rem;
+}
+
+/* Badge row: wrap khi nhieu badge */
+.badge-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}

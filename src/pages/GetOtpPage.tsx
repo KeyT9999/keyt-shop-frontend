@@ -56,7 +56,6 @@ export default function GetOtpPage() {
 
   const handleCopyOtp = () => {
     navigator.clipboard.writeText(otp);
-    alert('✅ Đã sao chép mã OTP!');
   };
 
   if (!user) {

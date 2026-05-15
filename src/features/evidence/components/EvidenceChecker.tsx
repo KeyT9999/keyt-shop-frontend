@@ -17,6 +17,9 @@ import {
   History,
   X,
   Clock,
+  BookOpen,
+  Unlock,
+  Users,
 } from 'lucide-react';
 import { fetchEvidence } from '../services/evidenceService';
 import type { EvidenceItem, VerdictResult, VerdictStatus } from '../types';
@@ -601,6 +604,18 @@ export default function EvidenceChecker() {
                           <Icon size={14} strokeWidth={2.5} />
                           {verificationLabels[item.verification]}
                         </span>
+                        {/* Badge: Semantic Scholar (paper thật) */}
+                        {item.paperId && (
+                          <span className="badge badge--s2" title="Nguồn từ Semantic Scholar">
+                            <BookOpen size={12} /> Semantic Scholar
+                          </span>
+                        )}
+                        {/* Badge: Open Access */}
+                        {item.isOpenAccess && (
+                          <span className="badge badge--oa" title="Bài báo Open Access - PDF miễn phí">
+                            <Unlock size={12} /> Open Access
+                          </span>
+                        )}
                         {item.broken && (
                           <span className="badge badge--broken">
                             <AlertTriangle size={12} /> Link lỗi
@@ -643,7 +658,23 @@ export default function EvidenceChecker() {
                       )}
 
                       <div className="meta-grid">
-                        {item.location && (
+                        {/* Authors - chỉ hiện nếu có data từ S2 */}
+                        {item.authors && (
+                          <div className="meta-item full">
+                            <span className="label"><Users size={11} /> Tác giả:</span>{' '}
+                            <span className="value">{item.authors}</span>
+                          </div>
+                        )}
+                        {/* Year + Journal cùng hàng */}
+                        {(item.year || item.journal) && (
+                          <div className="meta-item full">
+                            <span className="label">📅 Xuất bản:</span>{' '}
+                            <span className="value">
+                              {[item.year, item.journal].filter(Boolean).join(' · ')}
+                            </span>
+                          </div>
+                        )}
+                        {item.location && !item.year && (
                           <div className="meta-item">
                             <span className="label">Vị trí:</span>{' '}
                             <span className="value">{item.location}</span>

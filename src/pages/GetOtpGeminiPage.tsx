@@ -55,7 +55,6 @@ export default function GetOtpGeminiPage() {
 
   const handleCopyOtp = () => {
     navigator.clipboard.writeText(otp);
-    alert('✅ Đã sao chép mã OTP!');
   };
 
   if (!user) {

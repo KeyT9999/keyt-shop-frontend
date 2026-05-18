@@ -26,7 +26,7 @@ interface CompressionPreviewProps {
   onCancel: () => void;
 }
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB (match server limit)
 
 export default function CompressionPreview({ file, onConfirm, onCancel }: CompressionPreviewProps) {
   const [options, setOptions] = useState<CompressionOptions>({
@@ -46,7 +46,7 @@ export default function CompressionPreview({ file, onConfirm, onCancel }: Compre
   // Validate file size on mount
   useEffect(() => {
     if (file.size > MAX_FILE_SIZE) {
-      setFileSizeError(`File quá lớn (${(file.size / 1024 / 1024).toFixed(1)}MB). Kích thước tối đa cho phép là 50MB.`);
+      setFileSizeError(`File quá lớn (${(file.size / 1024 / 1024).toFixed(1)}MB). Kích thước tối đa cho phép là 10MB.`);
     } else {
       setFileSizeError(null);
     }

@@ -207,9 +207,9 @@ export default function App() {
         if (path === '/compress') {
             return {
                 ...base,
-                title: 'Nén Ảnh Online Miễn Phí – WebP, AVIF, JPEG, PNG | Tiệm KeyT',
+                title: 'Nén Ảnh Online Miễn Phí – Giảm Dung Lượng Ảnh Nhanh | KeyT Compress',
                 description:
-                    'Công cụ nén ảnh online miễn phí, hỗ trợ WebP, AVIF, JPEG, PNG. Giảm dung lượng ảnh lên đến 90% mà vẫn giữ chất lượng cao. Nén tối đa 10 ảnh cùng lúc, tải về ngay ✓',
+                    'Nén ảnh online miễn phí, hỗ trợ WebP, AVIF, PNG, JPEG, GIF. Giảm dung lượng ảnh tới 90% không giảm chất lượng. Không cần đăng ký, nén tới 10 ảnh cùng lúc. Phù hợp cho website và bán hàng online.',
                 canonicalPath: '/compress',
             }
         }

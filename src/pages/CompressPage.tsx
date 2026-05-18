@@ -46,7 +46,7 @@ interface FileEntry {
 
 const SUPPORTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'];
 const MAX_FILES = 10;
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB (match server limit)
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -87,7 +87,7 @@ export default function CompressPage() {
         continue;
       }
       if (file.size > MAX_FILE_SIZE) {
-        errors.push(`"${file.name}" vượt quá 50MB.`);
+        errors.push(`"${file.name}" vượt quá 10MB.`);
         continue;
       }
       valid.push(file);
@@ -275,11 +275,11 @@ export default function CompressPage() {
             <span>Miễn phí • Không giới hạn</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-3">
-            Nén Ảnh Online
+            Nén Ảnh Online Miễn Phí
           </h1>
           <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-            Giảm dung lượng ảnh mà vẫn giữ chất lượng cao. Hỗ trợ WebP, AVIF, JPEG, PNG.
-            Xử lý hoàn toàn trên server, không lưu trữ ảnh.
+            Giảm dung lượng ảnh tới 90% mà vẫn giữ chất lượng cao. Hỗ trợ WebP, AVIF, JPEG, PNG, GIF.
+            Không cần đăng ký, xử lý nhanh, không lưu trữ ảnh trên server.
           </p>
         </div>
       </div>
@@ -370,7 +370,7 @@ export default function CompressPage() {
             Kéo thả ảnh vào đây hoặc nhấn để chọn
           </p>
           <p className="text-slate-400 text-sm">
-            Tối đa {MAX_FILES} ảnh • Mỗi ảnh tối đa 50MB • JPEG, PNG, WebP, AVIF, GIF
+            Tối đa {MAX_FILES} ảnh • Mỗi ảnh tối đa 10MB • JPEG, PNG, WebP, AVIF, GIF
           </p>
         </div>
 
@@ -553,10 +553,107 @@ export default function CompressPage() {
             </div>
             <h3 className="font-semibold text-slate-800 mb-1">Batch processing</h3>
             <p className="text-sm text-slate-500">
-              Nén tối đa 10 ảnh cùng lúc, mỗi ảnh tối đa 50MB.
+              Nén tối đa 10 ảnh cùng lúc, mỗi ảnh tối đa 10MB.
             </p>
           </div>
         </div>
+
+        {/* SEO Content - How it works */}
+        <section className="mt-16 max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">Cách nén ảnh online với KeyT Compress</h2>
+          <div className="space-y-3 text-slate-600 text-sm leading-relaxed">
+            <p><strong>Bước 1:</strong> Chọn định dạng đầu ra (WebP, AVIF, JPEG hoặc PNG) và điều chỉnh chất lượng mong muốn.</p>
+            <p><strong>Bước 2:</strong> Kéo thả ảnh vào vùng upload hoặc nhấn để chọn file từ máy tính. Hỗ trợ tối đa 10 ảnh cùng lúc.</p>
+            <p><strong>Bước 3:</strong> Nhấn "Nén ảnh" và đợi vài giây. Hệ thống sẽ xử lý từng ảnh và hiển thị kết quả.</p>
+            <p><strong>Bước 4:</strong> Tải về ảnh đã nén. Bạn có thể tải từng ảnh hoặc tải tất cả cùng lúc.</p>
+          </div>
+        </section>
+
+        {/* SEO Content - Why compress */}
+        <section className="mt-12 max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">Tại sao cần nén ảnh?</h2>
+          <ul className="space-y-2 text-slate-600 text-sm leading-relaxed list-disc list-inside">
+            <li><strong>Tăng tốc website:</strong> Ảnh chiếm 50-80% dung lượng trang web. Nén ảnh giúp website load nhanh hơn đáng kể.</li>
+            <li><strong>Cải thiện SEO:</strong> Google ưu tiên xếp hạng website có tốc độ tải nhanh. Ảnh nhẹ = Core Web Vitals tốt hơn.</li>
+            <li><strong>Tiết kiệm băng thông:</strong> Giảm chi phí hosting và CDN khi ảnh nhẹ hơn 70-90%.</li>
+            <li><strong>Tối ưu bán hàng online:</strong> Shopee, Lazada, Facebook yêu cầu ảnh dưới 2MB. Nén ảnh giúp ảnh sản phẩm đạt chuẩn.</li>
+            <li><strong>Trải nghiệm người dùng:</strong> Ảnh tải nhanh giúp khách hàng không rời trang, tăng tỷ lệ chuyển đổi.</li>
+          </ul>
+        </section>
+
+        {/* SEO Content - Format comparison */}
+        <section className="mt-12 max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">So sánh định dạng ảnh</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left border border-slate-200 rounded-lg overflow-hidden">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-4 py-3 font-semibold text-slate-700">Định dạng</th>
+                  <th className="px-4 py-3 font-semibold text-slate-700">Ưu điểm</th>
+                  <th className="px-4 py-3 font-semibold text-slate-700">Phù hợp cho</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                <tr><td className="px-4 py-3 font-medium text-[#F05A28]">WebP</td><td className="px-4 py-3 text-slate-600">Nhẹ hơn JPEG 25-35%, hỗ trợ transparency</td><td className="px-4 py-3 text-slate-600">Website, blog, e-commerce</td></tr>
+                <tr><td className="px-4 py-3 font-medium text-[#F05A28]">AVIF</td><td className="px-4 py-3 text-slate-600">Nhẹ nhất, chất lượng cao nhất</td><td className="px-4 py-3 text-slate-600">Website hiện đại, CDN</td></tr>
+                <tr><td className="px-4 py-3 font-medium text-[#F05A28]">JPEG</td><td className="px-4 py-3 text-slate-600">Tương thích mọi nơi</td><td className="px-4 py-3 text-slate-600">Ảnh chụp, social media, email</td></tr>
+                <tr><td className="px-4 py-3 font-medium text-[#F05A28]">PNG</td><td className="px-4 py-3 text-slate-600">Không mất chất lượng, hỗ trợ nền trong suốt</td><td className="px-4 py-3 text-slate-600">Logo, icon, ảnh cần nền trong suốt</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* SEO Content - FAQ */}
+        <section className="mt-12 max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6">Câu hỏi thường gặp</h2>
+          <div className="space-y-4">
+            <details className="group border border-slate-200 rounded-lg">
+              <summary className="flex justify-between items-center cursor-pointer px-5 py-4 text-sm font-medium text-slate-800">Nén ảnh có giảm chất lượng không?<span className="ml-2 text-[#F05A28] group-open:rotate-180 transition-transform">▼</span></summary>
+              <p className="px-5 pb-4 text-sm text-slate-600">Công cụ sử dụng thuật toán nén thông minh (lossy), giảm dung lượng 70-90% trong khi mắt thường gần như không nhận ra sự khác biệt. Bạn có thể điều chỉnh thanh chất lượng từ 1-100 để kiểm soát mức nén.</p>
+            </details>
+            <details className="group border border-slate-200 rounded-lg">
+              <summary className="flex justify-between items-center cursor-pointer px-5 py-4 text-sm font-medium text-slate-800">Ảnh có bị lưu trên server không?<span className="ml-2 text-[#F05A28] group-open:rotate-180 transition-transform">▼</span></summary>
+              <p className="px-5 pb-4 text-sm text-slate-600">Không. Ảnh được xử lý hoàn toàn trong bộ nhớ tạm và trả về ngay cho bạn. Không có ảnh nào được lưu trữ trên server sau khi xử lý. Quyền riêng tư của bạn được đảm bảo tuyệt đối.</p>
+            </details>
+            <details className="group border border-slate-200 rounded-lg">
+              <summary className="flex justify-between items-center cursor-pointer px-5 py-4 text-sm font-medium text-slate-800">Nên dùng WebP hay JPEG?<span className="ml-2 text-[#F05A28] group-open:rotate-180 transition-transform">▼</span></summary>
+              <p className="px-5 pb-4 text-sm text-slate-600">WebP nhẹ hơn JPEG 25-35% ở cùng chất lượng và được hỗ trợ bởi mọi trình duyệt hiện đại (Chrome, Firefox, Safari, Edge). Nếu website bạn không cần hỗ trợ IE cũ, WebP là lựa chọn tốt nhất.</p>
+            </details>
+            <details className="group border border-slate-200 rounded-lg">
+              <summary className="flex justify-between items-center cursor-pointer px-5 py-4 text-sm font-medium text-slate-800">Có giới hạn bao nhiêu ảnh?<span className="ml-2 text-[#F05A28] group-open:rotate-180 transition-transform">▼</span></summary>
+              <p className="px-5 pb-4 text-sm text-slate-600">Bạn có thể nén tối đa 10 ảnh cùng lúc, mỗi ảnh tối đa 10MB. Không giới hạn số lần sử dụng trong ngày, hoàn toàn miễn phí.</p>
+            </details>
+            <details className="group border border-slate-200 rounded-lg">
+              <summary className="flex justify-between items-center cursor-pointer px-5 py-4 text-sm font-medium text-slate-800">Có cần đăng ký tài khoản không?<span className="ml-2 text-[#F05A28] group-open:rotate-180 transition-transform">▼</span></summary>
+              <p className="px-5 pb-4 text-sm text-slate-600">Không cần đăng ký, không cần đăng nhập. Chỉ cần mở trang và bắt đầu nén ảnh ngay lập tức.</p>
+            </details>
+            <details className="group border border-slate-200 rounded-lg">
+              <summary className="flex justify-between items-center cursor-pointer px-5 py-4 text-sm font-medium text-slate-800">Nén ảnh cho Shopee/Lazada có phù hợp không?<span className="ml-2 text-[#F05A28] group-open:rotate-180 transition-transform">▼</span></summary>
+              <p className="px-5 pb-4 text-sm text-slate-600">Hoàn toàn phù hợp. Các sàn thương mại điện tử yêu cầu ảnh sản phẩm dưới 2MB. Công cụ giúp bạn giảm dung lượng ảnh mà vẫn giữ chất lượng sắc nét, đạt chuẩn upload.</p>
+            </details>
+            <details className="group border border-slate-200 rounded-lg">
+              <summary className="flex justify-between items-center cursor-pointer px-5 py-4 text-sm font-medium text-slate-800">Ảnh GIF động có hỗ trợ không?<span className="ml-2 text-[#F05A28] group-open:rotate-180 transition-transform">▼</span></summary>
+              <p className="px-5 pb-4 text-sm text-slate-600">Có, công cụ hỗ trợ nén ảnh GIF động (animated GIF), giữ nguyên animation và giảm dung lượng đáng kể.</p>
+            </details>
+            <details className="group border border-slate-200 rounded-lg">
+              <summary className="flex justify-between items-center cursor-pointer px-5 py-4 text-sm font-medium text-slate-800">Nén ảnh cho website thế nào cho tốt?<span className="ml-2 text-[#F05A28] group-open:rotate-180 transition-transform">▼</span></summary>
+              <p className="px-5 pb-4 text-sm text-slate-600">Chọn format WebP, chất lượng 75-80, chiều rộng 1200-1600px. Cách này giảm 80-90% dung lượng mà vẫn đẹp trên mọi màn hình. Google khuyến nghị ảnh web dưới 200KB mỗi ảnh.</p>
+            </details>
+          </div>
+        </section>
+
+        {/* SEO Content - Related tools */}
+        <section className="mt-12 max-w-3xl mx-auto mb-8">
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">Công cụ liên quan</h2>
+          <div className="flex flex-wrap gap-3">
+            <a href="/photo-frame" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 hover:border-[#F05A28] hover:text-[#F05A28] transition-colors">
+              🖼️ Photo Frame — Tạo khung ảnh chuyên nghiệp
+            </a>
+            <a href="/products" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 hover:border-[#F05A28] hover:text-[#F05A28] transition-colors">
+              🛒 Canva Pro, CapCut Pro giá rẻ
+            </a>
+          </div>
+        </section>
       </div>
     </div>
   );

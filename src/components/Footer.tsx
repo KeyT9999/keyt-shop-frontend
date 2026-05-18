@@ -44,6 +44,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/compress" className="hover:text-yellow-500 transition-colors flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-gray-600 rounded-full"></span> Nén Ảnh Online
+                </Link>
+              </li>
+              <li>
                 <Link to="/products" className="hover:text-gray-400 text-gray-500 transition-colors text-xs italic">
                   & nhiều hơn nữa...
                 </Link>

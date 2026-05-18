@@ -48,6 +48,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
         { label: 'YOUTUBE SUMMARIZER', href: '/summarizer', hasDropdown: false },
         { label: 'EVIDENCE CHECKER', href: '/evidence', hasDropdown: false },
         { label: 'PHOTO FRAME', href: '/photo-frame', hasDropdown: false },
+        { label: 'NÉN ẢNH', href: '/compress', hasDropdown: false },
         {
             label: 'TIP FREE',
             href: '#',

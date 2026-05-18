@@ -54,6 +54,7 @@ const FAQPage = lazy(() => import('./pages/FAQPage'));
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
 const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
 const PhotoFramePage = lazy(() => import('./pages/PhotoFramePage'));
+const CompressPage = lazy(() => import('./pages/CompressPage'));
 
 export default function App() {
     const { user, token } = useAuthContext();
@@ -203,6 +204,16 @@ export default function App() {
             }
         }
 
+        if (path === '/compress') {
+            return {
+                ...base,
+                title: 'Nén Ảnh Online Miễn Phí – WebP, AVIF, JPEG, PNG | Tiệm KeyT',
+                description:
+                    'Công cụ nén ảnh online miễn phí, hỗ trợ WebP, AVIF, JPEG, PNG. Giảm dung lượng ảnh lên đến 90% mà vẫn giữ chất lượng cao. Nén tối đa 10 ảnh cùng lúc, tải về ngay ✓',
+                canonicalPath: '/compress',
+            }
+        }
+
         return base;
     }, [location.pathname]);
 
@@ -258,6 +269,7 @@ export default function App() {
                         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
                         <Route path="/photo-frame" element={<PhotoFramePage />} />
+                        <Route path="/compress" element={<CompressPage />} />
                         <Route path="/admin/dashboard" element={<AdminDashboard />} />
                         <Route path="/admin/chatgpt-accounts" element={<ChatGptAccountsPage />} />
                         <Route path="/admin/subscriptions" element={<SubscriptionsPage />} />

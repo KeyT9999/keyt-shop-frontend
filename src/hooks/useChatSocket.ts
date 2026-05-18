@@ -9,6 +9,11 @@ export interface Message {
   sender: string;
   senderType: 'customer' | 'admin';
   content: string;
+  messageType?: 'text' | 'image' | 'file';
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileMime?: string;
   readStatus: boolean;
   timestamp: string;
 }
@@ -129,6 +134,21 @@ export function useChatSocket() {
     });
   }, [conversationId]);
 
+  const sendFileMessage = useCallback((fileData: {
+    fileUrl: string;
+    fileName: string;
+    fileSize: number;
+    fileMime: string;
+    messageType: 'image' | 'file';
+  }) => {
+    if (!socketRef.current || !conversationId) return;
+    socketRef.current.emit('chat:send_message', {
+      conversationId,
+      content: '',
+      ...fileData,
+    });
+  }, [conversationId]);
+
   const emitTyping = useCallback(() => {
     if (!socketRef.current || !conversationId) return;
     const now = Date.now();
@@ -149,6 +169,7 @@ export function useChatSocket() {
     isAdminOnline,
     isAdminTyping,
     sendMessage,
+    sendFileMessage,
     emitTyping,
     conversationId,
   };

@@ -1,9 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import axios from 'axios';
-import { MessageCircle, X, Send, ChevronLeft } from 'lucide-react';
+import { MessageCircle, X, Send, ChevronLeft, Paperclip, Loader2 } from 'lucide-react';
 import { useAuthContext } from '../../context/useAuthContext';
 import API_BASE_URL from '../../config/api';
+import { uploadChatFile } from '../../services/chatUpload';
+
+const ACCEPTED_FILE_TYPES = 'image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip';
+const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+}
 
 interface Message {
   _id: string;
@@ -11,6 +23,11 @@ interface Message {
   sender: string;
   senderType: 'customer' | 'admin';
   content: string;
+  messageType?: 'text' | 'image' | 'file';
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
+  fileMime?: string;
   timestamp: string;
 }
 
@@ -40,9 +57,11 @@ export default function AdminChatBubble() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [totalUnread, setTotalUnread] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Audio
   useEffect(() => {
@@ -112,6 +131,61 @@ export default function AdminChatBubble() {
     setText('');
   };
 
+  // Send file
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !token || !socketRef.current || !selectedConv) return;
+    e.target.value = '';
+    setIsUploading(true);
+    try {
+      const result = await uploadChatFile(file, { token });
+      const messageType = IMAGE_MIMES.includes(result.fileMime) ? 'image' : 'file';
+      socketRef.current.emit('chat:send_message', {
+        conversationId: selectedConv._id,
+        content: '',
+        messageType,
+        ...result,
+      });
+    } catch (err) {
+      console.error('[AdminChat] File upload failed:', err);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Render message content
+  const renderMessageContent = (msg: Message) => {
+    if (msg.messageType === 'image' && msg.fileUrl) {
+      return (
+        <img
+          src={msg.fileUrl}
+          alt={msg.fileName || 'Hình ảnh'}
+          className="max-w-[200px] rounded-lg cursor-pointer"
+          onClick={() => window.open(msg.fileUrl, '_blank')}
+        />
+      );
+    }
+    if (msg.messageType === 'file' && msg.fileUrl) {
+      return (
+        <a
+          href={msg.fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+        >
+          <span className="text-lg">📄</span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{msg.fileName || 'Tệp đính kèm'}</p>
+            {msg.fileSize && (
+              <p className="text-xs opacity-75">{formatBytes(msg.fileSize)}</p>
+            )}
+          </div>
+        </a>
+      );
+    }
+    return msg.content;
+  };
+
   return (
     <>
       {/* Floating bubble */}
@@ -179,7 +253,7 @@ export default function AdminChatBubble() {
                     <div className={`max-w-[75%] px-3 py-2 rounded-xl text-sm ${
                       msg.senderType === 'admin' ? 'bg-slate-800 text-white rounded-br-sm' : 'bg-slate-100 text-slate-800 rounded-bl-sm'
                     }`}>
-                      {msg.content}
+                      {renderMessageContent(msg)}
                     </div>
                     <span className="text-[10px] text-slate-400 mt-0.5 px-1">{formatTime(msg.timestamp)}</span>
                   </div>
@@ -187,6 +261,21 @@ export default function AdminChatBubble() {
                 <div ref={endRef} />
               </div>
               <div className="flex items-center gap-2 px-3 py-2 border-t border-slate-100">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ACCEPTED_FILE_TYPES}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="p-2 text-slate-500 hover:text-slate-800 rounded-lg transition-colors disabled:opacity-40"
+                  aria-label="Đính kèm tệp"
+                >
+                  {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Paperclip size={16} />}
+                </button>
                 <input
                   type="text"
                   value={text}

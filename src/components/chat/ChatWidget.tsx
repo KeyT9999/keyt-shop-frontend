@@ -1,6 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { MessageCircle, X, Send, Paperclip, Loader2 } from 'lucide-react';
 import { useChatSocket, type Message } from '../../hooks/useChatSocket';
+import { uploadChatFile } from '../../services/chatUpload';
+
+const ACCEPTED_FILE_TYPES = 'image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip';
+const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+}
 
 function formatTime(timestamp: string): string {
   const date = new Date(timestamp);
@@ -68,6 +80,39 @@ function TypingIndicator() {
 
 function MessageItem({ message }: { message: Message }) {
   const isCustomer = message.senderType === 'customer';
+
+  const renderContent = () => {
+    if (message.messageType === 'image' && message.fileUrl) {
+      return (
+        <img
+          src={message.fileUrl}
+          alt={message.fileName || 'Hình ảnh'}
+          className="max-w-[200px] rounded-lg cursor-pointer"
+          onClick={() => window.open(message.fileUrl, '_blank')}
+        />
+      );
+    }
+    if (message.messageType === 'file' && message.fileUrl) {
+      return (
+        <a
+          href={message.fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+        >
+          <span className="text-lg">📄</span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{message.fileName || 'Tệp đính kèm'}</p>
+            {message.fileSize && (
+              <p className="text-xs opacity-75">{formatBytes(message.fileSize)}</p>
+            )}
+          </div>
+        </a>
+      );
+    }
+    return message.content;
+  };
+
   return (
     <div className={`flex flex-col ${isCustomer ? 'items-end' : 'items-start'} mb-2`}>
       <span className="text-[10px] text-slate-400 mb-0.5 px-1">
@@ -80,7 +125,7 @@ function MessageItem({ message }: { message: Message }) {
             : 'bg-slate-100 text-slate-800 rounded-bl-sm'
         }`}
       >
-        {message.content}
+        {renderContent()}
       </div>
       <span className="text-[10px] text-slate-400 mt-0.5 px-1">
         {formatTime(message.timestamp)}
@@ -121,11 +166,16 @@ function MessageList({
 function MessageInput({
   onSend,
   onTyping,
+  onFileSelect,
+  isUploading,
 }: {
   onSend: (content: string) => void;
   onTyping: () => void;
+  onFileSelect: (file: File) => void;
+  isUploading: boolean;
 }) {
   const [text, setText] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
     if (!text.trim()) return;
@@ -140,8 +190,31 @@ function MessageInput({
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onFileSelect(file);
+      e.target.value = '';
+    }
+  };
+
   return (
     <div className="flex items-center gap-2 px-3 py-2 border-t border-slate-100">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={ACCEPTED_FILE_TYPES}
+        onChange={handleFileChange}
+        className="hidden"
+      />
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        disabled={isUploading}
+        className="p-2 text-slate-500 hover:text-[#F05A28] rounded-lg transition-colors disabled:opacity-40"
+        aria-label="Đính kèm tệp"
+      >
+        {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Paperclip size={18} />}
+      </button>
       <input
         type="text"
         value={text}
@@ -169,6 +242,7 @@ function MessageInput({
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const {
     messages,
     isConnected,
@@ -176,8 +250,23 @@ export default function ChatWidget() {
     isAdminOnline,
     isAdminTyping,
     sendMessage,
+    sendFileMessage,
     emitTyping,
   } = useChatSocket();
+
+  const handleFileSelect = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const sessionId = localStorage.getItem('keyt_chat_session_id') || '';
+      const result = await uploadChatFile(file, { sessionId });
+      const messageType = IMAGE_MIMES.includes(result.fileMime) ? 'image' : 'file';
+      sendFileMessage({ ...result, messageType });
+    } catch (err) {
+      console.error('[ChatWidget] File upload failed:', err);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <>
@@ -203,7 +292,12 @@ export default function ChatWidget() {
           )}
 
           <MessageList messages={messages} isAdminTyping={isAdminTyping} />
-          <MessageInput onSend={sendMessage} onTyping={emitTyping} />
+          <MessageInput
+            onSend={sendMessage}
+            onTyping={emitTyping}
+            onFileSelect={handleFileSelect}
+            isUploading={isUploading}
+          />
         </div>
       )}
     </>

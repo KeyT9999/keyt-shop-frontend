@@ -5,6 +5,8 @@ import { useAuthContext } from './context/useAuthContext';
 
 import Header from './components/Header';
 import FloatingContact from './components/FloatingContact';
+import ChatWidget from './components/chat/ChatWidget';
+import AdminChatBubble from './components/chat/AdminChatBubble';
 import ProtectedRoute from './components/ProtectedRoute';
 import Seo from './components/Seo';
 import StructuredData from './components/StructuredData';
@@ -55,6 +57,7 @@ const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
 const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
 const PhotoFramePage = lazy(() => import('./pages/PhotoFramePage'));
 const CompressPage = lazy(() => import('./pages/CompressPage'));
+const AdminChatPage = lazy(() => import('./pages/admin/AdminChatPage'));
 
 export default function App() {
     const { user, token } = useAuthContext();
@@ -218,6 +221,10 @@ export default function App() {
     }, [location.pathname]);
 
 
+    const isAdminPage = location.pathname.startsWith('/admin');
+    const isAdmin = user?.admin === true;
+    const showChatWidget = !isAdmin && !isAdminPage;
+
     return (
         <div className="app">
             <VisitTracker />
@@ -225,6 +232,8 @@ export default function App() {
             <Seo {...seoConfig} />
             <StructuredData />
             <FloatingContact />
+            {showChatWidget && <ChatWidget />}
+            {isAdmin && <AdminChatBubble />}
             <AnnouncementModal
                 open={announcementOpen}
                 title={announcementTitle}
@@ -282,6 +291,7 @@ export default function App() {
                         <Route path="/admin/netflix-replacements" element={<NetflixReplacementTicketsPage />} />
                         <Route path="/admin/user-login-history/:userId" element={<UserLoginHistoryPage />} />
                         <Route path="/admin/otp-requests" element={<OtpRequestsPage />} />
+                        <Route path="/admin/chat" element={<AdminChatPage />} />
                     </Routes>
                 </Suspense>
             </main>

@@ -71,7 +71,7 @@ export function useChatSocket() {
       // Join or resume conversation
       socket.emit('chat:join', {
         sessionId,
-        ...(user ? { customerId: user.userId || user.id, customerName: user.username, customerEmail: user.email } : {}),
+        ...(user ? { customerId: user.id, customerName: user.username, customerEmail: user.email } : {}),
       });
     });
 

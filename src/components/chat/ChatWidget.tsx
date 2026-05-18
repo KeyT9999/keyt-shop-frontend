@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
-import { useChatSocket, Message } from '../../hooks/useChatSocket';
+import { useChatSocket, type Message } from '../../hooks/useChatSocket';
 
 function formatTime(timestamp: string): string {
   const date = new Date(timestamp);

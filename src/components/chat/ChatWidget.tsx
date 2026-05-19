@@ -1,10 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Paperclip, Loader2 } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { MessageCircle, X, Send, Paperclip, Loader2, Image as ImageIcon } from 'lucide-react';
 import { useChatSocket, type Message } from '../../hooks/useChatSocket';
 import { uploadChatFile } from '../../services/chatUpload';
+import { playChatNotificationSound } from '../../utils/chatNotificationSound';
 
 const ACCEPTED_FILE_TYPES = 'image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip';
 const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+// Giới hạn kích thước ảnh paste từ clipboard: 5MB
+const PASTE_MAX_SIZE = 5 * 1024 * 1024;
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -163,22 +167,70 @@ function MessageList({
   );
 }
 
+/**
+ * PendingImagePreview — Hiển thị preview ảnh paste từ clipboard trước khi gửi.
+ * Cho phép user xem lại và hủy nếu paste nhầm.
+ */
+function PendingImagePreview({
+  file,
+  previewUrl,
+  onCancel,
+}: {
+  file: File;
+  previewUrl: string;
+  onCancel: () => void;
+}) {
+  return (
+    <div
+      className="mx-3 mb-2 flex items-center gap-2 rounded-lg bg-slate-100 p-2"
+      style={{
+        animation: 'chatPreviewSlideIn 0.15s ease',
+      }}
+    >
+      <img
+        src={previewUrl}
+        alt="preview"
+        className="w-16 h-16 object-cover rounded-lg flex-shrink-0 border border-slate-200"
+      />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-slate-700 truncate flex items-center gap-1">
+          <ImageIcon size={11} className="flex-shrink-0 text-[#F05A28]" />
+          {file.name || 'Ảnh từ clipboard'}
+        </p>
+        <p className="text-xs text-slate-400 mt-0.5">{formatBytes(file.size)}</p>
+      </div>
+      <button
+        onClick={onCancel}
+        className="p-1 text-slate-400 hover:text-red-500 transition-colors rounded flex-shrink-0"
+        aria-label="Hủy ảnh"
+        title="Hủy"
+      >
+        <X size={14} />
+      </button>
+    </div>
+  );
+}
+
 function MessageInput({
   onSend,
   onTyping,
   onFileSelect,
+  onPaste,
   isUploading,
+  hasPendingImage,
 }: {
   onSend: (content: string) => void;
   onTyping: () => void;
   onFileSelect: (file: File) => void;
+  onPaste: (e: React.ClipboardEvent<HTMLInputElement>) => void;
   isUploading: boolean;
+  hasPendingImage: boolean;
 }) {
   const [text, setText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
-    if (!text.trim()) return;
+    if (!text.trim() && !hasPendingImage) return;
     onSend(text.trim());
     setText('');
   };
@@ -223,19 +275,34 @@ function MessageInput({
           onTyping();
         }}
         onKeyDown={handleKeyDown}
-        placeholder="Nhập tin nhắn..."
+        onPaste={onPaste}
+        placeholder={hasPendingImage ? 'Nhấn gửi để gửi ảnh...' : 'Nhập tin nhắn...'}
         className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-[#F05A28] bg-white"
       />
       <button
         onClick={handleSend}
-        disabled={!text.trim()}
+        disabled={!text.trim() && !hasPendingImage || isUploading}
         className="p-2 text-white bg-[#F05A28] rounded-lg disabled:opacity-40 hover:bg-[#d94d22] transition-colors"
         aria-label="Gửi tin nhắn"
       >
-        <Send size={18} />
+        {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
       </button>
     </div>
   );
+}
+
+// --- CSS keyframes cho animation (inject vào head nếu chưa có) ---
+const ANIMATION_STYLE_ID = 'chat-widget-animations';
+if (typeof document !== 'undefined' && !document.getElementById(ANIMATION_STYLE_ID)) {
+  const style = document.createElement('style');
+  style.id = ANIMATION_STYLE_ID;
+  style.textContent = `
+    @keyframes chatPreviewSlideIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 // --- Main Widget ---
@@ -243,6 +310,26 @@ function MessageInput({
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  // State cho pending image (paste từ clipboard)
+  const [pendingImage, setPendingImage] = useState<File | null>(null);
+  const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
+  const [pasteError, setPasteError] = useState<string | null>(null);
+  const pasteErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /**
+   * Callback khi có tin nhắn mới từ admin.
+   * useCallback vì isOpen sẽ thay đổi khi user mở/đóng chat.
+   * Chỉ phát âm thanh khi:
+   *   - Chat panel đang đóng (isOpen === false), HOẶC
+   *   - Tab đang bị ẩn (người dùng đang ở tab khác)
+   */
+  const handleNewAdminMessage = useCallback(() => {
+    if (!isOpen || document.hidden) {
+      playChatNotificationSound();
+    }
+  }, [isOpen]);
+
   const {
     messages,
     isConnected,
@@ -252,7 +339,103 @@ export default function ChatWidget() {
     sendMessage,
     sendFileMessage,
     emitTyping,
-  } = useChatSocket();
+  } = useChatSocket({ onNewAdminMessage: handleNewAdminMessage });
+
+  // Cleanup object URL khi pendingImageUrl thay đổi (tránh memory leak)
+  useEffect(() => {
+    return () => {
+      if (pendingImageUrl) URL.revokeObjectURL(pendingImageUrl);
+    };
+  }, [pendingImageUrl]);
+
+  // Xóa pending image khi đóng chat
+  useEffect(() => {
+    if (!isOpen) {
+      clearPendingImage();
+    }
+  }, [isOpen]);
+
+  // Cleanup error timer khi unmount
+  useEffect(() => {
+    return () => {
+      if (pasteErrorTimerRef.current) clearTimeout(pasteErrorTimerRef.current);
+    };
+  }, []);
+
+  function clearPendingImage() {
+    if (pendingImageUrl) URL.revokeObjectURL(pendingImageUrl);
+    setPendingImage(null);
+    setPendingImageUrl(null);
+  }
+
+  function showPasteError(msg: string) {
+    setPasteError(msg);
+    if (pasteErrorTimerRef.current) clearTimeout(pasteErrorTimerRef.current);
+    pasteErrorTimerRef.current = setTimeout(() => setPasteError(null), 3000);
+  }
+
+  /**
+   * Xử lý sự kiện Ctrl+V trong ô chat.
+   * Chỉ can thiệp khi clipboard chứa ảnh — để text paste hoạt động bình thường.
+   */
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const items = Array.from(e.clipboardData.items);
+    const imageItem = items.find((item) => item.type.startsWith('image/'));
+    if (!imageItem) return; // Không có ảnh → để browser tự xử lý paste text
+
+    e.preventDefault(); // Chặn paste text khi có ảnh
+
+    const file = imageItem.getAsFile();
+    if (!file) return;
+
+    // Validate MIME type
+    if (!IMAGE_MIMES.includes(file.type)) {
+      showPasteError('Định dạng ảnh không được hỗ trợ');
+      return;
+    }
+
+    // Validate kích thước
+    if (file.size > PASTE_MAX_SIZE) {
+      showPasteError('Ảnh quá lớn (tối đa 5MB)');
+      return;
+    }
+
+    // Tạo object URL để preview
+    if (pendingImageUrl) URL.revokeObjectURL(pendingImageUrl); // Cleanup URL cũ
+    const url = URL.createObjectURL(file);
+    setPendingImage(file);
+    setPendingImageUrl(url);
+    setPasteError(null);
+  };
+
+  /**
+   * Xử lý gửi tin nhắn.
+   * Ưu tiên: nếu có pending image → upload + sendFileMessage.
+   * Ngược lại → gửi text như bình thường.
+   */
+  const handleSend = async (content: string) => {
+    if (pendingImage) {
+      setIsUploading(true);
+      try {
+        const sessionId = localStorage.getItem('keyt_chat_session_id') || '';
+        const result = await uploadChatFile(pendingImage, { sessionId });
+        const messageType = IMAGE_MIMES.includes(result.fileMime) ? 'image' : 'file';
+        sendFileMessage({ ...result, messageType });
+        clearPendingImage();
+      } catch (err) {
+        console.error('[ChatWidget] Paste image upload failed:', err);
+        showPasteError('Gửi ảnh thất bại, vui lòng thử lại');
+      } finally {
+        setIsUploading(false);
+      }
+      return;
+    }
+
+    // Không có pending image → gửi text
+    if (content.trim()) {
+      sendMessage(content);
+    }
+  };
 
   const handleFileSelect = async (file: File) => {
     setIsUploading(true);
@@ -292,11 +475,28 @@ export default function ChatWidget() {
           )}
 
           <MessageList messages={messages} isAdminTyping={isAdminTyping} />
+
+          {/* Preview ảnh paste từ clipboard */}
+          {pendingImage && pendingImageUrl && (
+            <PendingImagePreview
+              file={pendingImage}
+              previewUrl={pendingImageUrl}
+              onCancel={clearPendingImage}
+            />
+          )}
+
+          {/* Inline error message */}
+          {pasteError && (
+            <p className="text-xs text-red-500 px-4 pb-1">{pasteError}</p>
+          )}
+
           <MessageInput
-            onSend={sendMessage}
+            onSend={handleSend}
             onTyping={emitTyping}
             onFileSelect={handleFileSelect}
+            onPaste={handlePaste}
             isUploading={isUploading}
+            hasPendingImage={!!pendingImage}
           />
         </div>
       )}

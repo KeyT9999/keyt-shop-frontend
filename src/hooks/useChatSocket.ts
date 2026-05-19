@@ -18,6 +18,15 @@ export interface Message {
   timestamp: string;
 }
 
+/**
+ * Options cho useChatSocket.
+ * onNewAdminMessage: callback khi nhận tin nhắn mới từ admin.
+ * Dùng để ChatWidget tự quyết định có phát âm thanh hay không.
+ */
+export interface UseChatSocketOptions {
+  onNewAdminMessage?: () => void;
+}
+
 // Derive socket URL from API_BASE_URL: strip /api path
 function getSocketUrl(): string {
   try {
@@ -40,7 +49,7 @@ function getOrCreateSessionId(): string {
   return sessionId;
 }
 
-export function useChatSocket() {
+export function useChatSocket(options: UseChatSocketOptions = {}) {
   const { token, user } = useAuthContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -103,6 +112,10 @@ export function useChatSocket() {
 
     socket.on('chat:message_received', (data: { message: Message }) => {
       setMessages((prev) => [...prev, data.message]);
+      // Notify ChatWidget khi có tin từ admin để quyết định phát âm thanh
+      if (data.message.senderType === 'admin') {
+        options.onNewAdminMessage?.();
+      }
     });
 
     socket.on('chat:typing_indicator', (data: { isTyping: boolean; sender: string }) => {

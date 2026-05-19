@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import axios from 'axios';
-import { MessageCircle, Send, CheckCircle, Circle } from 'lucide-react';
+import { MessageCircle, Send, CheckCircle, Circle, Search } from 'lucide-react';
 import { useAuthContext } from '../../context/useAuthContext';
 import API_BASE_URL from '../../config/api';
 
@@ -131,6 +131,8 @@ function ConversationList({
   onSelect,
   filter,
   onFilterChange,
+  searchTerm,
+  onSearchChange,
   loading,
 }: {
   conversations: Conversation[];
@@ -138,8 +140,12 @@ function ConversationList({
   onSelect: (id: string) => void;
   filter: 'active' | 'resolved';
   onFilterChange: (f: 'active' | 'resolved') => void;
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
   loading: boolean;
 }) {
+  const hasSearch = searchTerm.trim().length > 0;
+
   return (
     <div className="w-80 border-r border-slate-200 flex flex-col bg-white">
       <div className="px-4 py-3 border-b border-slate-200">
@@ -149,13 +155,30 @@ function ConversationList({
         </h2>
       </div>
       <ConversationFilter filter={filter} onChange={onFilterChange} />
+      <div className="px-3 py-3 border-b border-slate-100">
+        <label className="relative block">
+          <Search
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Tìm tên, email hoặc session..."
+            className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-500"
+            aria-label="Tìm kiếm khách hàng trong chat"
+          />
+        </label>
+      </div>
       <div className="flex-1 overflow-y-auto">
         {loading && (
           <p className="text-center text-slate-400 text-sm py-8">Đang tải...</p>
         )}
         {!loading && conversations.length === 0 && (
           <p className="text-center text-slate-400 text-sm py-8">
-            Không có cuộc hội thoại nào
+            {hasSearch ? 'Không tìm thấy khách hàng' : 'Không có cuộc hội thoại nào'}
           </p>
         )}
         {conversations.map((conv) => (
@@ -351,11 +374,14 @@ export default function AdminChatPage() {
   const [isCustomerTyping, setIsCustomerTyping] = useState(false);
   const [loading, setLoading] = useState(false);
   const [totalUnread, setTotalUnread] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
   const socketRef = useRef<Socket | null>(null);
   const lastTypingEmit = useRef<number>(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isTabFocused = useRef(true);
+  const fetchConversationsRef = useRef<() => void>(() => {});
 
   // Audio notification setup
   useEffect(() => {
@@ -393,13 +419,24 @@ export default function AdminChatPage() {
     }
   }, [totalUnread]);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [searchTerm]);
+
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
       const res = await axios.get(`${API_BASE_URL}/chat/conversations`, {
-        params: { status: filter },
+        params: {
+          status: filter,
+          ...(debouncedSearchTerm ? { search: debouncedSearchTerm } : {}),
+        },
         headers: { Authorization: `Bearer ${token}` },
       });
       const data: Conversation[] = res.data.conversations || res.data;
@@ -417,7 +454,11 @@ export default function AdminChatPage() {
     } finally {
       setLoading(false);
     }
-  }, [token, filter]);
+  }, [token, filter, debouncedSearchTerm]);
+
+  useEffect(() => {
+    fetchConversationsRef.current = fetchConversations;
+  }, [fetchConversations]);
 
   useEffect(() => {
     fetchConversations();
@@ -480,7 +521,7 @@ export default function AdminChatPage() {
       }
 
       // Refresh conversation list
-      fetchConversations();
+      fetchConversationsRef.current();
     });
 
     // Typing indicator from customer
@@ -496,14 +537,13 @@ export default function AdminChatPage() {
 
     // Conversation updated (e.g. new conversation created, resolved, etc.)
     socket.on('admin:conversation_updated', () => {
-      fetchConversations();
+      fetchConversationsRef.current();
     });
 
     return () => {
       socket.disconnect();
       socketRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, selectedId]);
 
   // Send message as admin
@@ -549,6 +589,8 @@ export default function AdminChatPage() {
         onSelect={setSelectedId}
         filter={filter}
         onFilterChange={setFilter}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         loading={loading}
       />
       <ConversationView

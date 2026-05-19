@@ -1,13 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import axios from 'axios';
-import { MessageCircle, X, Send, ChevronLeft, Paperclip, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, ChevronLeft, Paperclip, Loader2, Search, Image as ImageIcon } from 'lucide-react';
 import { useAuthContext } from '../../context/useAuthContext';
 import API_BASE_URL from '../../config/api';
 import { uploadChatFile } from '../../services/chatUpload';
+import { playChatNotificationSound } from '../../utils/chatNotificationSound';
 
 const ACCEPTED_FILE_TYPES = 'image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip';
 const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+// Giới hạn kích thước ảnh paste từ clipboard: 5MB
+const PASTE_MAX_SIZE = 5 * 1024 * 1024;
 
 function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
@@ -49,6 +53,62 @@ function formatTime(ts: string) {
   return new Date(ts).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 }
 
+/**
+ * PendingImagePreview — Hiển thị preview ảnh paste từ clipboard (admin).
+ * Styling nhất quán với admin theme (slate tones).
+ */
+function PendingImagePreview({
+  file,
+  previewUrl,
+  onCancel,
+}: {
+  file: File;
+  previewUrl: string;
+  onCancel: () => void;
+}) {
+  return (
+    <div
+      className="mx-3 mb-2 flex items-center gap-2 rounded-lg bg-slate-100 p-2"
+      style={{ animation: 'adminChatPreviewSlideIn 0.15s ease' }}
+    >
+      <img
+        src={previewUrl}
+        alt="preview"
+        className="w-14 h-14 object-cover rounded-lg flex-shrink-0 border border-slate-200"
+      />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-slate-700 truncate flex items-center gap-1">
+          <ImageIcon size={11} className="flex-shrink-0 text-slate-500" />
+          {file.name || 'Ảnh từ clipboard'}
+        </p>
+        <p className="text-xs text-slate-400 mt-0.5">{formatBytes(file.size)}</p>
+      </div>
+      <button
+        onClick={onCancel}
+        className="p-1 text-slate-400 hover:text-red-500 transition-colors rounded flex-shrink-0"
+        aria-label="Hủy ảnh"
+        title="Hủy"
+      >
+        <X size={14} />
+      </button>
+    </div>
+  );
+}
+
+// Inject keyframes animation cho preview slide-in
+const ANIMATION_STYLE_ID = 'admin-chat-animations';
+if (typeof document !== 'undefined' && !document.getElementById(ANIMATION_STYLE_ID)) {
+  const style = document.createElement('style');
+  style.id = ANIMATION_STYLE_ID;
+  style.textContent = `
+    @keyframes adminChatPreviewSlideIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 export default function AdminChatBubble() {
   const { token } = useAuthContext();
   const [isOpen, setIsOpen] = useState(false);
@@ -58,31 +118,51 @@ export default function AdminChatBubble() {
   const [text, setText] = useState('');
   const [totalUnread, setTotalUnread] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // State cho pending image (paste từ clipboard)
+  const [pendingImage, setPendingImage] = useState<File | null>(null);
+  const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
+  const [pasteError, setPasteError] = useState<string | null>(null);
+  const pasteErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const socketRef = useRef<Socket | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fetchConversationsRef = useRef<() => void>(() => {});
 
-  // Audio
+  // Debounce search term
   useEffect(() => {
-    audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ==');
-    audioRef.current.volume = 0.3;
-  }, []);
+    const timer = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [searchTerm]);
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
     if (!token) return;
     try {
       const res = await axios.get(`${API_BASE_URL}/chat/conversations`, {
-        params: { status: 'active' },
+        params: {
+          status: 'active',
+          ...(debouncedSearchTerm ? { search: debouncedSearchTerm } : {}),
+        },
         headers: { Authorization: `Bearer ${token}` },
       });
       const data: Conversation[] = res.data.conversations || [];
       data.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
       setConversations(data);
       setTotalUnread(data.reduce((s, c) => s + c.unreadCount, 0));
-    } catch {}
-  }, [token]);
+    } catch (err) {
+      console.error('[AdminChatBubble] Failed to fetch conversations:', err);
+    }
+  }, [token, debouncedSearchTerm]);
+
+  useEffect(() => {
+    fetchConversationsRef.current = fetchConversations;
+  }, [fetchConversations]);
 
   useEffect(() => { fetchConversations(); }, [fetchConversations]);
 
@@ -99,15 +179,18 @@ export default function AdminChatBubble() {
     socket.on('connect', () => { socket.emit('admin:join', { token }); });
 
     socket.on('admin:new_message', (data: { message: Message }) => {
-      audioRef.current?.play().catch(() => {});
-      fetchConversations();
+      // F2: Phát âm thanh thông báo khi có tin nhắn mới từ khách hàng
+      // Admin luôn cần biết ngay khi có khách nhắn
+      playChatNotificationSound();
+
+      fetchConversationsRef.current();
       if (selectedConv && data.message.conversationId === selectedConv._id) {
         setMessages(prev => [...prev, data.message]);
       }
     });
 
-    socket.on('chat:conversation_created', () => { fetchConversations(); });
-    socket.on('admin:conversation_updated', () => { fetchConversations(); });
+    socket.on('chat:conversation_created', () => { fetchConversationsRef.current(); });
+    socket.on('admin:conversation_updated', () => { fetchConversationsRef.current(); });
 
     return () => { socket.disconnect(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -124,14 +207,106 @@ export default function AdminChatBubble() {
   // Auto scroll
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  // Send message
-  const handleSend = () => {
-    if (!text.trim() || !socketRef.current || !selectedConv) return;
+  // Cleanup object URL khi pendingImageUrl thay đổi (tránh memory leak)
+  useEffect(() => {
+    return () => {
+      if (pendingImageUrl) URL.revokeObjectURL(pendingImageUrl);
+    };
+  }, [pendingImageUrl]);
+
+  // Cleanup error timer khi unmount
+  useEffect(() => {
+    return () => {
+      if (pasteErrorTimerRef.current) clearTimeout(pasteErrorTimerRef.current);
+    };
+  }, []);
+
+  // Xóa pending image khi chuyển conversation
+  useEffect(() => {
+    clearPendingImage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedConv?._id]);
+
+  function clearPendingImage() {
+    if (pendingImageUrl) URL.revokeObjectURL(pendingImageUrl);
+    setPendingImage(null);
+    setPendingImageUrl(null);
+  }
+
+  function showPasteError(msg: string) {
+    setPasteError(msg);
+    if (pasteErrorTimerRef.current) clearTimeout(pasteErrorTimerRef.current);
+    pasteErrorTimerRef.current = setTimeout(() => setPasteError(null), 3000);
+  }
+
+  /**
+   * Xử lý sự kiện Ctrl+V trong ô chat admin.
+   * Chỉ can thiệp khi clipboard chứa ảnh — text paste hoạt động bình thường.
+   */
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const items = Array.from(e.clipboardData.items);
+    const imageItem = items.find((item) => item.type.startsWith('image/'));
+    if (!imageItem) return; // Không có ảnh → để browser tự xử lý paste text
+
+    e.preventDefault();
+
+    const file = imageItem.getAsFile();
+    if (!file) return;
+
+    // Validate MIME type
+    if (!IMAGE_MIMES.includes(file.type)) {
+      showPasteError('Định dạng ảnh không được hỗ trợ');
+      return;
+    }
+
+    // Validate kích thước
+    if (file.size > PASTE_MAX_SIZE) {
+      showPasteError('Ảnh quá lớn (tối đa 5MB)');
+      return;
+    }
+
+    // Tạo object URL để preview
+    if (pendingImageUrl) URL.revokeObjectURL(pendingImageUrl);
+    const url = URL.createObjectURL(file);
+    setPendingImage(file);
+    setPendingImageUrl(url);
+    setPasteError(null);
+  };
+
+  // Send text message (hoặc pending image)
+  const handleSend = async () => {
+    if (!socketRef.current || !selectedConv) return;
+
+    // Ưu tiên gửi pending image nếu có
+    if (pendingImage) {
+      if (!token) return;
+      setIsUploading(true);
+      try {
+        const result = await uploadChatFile(pendingImage, { token });
+        const messageType = IMAGE_MIMES.includes(result.fileMime) ? 'image' : 'file';
+        socketRef.current.emit('chat:send_message', {
+          conversationId: selectedConv._id,
+          content: '',
+          messageType,
+          ...result,
+        });
+        clearPendingImage();
+      } catch (err) {
+        console.error('[AdminChat] Paste image upload failed:', err);
+        showPasteError('Gửi ảnh thất bại, vui lòng thử lại');
+      } finally {
+        setIsUploading(false);
+      }
+      return;
+    }
+
+    // Gửi text nếu không có pending image
+    if (!text.trim()) return;
     socketRef.current.emit('chat:send_message', { conversationId: selectedConv._id, content: text.trim() });
     setText('');
   };
 
-  // Send file
+  // Send file qua button đính kèm (không phải paste)
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !token || !socketRef.current || !selectedConv) return;
@@ -222,28 +397,49 @@ export default function AdminChatBubble() {
           {/* Content */}
           {!selectedConv ? (
             // Conversation list
-            <div className="flex-1 overflow-y-auto">
-              {conversations.length === 0 && (
-                <p className="text-center text-slate-400 text-sm py-8">Chưa có tin nhắn nào</p>
-              )}
-              {conversations.map(conv => (
-                <button
-                  key={conv._id}
-                  onClick={() => setSelectedConv(conv)}
-                  className="w-full text-left px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-sm text-slate-800">{conv.customerName}</span>
-                    {conv.unreadCount > 0 && (
-                      <span className="bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                        {conv.unreadCount}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 truncate mt-0.5">{conv.lastMessage || '...'}</p>
-                </button>
-              ))}
-            </div>
+            <>
+              <div className="px-3 py-3 border-b border-slate-100">
+                <label className="relative block">
+                  <Search
+                    size={15}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    aria-hidden="true"
+                  />
+                  <input
+                    type="search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Tìm khách hàng..."
+                    className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-500"
+                    aria-label="Tìm kiếm khách hàng trong chat"
+                  />
+                </label>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {conversations.length === 0 && (
+                  <p className="text-center text-slate-400 text-sm py-8">
+                    {searchTerm.trim() ? 'Không tìm thấy khách hàng' : 'Chưa có tin nhắn nào'}
+                  </p>
+                )}
+                {conversations.map(conv => (
+                  <button
+                    key={conv._id}
+                    onClick={() => setSelectedConv(conv)}
+                    className="w-full text-left px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-sm text-slate-800">{conv.customerName}</span>
+                      {conv.unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                          {conv.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 truncate mt-0.5">{conv.lastMessage || '...'}</p>
+                  </button>
+                ))}
+              </div>
+            </>
           ) : (
             // Chat view
             <>
@@ -260,6 +456,22 @@ export default function AdminChatBubble() {
                 ))}
                 <div ref={endRef} />
               </div>
+
+              {/* Preview ảnh paste từ clipboard */}
+              {pendingImage && pendingImageUrl && (
+                <PendingImagePreview
+                  file={pendingImage}
+                  previewUrl={pendingImageUrl}
+                  onCancel={clearPendingImage}
+                />
+              )}
+
+              {/* Inline error message */}
+              {pasteError && (
+                <p className="text-xs text-red-500 px-4 pb-1">{pasteError}</p>
+              )}
+
+              {/* Input area */}
               <div className="flex items-center gap-2 px-3 py-2 border-t border-slate-100">
                 <input
                   ref={fileInputRef}
@@ -281,11 +493,16 @@ export default function AdminChatBubble() {
                   value={text}
                   onChange={e => setText(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                  placeholder="Trả lời..."
+                  onPaste={handlePaste}
+                  placeholder={pendingImage ? 'Nhấn gửi để gửi ảnh...' : 'Trả lời...'}
                   className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-slate-500"
                 />
-                <button onClick={handleSend} disabled={!text.trim()} className="p-2 bg-slate-800 text-white rounded-lg disabled:opacity-40 hover:bg-slate-700">
-                  <Send size={16} />
+                <button
+                  onClick={handleSend}
+                  disabled={(!text.trim() && !pendingImage) || isUploading}
+                  className="p-2 bg-slate-800 text-white rounded-lg disabled:opacity-40 hover:bg-slate-700"
+                >
+                  {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                 </button>
               </div>
             </>

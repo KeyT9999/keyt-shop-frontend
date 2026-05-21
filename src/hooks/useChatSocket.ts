@@ -16,6 +16,17 @@ export interface Message {
   fileMime?: string;
   readStatus: boolean;
   timestamp: string;
+  reactions?: Array<{
+    emoji: string;
+    users: string[];
+  }>;
+  isDeleted?: boolean;
+  deletedAt?: string;
+  editedAt?: string;
+  editHistory?: Array<{
+    content: string;
+    editedAt: string;
+  }>;
 }
 
 /**
@@ -67,8 +78,9 @@ export function useChatSocket(options: UseChatSocketOptions = {}) {
 
     const socket = io(socketUrl, {
       auth: {
-        sessionId: getOrCreateSessionId(),
+        sessionId,
         role: 'customer',
+        ...(token ? { token } : {}),
       },
       transports: ['websocket', 'polling'],
       reconnection: true,
@@ -128,6 +140,36 @@ export function useChatSocket(options: UseChatSocketOptions = {}) {
       setIsAdminOnline(data.online);
     });
 
+    socket.on('chat:reaction_updated', (data: { messageId: string; reactions: NonNullable<Message['reactions']> }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === data.messageId
+            ? { ...msg, reactions: data.reactions }
+            : msg
+        )
+      );
+    });
+
+    socket.on('chat:message_edited', (data: { messageId: string; content: string; editedAt: string }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === data.messageId
+            ? { ...msg, content: data.content, editedAt: data.editedAt }
+            : msg
+        )
+      );
+    });
+
+    socket.on('chat:message_deleted', (data: { messageId: string }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === data.messageId
+            ? { ...msg, isDeleted: true, deletedAt: new Date().toISOString() }
+            : msg
+        )
+      );
+    });
+
     socket.on('error', (data: { code: string; message: string }) => {
       console.error('[Chat Socket Error]', data.code, data.message);
     });
@@ -175,6 +217,68 @@ export function useChatSocket(options: UseChatSocketOptions = {}) {
     }, 3000);
   }, [conversationId]);
 
+  const addReaction = useCallback((messageId: string, emoji: string) => {
+    if (!socketRef.current) return;
+    const currentUserId = getOrCreateSessionId();
+
+    // Optimistic update so the selected emoji appears immediately.
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg._id !== messageId) return msg;
+
+        const reactions = [...(msg.reactions || [])];
+        const reactionIndex = reactions.findIndex((reaction) => reaction.emoji === emoji);
+
+        if (reactionIndex === -1) {
+          reactions.push({ emoji, users: [currentUserId] });
+        } else if (!reactions[reactionIndex].users.includes(currentUserId)) {
+          reactions[reactionIndex] = {
+            ...reactions[reactionIndex],
+            users: [...reactions[reactionIndex].users, currentUserId],
+          };
+        }
+
+        return { ...msg, reactions };
+      })
+    );
+
+    socketRef.current.emit('chat:add_reaction', { messageId, emoji });
+  }, []);
+
+  const removeReaction = useCallback((messageId: string, emoji: string) => {
+    if (!socketRef.current) return;
+    const currentUserId = getOrCreateSessionId();
+
+    // Optimistic update; authoritative state still comes back via chat:reaction_updated.
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg._id !== messageId) return msg;
+
+        const reactions = (msg.reactions || [])
+          .map((reaction) =>
+            reaction.emoji === emoji
+              ? { ...reaction, users: reaction.users.filter((userId) => userId !== currentUserId) }
+              : reaction
+          )
+          .filter((reaction) => reaction.users.length > 0);
+
+        return { ...msg, reactions };
+      })
+    );
+
+    socketRef.current.emit('chat:remove_reaction', { messageId, emoji });
+  }, []);
+
+  const editMessage = useCallback((messageId: string, content: string) => {
+    if (!socketRef.current) return;
+    socketRef.current.emit('chat:edit_message', { messageId, content });
+  }, []);
+
+  const deleteMessage = useCallback((messageId: string) => {
+    if (!socketRef.current) return;
+    socketRef.current.emit('chat:delete_message', { messageId });
+  }, []);
+
   return {
     messages,
     isConnected,
@@ -184,6 +288,10 @@ export function useChatSocket(options: UseChatSocketOptions = {}) {
     sendMessage,
     sendFileMessage,
     emitTyping,
+    addReaction,
+    removeReaction,
+    editMessage,
+    deleteMessage,
     conversationId,
   };
 }

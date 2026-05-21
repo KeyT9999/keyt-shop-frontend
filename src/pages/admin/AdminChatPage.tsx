@@ -4,6 +4,10 @@ import axios from 'axios';
 import { MessageCircle, Send, CheckCircle, Circle, Search } from 'lucide-react';
 import { useAuthContext } from '../../context/useAuthContext';
 import API_BASE_URL from '../../config/api';
+import MessageReactions from '../../components/chat/MessageReactions';
+import MessageActions from '../../components/chat/MessageActions';
+import EditMessageModal from '../../components/chat/EditMessageModal';
+import MessageSearch from '../../components/chat/MessageSearch';
 
 // --- Types ---
 
@@ -15,6 +19,17 @@ interface Message {
   content: string;
   readStatus: boolean;
   timestamp: string;
+  isDeleted?: boolean;
+  deletedAt?: string;
+  editedAt?: string;
+  editHistory?: Array<{
+    content: string;
+    editedAt: string;
+  }>;
+  reactions?: Array<{
+    emoji: string;
+    users: string[];
+  }>;
 }
 
 interface Conversation {
@@ -194,25 +209,71 @@ function ConversationList({
   );
 }
 
-function AdminMessageItem({ message }: { message: Message }) {
+function AdminMessageItem({
+  message,
+  currentUserId,
+  onAddReaction,
+  onRemoveReaction,
+  onEditMessage,
+  onDeleteMessage,
+}: {
+  message: Message;
+  currentUserId: string;
+  onAddReaction: (messageId: string, emoji: string) => void;
+  onRemoveReaction: (messageId: string, emoji: string) => void;
+  onEditMessage: (message: Message) => void;
+  onDeleteMessage: (messageId: string) => void;
+}) {
   const isAdmin = message.senderType === 'admin';
+  const isDeleted = Boolean(message.isDeleted);
+
   return (
-    <div className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'} mb-2`}>
+    <div
+      id={`admin-message-${message._id}`}
+      className={`flex flex-col ${isAdmin ? 'items-end' : 'items-start'} mb-2`}
+    >
       <span className="text-[10px] text-slate-400 mb-0.5 px-1">
         {isAdmin ? 'Bạn' : 'Khách'}
       </span>
       <div
-        className={`max-w-[70%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
-          isAdmin
-            ? 'bg-slate-800 text-white rounded-br-sm'
-            : 'bg-slate-100 text-slate-800 rounded-bl-sm'
+        className={`relative group max-w-[70%] px-3 py-2 rounded-xl text-sm leading-relaxed overflow-visible ${
+          isDeleted
+            ? 'bg-slate-50 text-slate-400 border border-slate-200'
+            : isAdmin
+              ? 'bg-slate-800 text-white rounded-br-sm'
+              : 'bg-slate-100 text-slate-800 rounded-bl-sm'
         }`}
       >
-        {message.content}
+        <div className="absolute -top-2 -right-2 z-20 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          <MessageActions
+            message={message}
+            currentUserId={currentUserId}
+            onEdit={() => onEditMessage(message)}
+            onDelete={() => onDeleteMessage(message._id)}
+          />
+        </div>
+        {isDeleted ? (
+          <span className="italic opacity-70">Tin nhắn đã bị xóa</span>
+        ) : (
+          message.content
+        )}
       </div>
       <span className="text-[10px] text-slate-400 mt-0.5 px-1">
         {formatTime(message.timestamp)}
+        {message.editedAt && !isDeleted && (
+          <span className="ml-1 italic">(đã chỉnh sửa)</span>
+        )}
       </span>
+      {!isDeleted && (
+        <MessageReactions
+          messageId={message._id}
+          reactions={message.reactions || []}
+          currentUserId={currentUserId}
+          onAddReaction={onAddReaction}
+          onRemoveReaction={onRemoveReaction}
+          align={isAdmin ? 'right' : 'left'}
+        />
+      )}
     </div>
   );
 }
@@ -287,6 +348,16 @@ function ConversationView({
   onSend,
   onTyping,
   onResolve,
+  currentUserId,
+  onAddReaction,
+  onRemoveReaction,
+  onEditMessage,
+  onDeleteMessage,
+  isSearchOpen,
+  onSearchToggle,
+  onSearchClose,
+  onSearchResultClick,
+  token,
 }: {
   messages: Message[];
   isTyping: boolean;
@@ -294,6 +365,16 @@ function ConversationView({
   onSend: (content: string) => void;
   onTyping: () => void;
   onResolve: () => void;
+  currentUserId: string;
+  onAddReaction: (messageId: string, emoji: string) => void;
+  onRemoveReaction: (messageId: string, emoji: string) => void;
+  onEditMessage: (message: Message) => void;
+  onDeleteMessage: (messageId: string) => void;
+  isSearchOpen: boolean;
+  onSearchToggle: () => void;
+  onSearchClose: () => void;
+  onSearchResultClick: (messageId: string) => void;
+  token?: string | null;
 }) {
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -316,7 +397,7 @@ function ConversationView({
     <div className="flex-1 flex flex-col bg-slate-50">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200">
-        <div>
+        <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-sm text-slate-800">
             {selectedConversation.customerName}
           </h3>
@@ -324,6 +405,18 @@ function ConversationView({
             {selectedConversation.customerEmail || 'Khách ẩn danh'}
           </span>
         </div>
+        <button
+          onClick={onSearchToggle}
+          className={`p-2 rounded-lg transition-colors ${
+            isSearchOpen
+              ? 'bg-slate-100 text-slate-900'
+              : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+          }`}
+          aria-label="Tìm kiếm tin nhắn"
+          title="Tìm kiếm tin nhắn"
+        >
+          <Search size={16} />
+        </button>
         {selectedConversation.status === 'active' && (
           <button
             onClick={onResolve}
@@ -342,16 +435,35 @@ function ConversationView({
       </div>
 
       {/* Messages */}
+      {isSearchOpen ? (
+        <div className="flex-1 min-h-0">
+          <MessageSearch
+            conversationId={selectedConversation._id}
+            onResultClick={onSearchResultClick}
+            onClose={onSearchClose}
+            token={token}
+          />
+        </div>
+      ) : (
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {messages.length === 0 && (
           <p className="text-center text-slate-400 text-sm mt-8">Chưa có tin nhắn</p>
         )}
         {messages.map((msg) => (
-          <AdminMessageItem key={msg._id} message={msg} />
+          <AdminMessageItem
+            key={msg._id}
+            message={msg}
+            currentUserId={currentUserId}
+            onAddReaction={onAddReaction}
+            onRemoveReaction={onRemoveReaction}
+            onEditMessage={onEditMessage}
+            onDeleteMessage={onDeleteMessage}
+          />
         ))}
         {isTyping && <AdminTypingIndicator />}
         <div ref={endRef} />
       </div>
+      )}
 
       {/* Input */}
       <AdminMessageInput
@@ -366,7 +478,7 @@ function ConversationView({
 // --- Main Page ---
 
 export default function AdminChatPage() {
-  const { token } = useAuthContext();
+  const { token, user } = useAuthContext();
   const [filter, setFilter] = useState<'active' | 'resolved'>('active');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -376,6 +488,8 @@ export default function AdminChatPage() {
   const [totalUnread, setTotalUnread] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [isMessageSearchOpen, setIsMessageSearchOpen] = useState(false);
 
   const socketRef = useRef<Socket | null>(null);
   const lastTypingEmit = useRef<number>(0);
@@ -486,6 +600,11 @@ export default function AdminChatPage() {
     fetchMessages();
   }, [selectedId, token]);
 
+  useEffect(() => {
+    setIsMessageSearchOpen(false);
+    setEditingMessage(null);
+  }, [selectedId]);
+
   // Socket.io connection as admin
   useEffect(() => {
     if (!token) return;
@@ -540,6 +659,36 @@ export default function AdminChatPage() {
       fetchConversationsRef.current();
     });
 
+    socket.on('chat:reaction_updated', (data: { messageId: string; reactions: Message['reactions'] }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === data.messageId
+            ? { ...msg, reactions: data.reactions || [] }
+            : msg
+        )
+      );
+    });
+
+    socket.on('chat:message_edited', (data: { messageId: string; content: string; editedAt: string }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === data.messageId
+            ? { ...msg, content: data.content, editedAt: data.editedAt }
+            : msg
+        )
+      );
+    });
+
+    socket.on('chat:message_deleted', (data: { messageId: string; deletedAt?: string }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === data.messageId
+            ? { ...msg, isDeleted: true, deletedAt: data.deletedAt || new Date().toISOString() }
+            : msg
+        )
+      );
+    });
+
     return () => {
       socket.disconnect();
       socketRef.current = null;
@@ -571,6 +720,33 @@ export default function AdminChatPage() {
     }, 3000);
   }, [selectedId]);
 
+  const handleAddReaction = useCallback((messageId: string, emoji: string) => {
+    socketRef.current?.emit('chat:add_reaction', { messageId, emoji });
+  }, []);
+
+  const handleRemoveReaction = useCallback((messageId: string, emoji: string) => {
+    socketRef.current?.emit('chat:remove_reaction', { messageId, emoji });
+  }, []);
+
+  const handleEditMessage = useCallback((messageId: string, content: string) => {
+    socketRef.current?.emit('chat:edit_message', { messageId, content });
+    setEditingMessage(null);
+  }, []);
+
+  const handleDeleteMessage = useCallback((messageId: string) => {
+    socketRef.current?.emit('chat:delete_message', { messageId });
+  }, []);
+
+  const handleSearchResultClick = useCallback((messageId: string) => {
+    setIsMessageSearchOpen(false);
+    setTimeout(() => {
+      document.getElementById(`admin-message-${messageId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, 100);
+  }, []);
+
   // Resolve conversation
   const handleResolve = useCallback(() => {
     if (!socketRef.current || !selectedId) return;
@@ -582,7 +758,8 @@ export default function AdminChatPage() {
   const selectedConversation = conversations.find((c) => c._id === selectedId) || null;
 
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-white border border-slate-200 rounded-lg overflow-hidden m-4 shadow-sm">
+    <>
+      <div className="flex h-[calc(100vh-64px)] bg-white border border-slate-200 rounded-lg overflow-hidden m-4 shadow-sm">
       <ConversationList
         conversations={conversations}
         selectedId={selectedId}
@@ -600,7 +777,25 @@ export default function AdminChatPage() {
         onSend={handleSend}
         onTyping={handleTyping}
         onResolve={handleResolve}
+        currentUserId={user?.id || ''}
+        onAddReaction={handleAddReaction}
+        onRemoveReaction={handleRemoveReaction}
+        onEditMessage={setEditingMessage}
+        onDeleteMessage={handleDeleteMessage}
+        isSearchOpen={isMessageSearchOpen}
+        onSearchToggle={() => setIsMessageSearchOpen((open) => !open)}
+        onSearchClose={() => setIsMessageSearchOpen(false)}
+        onSearchResultClick={handleSearchResultClick}
+        token={token}
       />
-    </div>
+      </div>
+      {editingMessage && (
+        <EditMessageModal
+          message={editingMessage}
+          onSave={handleEditMessage}
+          onClose={() => setEditingMessage(null)}
+        />
+      )}
+    </>
   );
 }

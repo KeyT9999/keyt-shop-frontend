@@ -6,6 +6,10 @@ import { useAuthContext } from '../../context/useAuthContext';
 import API_BASE_URL from '../../config/api';
 import { uploadChatFile } from '../../services/chatUpload';
 import { playChatNotificationSound } from '../../utils/chatNotificationSound';
+import MessageReactions from './MessageReactions';
+import MessageActions from './MessageActions';
+import EditMessageModal from './EditMessageModal';
+import MessageSearch from './MessageSearch';
 
 const ACCEPTED_FILE_TYPES = 'image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip';
 const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -33,6 +37,17 @@ interface Message {
   fileSize?: number;
   fileMime?: string;
   timestamp: string;
+  reactions?: Array<{
+    emoji: string;
+    users: string[];
+  }>;
+  isDeleted?: boolean;
+  deletedAt?: string;
+  editedAt?: string;
+  editHistory?: Array<{
+    content: string;
+    editedAt: string;
+  }>;
 }
 
 interface Conversation {
@@ -110,7 +125,7 @@ if (typeof document !== 'undefined' && !document.getElementById(ANIMATION_STYLE_
 }
 
 export default function AdminChatBubble() {
-  const { token } = useAuthContext();
+  const { token, user } = useAuthContext();
   const [isOpen, setIsOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
@@ -120,6 +135,8 @@ export default function AdminChatBubble() {
   const [isUploading, setIsUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [isMessageSearchOpen, setIsMessageSearchOpen] = useState(false);
 
   // State cho pending image (paste từ clipboard)
   const [pendingImage, setPendingImage] = useState<File | null>(null);
@@ -191,6 +208,33 @@ export default function AdminChatBubble() {
 
     socket.on('chat:conversation_created', () => { fetchConversationsRef.current(); });
     socket.on('admin:conversation_updated', () => { fetchConversationsRef.current(); });
+    socket.on('chat:reaction_updated', (data: { messageId: string; reactions: Message['reactions'] }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === data.messageId
+            ? { ...msg, reactions: data.reactions || [] }
+            : msg
+        )
+      );
+    });
+    socket.on('chat:message_edited', (data: { messageId: string; content: string; editedAt: string }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === data.messageId
+            ? { ...msg, content: data.content, editedAt: data.editedAt }
+            : msg
+        )
+      );
+    });
+    socket.on('chat:message_deleted', (data: { messageId: string }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === data.messageId
+            ? { ...msg, isDeleted: true, deletedAt: new Date().toISOString() }
+            : msg
+        )
+      );
+    });
 
     return () => { socket.disconnect(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -224,6 +268,7 @@ export default function AdminChatBubble() {
   // Xóa pending image khi chuyển conversation
   useEffect(() => {
     clearPendingImage();
+    setIsMessageSearchOpen(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConv?._id]);
 
@@ -328,8 +373,39 @@ export default function AdminChatBubble() {
     }
   };
 
+  const handleAddReaction = (messageId: string, emoji: string) => {
+    socketRef.current?.emit('chat:add_reaction', { messageId, emoji });
+  };
+
+  const handleRemoveReaction = (messageId: string, emoji: string) => {
+    socketRef.current?.emit('chat:remove_reaction', { messageId, emoji });
+  };
+
+  const handleEditMessage = (messageId: string, content: string) => {
+    socketRef.current?.emit('chat:edit_message', { messageId, content });
+    setEditingMessage(null);
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    socketRef.current?.emit('chat:delete_message', { messageId });
+  };
+
+  const handleSearchResultClick = (messageId: string) => {
+    setIsMessageSearchOpen(false);
+    setTimeout(() => {
+      document.getElementById(`admin-bubble-message-${messageId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, 100);
+  };
+
   // Render message content
   const renderMessageContent = (msg: Message) => {
+    if (msg.isDeleted) {
+      return <span className="italic opacity-60">Tin nhắn đã bị xóa</span>;
+    }
+
     if (msg.messageType === 'image' && msg.fileUrl) {
       return (
         <img
@@ -389,6 +465,16 @@ export default function AdminChatBubble() {
             <h3 className="font-semibold text-sm flex-1">
               {selectedConv ? selectedConv.customerName : `Tin nhắn (${totalUnread})`}
             </h3>
+            {selectedConv && (
+              <button
+                onClick={() => setIsMessageSearchOpen((open) => !open)}
+                className="p-1 hover:bg-slate-700 rounded"
+                aria-label="Tìm kiếm tin nhắn"
+                title="Tìm kiếm tin nhắn"
+              >
+                <Search size={18} />
+              </button>
+            )}
             <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-slate-700 rounded">
               <X size={18} />
             </button>
@@ -443,19 +529,61 @@ export default function AdminChatBubble() {
           ) : (
             // Chat view
             <>
-              <div className="flex-1 overflow-y-auto px-3 py-3">
-                {messages.map(msg => (
-                  <div key={msg._id} className={`flex flex-col ${msg.senderType === 'admin' ? 'items-end' : 'items-start'} mb-2`}>
-                    <div className={`max-w-[75%] px-3 py-2 rounded-xl text-sm ${
-                      msg.senderType === 'admin' ? 'bg-slate-800 text-white rounded-br-sm' : 'bg-slate-100 text-slate-800 rounded-bl-sm'
-                    }`}>
-                      {renderMessageContent(msg)}
+              {isMessageSearchOpen ? (
+                <div className="flex-1 min-h-0">
+                  <MessageSearch
+                    conversationId={selectedConv._id}
+                    onResultClick={handleSearchResultClick}
+                    onClose={() => setIsMessageSearchOpen(false)}
+                    token={token}
+                  />
+                </div>
+              ) : (
+                <div className="flex-1 overflow-y-auto px-3 py-3">
+                  {messages.map(msg => (
+                    <div
+                      id={`admin-bubble-message-${msg._id}`}
+                      key={msg._id}
+                      className={`flex flex-col ${msg.senderType === 'admin' ? 'items-end' : 'items-start'} mb-2`}
+                    >
+                      <div className={`relative group max-w-[75%] px-3 py-2 rounded-xl text-sm overflow-visible ${
+                        msg.isDeleted
+                          ? 'bg-slate-50 text-slate-400 border border-slate-200'
+                          : msg.senderType === 'admin'
+                            ? 'bg-slate-800 text-white rounded-br-sm'
+                            : 'bg-slate-100 text-slate-800 rounded-bl-sm'
+                      }`}>
+                        <div className="absolute -top-2 -right-2 z-20 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                          <MessageActions
+                            message={msg}
+                            currentUserId={user?.id || ''}
+                            onEdit={() => setEditingMessage(msg)}
+                            onDelete={() => handleDeleteMessage(msg._id)}
+                          />
+                        </div>
+                        {renderMessageContent(msg)}
+                      </div>
+                      <span className="text-[10px] text-slate-400 mt-0.5 px-1">
+                        {formatTime(msg.timestamp)}
+                        {msg.editedAt && !msg.isDeleted && (
+                          <span className="ml-1 italic">(đã chỉnh sửa)</span>
+                        )}
+                      </span>
+                      {!msg.isDeleted && (
+                        <MessageReactions
+                          messageId={msg._id}
+                          reactions={msg.reactions || []}
+                          currentUserId={user?.id || ''}
+                          onAddReaction={handleAddReaction}
+                          onRemoveReaction={handleRemoveReaction}
+                          align={msg.senderType === 'admin' ? 'right' : 'left'}
+                        />
+                      )}
                     </div>
-                    <span className="text-[10px] text-slate-400 mt-0.5 px-1">{formatTime(msg.timestamp)}</span>
-                  </div>
-                ))}
-                <div ref={endRef} />
-              </div>
+                  ))}
+                  <div ref={endRef} />
+                </div>
+              )}
 
               {/* Preview ảnh paste từ clipboard */}
               {pendingImage && pendingImageUrl && (
@@ -508,6 +636,14 @@ export default function AdminChatBubble() {
             </>
           )}
         </div>
+      )}
+
+      {editingMessage && (
+        <EditMessageModal
+          message={editingMessage}
+          onSave={handleEditMessage}
+          onClose={() => setEditingMessage(null)}
+        />
       )}
     </>
   );

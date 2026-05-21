@@ -1,8 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, X, Send, Paperclip, Loader2, Image as ImageIcon } from 'lucide-react';
+import { MessageCircle, X, Send, Paperclip, Loader2, Image as ImageIcon, Search } from 'lucide-react';
 import { useChatSocket, type Message } from '../../hooks/useChatSocket';
 import { uploadChatFile } from '../../services/chatUpload';
 import { playChatNotificationSound } from '../../utils/chatNotificationSound';
+import { useAuthContext } from '../../context/useAuthContext';
+import MessageReactions from './MessageReactions';
+import MessageActions from './MessageActions';
+import EditMessageModal from './EditMessageModal';
+import MessageSearch from './MessageSearch';
 
 const ACCEPTED_FILE_TYPES = 'image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip';
 const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -41,9 +46,11 @@ function ChatBubble({ onClick }: { onClick: () => void }) {
 function ChatPanelHeader({
   isAdminOnline,
   onClose,
+  onSearchToggle,
 }: {
   isAdminOnline: boolean;
   onClose: () => void;
+  onSearchToggle: () => void;
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-3 bg-[#F05A28] text-white rounded-t-xl">
@@ -58,13 +65,22 @@ function ChatPanelHeader({
           </span>
         </div>
       </div>
-      <button
-        onClick={onClose}
-        className="p-1 hover:bg-white/20 rounded transition-colors"
-        aria-label="Đóng chat"
-      >
-        <X size={20} />
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onSearchToggle}
+          className="p-1 hover:bg-white/20 rounded transition-colors"
+          aria-label="Tìm kiếm tin nhắn"
+        >
+          <Search size={20} />
+        </button>
+        <button
+          onClick={onClose}
+          className="p-1 hover:bg-white/20 rounded transition-colors"
+          aria-label="Đóng chat"
+        >
+          <X size={20} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -82,10 +98,29 @@ function TypingIndicator() {
   );
 }
 
-function MessageItem({ message }: { message: Message }) {
+function MessageItem({ 
+  message,
+  currentUserId,
+  onAddReaction,
+  onRemoveReaction,
+  onEditMessage,
+  onDeleteMessage,
+}: { 
+  message: Message;
+  currentUserId: string;
+  onAddReaction: (messageId: string, emoji: string) => void;
+  onRemoveReaction: (messageId: string, emoji: string) => void;
+  onEditMessage?: (message: Message) => void;
+  onDeleteMessage?: (messageId: string) => void;
+}) {
   const isCustomer = message.senderType === 'customer';
 
   const renderContent = () => {
+    // Check if deleted first
+    if (message.isDeleted) {
+      return <span className="italic opacity-60">Tin nhắn đã bị xóa</span>;
+    }
+
     if (message.messageType === 'image' && message.fileUrl) {
       return (
         <img
@@ -118,22 +153,47 @@ function MessageItem({ message }: { message: Message }) {
   };
 
   return (
-    <div className={`flex flex-col ${isCustomer ? 'items-end' : 'items-start'} mb-2`}>
+    <div id={`message-${message._id}`} className={`flex flex-col ${isCustomer ? 'items-end' : 'items-start'} mb-2`}>
       <span className="text-[10px] text-slate-400 mb-0.5 px-1">
         {isCustomer ? 'Bạn' : 'Admin'}
       </span>
       <div
-        className={`max-w-[75%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
-          isCustomer
-            ? 'bg-[#F05A28] text-white rounded-br-sm'
-            : 'bg-slate-100 text-slate-800 rounded-bl-sm'
+        className={`relative group max-w-[75%] px-3 py-2 rounded-xl text-sm leading-relaxed overflow-visible ${
+          message.isDeleted
+            ? 'bg-slate-50 text-slate-400 border border-slate-200'
+            : isCustomer
+              ? 'bg-[#F05A28] text-white rounded-br-sm'
+              : 'bg-slate-100 text-slate-800 rounded-bl-sm'
         }`}
       >
+        {/* MessageActions - show on hover */}
+        <div className="absolute -top-2 -right-2 z-20 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          <MessageActions
+            message={message}
+            currentUserId={currentUserId}
+            onEdit={() => onEditMessage?.(message)}
+            onDelete={() => onDeleteMessage?.(message._id)}
+          />
+        </div>
+        
         {renderContent()}
       </div>
       <span className="text-[10px] text-slate-400 mt-0.5 px-1">
         {formatTime(message.timestamp)}
+        {message.editedAt && !message.isDeleted && (
+          <span className="ml-1 italic">(đã chỉnh sửa)</span>
+        )}
       </span>
+      {!message.isDeleted && (
+        <MessageReactions
+          messageId={message._id}
+          reactions={message.reactions || []}
+          currentUserId={currentUserId}
+          onAddReaction={onAddReaction}
+          onRemoveReaction={onRemoveReaction}
+          align={isCustomer ? 'right' : 'left'}
+        />
+      )}
     </div>
   );
 }
@@ -141,9 +201,19 @@ function MessageItem({ message }: { message: Message }) {
 function MessageList({
   messages,
   isAdminTyping,
+  currentUserId,
+  onAddReaction,
+  onRemoveReaction,
+  onEditMessage,
+  onDeleteMessage,
 }: {
   messages: Message[];
   isAdminTyping: boolean;
+  currentUserId: string;
+  onAddReaction: (messageId: string, emoji: string) => void;
+  onRemoveReaction: (messageId: string, emoji: string) => void;
+  onEditMessage: (message: Message) => void;
+  onDeleteMessage: (messageId: string) => void;
 }) {
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -159,7 +229,15 @@ function MessageList({
         </p>
       )}
       {messages.map((msg) => (
-        <MessageItem key={msg._id} message={msg} />
+        <MessageItem 
+          key={msg._id} 
+          message={msg}
+          currentUserId={currentUserId}
+          onAddReaction={onAddReaction}
+          onRemoveReaction={onRemoveReaction}
+          onEditMessage={onEditMessage}
+          onDeleteMessage={onDeleteMessage}
+        />
       ))}
       {isAdminTyping && <TypingIndicator />}
       <div ref={endRef} />
@@ -317,6 +395,15 @@ export default function ChatWidget() {
   const [pasteError, setPasteError] = useState<string | null>(null);
   const pasteErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // State cho edit message modal
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+
+  // State cho search
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Get user context for reactions
+  const { token, user } = useAuthContext();
+
   /**
    * Callback khi có tin nhắn mới từ admin.
    * useCallback vì isOpen sẽ thay đổi khi user mở/đóng chat.
@@ -339,7 +426,47 @@ export default function ChatWidget() {
     sendMessage,
     sendFileMessage,
     emitTyping,
+    addReaction,
+    removeReaction,
+    editMessage,
+    deleteMessage,
+    conversationId,
   } = useChatSocket({ onNewAdminMessage: handleNewAdminMessage });
+
+  // Chat customer messages/reactions are keyed by socket sessionId in the backend.
+  // Prefer sessionId so reaction highlighting and edit/delete ownership match Message.sender.
+  const sessionId = localStorage.getItem('keyt_chat_session_id') || '';
+  const currentUserId = sessionId || user?.id || '';
+
+  // Handle edit message
+  const handleEditMessage = (messageId: string, content: string) => {
+    editMessage(messageId, content);
+    setEditingMessage(null);
+  };
+
+  // Handle delete message
+  const handleDeleteMessage = (messageId: string) => {
+    deleteMessage(messageId);
+  };
+
+  // Handle search result click - scroll to message
+  const handleSearchResultClick = (messageId: string) => {
+    setIsSearchOpen(false);
+    
+    // Wait for search panel to close, then scroll
+    setTimeout(() => {
+      const messageElement = document.getElementById(`message-${messageId}`);
+      if (messageElement) {
+        messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  };
+
+  const clearPendingImage = useCallback(() => {
+    if (pendingImageUrl) URL.revokeObjectURL(pendingImageUrl);
+    setPendingImage(null);
+    setPendingImageUrl(null);
+  }, [pendingImageUrl]);
 
   // Cleanup object URL khi pendingImageUrl thay đổi (tránh memory leak)
   useEffect(() => {
@@ -353,7 +480,7 @@ export default function ChatWidget() {
     if (!isOpen) {
       clearPendingImage();
     }
-  }, [isOpen]);
+  }, [clearPendingImage, isOpen]);
 
   // Cleanup error timer khi unmount
   useEffect(() => {
@@ -361,12 +488,6 @@ export default function ChatWidget() {
       if (pasteErrorTimerRef.current) clearTimeout(pasteErrorTimerRef.current);
     };
   }, []);
-
-  function clearPendingImage() {
-    if (pendingImageUrl) URL.revokeObjectURL(pendingImageUrl);
-    setPendingImage(null);
-    setPendingImageUrl(null);
-  }
 
   function showPasteError(msg: string) {
     setPasteError(msg);
@@ -460,6 +581,7 @@ export default function ChatWidget() {
           <ChatPanelHeader
             isAdminOnline={isAdminOnline}
             onClose={() => setIsOpen(false)}
+            onSearchToggle={() => setIsSearchOpen(!isSearchOpen)}
           />
 
           {/* Connection status banner */}
@@ -474,7 +596,28 @@ export default function ChatWidget() {
             </div>
           )}
 
-          <MessageList messages={messages} isAdminTyping={isAdminTyping} />
+          {/* Conditionally render MessageSearch or MessageList */}
+          {isSearchOpen ? (
+            <div className="flex-1 min-h-0">
+              <MessageSearch
+                conversationId={conversationId || ''}
+                onResultClick={handleSearchResultClick}
+                onClose={() => setIsSearchOpen(false)}
+                token={token}
+                sessionId={sessionId}
+              />
+            </div>
+          ) : (
+            <MessageList 
+              messages={messages} 
+              isAdminTyping={isAdminTyping}
+              currentUserId={currentUserId}
+              onAddReaction={addReaction}
+              onRemoveReaction={removeReaction}
+              onEditMessage={setEditingMessage}
+              onDeleteMessage={handleDeleteMessage}
+            />
+          )}
 
           {/* Preview ảnh paste từ clipboard */}
           {pendingImage && pendingImageUrl && (
@@ -499,6 +642,15 @@ export default function ChatWidget() {
             hasPendingImage={!!pendingImage}
           />
         </div>
+      )}
+
+      {/* Edit Message Modal */}
+      {editingMessage && (
+        <EditMessageModal
+          message={editingMessage}
+          onSave={handleEditMessage}
+          onClose={() => setEditingMessage(null)}
+        />
       )}
     </>
   );

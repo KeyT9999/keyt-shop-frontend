@@ -108,7 +108,7 @@ export default function FAQPage() {
       </h1>
 
       <div style={{ fontSize: '1.1rem', color: '#64748b', marginBottom: '3rem', lineHeight: '1.6' }}>
-        <p>Tìm câu trả lời cho các câu hỏi phổ biến về dịch vụ, thanh toán và hỗ trợ tại Tiệm Tạp Hóa KeyT.</p>
+        <p>Tìm câu trả lời cho các câu hỏi phổ biến về dịch vụ, thanh toán và hỗ trợ tại Mindora AI.</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>

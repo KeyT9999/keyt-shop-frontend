@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useAuthContext } from '../context/useAuthContext';
 import { Link } from 'react-router-dom';
@@ -13,45 +13,61 @@ export default function GetOtpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const emailRef = useRef('');
 
-  const handleGetOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Keep ref in sync for auto-refresh
+  useEffect(() => { emailRef.current = chatgptEmail; }, [chatgptEmail]);
 
-    if (!chatgptEmail) {
+  // Cleanup timer on unmount
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  const fetchOtp = useCallback(async (email?: string) => {
+    const targetEmail = email ?? emailRef.current;
+    if (!targetEmail) {
       setError('Vui lòng nhập email ChatGPT');
       return;
     }
 
     setLoading(true);
     setError('');
-    setOtp('');
 
     try {
       const response = await axios.post(
         `${API_BASE_URL}/chatgpt/get-otp`,
-        { chatgptEmail },
+        { chatgptEmail: targetEmail },
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {}
         }
       );
 
       setOtp(response.data.otp);
-      setCountdown(30);
 
-      const interval = setInterval(() => {
+      // Use server-provided expiresIn for accurate countdown
+      if (timerRef.current) clearInterval(timerRef.current);
+      setCountdown(response.data.expiresIn || 30);
+      timerRef.current = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
-            clearInterval(interval);
+            // Auto-refresh when expired
+            if (timerRef.current) clearInterval(timerRef.current);
+            fetchOtp();
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
     } catch (err: any) {
+      setOtp('');
       setError(err.response?.data?.message || 'Không thể lấy mã OTP. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
+  }, [token]);
+
+  const handleGetOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchOtp(chatgptEmail);
   };
 
   const handleCopyOtp = () => {
@@ -146,7 +162,7 @@ export default function GetOtpPage() {
               {countdown > 0 && (
                 <div className="countdown-bar">
                   <div className="progress" style={{ width: `${(countdown / 30) * 100}%` }}></div>
-                  <p className="countdown-text">Mã hết hạn sau {countdown}s</p>
+                  <p className="countdown-text">Mã mới sau {countdown}s</p>
                 </div>
               )}
             </div>

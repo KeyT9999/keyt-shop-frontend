@@ -32,7 +32,7 @@ export default function Seo({
     noIndex = false,
 }: SeoProps) {
     useEffect(() => {
-        const resolvedTitle = title || 'Tiệm Tạp Hoá KeyT | Công Cụ Hỗ Trợ Học Tập';
+        const resolvedTitle = title || 'Mindora AI | Công Cụ Hỗ Trợ Học Tập';
         const resolvedDesc =
             description ||
             'Tóm tắt video YouTube tức thì, kiểm tra độ chính xác thông tin bằng AI và nguồn đáng tin cậy. Trực quan hóa nội dung với photo-frame thông minh. Hỗ trợ 24/7 tức thì ✓';
@@ -47,7 +47,7 @@ export default function Seo({
         upsertMeta('property', 'og:image', resolvedImage);
         upsertMeta('property', 'og:type', type);
         upsertMeta('property', 'og:url', canonicalUrl);
-        upsertMeta('property', 'og:site_name', 'Tiệm Tạp Hóa KeyT');
+        upsertMeta('property', 'og:site_name', 'Mindora AI');
         upsertMeta('property', 'og:locale', 'vi_VN');
 
         upsertMeta('name', 'twitter:card', 'summary_large_image');

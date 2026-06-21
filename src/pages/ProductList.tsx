@@ -64,7 +64,7 @@ export default function ProductList({ searchQuery = '', showHero = true }: Produ
       {showHero && (
         <section className="hero-section">
           <div className="hero-banner">
-            <div className="hero-eyebrow">Tiệm Tạp Hoá KeyT</div>
+            <div className="hero-eyebrow">Mindora AI</div>
             <h1>Tối ưu hóa hiệu suất học tập của bạn</h1>
             <p>Cung cấp các công cụ Tóm tắt YouTube, Kiểm tra thông tin AI, Photo Frame chuyên nghiệp.</p>
             <div className="hero-actions">

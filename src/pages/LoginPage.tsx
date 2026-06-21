@@ -89,7 +89,7 @@ export default function LoginPage() {
       >
         <div className="text-center mb-8">
           <p className="text-[#F05A28] font-bold tracking-wider text-xs uppercase mb-2">Chào mừng trở lại</p>
-          <h2 className="text-3xl font-bold text-[#1E293B]">Tiệm Tạp Hóa KeyT</h2>
+          <h2 className="text-3xl font-bold text-[#1E293B]">Mindora AI</h2>
           <p className="text-gray-500 text-sm mt-2">Đăng nhập tài khoản của bạn</p>
         </div>
 

@@ -9,5 +9,6 @@ export interface ChatGptAccount {
 export interface OtpResponse {
   otp: string;
   chatgptEmail: string;
+  expiresIn: number;
 }
 

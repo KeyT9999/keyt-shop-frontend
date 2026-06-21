@@ -43,7 +43,7 @@ export default function QrPaymentPage() {
             <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
               <span className="text-white text-xs font-bold">K</span>
             </div>
-            <span className="font-bold text-gray-700">TIỆM TẠP HÓA KEYT</span>
+            <span className="font-bold text-gray-700">MINDORA AI</span>
           </div>
           <div className="text-[#00B14F] font-bold text-xl flex items-center gap-1">
             <span className="text-2xl font-extrabold">payOS</span>

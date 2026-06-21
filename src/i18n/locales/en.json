@@ -16,8 +16,8 @@
     },
     "home": {
         "hero": {
-            "eyebrow": "Tiệm Tạp Hoá KeyT",
-            "title": "Tiệm Tạp Hoá KeyT",
+            "eyebrow": "Mindora AI",
+            "title": "Mindora AI",
             "desc": "Summarize YouTube videos instantly, verify facts with AI. Visualize content with our smart photo frame.",
             "shop_now": "PHOTO FRAME",
             "view_collection": "Evidence Checker",
@@ -73,7 +73,7 @@
             "read_more": "Read More"
         },
         "newsletter": {
-            "title": "New to KeyTShop?",
+            "title": "New to Mindora AI?",
             "desc": "Subscribe to our newsletter and get a 10% discount code.",
             "placeholder": "Your email address",
             "btn": "Subscribe"

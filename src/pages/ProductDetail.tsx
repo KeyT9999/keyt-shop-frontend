@@ -278,7 +278,7 @@ export default function ProductDetail() {
 
             <img
               src={displayImage}
-              alt={`Tài khoản ${currentName} chính hãng giá rẻ tại Tiệm Tạp Hóa KeyT`}
+              alt={`Tài khoản ${currentName} chính hãng giá rẻ tại Mindora AI`}
               className="relative w-64 md:w-96 object-contain drop-shadow-[0_20px_40px_rgba(240,90,40,0.15)] transform hover:-translate-y-2 transition-transform duration-500 z-10"
             />
 
@@ -391,10 +391,10 @@ export default function ProductDetail() {
 
         {/* Dynamic SEO Tags */}
         <Seo
-          title={`Mua ${currentName} Chính Hãng Giá Rẻ – Giao Nhanh, Bảo Hành Uy Tín | Tiệm Tạp Hóa KeyT`}
+          title={`Mua ${currentName} Chính Hãng Giá Rẻ – Giao Nhanh, Bảo Hành Uy Tín | Mindora AI`}
           description={
             product.description?.substring(0, 160) ||
-            `Mua công cụ ${currentName} chính hãng tại Tiệm Tạp Hóa KeyT – giá rẻ, kích hoạt nhanh, hỗ trợ Zalo 24/7.`
+            `Mua công cụ ${currentName} chính hãng tại Mindora AI – giá rẻ, kích hoạt nhanh, hỗ trợ Zalo 24/7.`
           }
           image={displayImage}
           type="product"
@@ -413,7 +413,7 @@ export default function ProductDetail() {
               description: product.description?.substring(0, 200) || `Công cụ ${currentName} chính hãng`,
               brand: {
                 "@type": "Brand",
-                name: "Tiệm Tạp Hóa KeyT"
+                name: "Mindora AI"
               },
               offers: {
                 "@type": "Offer",
@@ -616,7 +616,7 @@ export default function ProductDetail() {
             <div className="bg-gradient-to-br from-white to-orange-50/50 backdrop-blur-xl rounded-2xl p-6 border border-white shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
               <h3 className="text-sm font-bold text-slate-800 mb-6 uppercase tracking-wider border-b border-orange-100 pb-4 flex items-center">
                 <i className="fas fa-crown text-[#F05A28] mr-2 text-lg"></i>
-                Vì sao chọn KeyT?
+                Vì sao chọn Mindora AI?
               </h3>
               <div className="space-y-5">
                 <div className="flex gap-4 items-start">

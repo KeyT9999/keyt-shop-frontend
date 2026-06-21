@@ -119,7 +119,7 @@ export default function StructuredData() {
         const compressAppSchema = location.pathname === '/compress' ? {
             '@context': 'https://schema.org',
             '@type': 'WebApplication',
-            name: 'KeyT Compress - Nén Ảnh Online',
+            name: 'Mindora AI Compress - Nén Ảnh Online',
             url: `${SITE_URL}/compress`,
             applicationCategory: 'MultimediaApplication',
             operatingSystem: 'Web Browser',
@@ -178,7 +178,7 @@ export default function StructuredData() {
         const organizationSchema = {
             '@context': 'https://schema.org',
             '@type': 'Organization',
-            name: 'Tiệm Tạp Hóa KeyT',
+            name: 'Mindora AI',
             url: SITE_URL,
             logo: LOGO_URL,
             contactPoint: [

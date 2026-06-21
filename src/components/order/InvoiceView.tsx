@@ -134,7 +134,7 @@ export default function InvoiceView() {
               Thông tin cửa hàng
             </h3>
             <div style={{ fontSize: '0.875rem', color: '#374151', lineHeight: '1.75' }}>
-              <p style={{ margin: 0, fontWeight: 600 }}>Tiệm Tạp Hóa KeyT</p>
+              <p style={{ margin: 0, fontWeight: 600 }}>Mindora AI</p>
               <p style={{ margin: 0 }}>Email: trankimthang0207@gmail.com</p>
               <p style={{ margin: 0 }}>Website: keytshop.com</p>
             </div>
@@ -235,7 +235,7 @@ export default function InvoiceView() {
         {/* Footer */}
         <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '1px solid #e5e5e5', textAlign: 'center' }}>
           <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>
-            Cảm ơn bạn đã mua sắm tại Tiệm Tạp Hóa KeyT!
+            Cảm ơn bạn đã mua sắm tại Mindora AI!
           </p>
           <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.75rem', color: '#9ca3af' }}>
             Hóa đơn này được tạo tự động và có giá trị pháp lý.

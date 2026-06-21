@@ -9,9 +9,9 @@ export default function Footer() {
 
           {/* Cột 1: Thương hiệu */}
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-yellow-500 tracking-wide uppercase">TIỆM TẠP HÓA KEYT</h2>
+            <h2 className="text-xl font-bold text-yellow-500 tracking-wide uppercase">MINDORA AI</h2>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Tiệm Tạp Hoá KeyT - Nâng Tầm Cuộc Sống Số.
+              Mindora AI - Nâng Tầm Cuộc Sống Số.
             </p>
             <div className="flex items-center gap-4 pt-2">
               <a href="#" className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-[#1877F2] hover:text-white transition-all duration-300">
@@ -115,7 +115,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-12 pt-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} <span className="text-gray-300 font-medium">Tiệm Tạp Hóa KeyT</span>. All rights reserved.
+            © {new Date().getFullYear()} <span className="text-gray-300 font-medium">Mindora AI</span>. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-gray-500">
             <span className="hover:text-gray-300 cursor-pointer">Privacy</span>

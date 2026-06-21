@@ -510,7 +510,7 @@ export default function AdminChatPage() {
   useEffect(() => {
     const handleFocus = () => {
       isTabFocused.current = true;
-      document.title = 'Admin Chat - KeyT';
+      document.title = 'Admin Chat - Mindora AI';
     };
     const handleBlur = () => {
       isTabFocused.current = false;
@@ -522,14 +522,14 @@ export default function AdminChatPage() {
     return () => {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('blur', handleBlur);
-      document.title = 'Admin Chat - KeyT';
+      document.title = 'Admin Chat - Mindora AI';
     };
   }, []);
 
   // Update tab title with unread count
   useEffect(() => {
     if (!isTabFocused.current && totalUnread > 0) {
-      document.title = `(${totalUnread}) Admin Chat - KeyT`;
+      document.title = `(${totalUnread}) Admin Chat - Mindora AI`;
     }
   }, [totalUnread]);
 

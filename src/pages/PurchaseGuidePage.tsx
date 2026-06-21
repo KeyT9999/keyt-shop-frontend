@@ -7,7 +7,7 @@ export default function PurchaseGuidePage() {
 
       <div style={{ fontSize: '1.1rem', color: '#64748b', marginBottom: '3rem', lineHeight: '1.6' }}>
         <p>
-          Tiệm Tạp Hoá KeyT chuyên cung cấp các công cụ hỗ trợ học tập và AI thông minh: YouTube Summarizer, Evidence Checker, Photo Frame,
+          Mindora AI chuyên cung cấp các công cụ hỗ trợ học tập và AI thông minh: YouTube Summarizer, Evidence Checker, Photo Frame,
           cùng nhiều phần mềm hữu ích khác. Dưới đây là hướng dẫn từng bước để
           mua và sử dụng công cụ nhanh chóng, phù hợp cho cá nhân lẫn team.
         </p>
@@ -15,7 +15,7 @@ export default function PurchaseGuidePage() {
           Nếu cần tư vấn gói đúng nhu cầu (thiết kế, dựng video, AI, office), hãy nhắn ngay{' '}
           <a href="https://zalo.me/84868899104" style={{ color: '#f97316', fontWeight: 600 }}>Zalo 0868 899 104</a>{' '}
           hoặc xem danh mục tại{' '}
-          <a href="/" style={{ color: '#0ea5e9', fontWeight: 600 }}>trang chủ KeyT</a>.
+          <a href="/" style={{ color: '#0ea5e9', fontWeight: 600 }}>trang chủ Mindora AI</a>.
         </p>
         <div style={{ marginTop: '1rem', background: '#f8fafc', padding: '1rem 1.25rem', borderRadius: '10px', border: '1px solid #e2e8f0', color: '#0f172a' }}>
           <strong style={{ display: 'block', marginBottom: '0.5rem' }}>Đường dẫn nhanh:</strong>

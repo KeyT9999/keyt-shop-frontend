@@ -586,7 +586,7 @@ export default function AdminDashboard() {
         <div className="admin-sidebar-header">
           <div className="admin-logo">
             <LayoutDashboard size={24} />
-            <span>KeyT Admin</span>
+            <span>Mindora AI Admin</span>
           </div>
         </div>
 
@@ -790,7 +790,7 @@ export default function AdminDashboard() {
             fontSize: '0.75rem',
             borderTop: '1px solid #E2E8F0'
           }}>
-            &copy; {new Date().getFullYear()} KeyT Shop Admin. All rights reserved.
+            &copy; {new Date().getFullYear()} Mindora AI Admin. All rights reserved.
           </footer>
         </div>
       </main>

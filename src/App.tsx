@@ -106,9 +106,9 @@ export default function App() {
     const seoConfig = useMemo(() => {
         const path = location.pathname;
         const base = {
-            title: 'Mua Tài Khoản Premium Chính Hãng, Giá Rẻ | Tiệm Tạp Hóa KeyT',
+            title: 'Công Cụ AI Hỗ Trợ Học Tập & Sáng Tạo | Mindora AI',
             description:
-                'Tiệm Tạp Hóa KeyT - Đại lý bán tài khoản Premium giá siêu rẻ: Canva Pro, CapCut Pro, ChatGPT Plus, Office và nhiều dịch vụ khác. Bảo hành rõ ràng, hỗ trợ nhanh 24/7 ✓',
+                'Mindora AI - Cung cấp bộ công cụ AI thông minh hỗ trợ học tập và sáng tạo: YouTube Summarizer, Evidence Checker, Photo Frame và các tiện ích công nghệ hữu ích khác. Hỗ trợ 24/7 ✓',
             canonicalPath: path,
             type: 'website' as const,
             noIndex: false,
@@ -145,9 +145,9 @@ export default function App() {
         if (path === '/') {
             return {
                 ...base,
-                title: 'Tiệm Tạp Hóa KeyT – Canva Pro, CapCut Pro, ChatGPT Plus Giá Rẻ, Giao Nhanh',
+                title: 'Mindora AI – Công Cụ AI Hỗ Trợ Học Tập & Sáng Tạo',
                 description:
-                    'Mua Canva Pro, CapCut Pro, ChatGPT Plus, Office chính hãng tại Tiệm Tạp Hóa KeyT – giá rẻ, kích hoạt nhanh, bảo hành suốt thời gian dùng, hỗ trợ Zalo 24/7. Đặt mua ngay!',
+                    'Sử dụng bộ công cụ AI thông minh và tiện ích công nghệ tại Mindora AI: YouTube Summarizer, Evidence Checker, Photo Frame, giúp nâng cao hiệu suất học tập và làm việc. Đăng ký dùng ngay!',
                 canonicalPath: '/',
             };
         }
@@ -160,9 +160,9 @@ export default function App() {
         if (path === '/products') {
             return {
                 ...base,
-                title: 'Danh Sách Dịch Vụ Premium – Canva Pro, CapCut Pro, ChatGPT Plus, Office | KeyT',
+                title: 'Danh Sách Công Cụ & Dịch Vụ AI | Mindora AI',
                 description:
-                    'Xem bảng giá chi tiết Canva Pro, CapCut Pro, ChatGPT Plus, Office chính hãng tại Tiệm Tạp Hóa KeyT. Dịch vụ premium giá rẻ, kích hoạt nhanh, bảo hành rõ ràng, ưu đãi cho sinh viên.',
+                    'Xem bảng giá và đăng ký các công cụ AI hỗ trợ học tập, làm việc hiệu quả tại Mindora AI. Dịch vụ premium chất lượng, kích hoạt nhanh, bảo hành rõ ràng.',
                 canonicalPath: '/products',
             };
         }
@@ -170,9 +170,9 @@ export default function App() {
         if (path === '/purchase-guide') {
             return {
                 ...base,
-                title: 'Hướng Dẫn Mua Canva Pro, CapCut Pro, ChatGPT Plus Tại Tiệm Tạp Hóa KeyT',
+                title: 'Hướng Dẫn Mua Hàng & Sử Dụng Dịch Vụ | Mindora AI',
                 description:
-                    'Xem hướng dẫn chi tiết cách đặt mua Canva Pro, CapCut Pro, ChatGPT Plus, Office tại Tiệm Tạp Hóa KeyT – thao tác đơn giản, thanh toán an toàn, nhận dịch vụ nhanh, có bảo hành rõ ràng.',
+                    'Xem hướng dẫn chi tiết các bước đặt mua và sử dụng các công cụ AI, dịch vụ công nghệ tại Mindora AI – thao tác đơn giản, thanh toán an toàn, kích hoạt nhanh chóng.',
                 canonicalPath: '/purchase-guide',
             };
         }
@@ -180,9 +180,9 @@ export default function App() {
         if (path === '/faq') {
             return {
                 ...base,
-                title: 'FAQ Tiệm Tạp Hóa KeyT – Giải Đáp Về Canva Pro, CapCut Pro, ChatGPT Plus, Bảo Hành',
+                title: 'FAQ Mindora AI – Giải Đáp Thắc Mắc Về Dịch Vụ & Bảo Hành',
                 description:
-                    'Câu hỏi thường gặp về đặt hàng, thanh toán, thời gian nhận dịch vụ, bảo hành và hoàn tiền tại Tiệm Tạp Hóa KeyT. Giải đáp thắc mắc trước khi mua Canva Pro, CapCut Pro, ChatGPT Plus, Office.',
+                    'Câu hỏi thường gặp về đặt hàng, thanh toán, thời gian nhận dịch vụ, bảo hành và hoàn tiền khi sử dụng các công cụ AI và dịch vụ công nghệ tại Mindora AI.',
                 canonicalPath: '/faq',
             };
         }
@@ -190,9 +190,9 @@ export default function App() {
         if (path === '/warranty-refund') {
             return {
                 ...base,
-                title: 'Chính Sách Bảo Hành & Hoàn Tiền – Tiệm Tạp Hóa KeyT',
+                title: 'Chính Sách Bảo Hành & Hoàn Tiền – Mindora AI',
                 description:
-                    'Tìm hiểu chi tiết chính sách bảo hành và hoàn tiền tại Tiệm Tạp Hóa KeyT: điều kiện được hoàn tiền, thời gian xử lý, phạm vi bảo hành cho Canva Pro, CapCut Pro, ChatGPT Plus, Office.',
+                    'Tìm hiểu chi tiết chính sách bảo hành và hoàn tiền tại Mindora AI: điều kiện được hoàn tiền, thời gian xử lý, phạm vi bảo hành cho các công cụ AI và dịch vụ công nghệ.',
                 canonicalPath: '/warranty-refund',
             };
         }

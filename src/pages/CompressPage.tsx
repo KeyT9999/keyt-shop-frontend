@@ -560,7 +560,7 @@ export default function CompressPage() {
 
         {/* SEO Content - How it works */}
         <section className="mt-16 max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-slate-800 mb-4">Cách nén ảnh online với KeyT Compress</h2>
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">Cách nén ảnh online với Mindora AI Compress</h2>
           <div className="space-y-3 text-slate-600 text-sm leading-relaxed">
             <p><strong>Bước 1:</strong> Chọn định dạng đầu ra (WebP, AVIF, JPEG hoặc PNG) và điều chỉnh chất lượng mong muốn.</p>
             <p><strong>Bước 2:</strong> Kéo thả ảnh vào vùng upload hoặc nhấn để chọn file từ máy tính. Hỗ trợ tối đa 10 ảnh cùng lúc.</p>
@@ -650,7 +650,7 @@ export default function CompressPage() {
               🖼️ Photo Frame — Tạo khung ảnh chuyên nghiệp
             </a>
             <a href="/products" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 hover:border-[#F05A28] hover:text-[#F05A28] transition-colors">
-              🛒 Canva Pro, CapCut Pro giá rẻ
+              🛒 Danh sách công cụ & dịch vụ
             </a>
           </div>
         </section>

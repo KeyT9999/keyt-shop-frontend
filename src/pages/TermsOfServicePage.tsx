@@ -10,7 +10,7 @@ export default function TermsOfServicePage() {
       </div>
 
       <div style={{ fontSize: '1.1rem', color: '#64748b', marginBottom: '3rem', lineHeight: '1.6' }}>
-        <p>Bằng việc sử dụng dịch vụ của Tiệm Tạp Hóa KeyT, bạn đồng ý tuân thủ các điều khoản và điều kiện sau đây.</p>
+        <p>Bằng việc sử dụng dịch vụ của Mindora AI, bạn đồng ý tuân thủ các điều khoản và điều kiện sau đây.</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -20,7 +20,7 @@ export default function TermsOfServicePage() {
           </h2>
           <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
             <p style={{ margin: 0, color: '#475569', lineHeight: '1.8' }}>
-              Khi truy cập và sử dụng website Tiệm Tạp Hóa KeyT, bạn đồng ý tuân thủ các điều khoản này. Nếu không đồng ý, vui lòng không sử dụng dịch vụ của chúng tôi.
+              Khi truy cập và sử dụng website Mindora AI, bạn đồng ý tuân thủ các điều khoản này. Nếu không đồng ý, vui lòng không sử dụng dịch vụ của chúng tôi.
             </p>
           </div>
         </section>
@@ -112,7 +112,7 @@ export default function TermsOfServicePage() {
           </h2>
           <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
             <p style={{ margin: 0, color: '#475569', lineHeight: '1.8' }}>
-              Tất cả nội dung trên website (logo, văn bản, hình ảnh) thuộc quyền sở hữu của Tiệm Tạp Hóa KeyT hoặc được cấp phép sử dụng. Bạn không được sao chép, phân phối hoặc sử dụng cho mục đích thương mại mà không có sự đồng ý bằng văn bản.
+              Tất cả nội dung trên website (logo, văn bản, hình ảnh) thuộc quyền sở hữu của Mindora AI hoặc được cấp phép sử dụng. Bạn không được sao chép, phân phối hoặc sử dụng cho mục đích thương mại mà không có sự đồng ý bằng văn bản.
             </p>
           </div>
         </section>

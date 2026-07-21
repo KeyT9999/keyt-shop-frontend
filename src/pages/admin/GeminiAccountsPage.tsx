@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuthContext } from '../../context/useAuthContext';
-import { ChevronLeft, ChevronRight, ClipboardPaste, CheckCircle, XCircle, Loader2, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ClipboardPaste, CheckCircle, XCircle, Loader2, Trash2, Search, X } from 'lucide-react';
 import axios from 'axios';
 import API_BASE_URL from '../../config/api';
 import GeminiAccountForm from '../../components/admin/GeminiAccountForm';
+import { isValid2FAKey } from '../../utils/validation';
 
 interface GeminiAccount {
   _id: string;
@@ -42,8 +43,22 @@ export default function GeminiAccountsPage() {
   const [accounts, setAccounts] = useState<GeminiAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingAccount, setEditingAccount] = useState<GeminiAccount | null>(null);
+
+  // Search & Filter States
+  const [searchTerm, setSearchTerm] = useState('');
+  const [domainFilter, setDomainFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [keyStatusFilter, setKeyStatusFilter] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+
+  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Reset to page 1 when filter/search/sort changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, domainFilter, dateFilter, keyStatusFilter, sortBy]);
 
   // Bulk import state
   const [bulkText, setBulkText] = useState('');
@@ -137,8 +152,89 @@ export default function GeminiAccountsPage() {
   if (!user?.admin) return <div style={{ padding: '2rem', color: '#1f2937' }}>403 - Không có quyền</div>;
   if (loading) return <div style={{ padding: '2rem', color: '#1f2937' }}>Đang tải...</div>;
 
-  const totalPages = Math.ceil(accounts.length / itemsPerPage);
-  const paginatedAccounts = accounts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  // Filter and Sort Logic
+  const filteredAccounts = accounts.filter(account => {
+    // 1. Search term (Email & Secret Key)
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase().trim();
+      const emailMatch = account.geminiEmail.toLowerCase().includes(term);
+      const keyMatch = account.secretKey.toLowerCase().replace(/\s+/g, '').includes(term.replace(/\s+/g, ''));
+      if (!emailMatch && !keyMatch) return false;
+    }
+
+    // 2. Domain Filter
+    if (domainFilter) {
+      const email = account.geminiEmail.toLowerCase();
+      if (domainFilter === 'gmail') {
+        if (!email.endsWith('@gmail.com')) return false;
+      } else if (domainFilter === 'icloud') {
+        if (!email.endsWith('@icloud.com')) return false;
+      } else if (domainFilter === 'outlook') {
+        if (!email.endsWith('@outlook.com') && !email.endsWith('@hotmail.com')) return false;
+      } else if (domainFilter === 'other') {
+        if (email.endsWith('@gmail.com') || email.endsWith('@icloud.com') || email.endsWith('@outlook.com') || email.endsWith('@hotmail.com')) return false;
+      }
+    }
+
+    // 3. Date Filter (createdAt)
+    if (dateFilter && account.createdAt) {
+      const createdDate = new Date(account.createdAt);
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfYesterday = new Date(startOfToday);
+      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+      
+      const diffTime = now.getTime() - createdDate.getTime();
+      const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+      if (dateFilter === 'today') {
+        if (createdDate < startOfToday) return false;
+      } else if (dateFilter === 'yesterday') {
+        if (createdDate < startOfYesterday || createdDate >= startOfToday) return false;
+      } else if (dateFilter === '7days') {
+        if (diffDays > 7) return false;
+      } else if (dateFilter === '30days') {
+        if (diffDays > 30) return false;
+      }
+    }
+
+    // 4. 2FA Key Status Filter
+    if (keyStatusFilter) {
+      const isValid = isValid2FAKey(account.secretKey);
+      if (keyStatusFilter === 'valid' && !isValid) return false;
+      if (keyStatusFilter === 'invalid' && isValid) return false;
+    }
+
+    return true;
+  });
+
+  // Sorting Logic
+  const sortedAccounts = [...filteredAccounts].sort((a, b) => {
+    if (sortBy === 'newest') {
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    }
+    if (sortBy === 'oldest') {
+      return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+    }
+    if (sortBy === 'az') {
+      return a.geminiEmail.localeCompare(b.geminiEmail);
+    }
+    if (sortBy === 'za') {
+      return b.geminiEmail.localeCompare(a.geminiEmail);
+    }
+    return 0;
+  });
+
+  const totalPages = Math.ceil(sortedAccounts.length / itemsPerPage);
+  const paginatedAccounts = sortedAccounts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setDomainFilter('');
+    setDateFilter('');
+    setKeyStatusFilter('');
+    setSortBy('newest');
+  };
 
   const geminiBlue = '#4285F4';
   const geminiPurple = '#9B72CB';
@@ -167,6 +263,185 @@ export default function GeminiAccountsPage() {
             <h1 style={{ color: '#1E293B', fontSize: '2rem', fontWeight: 700, margin: 0 }}>Gemini Accounts</h1>
           </div>
           <p style={{ color: '#64748B', margin: 0 }}>Quản lý kho tài khoản Gemini tự động</p>
+        </div>
+
+        {/* Stats Cards Section */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+          <div style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0,0,0,0.05)' }}>
+            <div style={{ color: '#64748B', fontSize: '0.825rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>Tổng số tài khoản</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#1E293B' }}>{accounts.length}</div>
+          </div>
+          <div style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px 0 rgba(0,0,0,0.05)' }}>
+            <div style={{ color: '#64748B', fontSize: '0.825rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>Đang hiển thị</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 700, color: geminiBlue }}>{filteredAccounts.length}</div>
+          </div>
+          <div style={{ 
+            background: accounts.some(a => !isValid2FAKey(a.secretKey)) ? '#FEF2F2' : '#ffffff', 
+            padding: '20px', 
+            borderRadius: '16px', 
+            border: accounts.some(a => !isValid2FAKey(a.secretKey)) ? '1px solid #FEE2E2' : '1px solid #E2E8F0', 
+            boxShadow: '0 1px 3px 0 rgba(0,0,0,0.05)' 
+          }}>
+            <div style={{ color: accounts.some(a => !isValid2FAKey(a.secretKey)) ? '#EF4444' : '#64748B', fontSize: '0.825rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>Key lỗi 2FA</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 700, color: accounts.some(a => !isValid2FAKey(a.secretKey)) ? '#EF4444' : '#1E293B' }}>
+              {accounts.filter(a => !isValid2FAKey(a.secretKey)).length}
+            </div>
+          </div>
+        </div>
+
+        {/* Filters Bar Section */}
+        <div style={{ 
+          background: '#ffffff', 
+          padding: '20px', 
+          borderRadius: '16px', 
+          border: `1.5px solid ${geminiBlue}15`, 
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', 
+          marginBottom: '24px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '16px',
+          alignItems: 'center'
+        }}>
+          {/* Search box */}
+          <div style={{ flex: '1 1 300px', position: 'relative' }}>
+            <Search size={18} color="#94A3B8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+            <input
+              type="text"
+              placeholder="Tìm kiếm theo email hoặc secret key..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px 40px 12px 40px',
+                borderRadius: '10px',
+                border: '1.5px solid #E2E8F0',
+                fontSize: '0.9rem',
+                color: '#1E293B',
+                outline: 'none',
+                boxSizing: 'border-box',
+                transition: 'all 0.2s'
+              }}
+              onFocus={(e) => { e.target.style.borderColor = geminiBlue; e.target.style.boxShadow = `0 0 0 3px ${geminiBlue}12`; }}
+              onBlur={(e) => { e.target.style.borderColor = '#E2E8F0'; e.target.style.boxShadow = 'none'; }}
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                style={{ 
+                  position: 'absolute', 
+                  right: '14px', 
+                  top: '50%', 
+                  transform: 'translateY(-50%)', 
+                  background: 'none', 
+                  border: 'none', 
+                  cursor: 'pointer',
+                  color: '#94A3B8',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Domain Filter */}
+          <div style={{ flex: '1 1 150px' }}>
+            <select
+              value={domainFilter}
+              onChange={(e) => setDomainFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1.5px solid #E2E8F0',
+                background: '#ffffff',
+                color: '#1E293B',
+                fontSize: '0.9rem',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="">Tất cả tên miền</option>
+              <option value="gmail">Gmail (@gmail.com)</option>
+              <option value="icloud">iCloud (@icloud.com)</option>
+              <option value="outlook">Outlook/Hotmail</option>
+              <option value="other">Tên miền khác</option>
+            </select>
+          </div>
+
+          {/* Date Filter */}
+          <div style={{ flex: '1 1 150px' }}>
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1.5px solid #E2E8F0',
+                background: '#ffffff',
+                color: '#1E293B',
+                fontSize: '0.9rem',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="">Tất cả thời gian</option>
+              <option value="today">Hôm nay</option>
+              <option value="yesterday">Hôm qua</option>
+              <option value="7days">7 ngày qua</option>
+              <option value="30days">30 ngày qua</option>
+            </select>
+          </div>
+
+          {/* 2FA Key Validity Filter */}
+          <div style={{ flex: '1 1 150px' }}>
+            <select
+              value={keyStatusFilter}
+              onChange={(e) => setKeyStatusFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1.5px solid #E2E8F0',
+                background: '#ffffff',
+                color: '#1E293B',
+                fontSize: '0.9rem',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="">Trạng thái Key 2FA</option>
+              <option value="valid">Key hợp lệ</option>
+              <option value="invalid">Key không hợp lệ</option>
+            </select>
+          </div>
+
+          {/* Sort selection */}
+          <div style={{ flex: '1 1 150px' }}>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                borderRadius: '10px',
+                border: '1.5px solid #E2E8F0',
+                background: '#ffffff',
+                color: '#1E293B',
+                fontSize: '0.9rem',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="newest">Ngày tạo: Mới nhất</option>
+              <option value="oldest">Ngày tạo: Cũ nhất</option>
+              <option value="az">Email: A → Z</option>
+              <option value="za">Email: Z → A</option>
+            </select>
+          </div>
         </div>
 
         {/* ====== BULK IMPORT SECTION ====== */}
@@ -345,34 +620,77 @@ export default function GeminiAccountsPage() {
               </tr>
             </thead>
             <tbody>
-              {paginatedAccounts.map((account) => (
-                <tr key={account._id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                  <td style={{ padding: '20px 24px', color: '#1E293B', fontWeight: 500 }}>{account.geminiEmail}</td>
-                  <td style={{ padding: '20px 24px' }}>
-                    <code style={{ background: '#eff6ff', padding: '4px 8px', borderRadius: '4px', color: geminiBlue, fontSize: '0.85rem', fontFamily: 'monospace' }}>
-                      {account.secretKey}
-                    </code>
-                  </td>
-                  <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                      <button
-                        onClick={() => setEditingAccount(account)}
-                        style={{ padding: '8px 16px', background: '#1E293B', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(account._id)}
-                        style={{ padding: '8px 16px', background: '#FEF2F2', color: '#EF4444', border: '1px solid #FECACA', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {paginatedAccounts.map((account) => {
+                const isKeyValid = isValid2FAKey(account.secretKey);
+                return (
+                  <tr key={account._id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                    <td style={{ padding: '20px 24px', color: '#1E293B', fontWeight: 500 }}>{account.geminiEmail}</td>
+                    <td style={{ padding: '20px 24px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <code style={{ background: '#eff6ff', padding: '4px 8px', borderRadius: '4px', color: geminiBlue, fontSize: '0.85rem', fontFamily: 'monospace' }}>
+                          {account.secretKey}
+                        </code>
+                        {!isKeyValid && (
+                          <span style={{
+                            background: '#FEF2F2',
+                            color: '#EF4444',
+                            padding: '2px 8px',
+                            borderRadius: '999px',
+                            fontSize: '0.725rem',
+                            fontWeight: 600,
+                            border: '1px solid #FEE2E2',
+                            display: 'inline-flex',
+                            alignItems: 'center'
+                          }}>
+                            Lỗi Key 2FA
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                        <button
+                          onClick={() => setEditingAccount(account)}
+                          style={{ padding: '8px 16px', background: '#1E293B', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() => handleDelete(account._id)}
+                          style={{ padding: '8px 16px', background: '#FEF2F2', color: '#EF4444', border: '1px solid #FECACA', borderRadius: '8px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+
+          {filteredAccounts.length === 0 && accounts.length > 0 && (
+            <div style={{ padding: '48px', textAlign: 'center', color: '#64748B' }}>
+              <p style={{ margin: 0, fontSize: '1.1rem' }}>Không tìm thấy tài khoản nào khớp với bộ lọc.</p>
+              <button 
+                onClick={handleResetFilters} 
+                style={{ 
+                  marginTop: '12px', 
+                  padding: '10px 20px', 
+                  background: `linear-gradient(135deg, ${geminiBlue}, ${geminiPurple})`, 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '10px', 
+                  cursor: 'pointer', 
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  boxShadow: `0 4px 12px ${geminiBlue}30`
+                }}
+              >
+                Xóa bộ lọc
+              </button>
+            </div>
+          )}
 
           {accounts.length === 0 && (
             <div style={{ padding: '48px', textAlign: 'center', color: '#64748B' }}>
@@ -381,10 +699,10 @@ export default function GeminiAccountsPage() {
             </div>
           )}
 
-          {accounts.length > 0 && (
+          {filteredAccounts.length > 0 && (
             <div style={{ padding: '20px 24px', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FAFAF9' }}>
               <div style={{ color: '#64748B', fontSize: '0.875rem' }}>
-                Hiển thị <strong>{(currentPage - 1) * itemsPerPage + 1}</strong> - <strong>{Math.min(currentPage * itemsPerPage, accounts.length)}</strong> của <strong>{accounts.length}</strong> accounts
+                Hiển thị <strong>{(currentPage - 1) * itemsPerPage + 1}</strong> - <strong>{Math.min(currentPage * itemsPerPage, filteredAccounts.length)}</strong> của <strong>{filteredAccounts.length}</strong> accounts
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}
@@ -406,8 +724,13 @@ export default function GeminiAccountsPage() {
           )}
         </div>
 
-        <div style={{ marginTop: '16px', color: '#94A3B8', fontSize: '0.875rem', textAlign: 'right' }}>
-          Tổng số lượng tài khoản Gemini: <strong style={{ color: '#1E293B' }}>{accounts.length}</strong>
+        <div style={{ marginTop: '16px', color: '#94A3B8', fontSize: '0.875rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>
+            {filteredAccounts.length !== accounts.length && (
+              <>Đang lọc ra <strong style={{ color: '#64748B' }}>{filteredAccounts.length}</strong> trên </>
+            )}
+            Tổng số lượng tài khoản Gemini: <strong style={{ color: '#1E293B' }}>{accounts.length}</strong>
+          </span>
         </div>
 
         <style>{`

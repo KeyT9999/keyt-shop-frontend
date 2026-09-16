@@ -18,6 +18,7 @@ import nikonLogo from '../assets/photoframe/Nikon_logo.png';
 import ricohLogo from '../assets/photoframe/Ricoh_logo_2005.svg.png';
 import { generateDisplayUrl } from '../utils/photoframe/imageOptimization';
 import { blurFrame } from '../components/PhotoFrame/templates/blurFrame';
+import { PRESET_STORAGE_KEY } from '../features/aiImage/constants';
 import { liveViewFrame } from '../components/PhotoFrame/templates/liveViewFrame';
 import { filmFrame } from '../components/PhotoFrame/templates/filmFrame';
 import { glassFrame } from '../components/PhotoFrame/templates/glassFrame';
@@ -184,6 +185,46 @@ export default function PhotoFramePage() {
   };
 
   const activePhoto = photos.find((p) => p.id === activePhotoId);
+
+  // Áp dụng preset từ trang AI Xử Lý Ảnh (one-shot qua sessionStorage)
+  useEffect(() => {
+    let raw = null;
+    try {
+      raw = sessionStorage.getItem(PRESET_STORAGE_KEY);
+      if (raw) sessionStorage.removeItem(PRESET_STORAGE_KEY);
+    } catch {
+      return;
+    }
+    if (!raw) return;
+
+    try {
+      const preset = JSON.parse(raw);
+      const tpl = templates.find((t) => t.name === preset.template);
+      if (tpl) setSelectedTemplate(tpl);
+
+      const p = preset.params || {};
+      if (typeof p.framePadding === 'number') setFramePadding(p.framePadding);
+      if (typeof p.blurRadius === 'number') setBlurRadius(p.blurRadius);
+      if (typeof p.blurBrightness === 'number') setBlurBrightness(p.blurBrightness);
+      if (typeof p.shadowOpacity === 'number') setShadowOpacity(p.shadowOpacity);
+      if (typeof p.focusX === 'number') setFocusX(p.focusX);
+      if (typeof p.focusY === 'number') setFocusY(p.focusY);
+
+      if (preset.imageDataUrl) {
+        fetch(preset.imageDataUrl)
+          .then((res) => res.blob())
+          .then((blob) => {
+            const ext = blob.type.includes('png') ? 'png' : 'jpg';
+            const file = new File([blob], `ai-image.${ext}`, { type: blob.type || 'image/jpeg' });
+            handleUpload([file]);
+          })
+          .catch((err) => console.warn('Không nạp được ảnh từ preset AI:', err));
+      }
+    } catch (err) {
+      console.warn('Preset AI không hợp lệ:', err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];

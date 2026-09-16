@@ -6,18 +6,11 @@ import { visitService } from '../../services/visitService';
 import type { AdminStats } from '../../types/admin';
 import type { VisitStats } from '../../types/visit';
 import {
-  LayoutDashboard,
   Users,
   Package,
-  ShoppingBag,
   Bot,
   CreditCard,
   Key,
-  LogOut,
-  Menu,
-  Star,
-  Bell,
-  RefreshCw,
   TrendingUp,
   TrendingDown,
   Clock,
@@ -31,35 +24,14 @@ import DailyVisitsChart from '../../components/DailyVisitsChart';
 import HourlyVisitsChart from '../../components/HourlyVisitsChart';
 import './AdminStyles.css';
 
-// Import sub-pages (components)
-import UsersPage from './UsersPage';
-import ProductsPage from './ProductsPage';
-import OrdersPage from './OrdersPage';
-import ChatGptAccountsPage from './ChatGptAccountsPage';
-import GeminiAccountsPage from './GeminiAccountsPage';
-import SubscriptionsPage from './SubscriptionsPage';
-import OtpRequestsPage from './OtpRequestsPage';
-import ReviewsPage from './ReviewsPage';
-import AnnouncementPage from './AnnouncementPage';
-
-type AdminTab = 'dashboard' | 'users' | 'products' | 'orders' | 'chatgpt' | 'gemini' | 'subscriptions' | 'otp' | 'reviews' | 'announcement';
-
 export default function AdminDashboard() {
-  const { token, user, logout } = useAuthContext();
+  const { token, user } = useAuthContext();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
   const [visitStats, setVisitStats] = useState<VisitStats | null>(null);
   const [loadingVisitStats, setLoadingVisitStats] = useState(false);
   const [visitPeriod, setVisitPeriod] = useState<'1m' | '2m' | '3m' | '6m' | '1y'>('1m');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
-    // Default to open on desktop (> 768px), closed on mobile
-    if (typeof window !== 'undefined') {
-      return window.innerWidth > 768;
-    }
-    return true;
-  });
 
   useEffect(() => {
     if (token && user?.admin) {
@@ -107,42 +79,6 @@ export default function AdminDashboard() {
     );
   }
 
-  const renderContent = () => {
-    try {
-      switch (activeTab) {
-        case 'dashboard':
-          return renderDashboardHome();
-        case 'users':
-          return <UsersPage />;
-        case 'products':
-          return <ProductsPage />;
-        case 'orders':
-          return <OrdersPage />;
-        case 'reviews':
-          return <ReviewsPage />;
-        case 'chatgpt':
-          return <ChatGptAccountsPage />;
-        case 'gemini':
-          return <GeminiAccountsPage />;
-        case 'subscriptions':
-          return <SubscriptionsPage />;
-        case 'otp':
-          return <OtpRequestsPage />;
-        case 'announcement':
-          return <AnnouncementPage />;
-        default:
-          return renderDashboardHome();
-      }
-    } catch (error) {
-      console.error('Error rendering content:', error);
-      return (
-        <div style={{ padding: '2rem', color: '#EF4444' }}>
-          <h2>Đã có lỗi xảy ra</h2>
-          <p>{error instanceof Error ? error.message : 'Unknown error'}</p>
-        </div>
-      );
-    }
-  };
 
   const renderDashboardHome = () => {
     if (loadingStats) {
@@ -533,10 +469,10 @@ export default function AdminDashboard() {
         <div className="table-container" style={{ marginTop: '24px' }}>
           <h3 style={{ padding: '12px 16px', margin: 0, borderBottom: '1px solid #E2E8F0', color: '#1E293B', fontSize: '0.95rem' }}>Quick Actions</h3>
           <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <button className="btn-admin btn-admin-primary" onClick={() => setActiveTab('users')} style={{ width: '100%' }}>
+            <button className="btn-admin btn-admin-primary" onClick={() => navigate('/admin/users')} style={{ width: '100%' }}>
               <Users size={16} /> Manage Users
             </button>
-            <button className="btn-admin btn-admin-outline" onClick={() => setActiveTab('products')} style={{ width: '100%' }}>
+            <button className="btn-admin btn-admin-outline" onClick={() => navigate('/admin/products')} style={{ width: '100%' }}>
               <Package size={16} /> Manage Products
             </button>
             <button className="btn-admin btn-admin-outline" onClick={() => navigate('/admin/affiliate')} style={{ width: '100%' }}>
@@ -549,251 +485,5 @@ export default function AdminDashboard() {
     );
   };
 
-  const getPageTitle = () => {
-    switch (activeTab) {
-      case 'dashboard': return 'Dashboard';
-      case 'users': return 'Quản lý Users';
-      case 'products': return 'Quản lý Sản phẩm';
-      case 'orders': return 'Quản lý Đơn hàng';
-      case 'reviews': return 'Quản lý Đánh giá';
-      case 'chatgpt': return 'ChatGPT Accounts';
-      case 'gemini': return 'Gemini Accounts';
-      case 'subscriptions': return 'Subscriptions';
-      case 'otp': return 'OTP Requests';
-      case 'announcement': return 'Thông báo';
-      default: return 'Admin';
-    }
-  };
-
-  return (
-    <div className="admin-layout">
-      {/* Sidebar Overlay - only visible on mobile */}
-      <div 
-        className="admin-sidebar-overlay"
-        onClick={() => setIsSidebarOpen(false)}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 999,
-          display: isSidebarOpen ? 'block' : 'none'
-        }}
-      />
-      <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
-        <div className="admin-sidebar-header">
-          <div className="admin-logo">
-            <LayoutDashboard size={24} />
-            <span>Mindora AI Admin</span>
-          </div>
-        </div>
-
-        <nav className="admin-sidebar-content">
-          <button
-            className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Switching to dashboard tab');
-              setActiveTab('dashboard');
-            }}
-          >
-            <LayoutDashboard size={20} />
-            <span>Tổng quan</span>
-          </button>
-
-          <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '8px 0' }}></div>
-
-          <button
-            className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setActiveTab('users');
-            }}
-          >
-            <Users size={20} />
-            <span>Quản lý Users</span>
-          </button>
-
-          <button
-            className={`admin-nav-item ${activeTab === 'products' ? 'active' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setActiveTab('products');
-            }}
-          >
-            <Package size={20} />
-            <span>Sản phẩm</span>
-          </button>
-
-          <button
-            className={`admin-nav-item ${activeTab === 'orders' ? 'active' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setActiveTab('orders');
-            }}
-          >
-            <ShoppingBag size={20} />
-            <span>Đơn hàng</span>
-          </button>
-
-          <button
-            className="admin-nav-item"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigate('/admin/netflix-replacements');
-            }}
-          >
-            <RefreshCw size={20} />
-            <span>Đổi cookie Netflix</span>
-          </button>
-
-          <button
-            className="admin-nav-item"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigate('/admin/affiliate');
-            }}
-          >
-            <TrendingUp size={20} />
-            <span>Affiliate & Rut tien</span>
-          </button>
-
-          <button
-            className={`admin-nav-item ${activeTab === 'reviews' ? 'active' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setActiveTab('reviews');
-            }}
-          >
-            <Star size={20} />
-            <span>Đánh giá</span>
-          </button>
-
-          <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '8px 0' }}></div>
-
-          <button
-            className={`admin-nav-item ${activeTab === 'chatgpt' ? 'active' : ''}`}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveTab('chatgpt'); }}
-          >
-            <Bot size={20} />
-            <span>ChatGPT Accounts</span>
-          </button>
-
-          <button
-            className={`admin-nav-item ${activeTab === 'gemini' ? 'active' : ''}`}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveTab('gemini'); }}
-          >
-            <svg width="20" height="20" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M96 0C96 53.0193 53.0193 96 0 96C53.0193 96 96 138.981 96 192C96 138.981 138.981 96 192 96C138.981 96 96 53.0193 96 0Z" fill="currentColor"/>
-            </svg>
-            <span>Gemini Accounts</span>
-          </button>
-
-          <button
-            className={`admin-nav-item ${activeTab === 'subscriptions' ? 'active' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setActiveTab('subscriptions');
-            }}
-          >
-            <CreditCard size={20} />
-            <span>Subscriptions</span>
-          </button>
-
-          <button
-            className={`admin-nav-item ${activeTab === 'otp' ? 'active' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setActiveTab('otp');
-            }}
-          >
-            <Key size={20} />
-            <span>OTP Requests</span>
-          </button>
-
-          <button
-            className={`admin-nav-item ${activeTab === 'announcement' ? 'active' : ''}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setActiveTab('announcement');
-            }}
-          >
-            <Bell size={20} />
-            <span>Thông báo</span>
-          </button>
-        </nav>
-
-        {/* Sidebar Footer */}
-        <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <button className="admin-nav-item" onClick={logout} style={{ color: '#EF4444' }}>
-            <LogOut size={20} />
-            <span>Đăng xuất</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="admin-main">
-        {/* Top Header */}
-        <header className="admin-topbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            {/* Toggle Sidebar Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsSidebarOpen(!isSidebarOpen);
-              }}
-              style={{
-                border: 'none',
-                background: 'transparent',
-                cursor: 'pointer',
-                padding: '8px',
-                borderRadius: '8px',
-                color: '#334155',
-                zIndex: 1001,
-                position: 'relative'
-              }}
-            >
-              <Menu size={24} />
-            </button>
-            <h1 className="admin-page-title">{getPageTitle()}</h1>
-          </div>
-
-          <div className="admin-user-profile">
-            <div className="admin-avatar">
-              {user?.username?.charAt(0).toUpperCase() || 'A'}
-            </div>
-            <span className="admin-username">{user?.username || 'Admin'}</span>
-          </div>
-        </header>
-
-        {/* Dynamic Content Area */}
-        <div className="admin-content-scroll">
-          {renderContent()}
-          <footer style={{
-            marginTop: 'auto',
-            padding: '16px',
-            textAlign: 'center',
-            color: '#94A3B8',
-            fontSize: '0.75rem',
-            borderTop: '1px solid #E2E8F0'
-          }}>
-            &copy; {new Date().getFullYear()} Mindora AI Admin. All rights reserved.
-          </footer>
-        </div>
-      </main>
-    </div>
-  );
+  return renderDashboardHome();
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, lazy, Suspense } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import './App.css';
 import { useAuthContext } from './context/useAuthContext';
 
@@ -32,10 +32,12 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const AdminBannerPage = lazy(() => import('./pages/admin/AdminBannerPage'));
 const EvidenceCheckerPage = lazy(() => import('./pages/EvidenceCheckerPage'));
 const ChatGptAccountsPage = lazy(() => import('./pages/admin/ChatGptAccountsPage'));
+const GeminiAccountsPage = lazy(() => import('./pages/admin/GeminiAccountsPage'));
 const SubscriptionsPage = lazy(() => import('./pages/admin/SubscriptionsPage'));
 const UserLoginHistoryPage = lazy(() => import('./pages/admin/UserLoginHistoryPage'));
 const OtpRequestsPage = lazy(() => import('./pages/admin/OtpRequestsPage'));
@@ -45,6 +47,8 @@ const OrdersPage = lazy(() => import('./pages/admin/OrdersPage'));
 const AdminOrderDetailPage = lazy(() => import('./pages/admin/AdminOrderDetailPage'));
 const NetflixReplacementTicketsPage = lazy(() => import('./pages/admin/NetflixReplacementTicketsPage'));
 const AdminAffiliatePage = lazy(() => import('./pages/admin/AdminAffiliatePage'));
+const ReviewsPage = lazy(() => import('./pages/admin/ReviewsPage'));
+const AnnouncementPage = lazy(() => import('./pages/admin/AnnouncementPage'));
 const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'));
 const UserOrdersPage = lazy(() => import('./pages/UserOrdersPage'));
 const InvoiceView = lazy(() => import('./components/order/InvoiceView'));
@@ -57,6 +61,7 @@ const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
 const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
 const PhotoFramePage = lazy(() => import('./pages/PhotoFramePage'));
 const CompressPage = lazy(() => import('./pages/CompressPage'));
+const AiImagePage = lazy(() => import('./pages/AiImagePage'));
 const AdminChatPage = lazy(() => import('./pages/admin/AdminChatPage'));
 
 export default function App() {
@@ -207,6 +212,16 @@ export default function App() {
             }
         }
 
+        if (path === '/ai-image') {
+            return {
+                ...base,
+                title: 'AI Xử Lý Ảnh Online – Caption AI, Gợi Ý Khung, Xóa Nền | Mindora AI',
+                description:
+                    'Công cụ AI xử lý ảnh miễn phí: tự động viết caption + hashtag, gợi ý khung ảnh đẹp, xóa nền và kiểm tra metadata AI. Dùng API key Gemini, OpenAI hoặc DeepSeek của riêng bạn — riêng xóa nền không cần key.',
+                canonicalPath: '/ai-image',
+            }
+        }
+
         if (path === '/compress') {
             return {
                 ...base,
@@ -231,7 +246,7 @@ export default function App() {
             <AffiliateReferralTracker />
             <Seo {...seoConfig} />
             <StructuredData />
-            <FloatingContact />
+            {!isAdminPage && <FloatingContact />}
             {showChatWidget && <ChatWidget />}
             {isAdmin && <AdminChatBubble />}
             <AnnouncementModal
@@ -241,9 +256,9 @@ export default function App() {
                 onClose={() => setAnnouncementOpen(false)}
             />
 
-            <Header onSearch={setSearchQuery} searchValue={searchQuery} />
+            {!isAdminPage && <Header onSearch={setSearchQuery} searchValue={searchQuery} />}
 
-            <main className="main-content-full">
+            <main className={isAdminPage ? "main-content-admin" : "main-content-full"}>
                 <Suspense fallback={
                     <div className="bg-[#fdfbf7] min-h-[70vh] flex items-center justify-center text-slate-800">
                       <div className="text-xl font-game animate-pulse text-[#F05A28]">LOADING...</div>
@@ -279,19 +294,26 @@ export default function App() {
                         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
                         <Route path="/photo-frame" element={<PhotoFramePage />} />
                         <Route path="/compress" element={<CompressPage />} />
-                        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                        <Route path="/admin/chatgpt-accounts" element={<ChatGptAccountsPage />} />
-                        <Route path="/admin/subscriptions" element={<SubscriptionsPage />} />
-                        <Route path="/admin/banners" element={<AdminBannerPage />} />
-                        <Route path="/admin/users" element={<UsersPage />} />
-                        <Route path="/admin/products" element={<ProductsPage />} />
-                        <Route path="/admin/orders" element={<OrdersPage />} />
-                        <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
-                        <Route path="/admin/affiliate" element={<AdminAffiliatePage />} />
-                        <Route path="/admin/netflix-replacements" element={<NetflixReplacementTicketsPage />} />
-                        <Route path="/admin/user-login-history/:userId" element={<UserLoginHistoryPage />} />
-                        <Route path="/admin/otp-requests" element={<OtpRequestsPage />} />
-                        <Route path="/admin/chat" element={<AdminChatPage />} />
+                        <Route path="/ai-image" element={<AiImagePage />} />
+                        <Route path="/admin" element={<AdminLayout />}>
+                            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                            <Route path="dashboard" element={<AdminDashboard />} />
+                            <Route path="chatgpt-accounts" element={<ChatGptAccountsPage />} />
+                            <Route path="gemini" element={<GeminiAccountsPage />} />
+                            <Route path="subscriptions" element={<SubscriptionsPage />} />
+                            <Route path="banners" element={<AdminBannerPage />} />
+                            <Route path="users" element={<UsersPage />} />
+                            <Route path="products" element={<ProductsPage />} />
+                            <Route path="orders" element={<OrdersPage />} />
+                            <Route path="orders/:id" element={<AdminOrderDetailPage />} />
+                            <Route path="affiliate" element={<AdminAffiliatePage />} />
+                            <Route path="netflix-replacements" element={<NetflixReplacementTicketsPage />} />
+                            <Route path="user-login-history/:userId" element={<UserLoginHistoryPage />} />
+                            <Route path="otp-requests" element={<OtpRequestsPage />} />
+                            <Route path="reviews" element={<ReviewsPage />} />
+                            <Route path="announcement" element={<AnnouncementPage />} />
+                            <Route path="chat" element={<AdminChatPage />} />
+                        </Route>
                     </Routes>
                 </Suspense>
             </main>

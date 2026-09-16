@@ -158,8 +158,8 @@ export default function AdminBannerPage() {
     };
 
     return (
-        <div className="banner-page" style={{ background: '#F8FAFC', minHeight: '100vh', padding: '40px 20px' }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="banner-page space-y-6">
+            <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                     <div>
                         <h1 style={{ color: '#1E293B', fontSize: '2rem', fontWeight: 700, margin: '0 0 8px 0' }}>Banner Management</h1>

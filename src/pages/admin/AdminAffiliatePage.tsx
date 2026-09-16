@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, CheckCircle2, RefreshCw, Wallet, XCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { CheckCircle2, RefreshCw, Wallet, XCircle } from 'lucide-react';
 import { useAuthContext } from '../../context/useAuthContext';
 import { affiliateService } from '../../services/affiliateService';
 import type {
@@ -55,7 +54,6 @@ function getUserLabel(user?: { username?: string; email?: string; displayName?: 
 
 export default function AdminAffiliatePage() {
   const { token, user } = useAuthContext();
-  const navigate = useNavigate();
   const [overview, setOverview] = useState<AdminAffiliateOverviewResponse | null>(null);
   const [withdrawals, setWithdrawals] = useState<AdminAffiliateWithdrawalsResponse | null>(null);
   const [earnings, setEarnings] = useState<AdminAffiliateEarningsResponse | null>(null);
@@ -162,29 +160,11 @@ export default function AdminAffiliatePage() {
   }
 
   return (
-    <div className="main-content" style={{ background: '#F8FAFC', minHeight: '100vh', padding: '20px 16px' }}>
-      <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'grid', gap: '20px' }}>
+    <div className="space-y-6">
+      <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'grid', gap: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
           <div>
-            <button
-              onClick={() => navigate('/admin/dashboard')}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: '#fff',
-                border: '1px solid #E2E8F0',
-                color: '#475569',
-                borderRadius: '8px',
-                padding: '8px 14px',
-                cursor: 'pointer',
-                marginBottom: '12px'
-              }}
-            >
-              <ArrowLeft size={16} />
-              Quay lại admin
-            </button>
-            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#0F172A' }}>Affiliate và rút tiền hoa hồng</h1>
+            <h1 style={{ margin: 0, fontSize: '1.8rem', color: '#0F172A', fontWeight: 700 }}>Affiliate và rút tiền hoa hồng</h1>
             <p style={{ margin: '8px 0 0', color: '#64748B', lineHeight: 1.6 }}>
               Quản lý tổng quan cộng tác viên, theo dõi hoa hồng phát sinh và duyệt chuyển khoản cho từng user.
             </p>

@@ -536,17 +536,17 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
             </button>
           </form>
 
-          {/* Active Code Display Card (Cyber Card) */}
+          {/* Active Code Display Card (Light Modern Design System) */}
           {code && (
             <div className="auth-code-hero-card">
               {/* Status Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="relative flex h-3 w-3">
+              <div className="flex items-center justify-between mb-3">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 shadow-xs">
+                  <span className="relative flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                   </span>
-                  <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">
                     Mã đang hoạt động
                   </span>
                 </div>
@@ -559,7 +559,7 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
                         cx="20"
                         cy="20"
                         r={radius}
-                        className="stroke-slate-800 fill-none"
+                        className="stroke-slate-200 fill-none"
                         strokeWidth="3.5"
                       />
                       <circle
@@ -601,7 +601,7 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
               >
                 {copied ? (
                   <>
-                    <CheckCircle2 size={18} className="text-emerald-400" />
+                    <CheckCircle2 size={18} className="text-white" />
                     <span>Đã sao chép vào bộ nhớ tạm!</span>
                   </>
                 ) : (
@@ -613,8 +613,8 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
               </button>
 
               {/* Auto-refresh note */}
-              <div className="flex items-center justify-center gap-1.5 mt-3 text-[11px] text-slate-400">
-                <RotateCw size={12} className={countdown <= 3 ? 'animate-spin text-orange-400' : ''} />
+              <div className="flex items-center justify-center gap-1.5 mt-3 text-xs text-slate-500 font-medium">
+                <RotateCw size={13} className={countdown <= 3 ? 'animate-spin text-[#F05A28]' : 'text-slate-400'} />
                 <span>Mã sẽ tự động làm mới khi hết thời gian</span>
               </div>
             </div>
@@ -887,15 +887,16 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
           cursor: not-allowed;
         }
 
-        /* Hero Code Display Card (Cyber Card) */
+        /* Hero Code Display Card (Light Modern Design System) */
         .auth-code-hero-card {
           margin-top: 1.75rem;
-          padding: 1.35rem 1.25rem;
-          background: #0F172A;
+          padding: 1.5rem 1.25rem;
+          background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
           border-radius: 20px;
-          border: 1px solid #1E293B;
-          box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.4),
-                      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+          border: 1.5px solid #E2E8F0;
+          box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.08),
+                      0 4px 12px -2px rgba(240, 90, 40, 0.05),
+                      inset 0 1px 0 rgba(255, 255, 255, 1);
           animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
@@ -921,9 +922,9 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
 
         .auth-radial-text {
           position: absolute;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          color: #F8FAFC;
+          font-size: 0.75rem;
+          font-weight: 800;
+          color: #0F172A;
           font-family: monospace;
         }
 
@@ -934,38 +935,41 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
         .auth-digit-box {
           flex: 1;
           max-width: 52px;
-          height: 60px;
+          height: 62px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(30, 41, 59, 0.7);
-          border: 1.5px solid rgba(240, 90, 40, 0.35);
-          border-radius: 12px;
+          background: #FFFFFF;
+          border: 2px solid #FED7AA;
+          border-radius: 14px;
           font-size: 1.85rem;
           font-weight: 800;
           font-family: 'SF Mono', Consolas, Monaco, monospace;
-          color: #FFFFFF;
-          text-shadow: 0 0 12px rgba(240, 90, 40, 0.4);
-          transition: all 0.2s ease;
+          color: #0F172A;
+          box-shadow: 0 4px 10px -2px rgba(240, 90, 40, 0.08),
+                      0 2px 4px -1px rgba(15, 23, 42, 0.03);
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .auth-digit-box:hover {
           border-color: #F05A28;
           transform: translateY(-2px);
-          background: rgba(30, 41, 59, 0.95);
+          background: #FFFDFB;
+          box-shadow: 0 8px 18px -3px rgba(240, 90, 40, 0.22);
         }
 
         .auth-full-code-box {
           padding: 1rem;
-          background: rgba(30, 41, 59, 0.7);
-          border: 1.5px solid rgba(240, 90, 40, 0.35);
-          border-radius: 12px;
+          background: #FFFFFF;
+          border: 2px solid #FED7AA;
+          border-radius: 14px;
           text-align: center;
           font-size: 1.75rem;
           font-weight: 800;
           font-family: monospace;
-          color: #FFFFFF;
+          color: #0F172A;
           letter-spacing: 4px;
+          box-shadow: 0 4px 10px -2px rgba(240, 90, 40, 0.08);
         }
 
         .auth-copy-btn {
@@ -974,25 +978,31 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
           align-items: center;
           justify-content: center;
           gap: 8px;
-          padding: 0.75rem;
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 12px;
-          color: #F8FAFC;
-          font-size: 0.875rem;
-          font-weight: 600;
-          transition: all 0.2s ease;
+          padding: 0.85rem;
+          background: linear-gradient(135deg, #F05A28 0%, #EA580C 100%);
+          border: none;
+          border-radius: 14px;
+          color: #FFFFFF;
+          font-size: 0.9375rem;
+          font-weight: 700;
+          box-shadow: 0 8px 18px -4px rgba(240, 90, 40, 0.35);
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .auth-copy-btn:hover {
-          background: rgba(255, 255, 255, 0.16);
-          border-color: rgba(255, 255, 255, 0.2);
+          background: linear-gradient(135deg, #FF6838 0%, #F05A28 100%);
+          transform: translateY(-1.5px);
+          box-shadow: 0 12px 22px -4px rgba(240, 90, 40, 0.45);
+        }
+
+        .auth-copy-btn:active {
+          transform: translateY(0);
         }
 
         .auth-copy-btn.copied {
-          background: rgba(16, 185, 129, 0.15);
-          border-color: rgba(16, 185, 129, 0.4);
-          color: #34D399;
+          background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+          box-shadow: 0 8px 18px -4px rgba(16, 185, 129, 0.4);
+          color: #FFFFFF;
         }
 
         /* Tips Box */

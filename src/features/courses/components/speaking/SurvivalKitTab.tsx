@@ -112,36 +112,37 @@ export const SurvivalKitTab: React.FC<SurvivalKitTabProps> = ({ courseCode = 'jp
 
   return (
     <div className="space-y-8">
-      {/* Top Banner: Master Sheet Info */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white p-6 rounded-3xl border border-slate-700/60 shadow-xl relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-[#F05A28]/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+      {/* Top Banner: Master Sheet Info (Clean Modern Light Luxury Theme) */}
+      <div className="bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 p-6 sm:p-7 rounded-3xl border border-orange-200/80 shadow-sm relative overflow-hidden">
+        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-gradient-to-br from-[#F05A28]/10 to-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F05A28]/20 border border-[#F05A28]/40 rounded-full text-xs font-semibold text-[#F05A28] mb-2.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-100 border border-orange-200 rounded-full text-xs font-bold text-[#F05A28] mb-2.5 shadow-2xs">
               <Sparkles className="w-3.5 h-3.5 text-[#F05A28]" />
               Master Sheet Khảo Thí FPT University
             </div>
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
               Cẩm Nang Sinh Tồn &amp; Phản Xạ Nói JPD123
             </h2>
-            <p className="text-slate-300 text-sm mt-1 max-w-2xl leading-relaxed">
+            <p className="text-slate-600 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
               Tổng hợp toàn diện 22 mục kiến thức: 20 mẫu phản xạ nghe-đáp, 15 từ để hỏi, quy tắc trừ điểm, bảng chia ngữ pháp L4–L7 và trọn bộ 10 trợ từ.
             </p>
           </div>
-          <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-3 shrink-0 backdrop-blur-sm">
-            <div className="text-center px-2">
-              <div className="text-2xl font-black text-[#F05A28]">100</div>
-              <div className="text-[11px] text-slate-400 font-medium">Thang điểm</div>
+
+          <div className="flex items-center gap-3 bg-white border border-slate-200/90 rounded-2xl p-3 shrink-0 shadow-xs">
+            <div className="text-center px-3">
+              <div className="text-2xl sm:text-3xl font-black text-[#F05A28]">100</div>
+              <div className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide">Thang điểm</div>
             </div>
-            <div className="w-px h-8 bg-white/10"></div>
-            <div className="text-center px-2">
-              <div className="text-2xl font-black text-amber-400">20s</div>
-              <div className="text-[11px] text-slate-400 font-medium">Chuẩn bị đọc</div>
+            <div className="w-px h-8 bg-slate-200"></div>
+            <div className="text-center px-3">
+              <div className="text-2xl sm:text-3xl font-black text-amber-600">20s</div>
+              <div className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide">Chuẩn bị đọc</div>
             </div>
-            <div className="w-px h-8 bg-white/10"></div>
-            <div className="text-center px-2">
-              <div className="text-2xl font-black text-emerald-400">10s</div>
-              <div className="text-[11px] text-slate-400 font-medium">Suy nghĩ Q&amp;A</div>
+            <div className="w-px h-8 bg-slate-200"></div>
+            <div className="text-center px-3">
+              <div className="text-2xl sm:text-3xl font-black text-emerald-600">10s</div>
+              <div className="text-[11px] text-slate-500 font-semibold uppercase tracking-wide">Suy nghĩ Q&amp;A</div>
             </div>
           </div>
         </div>
@@ -368,13 +369,13 @@ export const SurvivalKitTab: React.FC<SurvivalKitTabProps> = ({ courseCode = 'jp
       {/* ========================================================================= */}
       {activeSection === 'question_words' && (
         <div className="space-y-6">
-          {/* 3-Step Strategy Card */}
-          <div className="bg-gradient-to-r from-sky-950 via-slate-900 to-indigo-950 text-white p-6 rounded-2xl border border-sky-800 shadow-lg">
-            <div className="flex items-center gap-2 text-sky-400 text-xs font-bold uppercase tracking-wider mb-2">
-              <Target className="w-4 h-4" />
-              Chiến thuật giải phóng tâm lý (Mục 20 Master Sheet)
+          {/* 3-Step Strategy Card (Modern Clean Light Sky Theme) */}
+          <div className="bg-gradient-to-br from-sky-50/90 via-white to-blue-50/50 p-6 sm:p-7 rounded-3xl border border-sky-200/90 shadow-sm relative overflow-hidden">
+            <div className="flex items-center gap-2 text-sky-700 bg-sky-100/80 border border-sky-200 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2.5 inline-flex">
+              <Target className="w-3.5 h-3.5 text-sky-600" />
+              Chiến thuật phản xạ tâm lý (Mục 20 Master Sheet)
             </div>
-            <h3 className="text-xl font-bold mb-4">
+            <h3 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 mb-5">
               Công Thức 3 Bước Xử Lý Câu Hỏi Trong Đầu (Không Dịch Cả Câu)
             </h3>
 
@@ -382,13 +383,15 @@ export const SurvivalKitTab: React.FC<SurvivalKitTabProps> = ({ courseCode = 'jp
               {(data?.threeStepMethod || []).map((step) => (
                 <div
                   key={step.step}
-                  className="bg-white/5 border border-white/10 p-4 rounded-xl backdrop-blur-sm relative"
+                  className="bg-white border border-sky-100 p-5 rounded-2xl shadow-xs hover:border-sky-300 hover:shadow-md transition-all flex flex-col justify-between"
                 >
-                  <div className="w-7 h-7 rounded-full bg-[#F05A28] text-white font-black text-xs flex items-center justify-center mb-2.5 shadow-md">
-                    {step.step}
+                  <div>
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#F05A28] to-orange-500 text-white font-black text-xs flex items-center justify-center mb-3 shadow-xs">
+                      {step.step}
+                    </div>
+                    <h4 className="font-bold text-slate-900 text-sm mb-1.5">{step.title}</h4>
+                    <p className="text-slate-600 text-xs leading-relaxed">{step.desc}</p>
                   </div>
-                  <h4 className="font-bold text-slate-100 text-sm mb-1.5">{step.title}</h4>
-                  <p className="text-slate-300 text-xs leading-relaxed">{step.desc}</p>
                 </div>
               ))}
             </div>
@@ -814,57 +817,59 @@ export const SurvivalKitTab: React.FC<SurvivalKitTabProps> = ({ courseCode = 'jp
       {/* ========================================================================= */}
       {activeSection === 'rubric' && (
         <div className="space-y-6">
-          <div className="bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 shadow-xl">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+          <div className="bg-gradient-to-br from-white via-slate-50/70 to-orange-50/20 p-6 sm:p-7 rounded-3xl border border-slate-200/90 shadow-sm">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
               <div>
-                <span className="px-3 py-1 bg-[#F05A28] text-white text-xs font-bold rounded-full uppercase tracking-wider">
+                <span className="px-3 py-1 bg-orange-100 border border-orange-200 text-[#F05A28] text-xs font-bold rounded-full uppercase tracking-wider">
                   Quy định Khảo Thí FPT University
                 </span>
-                <h3 className="text-2xl font-bold mt-2">Barem Chấm Điểm Thi Nói JPD123 (100đ)</h3>
-                <p className="text-slate-400 text-sm mt-1">
+                <h3 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
+                  Barem Chấm Điểm Thi Nói JPD123 (100đ)
+                </h3>
+                <p className="text-slate-600 text-xs sm:text-sm mt-1">
                   Đạt yêu cầu từ 50/100 trở lên • Thời gian thi 6–8 phút/thí sinh • Reading chuẩn bị 20 giây
                 </p>
               </div>
-              <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700 text-center min-w-[140px]">
-                <div className="text-3xl font-black text-[#F05A28]">50+</div>
-                <div className="text-xs text-slate-400 uppercase font-semibold mt-0.5">Điểm Qua Môn</div>
+              <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-2xl border border-orange-200 text-center min-w-[140px] shadow-xs">
+                <div className="text-3xl sm:text-4xl font-black text-[#F05A28]">50+</div>
+                <div className="text-xs text-orange-900 font-bold uppercase mt-0.5 tracking-wide">Điểm Qua Môn</div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/80">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-slate-300">Phần 1: Đọc Đoạn Văn</span>
-                  <span className="text-lg font-bold text-amber-400">45đ</span>
+              <div className="bg-amber-50/60 p-5 rounded-2xl border border-amber-200 hover:border-amber-300 transition-all shadow-xs">
+                <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-amber-200/60">
+                  <span className="text-sm font-bold text-amber-900">Phần 1: Đọc Đoạn Văn</span>
+                  <span className="text-lg font-black text-amber-600">45đ</span>
                 </div>
-                <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
-                  <li>5-7 chữ Kanji: 15đ</li>
-                  <li>2-4 từ Katakana: 10đ</li>
-                  <li>115-125 chữ Hiragana: 20đ (sai -0.2đ/chữ)</li>
+                <ul className="text-xs text-slate-700 space-y-1.5 list-disc list-inside font-medium">
+                  <li>5-7 chữ Kanji: <strong>15đ</strong></li>
+                  <li>2-4 từ Katakana: <strong>10đ</strong></li>
+                  <li>115-125 chữ Hiragana: <strong>20đ</strong> (sai -0.2đ/chữ)</li>
                   <li>20 giây chuẩn bị, đọc lưu loát trong 50s</li>
                 </ul>
               </div>
 
-              <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/80">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-slate-300">Phần 2: Vấn Đáp Q&amp;A</span>
-                  <span className="text-lg font-bold text-sky-400">45đ</span>
+              <div className="bg-sky-50/60 p-5 rounded-2xl border border-sky-200 hover:border-sky-300 transition-all shadow-xs">
+                <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-sky-200/60">
+                  <span className="text-sm font-bold text-sky-900">Phần 2: Vấn Đáp Q&amp;A</span>
+                  <span className="text-lg font-black text-sky-600">45đ</span>
                 </div>
-                <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
+                <ul className="text-xs text-slate-700 space-y-1.5 list-disc list-inside font-medium">
                   <li>3 câu hỏi x 15đ/câu (1 câu tranh + 2 câu không tranh)</li>
-                  <li>Sai ngữ pháp: -10đ/câu</li>
+                  <li>Sai ngữ pháp: <strong className="text-red-600">-10đ/câu</strong></li>
                   <li>Sai từ vựng: -5 đến -7đ/câu</li>
-                  <li>Sai dữ liệu trong tranh: -5đ/câu</li>
+                  <li>Sai dữ liệu trong tranh: <strong className="text-red-600">-5đ/câu</strong></li>
                   <li>Sai trợ từ / đuôi câu: -2 đến -3đ/lỗi</li>
                 </ul>
               </div>
 
-              <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/80">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-slate-300">Phần 3: Tác Phong</span>
-                  <span className="text-lg font-bold text-emerald-400">10đ</span>
+              <div className="bg-emerald-50/60 p-5 rounded-2xl border border-emerald-200 hover:border-emerald-300 transition-all shadow-xs">
+                <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-emerald-200/60">
+                  <span className="text-sm font-bold text-emerald-900">Phần 3: Tác Phong</span>
+                  <span className="text-lg font-black text-emerald-600">10đ</span>
                 </div>
-                <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
+                <ul className="text-xs text-slate-700 space-y-1.5 list-disc list-inside font-medium">
                   <li>Chào hỏi khi vào &amp; ra khỏi phòng (2đ)</li>
                   <li>Dùng câu cứu cánh khi cần nghe lại</li>
                   <li>Không ngập ngừng quá 10 giây/câu</li>
@@ -874,38 +879,46 @@ export const SurvivalKitTab: React.FC<SurvivalKitTabProps> = ({ courseCode = 'jp
             </div>
           </div>
 
-          {/* Reading Tips Card (Mục 21 Master Sheet) */}
-          <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 text-white p-6 rounded-2xl border border-emerald-800 shadow-lg">
-            <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">
-              <FileText className="w-4 h-4" />
+          {/* Reading Tips Card (Modern Clean Emerald Light Theme) */}
+          <div className="bg-gradient-to-br from-emerald-50/80 via-white to-teal-50/50 p-6 sm:p-7 rounded-3xl border border-emerald-200 shadow-sm">
+            <div className="flex items-center gap-2 text-emerald-800 bg-emerald-100/90 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2.5 inline-flex">
+              <FileText className="w-3.5 h-3.5 text-emerald-600" />
               Chiến thuật lấy trọn 45đ Reading (Mục 21 Master Sheet)
             </div>
-            <h4 className="text-lg font-bold mb-3">
+            <h4 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 mb-4">
               {data?.readingTips?.title || 'Kỹ thuật đọc đoạn văn an toàn'}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-2">
-                <strong className="text-emerald-300 block font-semibold">
-                  Nguyên tắc vàng: Đọc theo cụm nghĩa (スラッシュ・リーディング)
-                </strong>
-                <p className="text-slate-300">
-                  Tuyệt đối không đọc rời từng chữ hiragana. Hãy ngắt hơi theo từng cụm từ hoàn chỉnh:
-                </p>
-                <div className="bg-black/30 p-2.5 rounded font-japanese text-slate-200">
-                  <span className="text-red-400 block line-through">わ・た・し・は / こ・と・し・の… (Sai - vấp trừ điểm)</span>
-                  <span className="text-emerald-400 block font-bold mt-1">わたしは / 今年の8月に / ベトナムへ行きました。 (Đúng)</span>
+              <div className="bg-white p-5 rounded-2xl border border-emerald-100 shadow-xs space-y-2.5 flex flex-col justify-between">
+                <div>
+                  <strong className="text-emerald-900 block font-bold text-sm mb-1">
+                    Nguyên tắc vàng: Đọc theo cụm nghĩa (スラッシュ・リーディング)
+                  </strong>
+                  <p className="text-slate-600 text-xs">
+                    Tuyệt đối không đọc rời từng chữ hiragana. Hãy ngắt hơi theo từng cụm từ hoàn chỉnh:
+                  </p>
+                </div>
+                <div className="space-y-1.5 pt-1">
+                  <div className="bg-red-50 text-red-700 border border-red-200 p-2.5 rounded-xl font-japanese line-through text-xs">
+                    わ・た・し・は / こ・と・し・の… (Sai - vấp trừ điểm)
+                  </div>
+                  <div className="bg-emerald-50 text-emerald-900 border border-emerald-200 p-2.5 rounded-xl font-japanese font-bold text-xs">
+                    わたしは / 今年の8月に / ベトナムへ行きました。 (Đúng)
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-2">
-                <strong className="text-amber-300 block font-semibold">
-                  Khi gặp Kanji khó: Không đứng im quá 3 giây
-                </strong>
-                <p className="text-slate-300">
-                  {data?.readingTips?.stallAdvice || 'Nếu gặp chữ Kanji không nhớ cách đọc, không đứng im quá lâu. Hãy đọc lướt qua hoặc đọc âm gần đúng rồi tiếp tục đoạn văn. Đứng im sẽ bị trừ điểm ngập ngừng toàn bài.'}
-                </p>
-                <div className="text-slate-400 pt-1">
-                  Đoạn văn có 140–150 chữ: Kanji chiếm 15đ, Katakana 10đ, Hiragana 20đ.
+              <div className="bg-white p-5 rounded-2xl border border-amber-100 shadow-xs space-y-2.5 flex flex-col justify-between">
+                <div>
+                  <strong className="text-amber-900 block font-bold text-sm mb-1">
+                    Khi gặp Kanji khó: Không đứng im quá 3 giây
+                  </strong>
+                  <p className="text-slate-600 text-xs leading-relaxed">
+                    {data?.readingTips?.stallAdvice || 'Nếu gặp chữ Kanji không nhớ cách đọc, không đứng im quá lâu. Hãy đọc lướt qua hoặc đọc âm gần đúng rồi tiếp tục đoạn văn. Đứng im sẽ bị trừ điểm ngập ngừng toàn bài.'}
+                  </p>
+                </div>
+                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-slate-600 text-xs font-medium">
+                  Đoạn văn có 140–150 chữ: Kanji chiếm <strong>15đ</strong>, Katakana <strong>10đ</strong>, Hiragana <strong>20đ</strong>.
                 </div>
               </div>
             </div>

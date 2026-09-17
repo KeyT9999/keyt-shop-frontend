@@ -67,10 +67,88 @@ export interface ParticleCheatSheetItem {
   meanings: ParticleMeaning[];
 }
 
+export interface QuestionWordItem {
+  word: string;
+  furigana: string;
+  meaning: string;
+  responseGuide: string;
+  exampleQ: string;
+  exampleA: string;
+}
+
+export interface ReflexItem {
+  id: number;
+  question: string;
+  reflex: string;
+  lesson: string;
+  explanation: string;
+}
+
+export interface GrammarTableRow {
+  form: string;
+  pattern: string;
+  example: string;
+}
+
+export interface SubGrammarItem {
+  pattern: string;
+  meaning: string;
+  example: string;
+}
+
+export interface EventVsExistenceItem {
+  pattern: string;
+  meaning: string;
+  example: string;
+}
+
+export interface EventVsExistence {
+  locationDe: EventVsExistenceItem;
+  locationNi: EventVsExistenceItem;
+}
+
+export interface GrammarTables {
+  verbs: GrammarTableRow[];
+  iAdjectives: GrammarTableRow[];
+  naAdjectives: GrammarTableRow[];
+  subGrammar: SubGrammarItem[];
+  eventVsExistence: EventVsExistence;
+}
+
+export interface ThreeStepMethodItem {
+  step: number;
+  title: string;
+  desc: string;
+}
+
+export interface ImageStrategy {
+  title: string;
+  rule: string;
+  demoFpt: string;
+  demoQuestion: string;
+  demoAnswer: string;
+  tip: string;
+}
+
+export interface ReadingTips {
+  title: string;
+  structure: string;
+  goldenRule: string;
+  exampleBefore: string;
+  exampleAfter: string;
+  stallAdvice: string;
+}
+
 export interface SurvivalKit {
   manners: SurvivalManner[];
   rubricSummary: RubricItem[];
   particlesCheatSheet: ParticleCheatSheetItem[];
+  questionWordsSystem?: QuestionWordItem[];
+  reflexList20?: ReflexItem[];
+  grammarTables?: GrammarTables;
+  threeStepMethod?: ThreeStepMethodItem[];
+  imageStrategy?: ImageStrategy;
+  readingTips?: ReadingTips;
 }
 
 export interface MockExamPack {

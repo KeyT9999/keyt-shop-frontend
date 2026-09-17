@@ -84,7 +84,6 @@ export function QAPracticeTab({
     volumeLevel,
     audioUrl,
     error: recorderError,
-    isSupported: isMicSupported,
     startRecording,
     stopRecording,
     resetAudio

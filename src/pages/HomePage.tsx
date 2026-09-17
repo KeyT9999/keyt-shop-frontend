@@ -21,14 +21,8 @@ import {
   BookMarked,
   Layers,
   Award,
-  Volume2,
-  Play,
-  RotateCcw,
   UserCheck,
-  Headphones,
-  CheckCircle,
-  Clock,
-  MessageSquare
+  Headphones
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────
@@ -159,7 +153,6 @@ export default function HomePage() {
   const [jpdCourse, setJpdCourse] = useState<'jpd123' | 'jpd113'>('jpd123');
   const [examCycleStep, setExamCycleStep] = useState<number>(0); // 0: Sensei Question, 1: Student speak & Waveform, 2: Realtime Phonetic Tokens, 3: FPT Scorecard
   const [kanjiIndex, setKanjiIndex] = useState<number>(0);
-  const [kanjiFlipped, setKanjiFlipped] = useState<boolean>(false);
 
   // Cycle speaking exam steps every 3.8s
   useEffect(() => {
@@ -169,19 +162,11 @@ export default function HomePage() {
     return () => clearInterval(cycleTimer);
   }, []);
 
-  // Flip Kanji Card every 3.2s
-  useEffect(() => {
-    const flipTimer = setInterval(() => {
-      setKanjiFlipped((prev) => !prev);
-    }, 3200);
-    return () => clearInterval(flipTimer);
-  }, []);
-
-  // Switch Kanji word every 6.4s
+  // Switch Kanji word every 4s
   useEffect(() => {
     const wordTimer = setInterval(() => {
       setKanjiIndex((prev) => (prev + 1) % 5);
-    }, 6400);
+    }, 4000);
     return () => clearInterval(wordTimer);
   }, []);
 

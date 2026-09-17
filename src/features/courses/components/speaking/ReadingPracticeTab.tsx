@@ -57,7 +57,6 @@ export function ReadingPracticeTab({
     volumeLevel,
     audioUrl,
     error: recorderError,
-    isSupported: isMicSupported,
     startRecording,
     stopRecording,
     resetAudio

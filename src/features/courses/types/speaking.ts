@@ -4,11 +4,23 @@ export interface SpeakingTargetKanji {
   hanViet: string;
 }
 
+export interface SpeakingSentenceItem {
+  index: number;
+  raw?: string;
+  japanese: string;
+  furigana: string;
+  romaji?: string;
+  vietnamese: string;
+}
+
 export interface SpeakingReadingPassage {
   id: string;
   code: string;
+  lessonNum?: number;
   title: string;
   topic: string;
+  description?: string;
+  sentenceCount?: number;
   wordCount: number;
   contentJapanese: string;
   contentFurigana: string;
@@ -17,6 +29,7 @@ export interface SpeakingReadingPassage {
   targetKatakana: string[];
   prepTimeSeconds: number;
   readingTimeSeconds: number;
+  sentences?: SpeakingSentenceItem[];
 }
 
 export interface SpeakingAnswerLevel {

@@ -51,6 +51,8 @@ export default function SpeakingPage() {
           <SpeakingHero
             activeTab={activeTab}
             onTabChange={handleTabChange}
+            passagesCount={28}
+            questionsCount={31}
           />
 
           {/* Tab Content Panels */}

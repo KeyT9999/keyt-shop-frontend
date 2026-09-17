@@ -26,8 +26,6 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const YoutubeSummarizerPage = lazy(() => import('./pages/YoutubeSummarizerPage'));
 const GetOtpPage = lazy(() => import('./pages/GetOtpPage'));
-const GetOtpGeminiPage = lazy(() => import('./pages/GetOtpGeminiPage'));
-const Get2faPage = lazy(() => import('./pages/Get2faPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
@@ -279,8 +277,12 @@ export default function App() {
                         <Route path="/evidence" element={<ProtectedRoute><EvidenceCheckerPage /></ProtectedRoute>} />
                         <Route path="/summarizer" element={<ProtectedRoute><YoutubeSummarizerPage /></ProtectedRoute>} />
                         <Route path="/get-otp" element={<ProtectedRoute><GetOtpPage /></ProtectedRoute>} />
-                        <Route path="/get-otp-gemini" element={<ProtectedRoute><GetOtpGeminiPage /></ProtectedRoute>} />
-                        <Route path="/2falive" element={<ProtectedRoute><Get2faPage /></ProtectedRoute>} />
+                        <Route path="/get-otp-gemini" element={<ProtectedRoute><GetOtpPage /></ProtectedRoute>} />
+                        <Route path="/get-otp/gemini" element={<Navigate to="/get-otp-gemini" replace />} />
+                        <Route path="/gemini-otp" element={<Navigate to="/get-otp-gemini" replace />} />
+                        <Route path="/2falive" element={<ProtectedRoute><GetOtpPage /></ProtectedRoute>} />
+                        <Route path="/get-2fa" element={<Navigate to="/2falive" replace />} />
+                        <Route path="/2fa" element={<Navigate to="/2falive" replace />} />
                         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                         <Route path="/verify-email" element={<VerifyEmailPage />} />

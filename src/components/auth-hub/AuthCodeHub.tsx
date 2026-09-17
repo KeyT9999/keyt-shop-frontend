@@ -28,6 +28,14 @@ interface AuthCodeHubProps {
 const STORAGE_KEY_EMAILS = 'keyt_recent_otp_emails';
 const STORAGE_KEY_2FA = 'keyt_recent_2fa_keys';
 
+const getTabFromPath = (pathname: string, fallback: AuthHubTab = 'chatgpt'): AuthHubTab => {
+  const lower = pathname.toLowerCase();
+  if (lower.includes('gemini')) return 'gemini';
+  if (lower.includes('2fa')) return '2fa';
+  if (lower.includes('chatgpt') || lower === '/get-otp' || lower.startsWith('/get-otp')) return 'chatgpt';
+  return fallback;
+};
+
 export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps) {
   const { user, token } = useAuthContext();
   const navigate = useNavigate();
@@ -35,9 +43,7 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
 
   // Active Tab state
   const [activeTab, setActiveTab] = useState<AuthHubTab>(() => {
-    if (location.pathname.includes('/gemini')) return 'gemini';
-    if (location.pathname.includes('/2falive')) return '2fa';
-    return defaultTab;
+    return getTabFromPath(location.pathname, defaultTab);
   });
 
   // Form states
@@ -100,14 +106,15 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
 
   // Sync tab with URL if URL changes externally
   useEffect(() => {
-    if (location.pathname.includes('/gemini') && activeTab !== 'gemini') {
-      setActiveTab('gemini');
-    } else if (location.pathname.includes('/2falive') && activeTab !== '2fa') {
-      setActiveTab('2fa');
-    } else if (location.pathname.includes('/get-otp') && !location.pathname.includes('/gemini') && activeTab !== 'chatgpt') {
-      setActiveTab('chatgpt');
+    const expectedTab = getTabFromPath(location.pathname, defaultTab);
+    if (expectedTab !== activeTab) {
+      setActiveTab(expectedTab);
+      setError('');
+      setCode('');
+      setCountdown(0);
+      if (timerRef.current) clearInterval(timerRef.current);
     }
-  }, [location.pathname, activeTab]);
+  }, [location.pathname, defaultTab, activeTab]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -317,12 +324,12 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
         <div className="auth-hub-card">
           {/* Header Title */}
           <div className="auth-hub-header">
-            <div className="auth-hub-icon-wrapper">
+            <div className="auth-hub-icon-wrapper" key={`icon-${activeTab}`}>
               {activeTab === 'chatgpt' && (
-                <img src={chatgptIcon} alt="ChatGPT" className="w-8 h-8 object-contain" />
+                <img src={chatgptIcon} alt="ChatGPT" className="w-8 h-8 object-contain animate-fadeIn" />
               )}
               {activeTab === 'gemini' && (
-                <svg width="32" height="32" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="32" height="32" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-fadeIn">
                   <path
                     d="M96 0C96 53.0193 53.0193 96 0 96C53.0193 96 96 138.981 96 192C96 138.981 138.981 96 192 96C138.981 96 96 53.0193 96 0Z"
                     fill="url(#gemini-hub-gradient)"
@@ -336,38 +343,50 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
                   </defs>
                 </svg>
               )}
-              {activeTab === '2fa' && <ShieldCheck size={32} className="text-violet-600" />}
+              {activeTab === '2fa' && <ShieldCheck size={32} className="text-violet-600 animate-fadeIn" />}
             </div>
 
-            <h1 className="auth-hub-title">
+            <h1 className="auth-hub-title animate-fadeIn" key={`title-${activeTab}`}>
               {activeTab === 'chatgpt' && 'Get OTP ChatGPT'}
               {activeTab === 'gemini' && 'Get OTP Gemini'}
               {activeTab === '2fa' && 'Get 2FA Live Code'}
             </h1>
-            <p className="auth-hub-subtitle">
+            <p className="auth-hub-subtitle animate-fadeIn" key={`sub-${activeTab}`}>
               {activeTab === 'chatgpt' && 'Nhận mã OTP đăng nhập tài khoản ChatGPT nhanh chóng'}
               {activeTab === 'gemini' && 'Nhận mã xác thực OTP đăng nhập dịch vụ Google Gemini'}
               {activeTab === '2fa' && 'Tạo mã bảo mật 2 lớp (TOTP) tự động từ Secret Key'}
             </p>
           </div>
 
-          {/* Segmented Tab Switcher */}
-          <div className="auth-hub-tabs">
+          {/* Segmented Tab Switcher with Animated Sliding Glider */}
+          <div className="auth-hub-tabs" role="tablist">
+            {/* Sliding Pill Indicator */}
+            <div
+              className={`auth-tab-glider tab-${activeTab}`}
+              aria-hidden="true"
+            />
+
             <button
               type="button"
-              className={`auth-tab-btn ${activeTab === 'chatgpt' ? 'active' : ''}`}
+              role="tab"
+              aria-selected={activeTab === 'chatgpt'}
+              className={`auth-tab-btn cursor-pointer ${activeTab === 'chatgpt' ? 'active' : ''}`}
               onClick={() => switchTab('chatgpt')}
+              aria-label="ChatGPT OTP"
             >
-              <Sparkles size={16} />
+              <Sparkles size={16} className="auth-tab-icon" />
               <span>ChatGPT OTP</span>
             </button>
 
             <button
               type="button"
-              className={`auth-tab-btn ${activeTab === 'gemini' ? 'active' : ''}`}
+              role="tab"
+              aria-selected={activeTab === 'gemini'}
+              className={`auth-tab-btn cursor-pointer ${activeTab === 'gemini' ? 'active' : ''}`}
               onClick={() => switchTab('gemini')}
+              aria-label="Gemini OTP"
             >
-              <svg width="15" height="15" viewBox="0 0 192 192" fill="none">
+              <svg width="15" height="15" viewBox="0 0 192 192" fill="none" className="auth-tab-icon">
                 <path
                   d="M96 0C96 53.0193 53.0193 96 0 96C53.0193 96 96 138.981 96 192C96 138.981 138.981 96 192 96C138.981 96 96 53.0193 96 0Z"
                   fill="currentColor"
@@ -378,10 +397,13 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
 
             <button
               type="button"
-              className={`auth-tab-btn ${activeTab === '2fa' ? 'active' : ''}`}
+              role="tab"
+              aria-selected={activeTab === '2fa'}
+              className={`auth-tab-btn cursor-pointer ${activeTab === '2fa' ? 'active' : ''}`}
               onClick={() => switchTab('2fa')}
+              aria-label="2FA Live"
             >
-              <ShieldCheck size={16} />
+              <ShieldCheck size={16} className="auth-tab-icon" />
               <span>2FA Live</span>
             </button>
           </div>
@@ -389,7 +411,7 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
           {/* Form */}
           <form onSubmit={handleSubmit} className="auth-hub-form">
             {activeTab !== '2fa' ? (
-              <div className="form-field-group">
+              <div className="form-field-group animate-fadeIn" key={`email-group-${activeTab}`}>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
                     Email tài khoản {activeTab === 'chatgpt' ? 'ChatGPT' : 'Gemini'}
@@ -447,7 +469,7 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
                 )}
               </div>
             ) : (
-              <div className="form-field-group">
+              <div className="form-field-group animate-fadeIn" key="secret-group-2fa">
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
                     Mã bí mật (Secret Key)
@@ -526,7 +548,7 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
                   <span>Đang kết nối lấy mã...</span>
                 </div>
               ) : (
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-center gap-2 animate-fadeIn" key={`btn-content-${activeTab}`}>
                   <KeyRound size={18} />
                   <span>
                     {activeTab === '2fa' ? 'Tạo mã 2FA Live' : 'Lấy mã OTP ngay'}
@@ -703,17 +725,52 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
           line-height: 1.4;
         }
 
-        /* Segmented Tabs */
+        /* Segmented Tabs Container */
         .auth-hub-tabs {
+          position: relative;
           display: flex;
           background: #F1F5F9;
           padding: 4px;
           border-radius: 16px;
           margin-bottom: 1.75rem;
-          gap: 4px;
+          box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+          user-select: none;
+          gap: 0;
+        }
+
+        /* Animated Sliding Pill / Glider */
+        .auth-tab-glider {
+          position: absolute;
+          top: 4px;
+          bottom: 4px;
+          left: 4px;
+          width: calc((100% - 8px) / 3);
+          border-radius: 12px;
+          background: linear-gradient(180deg, #1E293B 0%, #0F172A 100%);
+          box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.28),
+                      0 1px 3px 0 rgba(15, 23, 42, 0.15),
+                      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+          pointer-events: none;
+          z-index: 1;
+          transition: transform 320ms cubic-bezier(0.34, 1.25, 0.64, 1);
+          will-change: transform;
+        }
+
+        .auth-tab-glider.tab-chatgpt {
+          transform: translateX(0%);
+        }
+
+        .auth-tab-glider.tab-gemini {
+          transform: translateX(100%);
+        }
+
+        .auth-tab-glider.tab-2fa {
+          transform: translateX(200%);
         }
 
         .auth-tab-btn {
+          position: relative;
+          z-index: 2;
           flex: 1;
           display: flex;
           align-items: center;
@@ -727,7 +784,11 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
           background: transparent;
           border-radius: 12px;
           cursor: pointer;
-          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: color 240ms ease, transform 150ms ease;
+        }
+
+        .auth-tab-btn:active {
+          transform: scale(0.96);
         }
 
         .auth-tab-btn:hover:not(.active) {
@@ -735,9 +796,40 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
         }
 
         .auth-tab-btn.active {
-          background: #0F172A;
           color: #FFFFFF;
-          box-shadow: 0 4px 10px -2px rgba(15, 23, 42, 0.2);
+          font-weight: 700;
+        }
+
+        .auth-tab-icon {
+          transition: transform 320ms cubic-bezier(0.34, 1.4, 0.64, 1);
+        }
+
+        .auth-tab-btn.active .auth-tab-icon {
+          transform: scale(1.12);
+        }
+
+        @keyframes authFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: authFadeIn 250ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .auth-tab-glider,
+          .auth-tab-icon,
+          .animate-fadeIn {
+            transition: none !important;
+            animation: none !important;
+          }
         }
 
         /* Form */

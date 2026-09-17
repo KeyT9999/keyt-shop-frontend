@@ -15,6 +15,7 @@ import {
   Frame,
   Zap,
   KeyRound,
+  GraduationCap,
   Search,
   type LucideIcon
 } from 'lucide-react';
@@ -149,6 +150,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     location.pathname === '/get-otp' ||
     location.pathname === '/get-otp-gemini' ||
     location.pathname === '/2falive';
+  const isJapaneseActive = location.pathname.startsWith('/courses');
 
   return (
     <div className="header-wrapper">
@@ -296,6 +298,22 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   <KeyRound size={15} />
                   <span>Get OTP & 2FA</span>
                   <span className="otp-live-badge">Live</span>
+                </Link>
+              </li>
+
+              {/* 5. Tiếng Nhật JPD123 */}
+              <li className="header-nav-item">
+                <Link
+                  to="/courses/jpd123"
+                  className={`header-nav-link flex items-center gap-1.5 cursor-pointer ${
+                    isJapaneseActive ? 'active' : ''
+                  }`}
+                >
+                  <GraduationCap size={15} className="text-[#F05A28]" />
+                  <span>Tiếng Nhật JPD123</span>
+                  <span className="text-[10px] font-bold bg-[#F05A28]/10 text-[#F05A28] px-1.5 py-0.5 rounded-full border border-orange-200">
+                    N5
+                  </span>
                 </Link>
               </li>
             </ul>
@@ -471,6 +489,18 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
           >
             <KeyRound size={16} />
             <span>Get OTP & 2FA Code</span>
+          </Link>
+
+          {/* Group: Học Ngôn Ngữ */}
+          <div className="mobile-group-title">Khóa Học & Ngôn Ngữ</div>
+          <Link
+            to="/courses/jpd123"
+            className={`mobile-sub-link ${isJapaneseActive ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <GraduationCap size={16} className="text-[#F05A28]" />
+            <span>Tiếng Nhật JPD123</span>
+            <span className="mobile-badge">N5</span>
           </Link>
 
           {/* Divider */}

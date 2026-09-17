@@ -62,6 +62,16 @@ const CompressPage = lazy(() => import('./pages/CompressPage'));
 const AiImagePage = lazy(() => import('./pages/AiImagePage'));
 const AdminChatPage = lazy(() => import('./pages/admin/AdminChatPage'));
 
+// Japanese Learning Course Pages
+const CourseLandingPage = lazy(() => import('./pages/courses/CourseLandingPage'));
+const VocabularyLessonListPage = lazy(() => import('./pages/courses/VocabularyLessonListPage'));
+const VocabularyDetailPage = lazy(() => import('./pages/courses/VocabularyDetailPage'));
+const KanjiLessonListPage = lazy(() => import('./pages/courses/KanjiLessonListPage'));
+const KanjiDetailPage = lazy(() => import('./pages/courses/KanjiDetailPage'));
+const GrammarLessonListPage = lazy(() => import('./pages/courses/GrammarLessonListPage'));
+const GrammarDetailPage = lazy(() => import('./pages/courses/GrammarDetailPage'));
+const ExamListPage = lazy(() => import('./pages/courses/ExamListPage'));
+
 export default function App() {
     const { user, token } = useAuthContext();
     const [searchQuery, setSearchQuery] = useState('');
@@ -297,6 +307,19 @@ export default function App() {
                         <Route path="/photo-frame" element={<PhotoFramePage />} />
                         <Route path="/compress" element={<CompressPage />} />
                         <Route path="/ai-image" element={<AiImagePage />} />
+
+                        {/* Japanese Course Routes */}
+                        <Route path="/courses/:courseCode" element={<CourseLandingPage />} />
+                        <Route path="/courses/:courseCode/vocabulary" element={<VocabularyLessonListPage />} />
+                        <Route path="/courses/:courseCode/vocabulary/:lessonSlug" element={<VocabularyDetailPage />} />
+                        <Route path="/courses/:courseCode/kanji" element={<KanjiLessonListPage />} />
+                        <Route path="/courses/:courseCode/kanji/:lessonSlug" element={<KanjiDetailPage />} />
+                        <Route path="/courses/:courseCode/kanji/:lessonSlug/:mode" element={<KanjiDetailPage />} />
+                        <Route path="/courses/:courseCode/grammar" element={<GrammarLessonListPage />} />
+                        <Route path="/courses/:courseCode/grammar/:lessonSlug" element={<GrammarDetailPage />} />
+                        <Route path="/courses/:courseCode/exam" element={<ExamListPage />} />
+                        <Route path="/courses/:courseCode/exam/:examSlug" element={<ExamListPage />} />
+
                         <Route path="/admin" element={<AdminLayout />}>
                             <Route index element={<Navigate to="/admin/dashboard" replace />} />
                             <Route path="dashboard" element={<AdminDashboard />} />

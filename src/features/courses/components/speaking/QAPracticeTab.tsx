@@ -394,45 +394,36 @@ export function QAPracticeTab({
             </div>
 
             <div className="flex items-center gap-3">
-              {isMicSupported ? (
-                <>
-                  {!isRecording ? (
-                    <button
-                      type="button"
-                      disabled={isEvaluating}
-                      onClick={handleStartRecording}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#F05A28] text-white text-xs font-bold hover:bg-orange-600 transition-all cursor-pointer shadow-md disabled:opacity-50"
-                    >
-                      <Mic size={16} />
-                      <span>Bật Micro Trả Lời</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleStopAndEvaluate}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-all cursor-pointer shadow-md animate-pulse"
-                    >
-                      <MicOff size={16} />
-                      <span>Dừng & Chấm Điểm ({formatTime(duration)})</span>
-                    </button>
-                  )}
-
-                  {(audioUrl || qaResult) && !isRecording && (
-                    <button
-                      type="button"
-                      onClick={handleResetAnswer}
-                      className="p-2.5 rounded-2xl bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                      title="Thu âm lại"
-                    >
-                      <RotateCcw size={16} />
-                    </button>
-                  )}
-                </>
+              {!isRecording ? (
+                <button
+                  type="button"
+                  disabled={isEvaluating}
+                  onClick={handleStartRecording}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#F05A28] text-white text-xs font-bold hover:bg-orange-600 transition-all cursor-pointer shadow-md disabled:opacity-50"
+                >
+                  <Mic size={16} />
+                  <span>Bật Micro Trả Lời</span>
+                </button>
               ) : (
-                <div className="text-xs text-amber-300 flex items-center gap-1.5">
-                  <AlertCircle size={15} />
-                  <span>Trình duyệt không hỗ trợ microphone.</span>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleStopAndEvaluate}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-all cursor-pointer shadow-md animate-pulse"
+                >
+                  <MicOff size={16} />
+                  <span>Dừng & Chấm Điểm ({formatTime(duration)})</span>
+                </button>
+              )}
+
+              {(audioUrl || qaResult) && !isRecording && (
+                <button
+                  type="button"
+                  onClick={handleResetAnswer}
+                  className="p-2.5 rounded-2xl bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                  title="Thu âm lại"
+                >
+                  <RotateCcw size={16} />
+                </button>
               )}
             </div>
           </div>

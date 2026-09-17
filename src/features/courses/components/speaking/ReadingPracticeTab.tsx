@@ -488,45 +488,36 @@ export function ReadingPracticeTab({
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3">
-                {isMicSupported ? (
-                  <>
-                    {!isRecording ? (
-                      <button
-                        type="button"
-                        disabled={isEvaluating}
-                        onClick={handleStartRecording}
-                        className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#F05A28] text-white text-xs font-bold hover:bg-orange-600 transition-all cursor-pointer shadow-md disabled:opacity-50"
-                      >
-                        <Mic size={16} />
-                        <span>Bắt đầu đọc</span>
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleStopAndEvaluate}
-                        className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-all cursor-pointer shadow-md animate-pulse"
-                      >
-                        <MicOff size={16} />
-                        <span>Dừng & Chấm Điểm ({formatTime(duration)})</span>
-                      </button>
-                    )}
-
-                    {(audioUrl || evaluationResult) && !isRecording && (
-                      <button
-                        type="button"
-                        onClick={handleReset}
-                        className="p-3 rounded-2xl bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                        title="Đọc lại bài này"
-                      >
-                        <RotateCcw size={16} />
-                      </button>
-                    )}
-                  </>
+                {!isRecording ? (
+                  <button
+                    type="button"
+                    disabled={isEvaluating}
+                    onClick={handleStartRecording}
+                    className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#F05A28] text-white text-xs font-bold hover:bg-orange-600 transition-all cursor-pointer shadow-md disabled:opacity-50"
+                  >
+                    <Mic size={16} />
+                    <span>Bắt đầu đọc</span>
+                  </button>
                 ) : (
-                  <div className="text-xs text-amber-300 flex items-center gap-1.5">
-                    <AlertCircle size={15} />
-                    <span>Trình duyệt không hỗ trợ MediaRecorder microphone.</span>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleStopAndEvaluate}
+                    className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-all cursor-pointer shadow-md animate-pulse"
+                  >
+                    <MicOff size={16} />
+                    <span>Dừng & Chấm Điểm ({formatTime(duration)})</span>
+                  </button>
+                )}
+
+                {(audioUrl || evaluationResult) && !isRecording && (
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="p-3 rounded-2xl bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                    title="Đọc lại bài này"
+                  >
+                    <RotateCcw size={16} />
+                  </button>
                 )}
               </div>
             </div>

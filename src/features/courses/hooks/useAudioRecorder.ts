@@ -67,7 +67,7 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
 
   const startRecording = useCallback(async () => {
     if (!isSupported) {
-      setError('Trình duyệt không hỗ trợ ghi âm trực tiếp.');
+      console.warn('Microphone API not supported on this browser.');
       return;
     }
 

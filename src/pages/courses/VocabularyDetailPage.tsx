@@ -148,11 +148,13 @@ export default function VocabularyDetailPage() {
     );
   }
 
+  const cleanTitle = lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '');
+
   return (
     <>
       <Seo
-        title={`Bài ${lesson.lessonCode}: ${lesson.title} - Từ Vựng ${upperCode} | Mindora AI`}
-        description={`Học từ vựng bài ${lesson.lessonCode}: ${lesson.title} (${items.length} từ vựng). Luyện Flashcard, gõ từ và làm bài tập trắc nghiệm miễn phí.`}
+        title={`Bài ${lesson.lessonCode}: ${cleanTitle} - Từ Vựng ${upperCode} | Mindora AI`}
+        description={`Học từ vựng bài ${lesson.lessonCode}: ${cleanTitle} (${items.length} từ vựng). Luyện Flashcard, gõ từ và làm bài tập trắc nghiệm miễn phí.`}
         canonicalPath={`/courses/${courseCode.toLowerCase()}/vocabulary/${lesson.slug}`}
       />
 
@@ -178,7 +180,7 @@ export default function VocabularyDetailPage() {
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                {lesson.lessonCode}: {lesson.title}
+                {lesson.lessonCode}: {cleanTitle}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
                 {lesson.description}

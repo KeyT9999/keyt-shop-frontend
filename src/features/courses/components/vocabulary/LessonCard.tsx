@@ -41,7 +41,7 @@ export default function LessonCard({ lesson, courseCode }: LessonCardProps) {
 
         {/* Title & Description */}
         <h4 className="text-lg font-bold text-slate-900 group-hover:text-[#F05A28] transition-colors mb-2 line-clamp-1">
-          {lesson.lessonCode}: {lesson.title}
+          {lesson.lessonCode}: {lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '')}
         </h4>
         <p className="text-xs sm:text-sm text-slate-500 line-clamp-2 leading-relaxed mb-6">
           {lesson.description}

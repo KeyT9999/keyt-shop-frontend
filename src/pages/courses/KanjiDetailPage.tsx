@@ -23,25 +23,39 @@ import type { CourseLesson, KanjiItem } from '../../features/courses/types';
 import CourseBreadcrumb from '../../features/courses/components/common/CourseBreadcrumb';
 import Seo from '../../components/Seo';
 
-// Map âm Hán Việt chuẩn cho toàn bộ 42 chữ Hán khóa JPD123
+// Map âm Hán Việt chuẩn cho các chữ Hán JPD113 (Bài 1-3) và JPD123 (Bài 4-7)
 const KANJI_HANVIET_MAP: Record<string, string> = {
-  // Lesson 4: Địa điểm và Phương hướng
+  // JPD113 - Lesson 1: Giới thiệu bản thân và Trường học
+  '私': 'TƯ', '日': 'NHẬT', '本': 'BẢN', '大': 'ĐẠI', '学': 'HỌC',
+  '語': 'NGỮ', '校': 'HIỆU', '生': 'SINH', '人': 'NHÂN', '才': 'TÀI',
+  // JPD113 - Lesson 2: Số đếm và Đơn vị tiền tệ
+  '一': 'NHẤT', '二': 'NHỊ', '三': 'TAM', '四': 'TỨ', '五': 'NGŨ',
+  '六': 'LỤC', '七': 'THẤT', '八': 'BÁT', '九': 'CỬU', '十': 'THẬP',
+  '百': 'BÁCH', '千': 'THIÊN', '万': 'VẠN', '円': 'VIÊN',
+  // JPD113 - Lesson 3: Thời gian và Ngày trong tuần
+  '月': 'NGUYỆT', '火': 'HỎA', '水': 'THỦY', '木': 'MỘC', '金': 'KIM',
+  '土': 'THỔ', '何': 'HÀ', '年': 'NIÊN', '時': 'THỜI', '間': 'GIAN',
+  '分': 'PHÂN',
+  // JPD123 - Lesson 4: Địa điểm và Phương hướng
   '東': 'ĐÔNG', '京': 'KINH', '名': 'DANH', '前': 'TIỀN', '国': 'QUỐC',
   '南': 'NAM', '女': 'NỮ', '男': 'NAM', '区': 'KHU', '市': 'THỊ',
-  // Lesson 5: Hành động và Nghỉ ngơi
+  // JPD123 - Lesson 5: Hành động và Nghỉ ngơi
   '先': 'TIÊN', '週': 'CHU', '毎': 'MỖI', '午': 'NGỌ', '後': 'HẬU',
   '見': 'KIẾN', '食': 'THỰC', '飲': 'ẨM', '買': 'MÃI', '物': 'VẬT',
   '行': 'HÀNH', '休': 'HƯU',
-  // Lesson 6: Giao tiếp và Sinh hoạt
+  // JPD123 - Lesson 6: Giao tiếp và Sinh hoạt
   '今': 'KIM', '来': 'LAI', '帰': 'QUY', '会': 'HỘI', '社': 'XÃ',
   '聞': 'VĂN', '読': 'ĐỘC', '書': 'THƯ', '話': 'THOẠI',
-  // Lesson 7: Tự nhiên và Cơ bản
+  // JPD123 - Lesson 7: Tự nhiên và Cơ bản
   '寺': 'TỰ', '言': 'NGÔN', '貝': 'BỐI', '田': 'ĐIỀN', '力': 'LỰC',
   '門': 'MÔN', '肉': 'NHỤC', '料': 'LIỆU', '理': 'LÝ', '野': 'DÃ',
   '半': 'BÁN'
 };
 
 const LESSON_NUMBERS: Record<string, number> = {
+  'LESSON-1': 1,
+  'LESSON-2': 2,
+  'LESSON-3': 3,
   'LESSON-4': 4,
   'LESSON-5': 5,
   'LESSON-6': 6,
@@ -49,6 +63,9 @@ const LESSON_NUMBERS: Record<string, number> = {
 };
 
 const VOCAB_COUNTS: Record<string, number> = {
+  'LESSON-1': 20,
+  'LESSON-2': 50,
+  'LESSON-3': 28,
   'LESSON-4': 15,
   'LESSON-5': 31,
   'LESSON-6': 31,

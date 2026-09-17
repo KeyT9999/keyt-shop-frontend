@@ -1,4 +1,4 @@
-export type SectionType = 'vocabulary' | 'kanji' | 'grammar' | 'exam';
+export type SectionType = 'vocabulary' | 'kanji' | 'grammar' | 'exam' | 'speaking';
 
 export type MemoryStatus = 'new' | 'learning' | 'familiar' | 'mastered';
 
@@ -89,7 +89,7 @@ export interface CourseSectionMeta {
   totalItems: number;
   userMastered: number;
   percent: number;
-  colorTheme: 'rose' | 'orange' | 'indigo' | 'emerald';
+  colorTheme: 'rose' | 'orange' | 'indigo' | 'emerald' | 'purple';
 }
 
 export interface CourseData {

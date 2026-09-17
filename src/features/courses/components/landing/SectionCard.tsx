@@ -39,6 +39,13 @@ export default function SectionCard({ section, courseCode }: SectionCardProps) {
       charBg: 'bg-emerald-100/70 text-emerald-800',
       btnHover: 'group-hover:text-emerald-600',
       progressColor: 'emerald' as const
+    },
+    purple: {
+      borderHover: 'hover:border-purple-400/80',
+      badgeBg: 'bg-purple-50 text-purple-700 border-purple-200',
+      charBg: 'bg-purple-100/70 text-purple-800',
+      btnHover: 'group-hover:text-purple-600',
+      progressColor: 'purple' as const
     }
   }[section.colorTheme];
 

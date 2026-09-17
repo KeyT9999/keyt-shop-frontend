@@ -37,12 +37,13 @@ export default function GrammarLessonListPage() {
   }, [courseCode, token]);
 
   const upperCode = courseCode.toUpperCase();
+  const totalItems = lessons.reduce((acc, l) => acc + (l.itemCount || 0), 0);
 
   return (
     <>
       <Seo
-        title={`Ngữ Pháp ${upperCode} - Danh Sách 4 Bài Học | Mindora AI`}
-        description={`Học các mẫu ngữ pháp tiếng Nhật ${upperCode} qua 4 bài học trọng tâm, công thức mẫu câu và ví dụ hội thoại.`}
+        title={`Ngữ Pháp ${upperCode} - Danh Sách ${lessons.length || (upperCode === 'JPD113' ? 3 : 4)} Bài Học | Mindora AI`}
+        description={`Học các mẫu ngữ pháp tiếng Nhật ${upperCode} qua các bài học trọng tâm, công thức mẫu câu và ví dụ hội thoại.`}
         canonicalPath={`/courses/${courseCode.toLowerCase()}/grammar`}
       />
 
@@ -64,12 +65,12 @@ export default function GrammarLessonListPage() {
               Danh Sách Bài Học Ngữ Pháp {upperCode}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Bao gồm 23 mẫu ngữ pháp quan trọng nhất cho cấp độ N5 với ví dụ trực quan.
+              Bao gồm các mẫu ngữ pháp quan trọng nhất cho cấp độ N5 với ví dụ trực quan.
             </p>
           </div>
 
           <div className="px-4 py-2 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-200/60 text-xs font-bold self-start sm:self-auto">
-            4 Bài học • 23 Mẫu câu
+            {lessons.length || (upperCode === 'JPD113' ? 3 : 4)} Bài học • {totalItems || (upperCode === 'JPD113' ? 21 : 23)} Mẫu câu
           </div>
         </div>
 

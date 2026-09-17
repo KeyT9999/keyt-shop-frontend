@@ -63,6 +63,7 @@ const AiImagePage = lazy(() => import('./pages/AiImagePage'));
 const AdminChatPage = lazy(() => import('./pages/admin/AdminChatPage'));
 
 // Japanese Learning Course Pages
+const CoursesHubPage = lazy(() => import('./pages/courses/CoursesHubPage'));
 const CourseLandingPage = lazy(() => import('./pages/courses/CourseLandingPage'));
 const VocabularyLessonListPage = lazy(() => import('./pages/courses/VocabularyLessonListPage'));
 const VocabularyDetailPage = lazy(() => import('./pages/courses/VocabularyDetailPage'));
@@ -71,6 +72,7 @@ const KanjiDetailPage = lazy(() => import('./pages/courses/KanjiDetailPage'));
 const GrammarLessonListPage = lazy(() => import('./pages/courses/GrammarLessonListPage'));
 const GrammarDetailPage = lazy(() => import('./pages/courses/GrammarDetailPage'));
 const ExamListPage = lazy(() => import('./pages/courses/ExamListPage'));
+const SpeakingPage = lazy(() => import('./pages/courses/SpeakingPage'));
 
 export default function App() {
     const { user, token } = useAuthContext();
@@ -309,6 +311,7 @@ export default function App() {
                         <Route path="/ai-image" element={<AiImagePage />} />
 
                         {/* Japanese Course Routes */}
+                        <Route path="/courses" element={<CoursesHubPage />} />
                         <Route path="/courses/:courseCode" element={<CourseLandingPage />} />
                         <Route path="/courses/:courseCode/vocabulary" element={<VocabularyLessonListPage />} />
                         <Route path="/courses/:courseCode/vocabulary/:lessonSlug" element={<VocabularyDetailPage />} />
@@ -319,6 +322,8 @@ export default function App() {
                         <Route path="/courses/:courseCode/grammar/:lessonSlug" element={<GrammarDetailPage />} />
                         <Route path="/courses/:courseCode/exam" element={<ExamListPage />} />
                         <Route path="/courses/:courseCode/exam/:examSlug" element={<ExamListPage />} />
+                        <Route path="/courses/:courseCode/speaking" element={<SpeakingPage />} />
+                        <Route path="/courses/:courseCode/speaking/:tab" element={<SpeakingPage />} />
 
                         <Route path="/admin" element={<AdminLayout />}>
                             <Route index element={<Navigate to="/admin/dashboard" replace />} />

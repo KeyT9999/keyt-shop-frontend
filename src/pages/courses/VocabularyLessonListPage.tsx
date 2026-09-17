@@ -43,12 +43,13 @@ export default function VocabularyLessonListPage() {
   }, [courseCode, token]);
 
   const upperCode = courseCode.toUpperCase();
+  const totalItems = lessons.reduce((acc, l) => acc + (l.itemCount || 0), 0);
 
   return (
     <>
       <Seo
-        title={`Từ Vựng ${upperCode} - Danh Sách 12 Bài Học | Mindora AI`}
-        description={`Học từ vựng tiếng Nhật ${upperCode} qua 12 bài học chi tiết với chế độ Flashcard 3D, luyện gõ và trắc nghiệm.`}
+        title={`Từ Vựng ${upperCode} - Danh Sách ${lessons.length || (upperCode === 'JPD113' ? 9 : 12)} Bài Học | Mindora AI`}
+        description={`Học từ vựng tiếng Nhật ${upperCode} qua các bài học chi tiết với chế độ Flashcard 3D, luyện gõ và trắc nghiệm.`}
         canonicalPath={`/courses/${courseCode.toLowerCase()}/vocabulary`}
       />
 
@@ -71,12 +72,12 @@ export default function VocabularyLessonListPage() {
               Danh Sách Bài Học Từ Vựng {upperCode}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Bao gồm 12 bài học trọng tâm chuẩn chương trình giảng dạy, kết hợp luyện nhớ phản xạ nhanh.
+              Bao gồm {lessons.length || (upperCode === 'JPD113' ? 9 : 12)} bài học trọng tâm chuẩn chương trình giảng dạy, kết hợp luyện nhớ phản xạ nhanh.
             </p>
           </div>
 
           <div className="px-4 py-2 rounded-2xl bg-orange-50 text-[#F05A28] border border-orange-200/60 text-xs font-bold self-start sm:self-auto">
-            12 Bài học • 180 Từ vựng
+            {lessons.length || (upperCode === 'JPD113' ? 9 : 12)} Bài học • {totalItems || (upperCode === 'JPD113' ? 264 : 180)} Từ vựng
           </div>
         </div>
 

@@ -2,7 +2,7 @@ interface CourseProgressBarProps {
   percent: number;
   label?: string;
   showPercentText?: boolean;
-  color?: 'orange' | 'rose' | 'indigo' | 'emerald' | 'blue';
+  color?: 'orange' | 'rose' | 'indigo' | 'emerald' | 'blue' | 'purple';
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -26,7 +26,8 @@ export default function CourseProgressBar({
     rose: 'from-rose-500 to-pink-500',
     indigo: 'from-indigo-600 to-violet-500',
     emerald: 'from-emerald-500 to-teal-500',
-    blue: 'from-blue-600 to-cyan-500'
+    blue: 'from-blue-600 to-cyan-500',
+    purple: 'from-purple-600 to-indigo-500'
   }[color];
 
   return (

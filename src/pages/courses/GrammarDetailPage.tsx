@@ -147,6 +147,191 @@ export default function GrammarDetailPage() {
   const practiceQuestions: PracticeQuestion[] = useMemo(() => {
     if (!items || items.length === 0) return [];
 
+    if (lessonSlug.includes('jpd113-n5-1') || lessonSlug.includes('bai-1')) {
+      return [
+        {
+          id: 1,
+          question: 'Chọn trợ từ đúng: "わたし _____ マイです。 (Tôi là Mai)"',
+          subQuestion: 'Khẳng định danh từ: N1 は N2 です',
+          options: ['は', 'が', 'を', 'に'],
+          correctAnswer: 0,
+          explanation: 'Trợ từ は (đọc là wa) đặt sau chủ ngữ, biểu thị chủ đề chính của câu: N1 は N2 です.'
+        },
+        {
+          id: 2,
+          question: 'Chọn dạng phủ định đúng: "パクさんは がくせい _____。 (Park không phải là học sinh)"',
+          subQuestion: 'Phủ định danh từ: N1 は N2 じゃ/ではありません',
+          options: [
+            'じゃありません',
+            'ありません',
+            'ないです',
+            'でした'
+          ],
+          correctAnswer: 0,
+          explanation: 'Phủ định của danh từ trong giao tiếp thường ngày dùng じゃありません (hoặc ではありません trang trọng).'
+        },
+        {
+          id: 3,
+          question: 'Chọn câu hỏi xác nhận đúng: "Bạn Nam có phải là kỹ sư không?"',
+          subQuestion: 'Câu hỏi nghi vấn danh từ: N1 は N2 ですか',
+          options: [
+            'ナムさんはエンジニアですか。',
+            'ナムさんはエンジニアですね。',
+            'ナムさんはエンジニアよ。',
+            'ナムさんはエンジニアでした。'
+          ],
+          correctAnswer: 0,
+          explanation: 'Thêm trợ từ か ở cuối câu trần thuật để tạo câu hỏi xác nhận mà không cần đổi trật tự từ.'
+        },
+        {
+          id: 4,
+          question: 'Điền trợ từ phù hợp: "マイさんは ベトナムじんです。ナムさん _____ ベトナムじんです。"',
+          subQuestion: 'Trợ từ biểu thị sự đồng nhất: N も',
+          options: ['も', 'は', 'の', 'と'],
+          correctAnswer: 0,
+          explanation: 'Trợ từ も mang nghĩa "cũng", thay thế cho は khi thông tin về đối tượng thứ hai giống hệt đối tượng thứ nhất.'
+        },
+        {
+          id: 5,
+          question: 'Chọn cách hỏi tuổi lịch sự: "Xin hỏi bạn bao nhiêu tuổi ạ?"',
+          subQuestion: 'Hỏi tuổi lịch sự trang trọng',
+          options: [
+            'おいくつですか。',
+            'なんさいですか。',
+            'どこですか。',
+            'だれですか。'
+          ],
+          correctAnswer: 0,
+          explanation: 'おいくつですか là cách hỏi tuổi lịch sự, trang trọng hơn なんさいですか.'
+        }
+      ];
+    }
+
+    if (lessonSlug.includes('jpd113-n5-2') || lessonSlug.includes('bai-2')) {
+      return [
+        {
+          id: 1,
+          question: 'Chọn chỉ định từ khi đồ vật ở gần người nghe: "_____ は ほんです。"',
+          subQuestion: 'Chỉ định từ vật: これ (gần mình), それ (gần bạn), あれ (xa cả hai)',
+          options: ['それ', 'これ', 'あれ', 'どれ'],
+          correctAnswer: 0,
+          explanation: 'それ dùng để chỉ đồ vật nằm ở gần phía người nghe (xa người nói).'
+        },
+        {
+          id: 2,
+          question: 'Điền từ thích hợp đứng trước danh từ: "_____ じしょは わたしのです。"',
+          subQuestion: 'Chỉ định từ đi kèm danh từ: この / その / あの + N',
+          options: ['この', 'これ', 'ここ', 'こちら'],
+          correctAnswer: 0,
+          explanation: 'この / その / あの bắt buộc phải đi kèm trực tiếp với một danh từ ngay sau nó: この じしょ.'
+        },
+        {
+          id: 3,
+          question: 'Trả lời câu hỏi xác nhận: "これは ノートですか。" -> "Vâng, đúng vậy."',
+          subQuestion: 'Cách trả lời khẳng định đúng với câu hỏi danh từ',
+          options: [
+            'はい、そうです。',
+            'いいえ、ちがいます。',
+            'はい、ノートではありません。',
+            'いいえ、そうです。'
+          ],
+          correctAnswer: 0,
+          explanation: 'Với câu hỏi danh từ, khi xác nhận đúng ta trả lời はい、そうです (Vâng, đúng như vậy).'
+        },
+        {
+          id: 4,
+          question: 'Chọn câu hỏi về thể loại/nội dung: "Đó là tạp chí gì thế?"',
+          subQuestion: 'Hỏi về nội dung hoặc chủ đề của danh từ: なんの N',
+          options: [
+            'なんの ざっしですか。',
+            'だれの ざっしですか。',
+            'どこの ざっしですか。',
+            'いくらの ざっしですか。'
+          ],
+          correctAnswer: 0,
+          explanation: 'なんの N dùng để hỏi về thể loại, nội dung của sách/tạp chí (Ví dụ: tạp chí ô tô, tạp chí tiếng Nhật).'
+        },
+        {
+          id: 5,
+          question: 'Chọn câu đúng: "Cái bút chì kia là của anh Tanaka."',
+          subQuestion: 'Lược bỏ danh từ đã hiểu rõ ở vị ngữ: N の',
+          options: [
+            'あの えんぴつは たなかさんのです。',
+            'あれ えんぴつは たなかさんのです。',
+            'その えんぴつは たなかさんのです。',
+            'どの えんぴつは たなかさんのです。'
+          ],
+          correctAnswer: 0,
+          explanation: 'あの えんぴつ (bút chì kia) + は たなかさんのです (là của anh Tanaka - lược chữ えんぴつ sau の).'
+        }
+      ];
+    }
+
+    if (lessonSlug.includes('jpd113-n5-3') || lessonSlug.includes('bai-3')) {
+      return [
+        {
+          id: 1,
+          question: 'Chọn từ chỉ nơi chốn ở xa cả người nói và người nghe: "Nhà ăn ở chỗ đằng kia."',
+          subQuestion: 'Từ chỉ nơi chốn: ここ / そこ / あそこ',
+          options: [
+            'しょくどうは あそこです。',
+            'しょくどうは ここです。',
+            'しょくどうは そこです。',
+            'しょくどうは どこです。'
+          ],
+          correctAnswer: 0,
+          explanation: 'あそこ dùng để chỉ địa điểm nằm ở xa cả người nói và người nghe (đằng kia).'
+        },
+        {
+          id: 2,
+          question: 'Chọn câu hỏi lịch sự về vị trí: "Xin hỏi văn phòng ở đâu ạ?"',
+          subQuestion: 'Dạng lịch sự của どこ là どちら',
+          options: [
+            'じむしょは どちらですか。',
+            'じむしょは なんですか。',
+            'じむしょは だれですか。',
+            'じむしょは いくらですか。'
+          ],
+          correctAnswer: 0,
+          explanation: 'どちら là cách hỏi trang trọng, lịch sự của どこ khi hỏi vị trí phòng ban hoặc phương hướng.'
+        },
+        {
+          id: 3,
+          question: 'Điền trợ từ xuất xứ: "これは にほん _____ くるまです。 (Đây là ô tô của Nhật Bản)"',
+          subQuestion: 'Chỉ xuất xứ / hãng sản xuất: N (quốc gia) の N (sản phẩm)',
+          options: ['の', 'は', 'で', 'に'],
+          correctAnswer: 0,
+          explanation: '[Tên nước / Nhà sản xuất] の [Sản phẩm] mang nghĩa xuất xứ từ nước đó (Nhật Bản chế tạo).'
+        },
+        {
+          id: 4,
+          question: 'Chọn câu hỏi giá tiền: "Cái túi xách này giá bao nhiêu tiền?"',
+          subQuestion: 'Mẫu câu hỏi giá: N は いくらですか',
+          options: [
+            'この かばんは いくらですか。',
+            'この かばんは どこですか。',
+            'この かばんは なんさいですか。',
+            'この かばんは どちらですか。'
+          ],
+          correctAnswer: 0,
+          explanation: 'いくらですか dùng để hỏi giá tiền của đồ vật (Bao nhiêu tiền?).'
+        },
+        {
+          id: 5,
+          question: 'Từ "Tầng 3" trong tiếng Nhật đọc chuẩn âm đục là gì?',
+          subQuestion: 'Biến âm tầng nhà (階)',
+          options: [
+            'さんがい',
+            'さんかい',
+            'よんかい',
+            'にかい'
+          ],
+          correctAnswer: 0,
+          explanation: 'Tầng 3 là trường hợp biến âm đặc biệt đọc là さんがい (âm đục がい).'
+        }
+      ];
+    }
+
     if (lessonSlug.includes('bai-5')) {
       return [
         {

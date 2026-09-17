@@ -9,6 +9,9 @@ import Seo from '../../components/Seo';
 
 // Vocab counts từ vocabularyItems trong lessons.json
 const VOCAB_COUNT: Record<string, number> = {
+  'LESSON-1': 20,
+  'LESSON-2': 50,
+  'LESSON-3': 28,
   'LESSON-4': 15,
   'LESSON-5': 31,
   'LESSON-6': 31,
@@ -17,6 +20,21 @@ const VOCAB_COUNT: Record<string, number> = {
 
 // Màu gradient theo lesson
 const LESSON_COLORS: Record<string, { bg: string; badge: string; dot: string }> = {
+  'LESSON-1': {
+    bg: 'from-blue-500 to-cyan-400',
+    badge: 'bg-blue-50 text-blue-700 border-blue-200',
+    dot: 'bg-blue-500',
+  },
+  'LESSON-2': {
+    bg: 'from-amber-500 to-orange-400',
+    badge: 'bg-amber-50 text-amber-700 border-amber-200',
+    dot: 'bg-amber-500',
+  },
+  'LESSON-3': {
+    bg: 'from-teal-500 to-emerald-400',
+    badge: 'bg-teal-50 text-teal-700 border-teal-200',
+    dot: 'bg-teal-500',
+  },
   'LESSON-4': {
     bg: 'from-rose-500 to-orange-400',
     badge: 'bg-rose-50 text-rose-700 border-rose-200',
@@ -40,6 +58,9 @@ const LESSON_COLORS: Record<string, { bg: string; badge: string; dot: string }> 
 };
 
 const LESSON_NUMBERS: Record<string, number> = {
+  'LESSON-1': 1,
+  'LESSON-2': 2,
+  'LESSON-3': 3,
   'LESSON-4': 4,
   'LESSON-5': 5,
   'LESSON-6': 6,

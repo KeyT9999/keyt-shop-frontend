@@ -16,6 +16,12 @@ import {
   Zap,
   KeyRound,
   GraduationCap,
+  Mic,
+  Award,
+  BookOpen,
+  BookMarked,
+  Layers,
+  ArrowRight,
   Search,
   type LucideIcon
 } from 'lucide-react';
@@ -143,6 +149,115 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
       iconColor: '#D97706'
     }
   ];
+
+  const jpd113Tools: SubMenuItem[] = [
+    {
+      title: 'Môn JPD113 (Tổng Quan)',
+      desc: 'N5 Khởi Động: Minna Bài 1 đến Bài 3',
+      href: '/courses/jpd113',
+      icon: GraduationCap,
+      iconBg: 'bg-blue-50 text-blue-600',
+      iconColor: '#2563EB',
+      badge: 'MÔN 1'
+    },
+    {
+      title: 'Hán Tự JPD113',
+      desc: '35 chữ Hán cơ bản đầu tiên & Flashcard 3D',
+      href: '/courses/jpd113/kanji',
+      icon: BookOpen,
+      iconBg: 'bg-rose-50 text-rose-600',
+      iconColor: '#E11D48'
+    },
+    {
+      title: 'Từ Vựng JPD113',
+      desc: '379 từ vựng nền tảng (9 bài học nhỏ)',
+      href: '/courses/jpd113/vocabulary',
+      icon: BookMarked,
+      iconBg: 'bg-orange-50 text-[#F05A28]',
+      iconColor: '#F05A28'
+    },
+    {
+      title: 'Ngữ Pháp JPD113',
+      desc: '21 mẫu câu sơ cấp cốt lõi & bài tập củng cố',
+      href: '/courses/jpd113/grammar',
+      icon: Layers,
+      iconBg: 'bg-indigo-50 text-indigo-600',
+      iconColor: '#4F46E5'
+    },
+    {
+      title: 'Thi Nói 1-1 JPD113',
+      desc: 'Giả lập phòng thi Giám thị AI FPT (Đề A & B)',
+      href: '/courses/jpd113/speaking',
+      icon: Mic,
+      iconBg: 'bg-purple-50 text-purple-600',
+      iconColor: '#7C3AED',
+      badge: 'HOT'
+    },
+    {
+      title: 'Đề Thi FE JPD113',
+      desc: 'Đề thi trắc nghiệm Final Exam 60 phút có giải thích',
+      href: '/courses/jpd113/exam',
+      icon: Award,
+      iconBg: 'bg-emerald-50 text-emerald-600',
+      iconColor: '#059669',
+      badge: 'FE'
+    }
+  ];
+
+  const jpd123Tools: SubMenuItem[] = [
+    {
+      title: 'Môn JPD123 (Tổng Quan)',
+      desc: 'N5 Nâng Cao: Minna Bài 4 đến Bài 7',
+      href: '/courses/jpd123',
+      icon: GraduationCap,
+      iconBg: 'bg-orange-50 text-[#F05A28]',
+      iconColor: '#F05A28',
+      badge: 'MÔN 2'
+    },
+    {
+      title: 'Hán Tự JPD123',
+      desc: '42 chữ Hán nâng cao N5 & Flashcard 3D',
+      href: '/courses/jpd123/kanji',
+      icon: BookOpen,
+      iconBg: 'bg-rose-50 text-rose-600',
+      iconColor: '#E11D48'
+    },
+    {
+      title: 'Từ Vựng JPD123',
+      desc: '251 từ vựng chuyên sâu (12 bài học)',
+      href: '/courses/jpd123/vocabulary',
+      icon: BookMarked,
+      iconBg: 'bg-orange-50 text-[#F05A28]',
+      iconColor: '#F05A28'
+    },
+    {
+      title: 'Ngữ Pháp JPD123',
+      desc: '23 mẫu câu thì quá khứ, tính từ, so sánh',
+      href: '/courses/jpd123/grammar',
+      icon: Layers,
+      iconBg: 'bg-indigo-50 text-indigo-600',
+      iconColor: '#4F46E5'
+    },
+    {
+      title: 'Thi Nói 1-1 JPD123',
+      desc: 'Giả lập phòng thi Giám thị AI FPT chuyên sâu',
+      href: '/courses/jpd123/speaking',
+      icon: Mic,
+      iconBg: 'bg-purple-50 text-purple-600',
+      iconColor: '#7C3AED',
+      badge: 'HOT'
+    },
+    {
+      title: 'Đề Thi FE JPD123',
+      desc: '73 câu trắc nghiệm thi thật 60 phút',
+      href: '/courses/jpd123/exam',
+      icon: Award,
+      iconBg: 'bg-emerald-50 text-emerald-600',
+      iconColor: '#059669',
+      badge: 'FE'
+    }
+  ];
+
 
   const isAiActive = aiTools.some((t) => location.pathname === t.href);
   const isPhotoActive = photoTools.some((t) => location.pathname === t.href);
@@ -301,20 +416,131 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 </Link>
               </li>
 
-              {/* 5. Tiếng Nhật JPD123 */}
-              <li className="header-nav-item">
-                <Link
-                  to="/courses/jpd123"
-                  className={`header-nav-link flex items-center gap-1.5 cursor-pointer ${
+              {/* 5. Tiếng Nhật FPT Dropdown */}
+              <li
+                className="header-nav-item dropdown-trigger"
+                onMouseEnter={() => handleMouseEnter('japanese')}
+                onMouseLeave={handleMouseLeave}
+              >
+                <button
+                  type="button"
+                  className={`header-nav-link dropdown-btn flex items-center gap-1.5 cursor-pointer ${
                     isJapaneseActive ? 'active' : ''
                   }`}
+                  onClick={() => setActiveDropdown(activeDropdown === 'japanese' ? null : 'japanese')}
                 >
                   <GraduationCap size={15} className="text-[#F05A28]" />
-                  <span>Tiếng Nhật JPD123</span>
+                  <span>Tiếng Nhật FPT</span>
                   <span className="text-[10px] font-bold bg-[#F05A28]/10 text-[#F05A28] px-1.5 py-0.5 rounded-full border border-orange-200">
-                    N5
+                    2 Môn
                   </span>
-                </Link>
+                  <ChevronDown
+                    size={14}
+                    className={`dropdown-chevron ${activeDropdown === 'japanese' ? 'open' : ''}`}
+                  />
+                </button>
+
+                {activeDropdown === 'japanese' && (
+                  <div className="modern-dropdown-menu-wide">
+                    <div className="dropdown-menu-header flex flex-row items-center justify-between pb-3">
+                      <div>
+                        <span className="dropdown-menu-tag">Cổng Khảo Thí Tiếng Nhật Đại Học FPT</span>
+                        <span className="dropdown-menu-subtitle">Chọn chính xác học phần bạn đang học (2 môn học độc lập)</span>
+                      </div>
+                      <Link
+                        to="/courses"
+                        onClick={() => setActiveDropdown(null)}
+                        className="text-xs font-bold text-[#F05A28] hover:underline flex items-center gap-1 cursor-pointer shrink-0"
+                      >
+                        <span>Cổng 2 môn học</span>
+                        <ArrowRight size={13} />
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mt-2">
+                      {/* Column 1: JPD113 */}
+                      <div className="p-3 bg-blue-50/40 rounded-2xl border border-blue-100">
+                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-blue-100/80">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-blue-600" />
+                            <span className="text-xs font-black text-blue-900 uppercase">Môn JPD113 (Bài 1 - 3)</span>
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Kỳ 1</span>
+                        </div>
+                        <div className="space-y-1">
+                          {jpd113Tools.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                              <Link
+                                key={item.href}
+                                to={item.href}
+                                className={`dropdown-card-item ${location.pathname === item.href ? 'item-active' : ''}`}
+                                onClick={() => setActiveDropdown(null)}
+                              >
+                                <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
+                                  <Icon size={16} />
+                                </div>
+                                <div className="dropdown-item-content">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="dropdown-item-title">{item.title}</span>
+                                    {item.badge && <span className="dropdown-item-badge">{item.badge}</span>}
+                                  </div>
+                                  <span className="dropdown-item-desc">{item.desc}</span>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Column 2: JPD123 */}
+                      <div className="p-3 bg-orange-50/40 rounded-2xl border border-orange-100">
+                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-orange-100/80">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-[#F05A28]" />
+                            <span className="text-xs font-black text-orange-950 uppercase">Môn JPD123 (Bài 4 - 7)</span>
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-[#F05A28]">Kỳ 2</span>
+                        </div>
+                        <div className="space-y-1">
+                          {jpd123Tools.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                              <Link
+                                key={item.href}
+                                to={item.href}
+                                className={`dropdown-card-item ${location.pathname === item.href ? 'item-active' : ''}`}
+                                onClick={() => setActiveDropdown(null)}
+                              >
+                                <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
+                                  <Icon size={16} />
+                                </div>
+                                <div className="dropdown-item-content">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="dropdown-item-title">{item.title}</span>
+                                    {item.badge && <span className="dropdown-item-badge">{item.badge}</span>}
+                                  </div>
+                                  <span className="dropdown-item-desc">{item.desc}</span>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 px-2">
+                      <span>JPD113 và JPD123 là 2 môn học độc lập theo chương trình Đại học FPT.</span>
+                      <Link
+                        to="/courses"
+                        onClick={() => setActiveDropdown(null)}
+                        className="font-bold text-[#F05A28] hover:underline cursor-pointer"
+                      >
+                        Vào cổng 2 môn học →
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </li>
             </ul>
           </nav>
@@ -491,17 +717,59 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             <span>Get OTP & 2FA Code</span>
           </Link>
 
-          {/* Group: Học Ngôn Ngữ */}
-          <div className="mobile-group-title">Khóa Học & Ngôn Ngữ</div>
-          <Link
-            to="/courses/jpd123"
-            className={`mobile-sub-link ${isJapaneseActive ? 'active' : ''}`}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <GraduationCap size={16} className="text-[#F05A28]" />
-            <span>Tiếng Nhật JPD123</span>
-            <span className="mobile-badge">N5</span>
-          </Link>
+          {/* Group: Cổng 2 môn học */}
+          <div className="mobile-group-title flex items-center justify-between">
+            <span>Tiếng Nhật Đại Học FPT</span>
+            <Link
+              to="/courses"
+              className="text-[11px] font-bold text-[#F05A28] lowercase"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              xem cả 2 môn →
+            </Link>
+          </div>
+
+          {/* Sub-group JPD113 */}
+          <div className="px-3 py-1 text-[11px] font-black uppercase tracking-wider text-blue-700 bg-blue-50/80 rounded-lg mb-1 flex items-center justify-between">
+            <span>Môn JPD113 (Bài 1 - 3)</span>
+            <span className="text-[10px] font-normal lowercase">kỳ 1</span>
+          </div>
+          {jpd113Tools.map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <Link
+                key={tool.href}
+                to={tool.href}
+                className={`mobile-sub-link ${location.pathname === tool.href ? 'active' : ''}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Icon size={16} style={{ color: tool.iconColor }} />
+                <span>{tool.title}</span>
+                {tool.badge && <span className="mobile-badge">{tool.badge}</span>}
+              </Link>
+            );
+          })}
+
+          {/* Sub-group JPD123 */}
+          <div className="px-3 py-1 text-[11px] font-black uppercase tracking-wider text-[#F05A28] bg-orange-50/80 rounded-lg mt-3 mb-1 flex items-center justify-between">
+            <span>Môn JPD123 (Bài 4 - 7)</span>
+            <span className="text-[10px] font-normal lowercase">kỳ 2</span>
+          </div>
+          {jpd123Tools.map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <Link
+                key={tool.href}
+                to={tool.href}
+                className={`mobile-sub-link ${location.pathname === tool.href ? 'active' : ''}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Icon size={16} style={{ color: tool.iconColor }} />
+                <span>{tool.title}</span>
+                {tool.badge && <span className="mobile-badge">{tool.badge}</span>}
+              </Link>
+            );
+          })}
 
           {/* Divider */}
           <div className="my-4 border-t border-slate-200" />

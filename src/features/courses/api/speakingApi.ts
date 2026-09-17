@@ -6,10 +6,12 @@ import type {
   MockExamPack,
   SurvivalKit,
   FEExamSummary,
-  FEExamDetail
+  FEExamDetail,
+  PronunciationEvaluationResult
 } from '../types/speaking';
 
 export const speakingApi = {
+
   /**
    * Get all reading passages (Mã đề A)
    */
@@ -73,5 +75,46 @@ export const speakingApi = {
   async getFeExamDetail(courseCode = 'jpd123', slug: string): Promise<FEExamDetail> {
     const res = await axios.get(`${API_BASE_URL}/courses/${courseCode}/exams/fe-tests/${slug}`);
     return res.data.data;
+  },
+
+  /**
+   * Evaluate pronunciation audio via AI Speech Service (FastAPI / Node proxy)
+   */
+  async evaluatePronunciation(
+    courseCode = 'jpd123',
+    audioBlob: Blob,
+    expectedText: string,
+    passageId?: string
+  ): Promise<PronunciationEvaluationResult> {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'reading_practice.webm');
+    formData.append('expectedText', expectedText);
+    formData.append('courseCode', courseCode);
+    if (passageId) formData.append('passageId', passageId);
+
+    // Try Node backend proxy first
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/courses/${courseCode}/speaking/evaluate`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 45000
+        }
+      );
+      return res.data.data;
+    } catch (backendErr) {
+      console.warn('Backend proxy failed, attempting direct AI microservice at :8001...', backendErr);
+      const directRes = await axios.post(
+        'http://127.0.0.1:8001/api/pronunciation/evaluate',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 45000
+        }
+      );
+      return directRes.data.data;
+    }
   }
 };
+

@@ -131,3 +131,40 @@ export interface MockExamScorecard {
   passed: boolean; // >= 50
   generalFeedback: string;
 }
+
+export interface PronunciationWordEvaluation {
+  word: string;
+  reading: string;
+  romaji: string;
+  moras: string[];
+  score: number;
+  status: 'correct' | 'warning' | 'error' | 'missing';
+  feedback: string;
+  spoken?: string;
+}
+
+export interface PronunciationEvaluationResult {
+  expected: string;
+  transcript: string;
+  score: number; // /100
+  feScore: number; // /45
+  grade: 'S' | 'A' | 'B' | 'C' | 'D';
+  summary: string;
+  metrics: {
+    accuracy: number;
+    pronunciation: number;
+    fluency: number;
+    rhythm: number;
+  };
+  details: {
+    moraRate: number;
+    expectedMoras: number;
+    speechDurationSec: number;
+    hesitationCount: number;
+    characterErrorRate: number;
+  };
+  words: PronunciationWordEvaluation[];
+  courseCode?: string;
+  passageId?: string;
+}
+

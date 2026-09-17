@@ -5,7 +5,9 @@ import {
   Trophy,
   Sparkles,
   ChevronRight,
-  Flame
+  Flame,
+  Award,
+  Target
 } from 'lucide-react';
 import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
@@ -18,8 +20,8 @@ interface SpeedMatchModeProps {
 }
 
 interface MatchCard {
-  id: string; // unique card id (e.g. '123_jp' or '123_vi')
-  wordId: string;
+  id: string; // unique card id: e.g. 'wordKey_jp' or 'wordKey_vi'
+  wordKey: string;
   type: 'japanese' | 'vietnamese';
   text: string;
   subtext?: string;
@@ -34,19 +36,34 @@ export default function SpeedMatchMode({
 }: SpeedMatchModeProps) {
   const [cards, setCards] = useState<MatchCard[]>([]);
   const [selectedCard, setSelectedCard] = useState<MatchCard | null>(null);
-  const [matchedWordIds, setMatchedWordIds] = useState<Set<string>>(new Set());
+  const [matchedWordKeys, setMatchedWordKeys] = useState<Set<string>>(new Set());
   const [wrongPairIds, setWrongPairIds] = useState<string[]>([]);
   const [justMatchedPairIds, setJustMatchedPairIds] = useState<string[]>([]);
+
+  // Scoring & Stats
+  const [score, setScore] = useState(0);
+  const [wrongCount, setWrongCount] = useState(0);
+  const [streakCount, setStreakCount] = useState(0);
 
   // Timer states
   const [isStarted, setIsStarted] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [isVictory, setIsVictory] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(false);
-  const [streakCount, setStreakCount] = useState(0);
+  const [finalTimeSec, setFinalTimeSec] = useState(0);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Refs to prevent stale closures and avoid re-render timer glitches
+  const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
+  const isStartedRef = useRef<boolean>(false);
+  const wrongTimeoutRef = useRef<number | null>(null);
+  const matchedTimeoutRef = useRef<number | null>(null);
+  const itemsPoolRef = useRef<VocabularyItem[]>(items);
+
+  // Always keep latest items in ref without triggering game restart
+  useEffect(() => {
+    itemsPoolRef.current = items;
+  }, [items]);
 
   const storageKey = `speed_match_best_${(courseCode || 'jpd123').toLowerCase()}_${lessonSlug}`;
   const [personalBest, setPersonalBest] = useState<number | null>(() => {
@@ -58,7 +75,7 @@ export default function SpeedMatchMode({
     }
   });
 
-  // Speech Helper
+  // Speech helper
   const speak = useCallback((text: string) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
@@ -69,39 +86,79 @@ export default function SpeedMatchMode({
     }
   }, []);
 
-  // Initialize game with 6 random pairs
-  const initGame = useCallback(() => {
-    if (!items || items.length === 0) return;
+  // Stop Stopwatch
+  const stopTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
 
-    // Reset game states
-    if (timerRef.current) clearInterval(timerRef.current);
+  // Start Stopwatch on first card click
+  const ensureTimerStarted = () => {
+    if (!isStartedRef.current) {
+      isStartedRef.current = true;
+      setIsStarted(true);
+      startTimeRef.current = Date.now();
+      timerRef.current = window.setInterval(() => {
+        setElapsedMs(Date.now() - startTimeRef.current);
+      }, 50);
+    }
+  };
+
+  // Initialize a new round with 6 pairs (12 cards)
+  const initGame = useCallback(() => {
+    const sourceItems = itemsPoolRef.current && itemsPoolRef.current.length > 0 ? itemsPoolRef.current : items;
+    if (!sourceItems || sourceItems.length === 0) return;
+
+    // Clear any running timers
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (wrongTimeoutRef.current) {
+      clearTimeout(wrongTimeoutRef.current);
+      wrongTimeoutRef.current = null;
+    }
+    if (matchedTimeoutRef.current) {
+      clearTimeout(matchedTimeoutRef.current);
+      matchedTimeoutRef.current = null;
+    }
+
+    isStartedRef.current = false;
+    setIsStarted(false);
+    setElapsedMs(0);
+    setFinalTimeSec(0);
     setSelectedCard(null);
-    setMatchedWordIds(new Set());
+    setMatchedWordKeys(new Set());
     setWrongPairIds([]);
     setJustMatchedPairIds([]);
     setIsVictory(false);
     setIsNewRecord(false);
+    setScore(0);
+    setWrongCount(0);
     setStreakCount(0);
-    setElapsedMs(0);
-    setIsStarted(false);
 
-    // Pick 6 random words (or all if < 6)
-    const shuffledPool = [...items].sort(() => Math.random() - 0.5);
-    const chosenItems = shuffledPool.slice(0, Math.min(6, items.length));
+    // Pick 6 random items
+    const shuffledPool = [...sourceItems].sort(() => Math.random() - 0.5);
+    const chosenItems = shuffledPool.slice(0, Math.min(6, sourceItems.length));
 
     const gameCards: MatchCard[] = [];
-    chosenItems.forEach((item) => {
+    chosenItems.forEach((item, idx) => {
+      const key = item._id || `${item.term}_${item.order || idx}`;
+      // Japanese card
       gameCards.push({
-        id: `${item._id}_jp`,
-        wordId: item._id,
+        id: `${key}_jp`,
+        wordKey: key,
         type: 'japanese',
         text: item.term,
         subtext: item.reading !== item.term ? item.reading : undefined,
         originalItem: item
       });
+      // Vietnamese card
       gameCards.push({
-        id: `${item._id}_vi`,
-        wordId: item._id,
+        id: `${key}_vi`,
+        wordKey: key,
         type: 'vietnamese',
         text: item.meaning,
         originalItem: item
@@ -112,37 +169,40 @@ export default function SpeedMatchMode({
     setCards(gameCards.sort(() => Math.random() - 0.5));
   }, [items]);
 
+  // Init once on mount or when switching lessonSlug ONLY
   useEffect(() => {
     initGame();
-  }, [initGame]);
-
-  // Start timer on first card click
-  const startTimer = () => {
-    if (!isStarted) {
-      setIsStarted(true);
-      startTimeRef.current = Date.now() - elapsedMs;
-      timerRef.current = setInterval(() => {
-        setElapsedMs(Date.now() - startTimeRef.current);
-      }, 50);
-    }
-  };
-
-  // Stop timer on victory
-  const stopTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (wrongTimeoutRef.current) clearTimeout(wrongTimeoutRef.current);
+      if (matchedTimeoutRef.current) clearTimeout(matchedTimeoutRef.current);
+    };
+  }, [lessonSlug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle Card Click
   const handleCardClick = (card: MatchCard) => {
-    // If already matched or clicking on wrong pair animation, ignore
-    if (matchedWordIds.has(card.wordId) || wrongPairIds.includes(card.id)) return;
+    // If this card is already matched, ignore
+    if (matchedWordKeys.has(card.wordKey)) return;
 
-    startTimer();
+    // Start timer on first interaction
+    ensureTimerStarted();
 
-    // If no card is currently selected
+    // If cards are currently flashing red from a wrong attempt, cancel red state early
+    if (wrongPairIds.length > 0) {
+      if (wrongTimeoutRef.current) {
+        clearTimeout(wrongTimeoutRef.current);
+        wrongTimeoutRef.current = null;
+      }
+      setWrongPairIds([]);
+      // Select the newly clicked card as card 1
+      setSelectedCard(card);
+      if (card.type === 'japanese') {
+        speak(card.text);
+      }
+      return;
+    }
+
+    // If no card is selected yet, select it
     if (!selectedCard) {
       setSelectedCard(card);
       if (card.type === 'japanese') {
@@ -151,39 +211,55 @@ export default function SpeedMatchMode({
       return;
     }
 
-    // If clicked on the same card, deselect
+    // If clicking the same card again, deselect
     if (selectedCard.id === card.id) {
       setSelectedCard(null);
       return;
     }
 
-    // Check if match
-    const isMatch = selectedCard.wordId === card.wordId && selectedCard.type !== card.type;
+    // Check if match: same wordKey AND different card type (1 JP, 1 VI)
+    const isMatch = selectedCard.wordKey === card.wordKey && selectedCard.type !== card.type;
 
     if (isMatch) {
-      // Correct Match!
-      const currentWordId = card.wordId;
-      setJustMatchedPairIds([selectedCard.id, card.id]);
-      setStreakCount((prev) => prev + 1);
+      // ── CORRECT MATCH ──
+      const matchedKey = card.wordKey;
+      const pairIds = [selectedCard.id, card.id];
+      setJustMatchedPairIds(pairIds);
+      setSelectedCard(null);
 
-      // Play audio of Japanese term
+      // Pronounce Japanese term
       speak(card.originalItem.term);
 
-      // Record result
-      onRecordResult(currentWordId, true);
-      weakWordsStorage.recordAttempt(courseCode, lessonSlug, currentWordId, true);
+      // Calculate score bonus
+      const nextStreak = streakCount + 1;
+      setStreakCount(nextStreak);
+      const streakBonus = nextStreak > 1 ? (nextStreak - 1) * 50 : 0;
+      setScore((prev) => prev + 100 + streakBonus);
 
-      setTimeout(() => {
-        setMatchedWordIds((prev) => {
-          const next = new Set(prev).add(currentWordId);
-          // Check Victory
+      // Record result to learning tracking (safe if _id exists)
+      if (card.originalItem._id) {
+        onRecordResult(card.originalItem._id, true);
+        weakWordsStorage.recordAttempt(courseCode, lessonSlug, card.originalItem._id, true);
+      }
+
+      // After 300ms flash green, mark as matched and disappear
+      matchedTimeoutRef.current = window.setTimeout(() => {
+        setJustMatchedPairIds([]);
+        setMatchedWordKeys((prev) => {
+          const next = new Set(prev).add(matchedKey);
           const totalPairs = cards.length / 2;
+
+          // Check if all pairs are finished
           if (next.size >= totalPairs) {
             stopTimer();
-            setIsVictory(true);
-
-            // Calculate final time in seconds
             const finalSec = parseFloat(((Date.now() - startTimeRef.current) / 1000).toFixed(1));
+            setFinalTimeSec(finalSec);
+
+            // Calculate final speed score
+            const timeBonus = Math.max(0, Math.round(1000 - finalSec * 25));
+            setScore((currentScore) => currentScore + timeBonus);
+
+            // Check personal best
             if (!personalBest || finalSec < personalBest) {
               setIsNewRecord(true);
               setPersonalBest(finalSec);
@@ -193,49 +269,66 @@ export default function SpeedMatchMode({
                 // ignore
               }
             }
+            setIsVictory(true);
           }
           return next;
         });
-        setJustMatchedPairIds([]);
-        setSelectedCard(null);
-      }, 350);
+      }, 300);
     } else {
-      // Wrong Match!
+      // ── WRONG MATCH ──
+      const wrongIds = [selectedCard.id, card.id];
+      setWrongPairIds(wrongIds);
+      setWrongCount((prev) => prev + 1);
       setStreakCount(0);
-      setWrongPairIds([selectedCard.id, card.id]);
+      setScore((prev) => Math.max(0, prev - 25));
 
       // Record mistake
-      weakWordsStorage.addWeakWord(courseCode, lessonSlug, selectedCard.wordId);
-      weakWordsStorage.addWeakWord(courseCode, lessonSlug, card.wordId);
-      onRecordResult(selectedCard.wordId, false);
+      if (selectedCard.originalItem._id) {
+        weakWordsStorage.addWeakWord(courseCode, lessonSlug, selectedCard.originalItem._id);
+        onRecordResult(selectedCard.originalItem._id, false);
+      }
+      if (card.originalItem._id) {
+        weakWordsStorage.addWeakWord(courseCode, lessonSlug, card.originalItem._id);
+      }
 
-      setTimeout(() => {
+      // Reset wrong state after 450ms so player can continue playing
+      wrongTimeoutRef.current = window.setTimeout(() => {
         setWrongPairIds([]);
         setSelectedCard(null);
-      }, 500);
+      }, 450);
     }
   };
 
-  const formattedSeconds = (elapsedMs / 1000).toFixed(1);
   const totalPairs = cards.length / 2;
-  const remainingPairs = totalPairs - matchedWordIds.size;
+  const remainingPairs = Math.max(0, totalPairs - matchedWordKeys.size);
+  const formattedSeconds = (elapsedMs / 1000).toFixed(1);
 
-  if (items.length < 3) {
+  // Rank calculation for victory screen
+  const getRank = (time: number, mistakes: number) => {
+    if (time <= 12 && mistakes === 0) return { rank: 'S', title: 'Thần Sầu', color: 'from-amber-400 to-orange-500' };
+    if (time <= 20 && mistakes <= 1) return { rank: 'A', title: 'Xuất Sắc', color: 'from-emerald-400 to-teal-500' };
+    if (time <= 35 && mistakes <= 3) return { rank: 'B', title: 'Khá Giỏi', color: 'from-blue-400 to-indigo-500' };
+    return { rank: 'C', title: 'Cần Rèn Luyện', color: 'from-slate-400 to-slate-600' };
+  };
+
+  if (!items || items.length < 2) {
     return (
       <div className="p-12 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
-        Bài học cần ít nhất 3 từ vựng để mở trò chơi Ghép Cặp Thần Tốc.
+        Bài học cần ít nhất 2 từ vựng để mở trò chơi Ghép Cặp Thần Tốc.
       </div>
     );
   }
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col items-center select-none">
-      {/* ── Top Bar: Stopwatch & Personal Best ── */}
+      {/* ── Top Bar: Stopwatch, Score, Remaining & Best ── */}
       <div className="w-full mb-6 p-4 rounded-3xl bg-white border border-slate-200/90 shadow-sm flex items-center justify-between gap-4">
         {/* Left: Stopwatch */}
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-orange-50 text-[#F05A28] flex items-center justify-center font-bold">
-            <Zap size={22} className="animate-pulse" />
+          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold transition-colors ${
+            isStarted ? 'bg-orange-500 text-white shadow-md shadow-orange-500/30' : 'bg-orange-50 text-[#F05A28]'
+          }`}>
+            <Zap size={22} className={isStarted ? 'animate-pulse' : ''} />
           </div>
           <div>
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
@@ -247,14 +340,19 @@ export default function SpeedMatchMode({
           </div>
         </div>
 
-        {/* Center: Streak / Remaining */}
-        <div className="hidden sm:flex items-center gap-2">
+        {/* Center: Score & Remaining */}
+        <div className="flex items-center gap-2">
           {streakCount >= 2 && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-linear-to-r from-orange-500 to-amber-500 text-white font-black text-xs shadow-xs animate-bounce">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-linear-to-r from-orange-500 to-amber-500 text-white font-black text-xs shadow-xs animate-bounce">
               <Flame size={14} />
               <span>Combo x{streakCount}!</span>
             </div>
           )}
+
+          <div className="px-3 py-1.5 rounded-xl bg-orange-50 text-[#F05A28] border border-orange-200/60 font-black text-xs">
+            {score} Điểm
+          </div>
+
           <span className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs">
             Còn lại: <strong className="text-slate-900">{remainingPairs}</strong> cặp
           </span>
@@ -273,7 +371,7 @@ export default function SpeedMatchMode({
             type="button"
             onClick={initGame}
             className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
-            title="Làm mới bảng thẻ"
+            title="Làm mới bảng thẻ (6 từ mới)"
           >
             <RotateCcw size={16} />
           </button>
@@ -281,34 +379,38 @@ export default function SpeedMatchMode({
       </div>
 
       {/* ── Match Cards Grid (3x4 or 4x3) ── */}
-      <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-3.5">
+      <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-3.5 min-h-[380px]">
         {cards.map((card) => {
-          const isMatched = matchedWordIds.has(card.wordId);
+          const isMatched = matchedWordKeys.has(card.wordKey);
           const isSelected = selectedCard?.id === card.id;
           const isWrong = wrongPairIds.includes(card.id);
           const isJustMatched = justMatchedPairIds.includes(card.id);
 
-          // Card Styles
+          // Card Styles based on interaction state
           let cardStyle =
-            'bg-white text-slate-800 border-2 border-slate-200 hover:border-orange-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0';
+            'bg-white text-slate-800 border-2 border-slate-200/90 hover:border-orange-300 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0';
 
           if (isSelected) {
+            // Selected state: vibrant orange border and warm background
             cardStyle =
-              'bg-orange-50/90 text-orange-950 border-2 border-orange-500 shadow-lg scale-102 ring-3 ring-orange-200';
+              'bg-orange-50/90 text-orange-950 border-2 border-[#F05A28] shadow-lg scale-102 ring-3 ring-orange-300';
           }
 
           if (isWrong) {
+            // Wrong state: red flash & shake
             cardStyle =
-              'bg-rose-50 text-rose-900 border-2 border-rose-500 shadow-md ring-3 ring-rose-200 animate-shake';
+              'bg-rose-500 text-white border-2 border-rose-600 shadow-lg ring-3 ring-rose-300 animate-shake';
           }
 
           if (isJustMatched) {
+            // Correct state: green flash
             cardStyle =
-              'bg-emerald-50 text-emerald-900 border-2 border-emerald-500 shadow-lg ring-3 ring-emerald-200 scale-105';
+              'bg-emerald-500 text-white border-2 border-emerald-600 shadow-xl ring-4 ring-emerald-300 scale-105 animate-pulse';
           }
 
           if (isMatched) {
-            cardStyle = 'opacity-0 pointer-events-none scale-90 transition-all duration-300';
+            // Matched state: completely disappear from view
+            cardStyle = 'opacity-0 pointer-events-none scale-75 transition-all duration-300 invisible';
           }
 
           return (
@@ -322,16 +424,22 @@ export default function SpeedMatchMode({
               {card.type === 'japanese' ? (
                 <div className="space-y-1">
                   {card.subtext && (
-                    <div className="text-xs font-bold text-[#F05A28] font-japanese leading-none">
+                    <div className={`text-xs font-bold font-japanese leading-none ${
+                      isWrong || isJustMatched ? 'text-white/90' : 'text-[#F05A28]'
+                    }`}>
                       {card.subtext}
                     </div>
                   )}
-                  <div className="text-xl sm:text-2xl font-black text-slate-900 font-japanese leading-snug">
+                  <div className={`text-xl sm:text-2xl font-black font-japanese leading-snug ${
+                    isWrong || isJustMatched ? 'text-white' : 'text-slate-900'
+                  }`}>
                     {card.text}
                   </div>
                 </div>
               ) : (
-                <div className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">
+                <div className={`text-xs sm:text-sm font-bold leading-snug ${
+                  isWrong || isJustMatched ? 'text-white' : 'text-slate-800'
+                }`}>
                   {card.text}
                 </div>
               )}
@@ -342,42 +450,60 @@ export default function SpeedMatchMode({
 
       {/* ── Helper Instruction ── */}
       <div className="mt-6 text-center text-xs text-slate-400 font-medium">
-        💡 Click 1 thẻ Tiếng Nhật và 1 thẻ Ý Nghĩa để ghép cặp. Càng nhanh thứ hạng càng cao!
+        💡 Click 1 thẻ Tiếng Nhật và 1 thẻ Ý Nghĩa để ghép cặp. Đúng thẻ sẽ lóe xanh và biến mất, sai thẻ sẽ đỏ để tiếp tục ghép cho đến khi xong 6 cặp!
       </div>
 
       {/* ── Victory Modal ── */}
       {isVictory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
           <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 text-center animate-scaleUp">
-            <div className="w-16 h-16 rounded-full bg-linear-to-tr from-amber-400 to-[#F05A28] text-white flex items-center justify-center mx-auto mb-4 shadow-lg shadow-orange-500/30">
-              <Trophy size={32} />
+            {/* Rank Avatar */}
+            <div className={`w-20 h-20 rounded-3xl bg-linear-to-tr ${getRank(finalTimeSec, wrongCount).color} text-white flex flex-col items-center justify-center mx-auto mb-4 shadow-xl shadow-orange-500/20`}>
+              <span className="text-3xl font-black leading-none">{getRank(finalTimeSec, wrongCount).rank}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider mt-0.5">{getRank(finalTimeSec, wrongCount).title}</span>
             </div>
 
             <h3 className="text-2xl sm:text-3xl font-black text-slate-900 mb-1">
-              Tuyệt Vời! Đã Hoàn Thành!
+              Ghép Cặp Hoàn Tất! ⚡
             </h3>
 
             <p className="text-xs sm:text-sm text-slate-500 mb-6">
               Bạn đã ghép chính xác toàn bộ 6 cặp từ vựng!
             </p>
 
-            {/* Stats Badge */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            {/* Score & Time Stats */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="p-4 rounded-2xl bg-orange-50 border border-orange-200/80">
                 <div className="text-3xl font-black text-[#F05A28] font-mono">
-                  {formattedSeconds}s
+                  {finalTimeSec}s
                 </div>
-                <div className="text-xs font-bold text-orange-600 mt-1">Thời gian lần này</div>
+                <div className="text-xs font-bold text-orange-600 mt-1 flex items-center justify-center gap-1">
+                  <Zap size={13} />
+                  <span>Thời gian đua</span>
+                </div>
               </div>
 
               <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200/80">
                 <div className="text-3xl font-black text-amber-700 font-mono">
-                  {personalBest !== null ? `${personalBest}s` : `${formattedSeconds}s`}
+                  {score}
                 </div>
-                <div className="text-xs font-bold text-amber-600 mt-1">
-                  {isNewRecord ? '🔥 Kỷ Lục Mới!' : 'Kỷ lục tốt nhất'}
+                <div className="text-xs font-bold text-amber-600 mt-1 flex items-center justify-center gap-1">
+                  <Award size={13} />
+                  <span>Điểm số đạt được</span>
                 </div>
               </div>
+            </div>
+
+            {/* Mistakes & Personal Best details */}
+            <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs font-semibold text-slate-600 mb-6">
+              <span className="flex items-center gap-1.5">
+                <Target size={14} className="text-slate-400" />
+                Ghép sai: <strong className="text-slate-900">{wrongCount} lần</strong>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Trophy size={14} className="text-amber-500" />
+                Kỷ lục: <strong className="text-slate-900 font-mono">{personalBest}s</strong>
+              </span>
             </div>
 
             {isNewRecord && (
@@ -394,7 +520,7 @@ export default function SpeedMatchMode({
                 onClick={initGame}
                 className="w-full py-3.5 px-4 rounded-xl bg-[#F05A28] hover:bg-[#d94817] text-white font-bold text-sm transition-all shadow-md shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Chơi vòng mới (6 từ ngẫu nhiên)</span>
+                <span>Chơi vòng mới (6 cặp khác)</span>
                 <ChevronRight size={16} />
               </button>
 

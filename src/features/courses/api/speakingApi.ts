@@ -7,8 +7,11 @@ import type {
   SurvivalKit,
   FEExamSummary,
   FEExamDetail,
-  PronunciationEvaluationResult
+  PronunciationEvaluationResult,
+  QAEvaluationResult,
+  GreetingEvaluationResult
 } from '../types/speaking';
+
 
 export const speakingApi = {
 
@@ -115,6 +118,85 @@ export const speakingApi = {
       );
       return directRes.data.data;
     }
+  },
+
+  /**
+   * Evaluate Q&A audio answer via AI Speech Service
+   */
+  async evaluateQA(
+    courseCode = 'jpd123',
+    audioBlob: Blob,
+    questionJapanese: string,
+    keywords: string[] = [],
+    grammarPattern = '',
+    referenceAnswers: any = null
+  ): Promise<QAEvaluationResult> {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'qa_answer.webm');
+    formData.append('questionJapanese', questionJapanese);
+    formData.append('keywords', JSON.stringify(keywords));
+    if (grammarPattern) formData.append('grammarPattern', grammarPattern);
+    if (referenceAnswers) formData.append('referenceAnswers', JSON.stringify(referenceAnswers));
+
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/courses/${courseCode}/speaking/evaluate-qa`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 45000
+        }
+      );
+      return res.data.data;
+    } catch (backendErr) {
+      console.warn('Backend proxy failed, attempting direct AI microservice at :8001...', backendErr);
+      const directRes = await axios.post(
+        'http://127.0.0.1:8001/api/pronunciation/evaluate-qa',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 45000
+        }
+      );
+      return directRes.data.data;
+    }
+  },
+
+  /**
+   * Evaluate greeting phrase audio (失礼します / 失礼しました)
+   */
+  async evaluateGreeting(
+    courseCode = 'jpd123',
+    audioBlob: Blob,
+    targetPhrase = '失礼します'
+  ): Promise<GreetingEvaluationResult> {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'greeting.webm');
+    formData.append('targetPhrase', targetPhrase);
+
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/courses/${courseCode}/speaking/evaluate-greeting`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 30000
+        }
+      );
+      return res.data.data;
+    } catch (backendErr) {
+      console.warn('Backend proxy failed, attempting direct AI microservice at :8001...', backendErr);
+      const directRes = await axios.post(
+        'http://127.0.0.1:8001/api/pronunciation/evaluate-greeting',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 30000
+        }
+      );
+      return directRes.data.data;
+    }
   }
 };
+
 

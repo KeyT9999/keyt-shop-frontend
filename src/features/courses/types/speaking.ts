@@ -168,3 +168,25 @@ export interface PronunciationEvaluationResult {
   passageId?: string;
 }
 
+export interface QAEvaluationResult {
+  transcript: string;
+  score: number; // 0 - 15
+  maxScore: number; // 15
+  matchedLevel: 'level1' | 'level2' | 'level3' | 'incomplete';
+  matchedKeywords: string[];
+  missingKeywords: string[];
+  hasPoliteEnding: boolean;
+  pronunciationScore: number;
+  feedback: string;
+}
+
+export interface GreetingEvaluationResult {
+  transcript: string;
+  target: string;
+  passed: boolean;
+  score: number; // 0 - 10
+  maxScore: number; // 10
+  feedback: string;
+}
+
+

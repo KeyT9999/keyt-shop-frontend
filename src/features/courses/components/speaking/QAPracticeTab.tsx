@@ -9,12 +9,18 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
-  Image as ImageIcon
+  Image as ImageIcon,
+  RotateCcw,
+  AudioWaveform,
+  AlertCircle,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
-import type { SpeakingQuestion } from '../../types/speaking';
+
+import type { SpeakingQuestion, QAEvaluationResult } from '../../types/speaking';
 import { speakingApi } from '../../api/speakingApi';
 import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis';
-import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
+import { useAudioRecorder } from '../../hooks/useAudioRecorder';
 
 export interface QAPracticeTabProps {
   questions?: SpeakingQuestion[];
@@ -38,6 +44,11 @@ export function QAPracticeTab({
   // 10s thinking countdown
   const [thinkTimeLeft, setThinkTimeLeft] = useState<number>(10);
   const [isThinking, setIsThinking] = useState<boolean>(false);
+
+  // AI Evaluation state
+  const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
+  const [qaResult, setQaResult] = useState<QAEvaluationResult | null>(null);
+  const [evalError, setEvalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialQuestions && initialQuestions.length > 0) {
@@ -68,13 +79,16 @@ export function QAPracticeTab({
 
   const { isPlaying, speak, stop: stopAudio } = useSpeechSynthesis();
   const {
+    isRecording,
+    duration,
+    volumeLevel,
+    audioUrl,
+    error: recorderError,
     isSupported: isMicSupported,
-    isListening,
-    transcript,
-    startListening,
-    stopListening,
-    resetTranscript
-  } = useSpeechRecognition();
+    startRecording,
+    stopRecording,
+    resetAudio
+  } = useAudioRecorder();
 
   // Filtered list
   const filteredQuestions = questions.filter((q) => {
@@ -91,9 +105,10 @@ export function QAPracticeTab({
     setIsThinking(false);
     setThinkTimeLeft(10);
     setShowAnswer(false);
-    resetTranscript();
+    resetAudio();
+    setQaResult(null);
+    setEvalError(null);
     stopAudio();
-    if (isListening) stopListening();
   }, [currentIndex, selectedLessonFilter]);
 
   // 10s countdown timer
@@ -105,11 +120,64 @@ export function QAPracticeTab({
       }, 1000);
     } else if (thinkTimeLeft === 0 && isThinking) {
       setIsThinking(false);
-      // Auto prompt mic
-      if (isMicSupported && !isListening) startListening();
     }
     return () => clearInterval(timer);
-  }, [isThinking, thinkTimeLeft, isMicSupported, isListening, startListening]);
+  }, [isThinking, thinkTimeLeft]);
+
+  const handlePlayQuestionAudio = () => {
+    if (listenCount >= 3) return;
+    setListenCount((prev) => prev + 1);
+    stopAudio();
+    speak(currentQuestion.questionJapanese, 1.0, () => {
+      // Trigger 10s thinking timer
+      setThinkTimeLeft(10);
+      setIsThinking(true);
+    });
+  };
+
+  const handleStartRecording = async () => {
+    stopAudio();
+    setQaResult(null);
+    setEvalError(null);
+    setIsThinking(false);
+    await startRecording();
+  };
+
+  const handleStopAndEvaluate = async () => {
+    try {
+      const blob = await stopRecording();
+      if (!blob || !currentQuestion) return;
+
+      setIsEvaluating(true);
+      setEvalError(null);
+
+      const result = await speakingApi.evaluateQA(
+        courseCode,
+        blob,
+        currentQuestion.questionJapanese,
+        currentQuestion.keywords || [],
+        currentQuestion.grammarPattern || '',
+        currentQuestion.answers
+      );
+
+      setQaResult(result);
+    } catch (err: any) {
+      console.error('QA evaluation failed:', err);
+      setEvalError(
+        err.response?.data?.message ||
+        err.message ||
+        'Không thể chấm điểm câu trả lời. Vui lòng đảm bảo dịch vụ AI Speech đang chạy.'
+      );
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
+
+  const handleResetAnswer = () => {
+    resetAudio();
+    setQaResult(null);
+    setEvalError(null);
+  };
 
   if (loading || !currentQuestion) {
     return (
@@ -120,81 +188,86 @@ export function QAPracticeTab({
     );
   }
 
-  const handlePlayQuestionAudio = () => {
-    if (!currentQuestion) return;
-    if (listenCount >= 3) return;
-
-    setListenCount((c) => c + 1);
-    speak(currentQuestion.questionJapanese, 0.9);
-    // Start 10s thinking timer
-    setIsThinking(true);
-    setThinkTimeLeft(10);
-  };
-
-  const handleFilterChange = (val: number | 'all' | 'image') => {
-    setSelectedLessonFilter(val);
-    setCurrentIndex(0);
-  };
-
-  if (!currentQuestion) {
-    return (
-      <div className="p-12 text-center bg-white rounded-3xl border border-slate-200">
-        <p className="text-slate-500">Không tìm thấy câu hỏi phù hợp với bộ lọc.</p>
-      </div>
-    );
-  }
-
-  const ansObj = currentQuestion.answers[
+  const ansObj =
     activeAnswerLevel === 'level1'
-      ? 'level1_short'
-      : activeAnswerLevel === 'level2'
-      ? 'level2_polite'
-      : 'level3_expanded'
-  ];
+      ? currentQuestion.answers.level1_short
+      : activeAnswerLevel === 'level3'
+      ? currentQuestion.answers.level3_expanded
+      : currentQuestion.answers.level2_polite;
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   return (
     <div className="space-y-6">
-      {/* Lesson Filter Bar */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-          {[
-            { label: 'Tất Cả', val: 'all' },
-            { label: 'Bài 4 (Địa điểm/Tính từ)', val: 4 },
-            { label: 'Bài 5 (Quá khứ/Sở thích)', val: 5 },
-            { label: 'Bài 6 (Rủ rê/So sánh)', val: 6 },
-            { label: 'Bài 7 (Vị trí/Tiếp diễn)', val: 7 },
-            { label: 'Câu Có Tranh 🖼️', val: 'image' }
-          ].map((f) => (
-            <button
-              key={f.label}
-              type="button"
-              onClick={() => handleFilterChange(f.val as any)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 transition-colors cursor-pointer border ${
-                selectedLessonFilter === f.val
-                  ? 'bg-slate-900 text-white border-slate-900'
-                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+      {/* Lesson Filter Pills */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedLessonFilter('all');
+            setCurrentIndex(0);
+          }}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-colors cursor-pointer border ${
+            selectedLessonFilter === 'all'
+              ? 'bg-slate-900 text-white border-slate-900'
+              : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+          }`}
+        >
+          Tất cả ({questions.length} câu)
+        </button>
 
-        <div className="text-xs font-bold text-slate-500">
-          Câu <strong className="text-rose-600 text-sm font-black">{currentIndex + 1}</strong> / {filteredQuestions.length}
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedLessonFilter('image');
+            setCurrentIndex(0);
+          }}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-colors cursor-pointer border flex items-center gap-1 ${
+            selectedLessonFilter === 'image'
+              ? 'bg-amber-500 text-white border-amber-500'
+              : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+          }`}
+        >
+          <ImageIcon size={13} />
+          <span>Có tranh miêu tả</span>
+        </button>
+
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((lessonNum) => (
+          <button
+            key={lessonNum}
+            type="button"
+            onClick={() => {
+              setSelectedLessonFilter(lessonNum);
+              setCurrentIndex(0);
+            }}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold shrink-0 transition-colors cursor-pointer border ${
+              selectedLessonFilter === lessonNum
+                ? 'bg-[#F05A28] text-white border-[#F05A28]'
+                : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            Bài {lessonNum}
+          </button>
+        ))}
       </div>
 
       {/* Main Question Card */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-6">
-        {/* Question Header */}
+      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+        {/* Header Info */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-50 text-rose-700 border border-rose-200/60">
-              Mã: {currentQuestion.id}
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-900 text-white">
+              Câu {currentIndex + 1} / {filteredQuestions.length}
             </span>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-orange-50 text-[#F05A28] border border-orange-200/60">
               Bài {currentQuestion.lesson}
+            </span>
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+              Rubric: 15đ FE
             </span>
             {currentQuestion.hasImage && (
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
@@ -213,7 +286,7 @@ export function QAPracticeTab({
               </div>
             ) : (
               <div className="text-xs text-slate-400 font-medium">
-                Quy định: Suy nghĩ không quá 10s
+                Quy định phòng thi: Suy nghĩ không quá 10s
               </div>
             )}
           </div>
@@ -237,9 +310,9 @@ export function QAPracticeTab({
         )}
 
         {/* Question Text in Japanese */}
-        <div className="p-6 rounded-3xl bg-gradient-to-r from-rose-50/40 to-amber-50/30 border-2 border-slate-200/80 space-y-2">
+        <div className="p-6 rounded-3xl bg-gradient-to-r from-orange-50/30 to-amber-50/30 border-2 border-slate-200/80 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-rose-600">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#F05A28]">
               Giám Thị Hỏi:
             </span>
 
@@ -260,7 +333,7 @@ export function QAPracticeTab({
             {currentQuestion.questionJapanese}
           </p>
 
-          <p className="text-xs font-japanese text-rose-600 font-medium">
+          <p className="text-xs font-japanese text-[#F05A28] font-medium">
             【{currentQuestion.questionFurigana}】
           </p>
 
@@ -269,7 +342,7 @@ export function QAPracticeTab({
           </p>
         </div>
 
-        {/* Audio Speaker & Voice Control */}
+        {/* Audio Speaker & Controls */}
         <div className="flex items-center justify-between flex-wrap gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
           <button
             type="button"
@@ -291,24 +364,6 @@ export function QAPracticeTab({
             </span>
           </button>
 
-          {isMicSupported ? (
-            <button
-              type="button"
-              onClick={() => {
-                if (isListening) stopListening();
-                else startListening();
-              }}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs ${
-                isListening
-                  ? 'bg-red-500 text-white animate-pulse'
-                  : 'bg-[#F05A28] text-white hover:bg-orange-600'
-              }`}
-            >
-              {isListening ? <MicOff size={16} /> : <Mic size={16} />}
-              <span>{isListening ? 'Dừng thu âm' : 'Bật Micro Trả Lời'}</span>
-            </button>
-          ) : null}
-
           <button
             type="button"
             onClick={() => setShowAnswer(!showAnswer)}
@@ -319,32 +374,238 @@ export function QAPracticeTab({
           </button>
         </div>
 
-        {/* Real-time Voice Answer Recognition */}
-        {transcript && (
-          <div className="p-4 rounded-2xl bg-slate-900 text-white space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-rose-400 font-bold flex items-center gap-1.5">
-                <Mic size={13} />
-                <span>Câu trả lời của bạn:</span>
-              </span>
-              <button
-                type="button"
-                onClick={resetTranscript}
-                className="text-[11px] text-slate-400 hover:text-white cursor-pointer"
-              >
-                Xóa làm lại
-              </button>
+        {/* Voice Recording Box */}
+        <div className="p-6 rounded-3xl bg-slate-900 text-white space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Mic size={16} className="text-[#F05A28]" />
+                <span className="text-xs font-bold uppercase tracking-wider text-orange-400">
+                  Trả Lời Bằng Giọng Nói (AI Speech Chấm Barem 15đ)
+                </span>
+              </div>
+              <p className="text-xs text-slate-300">
+                {isRecording
+                  ? 'Đang thu âm câu trả lời của bạn... Hãy nói to, dùng thể lịch sự です/ます.'
+                  : isEvaluating
+                  ? 'AI đang phân tích câu trả lời, từ khóa và thể lịch sự...'
+                  : 'Bấm nút để trả lời câu hỏi giám thị bằng giọng nói của bạn.'}
+              </p>
             </div>
-            <p className="font-japanese text-base font-bold text-slate-100">{transcript}</p>
+
+            <div className="flex items-center gap-3">
+              {isMicSupported ? (
+                <>
+                  {!isRecording ? (
+                    <button
+                      type="button"
+                      disabled={isEvaluating}
+                      onClick={handleStartRecording}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#F05A28] text-white text-xs font-bold hover:bg-orange-600 transition-all cursor-pointer shadow-md disabled:opacity-50"
+                    >
+                      <Mic size={16} />
+                      <span>Bật Micro Trả Lời</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleStopAndEvaluate}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-all cursor-pointer shadow-md animate-pulse"
+                    >
+                      <MicOff size={16} />
+                      <span>Dừng & Chấm Điểm ({formatTime(duration)})</span>
+                    </button>
+                  )}
+
+                  {(audioUrl || qaResult) && !isRecording && (
+                    <button
+                      type="button"
+                      onClick={handleResetAnswer}
+                      className="p-2.5 rounded-2xl bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                      title="Thu âm lại"
+                    >
+                      <RotateCcw size={16} />
+                    </button>
+                  )}
+                </>
+              ) : (
+                <div className="text-xs text-amber-300 flex items-center gap-1.5">
+                  <AlertCircle size={15} />
+                  <span>Trình duyệt không hỗ trợ microphone.</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Live Waveform when Recording */}
+          {isRecording && (
+            <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 flex items-center justify-between gap-4 animate-fadeIn">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-red-500 animate-ping"></div>
+                <span className="text-xs font-mono font-bold text-red-400">
+                  REC: {formatTime(duration)}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 h-8">
+                {[...Array(16)].map((_, i) => {
+                  const dynamicHeight = Math.max(
+                    15,
+                    Math.min(100, (volumeLevel * (0.6 + ((i * 17) % 50) / 100)))
+                  );
+                  return (
+                    <div
+                      key={i}
+                      className="w-1.5 bg-gradient-to-t from-[#F05A28] to-amber-400 rounded-full transition-all duration-75"
+                      style={{ height: `${dynamicHeight}%` }}
+                    ></div>
+                  );
+                })}
+              </div>
+
+              <span className="text-xs text-slate-400 font-semibold hidden sm:inline">
+                Âm lượng: {volumeLevel}%
+              </span>
+            </div>
+          )}
+
+          {/* Evaluating State */}
+          {isEvaluating && (
+            <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 flex items-center gap-3">
+              <div className="w-5 h-5 border-2 border-[#F05A28] border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-xs font-bold text-slate-200">
+                AI đang nhận diện giọng nói và chấm điểm theo barem FPT...
+              </span>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {(recorderError || evalError) && (
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+              <AlertCircle size={15} className="shrink-0" />
+              <span>{recorderError || evalError}</span>
+            </div>
+          )}
+
+          {/* Audio Player of user's answer */}
+          {audioUrl && !isRecording && (
+            <div className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <AudioWaveform size={15} className="text-emerald-400" />
+                <span className="text-xs font-bold text-slate-200">
+                  Câu trả lời đã ghi âm ({formatTime(duration || 0)}):
+                </span>
+              </div>
+              <audio src={audioUrl} controls className="h-8 max-w-full sm:max-w-xs" />
+            </div>
+          )}
+        </div>
+
+        {/* AI Q&A Evaluation Result Box */}
+        {qaResult && (
+          <div className="p-6 rounded-3xl bg-slate-50 border-2 border-orange-200/90 space-y-4 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+              <div className="flex items-center gap-4">
+                {/* Score Pill */}
+                <div className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-slate-900 text-white shadow-md border-2 border-orange-500/40 shrink-0">
+                  <span className="text-[10px] font-bold text-orange-400 uppercase">Điểm Câu</span>
+                  <span className="text-2xl font-black">{qaResult.score}</span>
+                  <span className="text-[10px] text-slate-400">/ 15đ</span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className={`px-3 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${
+                        qaResult.matchedLevel === 'level3'
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                          : qaResult.matchedLevel === 'level2'
+                          ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                          : 'bg-blue-100 text-blue-900 border border-blue-300'
+                      }`}
+                    >
+                      {qaResult.matchedLevel === 'level3'
+                        ? 'Cấp 3: Mở Rộng Điểm Cao ⭐'
+                        : qaResult.matchedLevel === 'level2'
+                        ? 'Cấp 2: Lịch Sự Chuẩn Barem'
+                        : 'Cấp 1: Ngắn Gọn Cơ Bản'}
+                    </span>
+
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${
+                        qaResult.hasPoliteEnding
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {qaResult.hasPoliteEnding ? (
+                        <>
+                          <CheckCircle2 size={13} />
+                          <span>Thể lịch sự (です/ます)</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={13} />
+                          <span>Thiếu đuôi lịch sự</span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                    {qaResult.feedback}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Spoken text recognized */}
+            <div className="p-3.5 bg-white rounded-2xl border border-slate-200 space-y-1">
+              <span className="text-[11px] font-bold uppercase text-slate-400 block tracking-wider">
+                Văn bản nhận diện từ giọng nói (faster-whisper):
+              </span>
+              <p className="font-japanese text-base font-bold text-slate-900">
+                {qaResult.transcript || '(Không ghi nhận được âm thanh rõ ràng)'}
+              </p>
+            </div>
+
+            {/* Keywords Checklist */}
+            <div className="space-y-1.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
+                Từ Khóa Trọng Tâm Được Giám Thị Chấm:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {currentQuestion.keywords.map((kw, i) => {
+                  const isMatched = qaResult.matchedKeywords.includes(kw);
+                  return (
+                    <span
+                      key={i}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 border ${
+                        isMatched
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                          : 'bg-slate-100 text-slate-500 border-slate-200'
+                      }`}
+                    >
+                      {isMatched ? (
+                        <CheckCircle2 size={13} className="text-emerald-600" />
+                      ) : (
+                        <XCircle size={13} className="text-slate-400" />
+                      )}
+                      <span>{kw}</span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
 
         {/* 3-Level Suggested Answers */}
         {showAnswer && (
-          <div className="p-6 rounded-3xl bg-white border-2 border-rose-200 shadow-sm space-y-4 animate-fade-in">
+          <div className="p-6 rounded-3xl bg-white border-2 border-orange-200 shadow-sm space-y-4 animate-fadeIn">
             <div className="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-slate-100">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                <Sparkles size={14} className="text-rose-500" />
+                <Sparkles size={14} className="text-[#F05A28]" />
                 <span>3 Cấp Độ Trả Lời Chuẩn Barem FPT:</span>
               </span>
 
@@ -354,7 +615,7 @@ export function QAPracticeTab({
                   onClick={() => setActiveAnswerLevel('level1')}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                     activeAnswerLevel === 'level1'
-                      ? 'bg-white text-slate-800 shadow-2xs'
+                      ? 'bg-white text-slate-800 shadow-xs'
                       : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
@@ -365,7 +626,7 @@ export function QAPracticeTab({
                   onClick={() => setActiveAnswerLevel('level2')}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                     activeAnswerLevel === 'level2'
-                      ? 'bg-rose-600 text-white shadow-2xs'
+                      ? 'bg-[#F05A28] text-white shadow-xs'
                       : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
@@ -376,7 +637,7 @@ export function QAPracticeTab({
                   onClick={() => setActiveAnswerLevel('level3')}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                     activeAnswerLevel === 'level3'
-                      ? 'bg-[#F05A28] text-white shadow-2xs'
+                      ? 'bg-amber-500 text-white shadow-xs'
                       : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
@@ -394,14 +655,14 @@ export function QAPracticeTab({
                 <button
                   type="button"
                   onClick={() => speak(ansObj.japanese, 0.9)}
-                  className="p-2 rounded-xl bg-white text-slate-600 hover:text-rose-600 border border-slate-200 shadow-2xs transition-colors cursor-pointer"
+                  className="p-2 rounded-xl bg-white text-slate-600 hover:text-[#F05A28] border border-slate-200 shadow-xs transition-colors cursor-pointer"
                   title="Nghe phát âm đáp án"
                 >
                   <Volume2 size={16} />
                 </button>
               </div>
 
-              <div className="text-xs font-japanese text-rose-600 font-semibold">
+              <div className="text-xs font-japanese text-[#F05A28] font-semibold">
                 【{ansObj.reading}】
               </div>
 

@@ -20,6 +20,7 @@ import {
 import type { SurvivalKit } from '../../types/speaking';
 import { speakingApi } from '../../api/speakingApi';
 import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis';
+import { defaultSurvivalKitData } from '../../data/speakingMasterSheetData';
 
 interface SurvivalKitTabProps {
   courseCode?: string;
@@ -34,8 +35,7 @@ type SubSection =
   | 'rubric';
 
 export const SurvivalKitTab: React.FC<SurvivalKitTabProps> = ({ courseCode = 'jpd123' }) => {
-  const [data, setData] = useState<SurvivalKit | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [data, setData] = useState<SurvivalKit>(defaultSurvivalKitData);
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<SubSection>('reflex');
 
@@ -52,13 +52,19 @@ export const SurvivalKitTab: React.FC<SurvivalKitTabProps> = ({ courseCode = 'jp
     let isMounted = true;
     const load = async () => {
       try {
-        setLoading(true);
         const res = await speakingApi.getSurvivalKit(courseCode);
-        if (isMounted) setData(res);
+        if (isMounted && res) {
+          setData((prev) => ({
+            ...prev,
+            ...res,
+            reflexList20: res.reflexList20?.length ? res.reflexList20 : prev.reflexList20,
+            questionWordsSystem: res.questionWordsSystem?.length ? res.questionWordsSystem : prev.questionWordsSystem,
+            grammarTables: res.grammarTables || prev.grammarTables,
+            particlesCheatSheet: res.particlesCheatSheet?.length ? res.particlesCheatSheet : prev.particlesCheatSheet
+          }));
+        }
       } catch (err) {
-        console.error('Failed to load survival kit', err);
-      } finally {
-        if (isMounted) setLoading(false);
+        console.warn('Using bundled speaking master sheet fallback:', err);
       }
     };
     load();
@@ -73,17 +79,12 @@ export const SurvivalKitTab: React.FC<SurvivalKitTabProps> = ({ courseCode = 'jp
     setTimeout(() => setCopiedIndex(null), 1800);
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="w-10 h-10 border-4 border-[#F05A28] border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-slate-500 font-medium">Đang tải Master Sheet sinh tồn JPD123...</p>
-      </div>
-    );
-  }
-
   // Filter reflex list
-  const filteredReflex = (data?.reflexList20 || []).filter((item) => {
+  const reflexList = data?.reflexList20 && data.reflexList20.length > 0
+    ? data.reflexList20
+    : defaultSurvivalKitData.reflexList20 || [];
+
+  const filteredReflex = reflexList.filter((item) => {
     const matchFilter = reflexFilter === 'all' || item.lesson.toLowerCase().includes(reflexFilter.toLowerCase());
     const matchSearch =
       !reflexSearch.trim() ||
@@ -94,7 +95,11 @@ export const SurvivalKitTab: React.FC<SurvivalKitTabProps> = ({ courseCode = 'jp
   });
 
   // Filter question words
-  const filteredQWords = (data?.questionWordsSystem || []).filter((item) => {
+  const qWordsList = data?.questionWordsSystem && data.questionWordsSystem.length > 0
+    ? data.questionWordsSystem
+    : defaultSurvivalKitData.questionWordsSystem || [];
+
+  const filteredQWords = qWordsList.filter((item) => {
     if (!qWordSearch.trim()) return true;
     const query = qWordSearch.toLowerCase();
     return (

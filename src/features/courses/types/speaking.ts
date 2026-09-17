@@ -41,9 +41,12 @@ export interface SpeakingAnswerLevel {
 export interface SpeakingQuestion {
   id: string;
   lesson: number;
+  part?: number;
+  partTitle?: string;
   hasImage: boolean;
   imageType?: string;
   imageDescription?: string;
+  imageUrl?: string;
   questionJapanese: string;
   questionFurigana: string;
   questionVietnamese: string;
@@ -54,6 +57,24 @@ export interface SpeakingQuestion {
     level2_polite: SpeakingAnswerLevel;
     level3_expanded: SpeakingAnswerLevel;
   };
+}
+
+export interface QALessonOverview {
+  lesson: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  canDo: string[];
+  grammarFocus: string[];
+  tips: string;
+  nonImageCount: number;
+  imageCount: number;
+  parts: {
+    part: number;
+    title: string;
+    goal: string;
+    questionCount: number;
+  }[];
 }
 
 export interface SurvivalManner {

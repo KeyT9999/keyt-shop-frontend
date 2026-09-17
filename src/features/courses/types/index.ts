@@ -2,7 +2,15 @@ export type SectionType = 'vocabulary' | 'kanji' | 'grammar' | 'exam' | 'speakin
 
 export type MemoryStatus = 'new' | 'learning' | 'familiar' | 'mastered';
 
-export type LearningMode = 'flashcard' | 'typing' | 'multichoice' | 'table';
+export type LearningMode =
+  | 'flashcard'
+  | 'typing'
+  | 'multichoice'
+  | 'smart-quiz'
+  | 'speed-match'
+  | 'time-attack'
+  | 'mistake-buster'
+  | 'table';
 
 export interface UserItemProgress {
   status: MemoryStatus;

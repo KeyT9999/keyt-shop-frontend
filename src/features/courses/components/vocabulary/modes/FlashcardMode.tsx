@@ -20,13 +20,21 @@ import {
   Award
 } from 'lucide-react';
 import type { VocabularyItem } from '../../../types';
+import { weakWordsStorage } from '../../../utils/weakWordsStorage';
 
 interface FlashcardModeProps {
   items: VocabularyItem[];
+  courseCode?: string;
+  lessonSlug?: string;
   onRecordResult: (id: string, isCorrect: boolean) => void;
 }
 
-export default function FlashcardMode({ items, onRecordResult }: FlashcardModeProps) {
+export default function FlashcardMode({
+  items,
+  courseCode = 'jpd123',
+  lessonSlug = '',
+  onRecordResult
+}: FlashcardModeProps) {
   const [cardList, setCardList] = useState<VocabularyItem[]>(items);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -93,30 +101,52 @@ export default function FlashcardMode({ items, onRecordResult }: FlashcardModePr
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : cardList.length - 1));
   }, [cardList.length]);
 
-  // Assessment Buttons
-  const handleRate = (level: 'forgot' | 'hesitant' | 'mastered') => {
+  // 4-Level Anki SRS Spaced Repetition
+  const handleRate = (level: 'again' | 'hard' | 'good' | 'easy') => {
     if (!currentCard) return;
 
     const id = currentCard._id;
-    if (level === 'mastered') {
-      setRememberedIds((prev) => new Set(prev).add(id));
-      setForgottenIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-      onRecordResult(id, true);
-    } else if (level === 'hesitant') {
-      onRecordResult(id, true);
-    } else {
-      // forgot
+
+    if (level === 'again') {
+      // 1. Quên: Lặp lại sau 1 thẻ, tự động add vào Weak Words
       setForgottenIds((prev) => new Set(prev).add(id));
       setRememberedIds((prev) => {
         const next = new Set(prev);
         next.delete(id);
         return next;
       });
+      weakWordsStorage.addWeakWord(courseCode, lessonSlug, id);
       onRecordResult(id, false);
+
+      // Re-insert 1 card away into current cardList
+      const updatedList = [...cardList];
+      const insertIndex = Math.min(currentIndex + 2, updatedList.length);
+      updatedList.splice(insertIndex, 0, currentCard);
+      setCardList(updatedList);
+    } else if (level === 'hard') {
+      // 2. Khó: Lặp lại sau 3 thẻ
+      weakWordsStorage.recordAttempt(courseCode, lessonSlug, id, false);
+      onRecordResult(id, true);
+
+      // Re-insert 3 cards away
+      const updatedList = [...cardList];
+      const insertIndex = Math.min(currentIndex + 4, updatedList.length);
+      updatedList.splice(insertIndex, 0, currentCard);
+      setCardList(updatedList);
+    } else if (level === 'good') {
+      // 3. Tốt: Nhớ bình thường
+      weakWordsStorage.recordAttempt(courseCode, lessonSlug, id, true);
+      onRecordResult(id, true);
+    } else {
+      // 4. Dễ: Thuộc làu làu
+      setRememberedIds((prev) => new Set(prev).add(id));
+      setForgottenIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      weakWordsStorage.recordAttempt(courseCode, lessonSlug, id, true);
+      onRecordResult(id, true);
     }
 
     handleNext();
@@ -188,11 +218,13 @@ export default function FlashcardMode({ items, onRecordResult }: FlashcardModePr
         e.preventDefault();
         handlePrev();
       } else if (e.key === '1' || e.key.toLowerCase() === 'a') {
-        handleRate('forgot');
+        handleRate('again');
       } else if (e.key === '2' || e.key.toLowerCase() === 's') {
-        handleRate('hesitant');
+        handleRate('hard');
       } else if (e.key === '3' || e.key.toLowerCase() === 'd') {
-        handleRate('mastered');
+        handleRate('good');
+      } else if (e.key === '4' || e.key.toLowerCase() === 'f') {
+        handleRate('easy');
       } else if (e.key.toLowerCase() === 'p') {
         if (currentCard) speak(currentCard.term);
       }
@@ -200,7 +232,7 @@ export default function FlashcardMode({ items, onRecordResult }: FlashcardModePr
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleFlip, handleNext, handlePrev, currentCard, speak]);
+  }, [handleFlip, handleNext, handlePrev, currentCard, speak, handleRate]);
 
   if (!currentCard || cardList.length === 0) {
     return (
@@ -523,37 +555,52 @@ export default function FlashcardMode({ items, onRecordResult }: FlashcardModePr
           <ChevronLeft size={20} />
         </button>
 
-        {/* Level 1: Forgot / Chưa nhớ */}
+        {/* Level 1: Again / Quên */}
         <button
           type="button"
-          onClick={() => handleRate('forgot')}
-          className="flex-1 py-3 px-2 sm:px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-xs sm:text-sm border border-rose-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+          onClick={() => handleRate('again')}
+          className="flex-1 py-3 px-1.5 sm:px-3 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-xs sm:text-sm border border-rose-200 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+          title="Lặp lại sau 1 thẻ [1/A]"
         >
-          <XCircle size={17} className="text-rose-600 shrink-0" />
-          <span>Chưa nhớ</span>
-          <span className="hidden md:inline text-[11px] font-normal text-rose-500 font-mono">(A/1)</span>
+          <XCircle size={16} className="text-rose-600 shrink-0" />
+          <span>Quên</span>
+          <span className="hidden lg:inline text-[11px] font-normal text-rose-500 font-mono">(1)</span>
         </button>
 
-        {/* Level 2: Hesitant / Nhớ mang máng */}
+        {/* Level 2: Hard / Khó */}
         <button
           type="button"
-          onClick={() => handleRate('hesitant')}
-          className="flex-1 py-3 px-2 sm:px-4 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-black text-xs sm:text-sm border border-amber-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+          onClick={() => handleRate('hard')}
+          className="flex-1 py-3 px-1.5 sm:px-3 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-black text-xs sm:text-sm border border-amber-200 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+          title="Lặp lại sau 3 thẻ [2/S]"
         >
-          <HelpCircle size={17} className="text-amber-600 shrink-0" />
-          <span>Khó nhớ</span>
-          <span className="hidden md:inline text-[11px] font-normal text-amber-600 font-mono">(S/2)</span>
+          <HelpCircle size={16} className="text-amber-600 shrink-0" />
+          <span>Khó</span>
+          <span className="hidden lg:inline text-[11px] font-normal text-amber-600 font-mono">(2)</span>
         </button>
 
-        {/* Level 3: Mastered / Đã thuộc */}
+        {/* Level 3: Good / Tốt */}
         <button
           type="button"
-          onClick={() => handleRate('mastered')}
-          className="flex-1 py-3 px-2 sm:px-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-xs sm:text-sm border border-emerald-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+          onClick={() => handleRate('good')}
+          className="flex-1 py-3 px-1.5 sm:px-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-xs sm:text-sm border border-emerald-200 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+          title="Đã nhớ bình thường [3/D]"
         >
-          <CheckCircle2 size={17} className="text-emerald-600 shrink-0" />
-          <span>Đã thuộc</span>
-          <span className="hidden md:inline text-[11px] font-normal text-emerald-600 font-mono">(D/3)</span>
+          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+          <span>Tốt</span>
+          <span className="hidden lg:inline text-[11px] font-normal text-emerald-600 font-mono">(3)</span>
+        </button>
+
+        {/* Level 4: Easy / Dễ */}
+        <button
+          type="button"
+          onClick={() => handleRate('easy')}
+          className="flex-1 py-3 px-1.5 sm:px-3 rounded-2xl bg-sky-50 hover:bg-sky-100 text-sky-800 font-black text-xs sm:text-sm border border-sky-200 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+          title="Đã thuộc làu làu [4/F]"
+        >
+          <Sparkles size={16} className="text-sky-600 shrink-0" />
+          <span>Dễ</span>
+          <span className="hidden lg:inline text-[11px] font-normal text-sky-600 font-mono">(4)</span>
         </button>
 
         {/* Next Button */}
@@ -568,16 +615,18 @@ export default function FlashcardMode({ items, onRecordResult }: FlashcardModePr
       </div>
 
       {/* Shortcuts Helper Text */}
-      <div className="w-full mt-4 flex items-center justify-center gap-3 text-[11px] text-slate-400 font-medium">
+      <div className="w-full mt-4 flex items-center justify-center gap-2 sm:gap-3 text-[11px] text-slate-400 font-medium flex-wrap">
         <span>[Space] Lật thẻ</span>
         <span>•</span>
         <span>[← / →] Đổi thẻ</span>
         <span>•</span>
-        <span>[1] Chưa nhớ</span>
+        <span>[1] Quên</span>
         <span>•</span>
-        <span>[2] Khó nhớ</span>
+        <span>[2] Khó</span>
         <span>•</span>
-        <span>[3] Đã thuộc</span>
+        <span>[3] Tốt</span>
+        <span>•</span>
+        <span>[4] Dễ</span>
         <span>•</span>
         <span>[P] Nghe đọc</span>
       </div>

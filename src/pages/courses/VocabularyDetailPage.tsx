@@ -11,6 +11,11 @@ import VocabularyTable from '../../features/courses/components/vocabulary/Vocabu
 import FlashcardMode from '../../features/courses/components/vocabulary/modes/FlashcardMode';
 import TypingMode from '../../features/courses/components/vocabulary/modes/TypingMode';
 import MultiChoiceMode from '../../features/courses/components/vocabulary/modes/MultiChoiceMode';
+import SpeedMatchMode from '../../features/courses/components/vocabulary/modes/SpeedMatchMode';
+import SmartQuizMode from '../../features/courses/components/vocabulary/modes/SmartQuizMode';
+import TimeAttackMode from '../../features/courses/components/vocabulary/modes/TimeAttackMode';
+import MistakeBusterMode from '../../features/courses/components/vocabulary/modes/MistakeBusterMode';
+import { weakWordsStorage } from '../../features/courses/utils/weakWordsStorage';
 import Seo from '../../components/Seo';
 
 export default function VocabularyDetailPage() {
@@ -207,6 +212,7 @@ export default function VocabularyDetailPage() {
         <LearningModeSelector
           activeMode={activeMode}
           onSelectMode={setActiveMode}
+          weakWordsCount={weakWordsStorage.getWeakWordIds(courseCode, lesson.slug).length}
         />
 
         {/* Interactive Mode Content */}
@@ -214,6 +220,8 @@ export default function VocabularyDetailPage() {
           {activeMode === 'flashcard' && (
             <FlashcardMode
               items={items}
+              courseCode={courseCode}
+              lessonSlug={lesson.slug}
               onRecordResult={handleRecordResult}
             />
           )}
@@ -230,6 +238,43 @@ export default function VocabularyDetailPage() {
               courseCode={courseCode}
               lessonSlug={lesson.slug}
               onRecordResult={handleRecordResult}
+            />
+          )}
+
+          {activeMode === 'smart-quiz' && (
+            <SmartQuizMode
+              items={items}
+              courseCode={courseCode}
+              lessonSlug={lesson.slug}
+              onRecordResult={handleRecordResult}
+            />
+          )}
+
+          {activeMode === 'speed-match' && (
+            <SpeedMatchMode
+              items={items}
+              courseCode={courseCode}
+              lessonSlug={lesson.slug}
+              onRecordResult={handleRecordResult}
+            />
+          )}
+
+          {activeMode === 'time-attack' && (
+            <TimeAttackMode
+              items={items}
+              courseCode={courseCode}
+              lessonSlug={lesson.slug}
+              onRecordResult={handleRecordResult}
+            />
+          )}
+
+          {activeMode === 'mistake-buster' && (
+            <MistakeBusterMode
+              items={items}
+              courseCode={courseCode}
+              lessonSlug={lesson.slug}
+              onRecordResult={handleRecordResult}
+              onSwitchMode={(m) => setActiveMode(m as LearningMode)}
             />
           )}
 

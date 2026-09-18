@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthContext } from '../../context/useAuthContext';
 import { subscriptionService } from '../../services/subscriptionService';
 
@@ -21,6 +21,19 @@ export default function SubscriptionForm({ onSuccess, onCancel, initialData }: S
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pasteText, setPasteText] = useState('');
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        customerEmail: initialData.customerEmail || '',
+        contactZalo: initialData.contactZalo || '',
+        contactInstagram: initialData.contactInstagram || '',
+        serviceName: initialData.serviceName || '',
+        startDate: initialData.startDate ? new Date(initialData.startDate).toISOString().split('T')[0] : '',
+        endDate: initialData.endDate ? new Date(initialData.endDate).toISOString().split('T')[0] : ''
+      });
+    }
+  }, [initialData]);
 
   // Parse và điền form từ paste text
   const handlePasteParse = (text: string) => {

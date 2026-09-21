@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import {
   GraduationCap,
   ArrowRight,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 import Seo from '../../components/Seo';
 
@@ -88,6 +89,36 @@ export default function CoursesHubPage() {
             <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
               Hai môn học độc lập trong lộ trình đào tạo chuẩn Đại học FPT. Vui lòng chọn đúng môn học bạn đang theo học để truy cập ngân hàng đề thi, bài giảng và phòng thi nói 1-1 tương ứng.
             </p>
+          </div>
+        </div>
+
+        {/* Quick Intro Banner: Kana Quiz */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8">
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-[#1E293B] rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 border border-white/10 relative overflow-hidden">
+            <div className="absolute -right-6 -bottom-6 text-9xl font-black text-white/5 select-none font-japanese pointer-events-none">
+              あア
+            </div>
+
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-xs text-xs font-bold uppercase tracking-wider text-amber-300 border border-white/20 mb-3">
+                <Sparkles size={14} />
+                <span>Nhập Môn Miễn Phí • Tofugu Kana Quiz Style</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white mb-2">
+                Học Thuộc Bảng Chữ Cái Hiragana & Katakana
+              </h2>
+              <p className="text-xs sm:text-sm text-blue-100/90 max-w-2xl leading-relaxed">
+                Phương pháp gõ Romaji và phản xạ trực quan theo chuẩn Tofugu. Tự do lựa chọn hàng chữ, đổi font chữ Nhật Bản và kiểm tra ngay độ nhớ mặt chữ trước khi bước vào giáo trình chính thức.
+              </p>
+            </div>
+
+            <Link
+              to="/courses/kana"
+              className="py-3.5 px-6 rounded-2xl bg-white hover:bg-blue-50 text-slate-900 font-black text-sm shadow-md hover:shadow-xl transition-all flex items-center gap-2 shrink-0 cursor-pointer group"
+            >
+              <span>Vào Luyện Kana Ngay</span>
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform text-[#388bea]" />
+            </Link>
           </div>
         </div>
 

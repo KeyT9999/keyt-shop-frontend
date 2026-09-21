@@ -73,6 +73,7 @@ const GrammarLessonListPage = lazy(() => import('./pages/courses/GrammarLessonLi
 const GrammarDetailPage = lazy(() => import('./pages/courses/GrammarDetailPage'));
 const ExamListPage = lazy(() => import('./pages/courses/ExamListPage'));
 const SpeakingPage = lazy(() => import('./pages/courses/SpeakingPage'));
+const KanaQuizPage = lazy(() => import('./pages/courses/KanaQuizPage'));
 
 export default function App() {
     const { user, token } = useAuthContext();
@@ -242,6 +243,16 @@ export default function App() {
             }
         }
 
+        if (path === '/courses/kana' || path.endsWith('/kana')) {
+            return {
+                ...base,
+                title: 'Luyện Gõ Bảng Chữ Cái Tiếng Nhật Kana Quiz (Hiragana & Katakana) | Mindora AI',
+                description:
+                    'Luyện nhớ và gõ bảng chữ cái Hiragana, Katakana chuẩn Tofugu Kana Quiz. Hỗ trợ đa dạng font chữ Nhật Bản, âm đục, âm ghép và phát âm giọng bản xứ.',
+                canonicalPath: '/courses/kana',
+            };
+        }
+
         return base;
     }, [location.pathname]);
 
@@ -312,7 +323,11 @@ export default function App() {
 
                         {/* Japanese Course Routes */}
                         <Route path="/courses" element={<CoursesHubPage />} />
+                        <Route path="/courses/kana" element={<KanaQuizPage />} />
+                        <Route path="/courses/kana/:type" element={<KanaQuizPage />} />
                         <Route path="/courses/:courseCode" element={<CourseLandingPage />} />
+                        <Route path="/courses/:courseCode/kana" element={<KanaQuizPage />} />
+                        <Route path="/courses/:courseCode/kana/:type" element={<KanaQuizPage />} />
                         <Route path="/courses/:courseCode/vocabulary" element={<VocabularyLessonListPage />} />
                         <Route path="/courses/:courseCode/vocabulary/:lessonSlug" element={<VocabularyDetailPage />} />
                         <Route path="/courses/:courseCode/kanji" element={<KanjiLessonListPage />} />

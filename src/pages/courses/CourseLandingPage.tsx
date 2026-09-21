@@ -75,12 +75,20 @@ export default function CourseLandingPage() {
         <div className="p-8 rounded-3xl bg-rose-50 border border-rose-200 max-w-lg mx-auto">
           <h2 className="text-xl font-bold text-rose-800 mb-2">Thông báo</h2>
           <p className="text-sm text-rose-600 mb-6">{error || 'Không thể tải khóa học.'}</p>
-          <button
-            onClick={() => navigate('/courses/jpd123')}
-            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors"
-          >
-            Về khóa học JPD123
-          </button>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-5 py-2.5 bg-[#F05A28] text-white rounded-xl text-xs font-bold hover:bg-orange-600 transition-colors cursor-pointer shadow-sm"
+            >
+              Thử tải lại trang
+            </button>
+            <button
+              onClick={() => navigate('/courses')}
+              className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer shadow-sm"
+            >
+              Về Cổng Môn Học
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -150,6 +158,41 @@ export default function CourseLandingPage() {
             </button>
           </div>
         </div>
+
+        {/* Special JPD113 Kana Entry Banner */}
+        {courseCode.toLowerCase() === 'jpd113' && (
+          <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50 to-emerald-50 border border-blue-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-2xl bg-[#388bea] text-white font-black text-lg flex items-center justify-center shrink-0 shadow-sm">
+                あ
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-blue-700 uppercase tracking-wide">
+                    Kiến Thức Nhập Môn Cần Nắm
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                    Tofugu Style
+                  </span>
+                </div>
+                <h4 className="text-sm sm:text-base font-black text-slate-900 mt-0.5">
+                  Luyện Gõ & Thuộc Lòng Bảng Chữ Cái Kana (Hiragana & Katakana)
+                </h4>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Phương pháp gõ Romaji phản xạ nhanh, phát âm chuẩn & hỗ trợ đa dạng font chữ tiếng Nhật.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate('/courses/jpd113/kana')}
+              className="py-2.5 px-5 rounded-xl bg-[#388bea] hover:bg-blue-600 text-white font-bold text-xs shadow-sm hover:shadow-md transition-all shrink-0 cursor-pointer text-center"
+            >
+              Luyện Bảng Chữ Cái Ngay →
+            </button>
+          </div>
+        )}
 
         {/* Hero Section */}
         <CourseHero data={data} onContinue={handleContinue} />

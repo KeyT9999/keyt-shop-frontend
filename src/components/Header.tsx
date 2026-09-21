@@ -204,6 +204,61 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     }
   ];
 
+  const kanaTools: SubMenuItem[] = [
+    {
+      title: 'Kana Quiz (Tofugu)',
+      desc: 'Tùy chọn hàng chữ & gõ Romaji phản xạ',
+      href: '/courses/jpd113/kana',
+      icon: Sparkles,
+      iconBg: 'bg-emerald-50 text-emerald-600',
+      iconColor: '#059669',
+      badge: 'TOFUGU'
+    },
+    {
+      title: 'Luyện Chữ Hiragana',
+      desc: '46 chữ mềm cơ bản, biến âm & âm ghép',
+      href: '/courses/jpd113/kana/hiragana',
+      icon: BookOpen,
+      iconBg: 'bg-teal-50 text-teal-600',
+      iconColor: '#0D9488',
+      badge: '46 CHỮ'
+    },
+    {
+      title: 'Luyện Chữ Katakana',
+      desc: '46 chữ cứng & âm ngoại lai mở rộng',
+      href: '/courses/jpd113/kana/katakana',
+      icon: Zap,
+      iconBg: 'bg-cyan-50 text-cyan-600',
+      iconColor: '#0891B2',
+      badge: 'CỰC HAY'
+    },
+    {
+      title: 'Thử Thách Cả Hai',
+      desc: 'Trộn ngẫu nhiên Hiragana + Katakana',
+      href: '/courses/jpd113/kana/both',
+      icon: Award,
+      iconBg: 'bg-amber-50 text-amber-600',
+      iconColor: '#D97706',
+      badge: 'HOT'
+    },
+    {
+      title: 'Biến Âm & Âm Đục',
+      desc: 'Luyện biến âm Dakuon & Handakuon',
+      href: '/courses/jpd113/kana/hiragana',
+      icon: Layers,
+      iconBg: 'bg-emerald-50 text-emerald-600',
+      iconColor: '#059669'
+    },
+    {
+      title: 'Âm Ngoại Lai (Extended)',
+      desc: 'Từ mượn tiếng nước ngoài trong Katakana',
+      href: '/courses/jpd113/kana/katakana',
+      icon: BookMarked,
+      iconBg: 'bg-teal-50 text-teal-600',
+      iconColor: '#0D9488'
+    }
+  ];
+
   const jpd123Tools: SubMenuItem[] = [
     {
       title: 'Môn JPD123 (Tổng Quan)',
@@ -442,101 +497,128 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
                 {activeDropdown === 'japanese' && (
                   <div className="modern-dropdown-menu-wide">
-                    <div className="dropdown-menu-header flex flex-row items-center justify-between pb-3">
-                      <div>
-                        <span className="dropdown-menu-tag">Cổng Khảo Thí Tiếng Nhật Đại Học FPT</span>
-                        <span className="dropdown-menu-subtitle">Chọn chính xác học phần bạn đang học (2 môn học độc lập)</span>
-                      </div>
-                      <Link
-                        to="/courses"
-                        onClick={() => setActiveDropdown(null)}
-                        className="text-xs font-bold text-[#F05A28] hover:underline flex items-center gap-1 cursor-pointer shrink-0"
-                      >
-                        <span>Cổng 2 môn học</span>
-                        <ArrowRight size={13} />
-                      </Link>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 mt-2">
+                    <div className="grid grid-cols-3 gap-3.5">
                       {/* Column 1: JPD113 */}
-                      <div className="p-3 bg-blue-50/40 rounded-2xl border border-blue-100">
-                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-blue-100/80">
-                          <div className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-blue-600" />
-                            <span className="text-xs font-black text-blue-900 uppercase">Môn JPD113 (Bài 1 - 3)</span>
+                      <div className="p-3 bg-blue-50/40 rounded-2xl border border-blue-100 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between pb-2 mb-2 border-b border-blue-100/80">
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-blue-600" />
+                              <span className="text-xs font-black text-blue-900 uppercase">Môn JPD113 (Bài 1 - 3)</span>
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Kỳ 1</span>
                           </div>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Kỳ 1</span>
-                        </div>
-                        <div className="space-y-1">
-                          {jpd113Tools.map((item) => {
-                            const Icon = item.icon;
-                            return (
-                              <Link
-                                key={item.href}
-                                to={item.href}
-                                className={`dropdown-card-item ${location.pathname === item.href ? 'item-active' : ''}`}
-                                onClick={() => setActiveDropdown(null)}
-                              >
-                                <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
-                                  <Icon size={16} />
-                                </div>
-                                <div className="dropdown-item-content">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="dropdown-item-title">{item.title}</span>
-                                    {item.badge && <span className="dropdown-item-badge">{item.badge}</span>}
+                          <div className="space-y-1">
+                            {jpd113Tools.map((item) => {
+                              const Icon = item.icon;
+                              return (
+                                <Link
+                                  key={item.href}
+                                  to={item.href}
+                                  className={`dropdown-card-item ${location.pathname === item.href ? 'item-active' : ''}`}
+                                  onClick={() => setActiveDropdown(null)}
+                                >
+                                  <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
+                                    <Icon size={16} />
                                   </div>
-                                  <span className="dropdown-item-desc">{item.desc}</span>
-                                </div>
-                              </Link>
-                            );
-                          })}
+                                  <div className="dropdown-item-content">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="dropdown-item-title">{item.title}</span>
+                                      {item.badge && <span className="dropdown-item-badge">{item.badge}</span>}
+                                    </div>
+                                    <span className="dropdown-item-desc">{item.desc}</span>
+                                  </div>
+                                </Link>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Column 2: JPD123 */}
-                      <div className="p-3 bg-orange-50/40 rounded-2xl border border-orange-100">
-                        <div className="flex items-center justify-between pb-2 mb-2 border-b border-orange-100/80">
-                          <div className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-[#F05A28]" />
-                            <span className="text-xs font-black text-orange-950 uppercase">Môn JPD123 (Bài 4 - 7)</span>
+                      {/* Column 2: Bảng Chữ Cái Kana (Ở Giữa) */}
+                      <div className="p-3 bg-emerald-50/40 rounded-2xl border border-emerald-100 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between pb-2 mb-2 border-b border-emerald-100/80">
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                              <span className="text-xs font-black text-emerald-950 uppercase">Bảng Chữ Cái Kana</span>
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Nhập Môn</span>
                           </div>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-[#F05A28]">Kỳ 2</span>
-                        </div>
-                        <div className="space-y-1">
-                          {jpd123Tools.map((item) => {
-                            const Icon = item.icon;
-                            return (
-                              <Link
-                                key={item.href}
-                                to={item.href}
-                                className={`dropdown-card-item ${location.pathname === item.href ? 'item-active' : ''}`}
-                                onClick={() => setActiveDropdown(null)}
-                              >
-                                <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
-                                  <Icon size={16} />
-                                </div>
-                                <div className="dropdown-item-content">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="dropdown-item-title">{item.title}</span>
-                                    {item.badge && <span className="dropdown-item-badge">{item.badge}</span>}
+                          <div className="space-y-1">
+                            {kanaTools.map((item) => {
+                              const Icon = item.icon;
+                              return (
+                                <Link
+                                  key={item.title + item.href}
+                                  to={item.href}
+                                  className={`dropdown-card-item ${location.pathname === item.href ? 'item-active' : ''}`}
+                                  onClick={() => setActiveDropdown(null)}
+                                >
+                                  <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
+                                    <Icon size={16} />
                                   </div>
-                                  <span className="dropdown-item-desc">{item.desc}</span>
-                                </div>
-                              </Link>
-                            );
-                          })}
+                                  <div className="dropdown-item-content">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="dropdown-item-title">{item.title}</span>
+                                      {item.badge && <span className="dropdown-item-badge">{item.badge}</span>}
+                                    </div>
+                                    <span className="dropdown-item-desc">{item.desc}</span>
+                                  </div>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Column 3: JPD123 */}
+                      <div className="p-3 bg-orange-50/40 rounded-2xl border border-orange-100 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between pb-2 mb-2 border-b border-orange-100/80">
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-[#F05A28]" />
+                              <span className="text-xs font-black text-orange-950 uppercase">Môn JPD123 (Bài 4 - 7)</span>
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-[#F05A28]">Kỳ 2</span>
+                          </div>
+                          <div className="space-y-1">
+                            {jpd123Tools.map((item) => {
+                              const Icon = item.icon;
+                              return (
+                                <Link
+                                  key={item.href}
+                                  to={item.href}
+                                  className={`dropdown-card-item ${location.pathname === item.href ? 'item-active' : ''}`}
+                                  onClick={() => setActiveDropdown(null)}
+                                >
+                                  <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
+                                    <Icon size={16} />
+                                  </div>
+                                  <div className="dropdown-item-content">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="dropdown-item-title">{item.title}</span>
+                                      {item.badge && <span className="dropdown-item-badge">{item.badge}</span>}
+                                    </div>
+                                    <span className="dropdown-item-desc">{item.desc}</span>
+                                  </div>
+                                </Link>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 px-2">
+                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 px-2">
                       <span>JPD113 và JPD123 là 2 môn học độc lập theo chương trình Đại học FPT.</span>
                       <Link
                         to="/courses"
                         onClick={() => setActiveDropdown(null)}
-                        className="font-bold text-[#F05A28] hover:underline cursor-pointer"
+                        className="font-bold text-[#F05A28] hover:underline cursor-pointer flex items-center gap-1"
                       >
-                        Vào cổng 2 môn học →
+                        <span>Vào cổng 2 môn học</span>
+                        <ArrowRight size={13} />
                       </Link>
                     </div>
                   </div>
@@ -739,6 +821,27 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             return (
               <Link
                 key={tool.href}
+                to={tool.href}
+                className={`mobile-sub-link ${location.pathname === tool.href ? 'active' : ''}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Icon size={16} style={{ color: tool.iconColor }} />
+                <span>{tool.title}</span>
+                {tool.badge && <span className="mobile-badge">{tool.badge}</span>}
+              </Link>
+            );
+          })}
+
+          {/* Sub-group Bảng Chữ Cái Kana */}
+          <div className="px-3 py-1 text-[11px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50/80 rounded-lg mt-3 mb-1 flex items-center justify-between">
+            <span>Bảng Chữ Cái Kana (Nhập Môn)</span>
+            <span className="text-[10px] font-normal lowercase">tofugu</span>
+          </div>
+          {kanaTools.map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <Link
+                key={tool.title + tool.href}
                 to={tool.href}
                 className={`mobile-sub-link ${location.pathname === tool.href ? 'active' : ''}`}
                 onClick={() => setIsMobileMenuOpen(false)}

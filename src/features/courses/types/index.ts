@@ -10,7 +10,8 @@ export type LearningMode =
   | 'speed-match'
   | 'time-attack'
   | 'mistake-buster'
-  | 'table';
+  | 'table'
+  | 'passive-listening';
 
 export interface UserItemProgress {
   status: MemoryStatus;

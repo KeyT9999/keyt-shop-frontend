@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:feature": "eslint src/config/features.ts src/features/courses/components/vocabulary/LearningModeSelector.tsx src/features/courses/components/vocabulary/LearningModeSelector.test.tsx src/features/courses/components/vocabulary/modes/PassiveListeningMode.tsx src/features/courses/components/vocabulary/modes/PassiveListeningMode.test.tsx src/features/courses/hooks/usePassiveVocabularyPlayer.ts src/features/courses/hooks/usePassiveVocabularyPlayer.test.tsx src/features/courses/services/passiveSpeechSynthesis.ts src/features/courses/services/passiveSpeechSynthesis.test.ts src/features/courses/services/passiveVocabularyPlayer.ts src/features/courses/services/passiveVocabularyPlayer.test.ts src/features/courses/types/index.ts src/features/courses/utils/passiveListeningSequence.ts src/features/courses/utils/passiveListeningSequence.test.ts src/pages/courses/VocabularyDetailPage.tsx",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "check": "npm run lint:feature && npm test && npm run build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -34,6 +37,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@tailwindcss/postcss": "^4.1.18",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
@@ -44,10 +48,12 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.0.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vitest": "^5.0.3"
   }
 }

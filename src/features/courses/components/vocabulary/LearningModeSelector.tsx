@@ -6,7 +6,8 @@ import {
   Zap,
   HelpCircle,
   Flame,
-  ShieldAlert
+  ShieldAlert,
+  Headphones
 } from 'lucide-react';
 import type { LearningMode } from '../../types';
 
@@ -14,12 +15,14 @@ interface LearningModeSelectorProps {
   activeMode: LearningMode;
   onSelectMode: (mode: LearningMode) => void;
   weakWordsCount?: number;
+  passiveListeningEnabled?: boolean;
 }
 
 export default function LearningModeSelector({
   activeMode,
   onSelectMode,
-  weakWordsCount = 0
+  weakWordsCount = 0,
+  passiveListeningEnabled = false
 }: LearningModeSelectorProps) {
   const coreModes: Array<{
     id: LearningMode;
@@ -49,6 +52,14 @@ export default function LearningModeSelector({
       icon: Table
     }
   ];
+
+  if (passiveListeningEnabled) {
+    coreModes.push({
+      id: 'passive-listening',
+      label: 'Nghe thụ động',
+      icon: Headphones
+    });
+  }
 
   const advancedModes: Array<{
     id: LearningMode;

@@ -15,7 +15,9 @@ import SpeedMatchMode from '../../features/courses/components/vocabulary/modes/S
 import SmartQuizMode from '../../features/courses/components/vocabulary/modes/SmartQuizMode';
 import TimeAttackMode from '../../features/courses/components/vocabulary/modes/TimeAttackMode';
 import MistakeBusterMode from '../../features/courses/components/vocabulary/modes/MistakeBusterMode';
+import PassiveListeningMode from '../../features/courses/components/vocabulary/modes/PassiveListeningMode';
 import { weakWordsStorage } from '../../features/courses/utils/weakWordsStorage';
+import { IS_PASSIVE_LISTENING_ENABLED } from '../../config/features';
 import Seo from '../../components/Seo';
 
 export default function VocabularyDetailPage() {
@@ -215,6 +217,7 @@ export default function VocabularyDetailPage() {
           activeMode={activeMode}
           onSelectMode={setActiveMode}
           weakWordsCount={weakWordsStorage.getWeakWordIds(courseCode, lesson.slug).length}
+          passiveListeningEnabled={IS_PASSIVE_LISTENING_ENABLED}
         />
 
         {/* Interactive Mode Content */}
@@ -294,10 +297,17 @@ export default function VocabularyDetailPage() {
               />
             </div>
           )}
+
+          {activeMode === 'passive-listening' && IS_PASSIVE_LISTENING_ENABLED && (
+            <PassiveListeningMode
+              key={`${courseCode}:${lessonSlug}`}
+              items={items}
+            />
+          )}
         </div>
 
         {/* Always Show Reference Vocabulary Table Below when in interactive modes */}
-        {activeMode !== 'table' && (
+        {activeMode !== 'table' && activeMode !== 'passive-listening' && (
           <div className="pt-8 border-t border-slate-200">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">

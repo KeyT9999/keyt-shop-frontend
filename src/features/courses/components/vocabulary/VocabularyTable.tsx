@@ -2,25 +2,29 @@ import { useState } from 'react';
 import { Star, Volume2, CheckCircle2, CircleDashed, Clock, Sparkles } from 'lucide-react';
 import type { VocabularyItem, MemoryStatus } from '../../types';
 import JapaneseRuby from '../common/JapaneseRuby';
+import { getCourseLanguage } from '../../utils/courseLanguage';
 
 interface VocabularyTableProps {
   items: VocabularyItem[];
+  courseCode?: string;
   onToggleBookmark?: (id: string) => void;
   showReading?: boolean;
 }
 
 export default function VocabularyTable({
   items,
+  courseCode = 'jpd123',
   onToggleBookmark,
   showReading = true
 }: VocabularyTableProps) {
+  const language = getCourseLanguage(courseCode);
   const [playingId, setPlayingId] = useState<string | null>(null);
 
   const speakWord = (text: string, id: string) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ja-JP';
+      utterance.lang = language.speechLocale;
       utterance.rate = 0.9;
       setPlayingId(id);
       utterance.onend = () => setPlayingId(null);

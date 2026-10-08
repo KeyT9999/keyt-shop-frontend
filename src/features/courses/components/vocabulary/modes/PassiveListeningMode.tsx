@@ -4,12 +4,14 @@ import type { VocabularyItem } from '../../../types';
 import { usePassiveVocabularyPlayer } from '../../../hooks/usePassiveVocabularyPlayer';
 import { parsePassiveListeningDuration } from '../../../utils/passiveListeningSequence';
 import type { PassiveSpeechAdapter } from '../../../services/passiveSpeechSynthesis';
+import { getCourseLanguage } from '../../../utils/courseLanguage';
 
 const PRESET_DURATIONS = [5, 10, 15, 20, 30] as const;
 type DurationChoice = (typeof PRESET_DURATIONS)[number] | 'custom';
 
 interface PassiveListeningModeProps {
   items: VocabularyItem[];
+  courseCode?: string;
   speechAdapter?: PassiveSpeechAdapter;
 }
 
@@ -20,8 +22,9 @@ function formatRemainingTime(milliseconds: number) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
-export default function PassiveListeningMode({ items, speechAdapter }: PassiveListeningModeProps) {
-  const player = usePassiveVocabularyPlayer(items, speechAdapter);
+export default function PassiveListeningMode({ items, courseCode = 'jpd123', speechAdapter }: PassiveListeningModeProps) {
+  const language = getCourseLanguage(courseCode);
+  const player = usePassiveVocabularyPlayer(items, speechAdapter, courseCode);
   const [durationChoice, setDurationChoice] = useState<DurationChoice>(5);
   const [customDuration, setCustomDuration] = useState('5');
   const isSessionLocked = player.status === 'playing' || player.status === 'paused';
@@ -30,13 +33,13 @@ export default function PassiveListeningMode({ items, speechAdapter }: PassiveLi
   const canStart = player.isSupported && player.totalCount > 0 && selectedDuration !== null && !isSessionLocked;
 
   const missingVoices = [
-    !player.voiceAvailability.japanese ? 'tiếng Nhật' : null,
+    !player.voiceAvailability.japanese ? language.languageName.toLowerCase() : null,
     !player.voiceAvailability.vietnamese ? 'tiếng Việt' : null
   ].filter((language): language is string => language !== null);
 
   let statusMessage = 'Chọn thời lượng rồi bắt đầu nghe danh sách từ của bài này.';
   if (player.status === 'playing') {
-    if (player.phase === 'japanese') statusMessage = 'Đang đọc cách đọc tiếng Nhật';
+    if (player.phase === 'japanese') statusMessage = `Đang đọc từ tiếng ${language.kind === 'chinese' ? 'Trung' : 'Nhật'}`;
     else if (player.phase === 'vietnamese') statusMessage = 'Đang đọc nghĩa tiếng Việt';
     else if (player.phase === 'gap-before-meaning') statusMessage = 'Đang nghỉ trước khi đọc nghĩa';
     else if (player.phase === 'gap-before-next') statusMessage = 'Đang nghỉ trước từ tiếp theo';
@@ -65,7 +68,7 @@ export default function PassiveListeningMode({ items, speechAdapter }: PassiveLi
               Nghe thụ động
             </h2>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
-              Nghe cách đọc tiếng Nhật, nghỉ ngắn rồi nghe nghĩa tiếng Việt. Danh sách tự lặp lại đến hết thời gian bạn chọn.
+              Nghe {language.languageName.toLowerCase()}, nghỉ ngắn rồi nghe nghĩa tiếng Việt. Danh sách tự lặp lại đến hết thời gian bạn chọn.
             </p>
           </div>
         </div>

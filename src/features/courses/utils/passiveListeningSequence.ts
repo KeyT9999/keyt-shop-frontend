@@ -32,14 +32,15 @@ export function parsePassiveListeningDuration(value: string): number | null {
 }
 
 export function preparePassiveListeningSequence(
-  items: VocabularyItem[]
+  items: VocabularyItem[],
+  useTermAsSpokenText = false
 ): PassiveListeningSequence {
   const lessonItems = Array.isArray(items) ? items : [];
   const normalizedEntries = lessonItems
     .map((item, originalIndex) => {
       const term = typeof item?.term === 'string' ? item.term.trim() : '';
       const reading = typeof item?.reading === 'string' ? item.reading.trim() : '';
-      const japaneseText = reading || term;
+      const japaneseText = useTermAsSpokenText ? term : reading || term;
       const vietnameseText = typeof item?.meaning === 'string' ? item.meaning.trim() : '';
       const romaji = typeof item?.romaji === 'string' ? item.romaji.trim() : '';
       const itemId = typeof item?._id === 'string' ? item._id.trim() : '';

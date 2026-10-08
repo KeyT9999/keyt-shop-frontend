@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
+import { getCourseLanguage } from '../../../utils/courseLanguage';
 
 interface MistakeBusterModeProps {
   items: VocabularyItem[];
@@ -27,6 +28,7 @@ export default function MistakeBusterMode({
   onRecordResult,
   onSwitchMode
 }: MistakeBusterModeProps) {
+  const language = getCourseLanguage(courseCode);
   const [weakList, setWeakList] = useState<VocabularyItem[]>([]);
   const [streaks, setStreaks] = useState<Record<string, number>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -57,11 +59,11 @@ export default function MistakeBusterMode({
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ja-JP';
+      u.lang = language.speechLocale;
       u.rate = 0.95;
       window.speechSynthesis.speak(u);
     }
-  }, []);
+  }, [language.speechLocale]);
 
   // Handle Response
   const handleAnswer = (isCorrect: boolean) => {

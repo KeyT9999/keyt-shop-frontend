@@ -16,6 +16,7 @@ import {
   Zap,
   KeyRound,
   GraduationCap,
+  Languages,
   Mic,
   Award,
   BookOpen,
@@ -320,7 +321,10 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     location.pathname === '/get-otp' ||
     location.pathname === '/get-otp-gemini' ||
     location.pathname === '/2falive';
-  const isJapaneseActive = location.pathname.startsWith('/courses');
+  const isJapaneseActive =
+    location.pathname.startsWith('/courses/jpd') ||
+    kanaTools.some((item) => location.pathname === item.href);
+  const isChineseActive = location.pathname.startsWith('/courses/hsk1');
 
   return (
     <div className="header-wrapper">
@@ -471,7 +475,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 </Link>
               </li>
 
-              {/* 5. Tiếng Nhật FPT Dropdown */}
+              {/* 5. Tiếng Nhật Dropdown */}
               <li
                 className="header-nav-item dropdown-trigger"
                 onMouseEnter={() => handleMouseEnter('japanese')}
@@ -482,10 +486,12 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   className={`header-nav-link dropdown-btn flex items-center gap-1.5 cursor-pointer ${
                     isJapaneseActive ? 'active' : ''
                   }`}
+                  aria-expanded={activeDropdown === 'japanese'}
+                  aria-controls="japanese-course-menu"
                   onClick={() => setActiveDropdown(activeDropdown === 'japanese' ? null : 'japanese')}
                 >
                   <GraduationCap size={15} className="text-[#F05A28]" />
-                  <span>Tiếng Nhật FPT</span>
+                  <span>Tiếng Nhật</span>
                   <span className="text-[10px] font-bold bg-[#F05A28]/10 text-[#F05A28] px-1.5 py-0.5 rounded-full border border-orange-200">
                     2 Môn
                   </span>
@@ -496,7 +502,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 </button>
 
                 {activeDropdown === 'japanese' && (
-                  <div className="modern-dropdown-menu-wide">
+                  <div className="modern-dropdown-menu-wide" id="japanese-course-menu">
                     <div className="grid grid-cols-3 gap-3.5">
                       {/* Column 1: JPD113 */}
                       <div className="p-3 bg-blue-50/40 rounded-2xl border border-blue-100 flex flex-col justify-between">
@@ -610,17 +616,86 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 px-2">
-                      <span>JPD113 và JPD123 là 2 môn học độc lập theo chương trình Đại học FPT.</span>
-                      <Link
-                        to="/courses"
-                        onClick={() => setActiveDropdown(null)}
-                        className="font-bold text-[#F05A28] hover:underline cursor-pointer flex items-center gap-1"
-                      >
-                        <span>Vào cổng 2 môn học</span>
-                        <ArrowRight size={13} />
-                      </Link>
+                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 px-2">
+                      <span>JPD113 &amp; JPD123 • Lộ trình tiếng Nhật từ cơ bản đến N5</span>
+                      <div className="flex items-center gap-4">
+                        <Link
+                          to="/courses"
+                          onClick={() => setActiveDropdown(null)}
+                          className="font-bold text-slate-600 hover:text-[#F05A28] hover:underline cursor-pointer"
+                        >
+                          Tất cả khóa học
+                        </Link>
+                      </div>
                     </div>
+                  </div>
+                )}
+              </li>
+
+              {/* 6. Tiếng Trung Dropdown */}
+              <li
+                className="header-nav-item dropdown-trigger"
+                onMouseEnter={() => handleMouseEnter('chinese')}
+                onMouseLeave={handleMouseLeave}
+              >
+                <button
+                  type="button"
+                  className={`header-nav-link dropdown-btn flex items-center gap-1.5 cursor-pointer ${
+                    isChineseActive ? 'active' : ''
+                  }`}
+                  aria-expanded={activeDropdown === 'chinese'}
+                  aria-controls="chinese-course-menu"
+                  onClick={() => setActiveDropdown(activeDropdown === 'chinese' ? null : 'chinese')}
+                >
+                  <Languages size={15} className="text-[#F05A28]" />
+                  <span>Tiếng Trung</span>
+                  <span className="text-[10px] font-bold bg-[#F05A28]/10 text-[#F05A28] px-1.5 py-0.5 rounded-full border border-orange-200">
+                    HSK1
+                  </span>
+                  <ChevronDown
+                    size={14}
+                    className={`dropdown-chevron ${activeDropdown === 'chinese' ? 'open' : ''}`}
+                  />
+                </button>
+
+                {activeDropdown === 'chinese' && (
+                  <div className="modern-dropdown-menu chinese-dropdown" id="chinese-course-menu">
+                    <div className="chinese-dropdown-heading">
+                      <div className="chinese-dropdown-icon">
+                        <Languages size={20} />
+                      </div>
+                      <div>
+                        <span className="chinese-dropdown-eyebrow">TIẾNG TRUNG SƠ CẤP</span>
+                        <h3>HSK1</h3>
+                        <p>Làm quen từ vựng tiếng Trung nền tảng</p>
+                      </div>
+                    </div>
+
+                    <div className="chinese-dropdown-stats" aria-label="Nội dung khóa học HSK1">
+                      <div>
+                        <strong>11</strong>
+                        <span>chủ đề</span>
+                      </div>
+                      <div>
+                        <strong>150</strong>
+                        <span>từ vựng</span>
+                      </div>
+                      <div>
+                        <strong>HSK1</strong>
+                        <span>cấp độ</span>
+                      </div>
+                    </div>
+
+                    <Link
+                      to="/courses/hsk1/vocabulary"
+                      className="chinese-dropdown-cta cursor-pointer"
+                      onClick={() => setActiveDropdown(null)}
+                    >
+                      <BookMarked size={17} />
+                      <span>Học từ vựng HSK1</span>
+                      <ArrowRight size={16} />
+                    </Link>
+                    <p className="chinese-dropdown-note">Flashcard, luyện gõ, trắc nghiệm và nghe thụ động</p>
                   </div>
                 )}
               </li>
@@ -799,15 +874,15 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             <span>Get OTP & 2FA Code</span>
           </Link>
 
-          {/* Group: Cổng 2 môn học */}
+          {/* Group: Tiếng Nhật */}
           <div className="mobile-group-title flex items-center justify-between">
-            <span>Tiếng Nhật Đại Học FPT</span>
+            <span>Tiếng Nhật</span>
             <Link
               to="/courses"
-              className="text-[11px] font-bold text-[#F05A28] lowercase"
+              className="text-[11px] font-bold text-[#F05A28] lowercase cursor-pointer"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              xem cả 2 môn →
+              xem tất cả →
             </Link>
           </div>
 
@@ -873,6 +948,26 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
               </Link>
             );
           })}
+
+          <div className="mobile-group-title flex items-center justify-between">
+            <span>Tiếng Trung</span>
+            <Link
+              to="/courses/hsk1/vocabulary"
+              className="text-[11px] font-bold text-[#F05A28] lowercase cursor-pointer"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              vào HSK1 →
+            </Link>
+          </div>
+          <Link
+            to="/courses/hsk1/vocabulary"
+            className={`mobile-sub-link ${location.pathname.startsWith('/courses/hsk1') ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <BookMarked size={16} className="text-[#F05A28]" />
+            <span>Từ vựng HSK1</span>
+            <span className="mobile-badge">150 từ</span>
+          </Link>
 
           {/* Divider */}
           <div className="my-4 border-t border-slate-200" />

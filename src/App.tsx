@@ -323,6 +323,7 @@ export default function App() {
 
                         {/* Japanese Course Routes */}
                         <Route path="/courses" element={<CoursesHubPage />} />
+                        <Route path="/courses/hsk1" element={<Navigate to="/courses/hsk1/vocabulary" replace />} />
                         <Route path="/courses/kana" element={<KanaQuizPage />} />
                         <Route path="/courses/kana/:type" element={<KanaQuizPage />} />
                         <Route path="/courses/:courseCode" element={<CourseLandingPage />} />

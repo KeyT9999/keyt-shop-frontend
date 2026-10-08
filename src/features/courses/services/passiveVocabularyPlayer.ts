@@ -55,6 +55,7 @@ export class PassiveVocabularyPlayer {
   private readonly entries: PassiveListeningEntry[];
   private readonly speech: PassiveSpeechAdapter;
   private readonly clock: PassiveListeningClock;
+  private readonly primaryLocale: 'ja-JP' | 'zh-CN';
   private snapshot: PassiveVocabularyPlayerSnapshot;
   private sessionId = 0;
   private deadline = 0;
@@ -67,11 +68,13 @@ export class PassiveVocabularyPlayer {
   constructor(
     entries: PassiveListeningEntry[],
     speech: PassiveSpeechAdapter,
-    clock: PassiveListeningClock = browserClock
+    clock: PassiveListeningClock = browserClock,
+    primaryLocale: 'ja-JP' | 'zh-CN' = 'ja-JP'
   ) {
     this.entries = entries;
     this.speech = speech;
     this.clock = clock;
+    this.primaryLocale = primaryLocale;
     this.snapshot = {
       status: 'idle',
       phase: 'idle',
@@ -79,7 +82,7 @@ export class PassiveVocabularyPlayer {
       cycleNumber: 1,
       remainingMs: 0,
       errorMessage: null,
-      voiceAvailability: speech.getVoiceAvailability()
+      voiceAvailability: speech.getVoiceAvailability(primaryLocale)
     };
   }
 
@@ -92,7 +95,7 @@ export class PassiveVocabularyPlayer {
 
   refreshVoiceAvailability() {
     if (this.disposed) return;
-    const nextAvailability = this.speech.getVoiceAvailability();
+    const nextAvailability = this.speech.getVoiceAvailability(this.primaryLocale);
     if (
       nextAvailability.japanese === this.snapshot.voiceAvailability.japanese &&
       nextAvailability.vietnamese === this.snapshot.voiceAvailability.vietnamese
@@ -207,12 +210,12 @@ export class PassiveVocabularyPlayer {
     if (!this.canContinue(activeSessionId)) return;
     const entry = this.entries[this.snapshot.currentIndex];
     if (!entry) {
-      this.failSession(activeSessionId, 'missing-entry');
+      this.failSession(activeSessionId, 'missing-entry', this.primaryLocale);
       return;
     }
 
     this.publish({ phase: 'japanese' });
-    this.speak(entry.japaneseText, 'ja-JP', activeSessionId, () => {
+    this.speak(entry.japaneseText, this.primaryLocale, activeSessionId, () => {
       this.scheduleDelay(
         activeSessionId,
         PASSIVE_LISTENING_JAPANESE_MEANING_GAP_MS,
@@ -226,7 +229,7 @@ export class PassiveVocabularyPlayer {
     if (!this.canContinue(activeSessionId)) return;
     const entry = this.entries[this.snapshot.currentIndex];
     if (!entry) {
-      this.failSession(activeSessionId, 'missing-entry');
+      this.failSession(activeSessionId, 'missing-entry', 'vi-VN');
       return;
     }
 
@@ -251,7 +254,7 @@ export class PassiveVocabularyPlayer {
       onEnd: () => {
         if (this.canContinue(activeSessionId)) onEnd();
       },
-      onError: (reason) => this.failSession(activeSessionId, reason)
+      onError: (reason) => this.failSession(activeSessionId, reason, locale)
     });
   }
 
@@ -344,7 +347,7 @@ export class PassiveVocabularyPlayer {
     this.scheduleDelay(activeSessionId, pending.remainingMs, pending.phase, pending.callback);
   }
 
-  private failSession(activeSessionId: number, reason: string) {
+  private failSession(activeSessionId: number, reason: string, locale: PassiveSpeechLocale) {
     if (!this.canContinue(activeSessionId)) return;
     console.warn('[PassiveVocabularyPlayer] Speech synthesis failed.', {
       sessionId: activeSessionId,
@@ -352,11 +355,15 @@ export class PassiveVocabularyPlayer {
       reason
     });
     this.invalidateAndCancelSpeech();
+    const unavailableVoice = reason === 'language-unavailable' || reason === 'voice-unavailable';
+    const languageName = locale === 'zh-CN' ? 'tiếng Trung' : locale === 'ja-JP' ? 'tiếng Nhật' : 'tiếng Việt';
     this.publish({
       status: 'error',
       phase: 'idle',
       remainingMs: 0,
-      errorMessage: 'Giọng đọc bị gián đoạn. Hãy kiểm tra giọng đọc trên thiết bị rồi thử lại.'
+      errorMessage: unavailableVoice
+        ? `Không có giọng đọc ${languageName} phù hợp. Hãy cài hoặc bật giọng đọc này trên thiết bị rồi thử lại.`
+        : 'Giọng đọc bị gián đoạn. Hãy kiểm tra giọng đọc trên thiết bị rồi thử lại.'
     });
   }
 

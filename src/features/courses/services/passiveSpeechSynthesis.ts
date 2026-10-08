@@ -1,4 +1,4 @@
-export type PassiveSpeechLocale = 'ja-JP' | 'vi-VN';
+export type PassiveSpeechLocale = 'ja-JP' | 'zh-CN' | 'vi-VN';
 
 export interface PassiveSpeechCallbacks {
   onEnd: () => void;
@@ -7,7 +7,7 @@ export interface PassiveSpeechCallbacks {
 
 export interface PassiveSpeechAdapter {
   readonly isSupported: boolean;
-  getVoiceAvailability: () => { japanese: boolean; vietnamese: boolean };
+  getVoiceAvailability: (primaryLocale?: PassiveSpeechLocale) => { japanese: boolean; vietnamese: boolean };
   speak: (text: string, locale: PassiveSpeechLocale, callbacks: PassiveSpeechCallbacks) => void;
   pause: () => void;
   resume: () => void;
@@ -42,10 +42,10 @@ export function createBrowserPassiveSpeechAdapter(): PassiveSpeechAdapter {
       return getSpeechSynthesis() !== null && getUtteranceConstructor() !== null;
     },
 
-    getVoiceAvailability() {
+    getVoiceAvailability(primaryLocale = 'ja-JP') {
       const voices = getSpeechSynthesis()?.getVoices() ?? [];
       return {
-        japanese: !!findVoice(voices, 'ja-JP'),
+        japanese: !!findVoice(voices, primaryLocale),
         vietnamese: !!findVoice(voices, 'vi-VN')
       };
     },
@@ -59,16 +59,27 @@ export function createBrowserPassiveSpeechAdapter(): PassiveSpeechAdapter {
       }
 
       try {
-        const utterance = new Utterance(text);
-        utterance.lang = locale;
-        utterance.rate = locale === 'ja-JP' ? 0.9 : 0.95;
+        const preferredVoice = findVoice(synthesis.getVoices(), locale) ?? null;
+        const speakWithVoice = (voice: SpeechSynthesisVoice | null, canRetryWithDefault: boolean) => {
+          const utterance = new Utterance(text);
+          utterance.lang = locale;
+          utterance.rate = locale === 'ja-JP' || locale === 'zh-CN' ? 0.9 : 0.95;
+          utterance.voice = voice;
+          utterance.onend = callbacks.onEnd;
+          utterance.onerror = (event) => {
+            const voiceSelectionFailed = event.error === 'voice-unavailable' || event.error === 'language-unavailable';
+            if (voice && canRetryWithDefault && voiceSelectionFailed) {
+              // A voice list can be stale. Retry once with voice=null so the browser selects its default for this lang.
+              speakWithVoice(null, false);
+              return;
+            }
+            callbacks.onError(event.error || 'speech-error');
+          };
+          synthesis.speak(utterance);
+        };
 
-        const voice = findVoice(synthesis.getVoices(), locale);
-        if (voice) utterance.voice = voice;
-
-        utterance.onend = callbacks.onEnd;
-        utterance.onerror = (event) => callbacks.onError(event.error || 'speech-error');
-        synthesis.speak(utterance);
+        // With no matching device voice, voice=null asks the browser to choose its default using this lang hint.
+        speakWithVoice(preferredVoice, true);
       } catch {
         callbacks.onError('speech-error');
       }

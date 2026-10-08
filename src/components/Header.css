@@ -95,7 +95,7 @@
   display: none;
 }
 
-@media (min-width: 960px) {
+@media (min-width: 1200px) {
   .desktop-navigation {
     display: flex;
     align-items: center;
@@ -110,7 +110,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  gap: 2rem; /* Rộng rãi, thoáng đãng */
+  gap: clamp(0.8rem, 1.25vw, 1.25rem);
 }
 
 .header-nav-item {
@@ -138,6 +138,12 @@
 
 .header-nav-link:hover {
   color: var(--brand-orange);
+}
+
+.header-nav-link:focus-visible {
+  outline: 3px solid rgba(240, 90, 40, 0.3);
+  outline-offset: 4px;
+  border-radius: 8px;
 }
 
 .header-nav-link.active {
@@ -208,6 +214,126 @@
   animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.chinese-dropdown {
+  left: auto;
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  transform: none;
+  animation: chineseDropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chinese-dropdown-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid #FED7AA;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #FFF7ED 0%, #FFFFFF 72%);
+}
+
+.chinese-dropdown-icon {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #FDBA74;
+  border-radius: 14px;
+  background: #FFFFFF;
+  color: var(--brand-orange);
+  box-shadow: 0 3px 8px rgba(240, 90, 40, 0.1);
+}
+
+.chinese-dropdown-eyebrow {
+  color: #C2410C;
+  font-size: 0.625rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.chinese-dropdown-heading h3 {
+  margin: 0.1rem 0;
+  color: var(--brand-navy);
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.chinese-dropdown-heading p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.chinese-dropdown-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.chinese-dropdown-stats > div {
+  display: flex;
+  min-height: 58px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  background: #F8FAFC;
+}
+
+.chinese-dropdown-stats strong {
+  color: var(--brand-navy);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.chinese-dropdown-stats span {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.chinese-dropdown-cta {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 12px;
+  background: var(--brand-navy);
+  color: #FFFFFF;
+  font-size: 0.875rem;
+  font-weight: 750;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chinese-dropdown-cta:hover {
+  transform: translateY(-1px);
+  background: #1E293B;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
+}
+
+.chinese-dropdown-cta:focus-visible {
+  outline: 3px solid rgba(240, 90, 40, 0.4);
+  outline-offset: 3px;
+}
+
+.chinese-dropdown-note {
+  margin: 0.65rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
 @keyframes dropdownFadeIn {
   from {
     opacity: 0;
@@ -216,6 +342,17 @@
   to {
     opacity: 1;
     transform: translate(-50%, 0);
+  }
+}
+
+@keyframes chineseDropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -315,6 +452,8 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  white-space: nowrap;
+  flex-shrink: 0;
   padding: 0.45rem 0.9rem;
   background-color: #FFF7ED;
   color: #C2410C;
@@ -531,7 +670,7 @@
 }
 
 /* --- Mobile Drawer --- */
-@media (max-width: 959px) {
+@media (max-width: 1199px) {
   .mobile-toggle-btn {
     display: flex;
   }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Volume2, Trophy, Sparkles } from 'lucide-react';
 import type { QuizQuestion } from '../../../types';
 import { courseApi } from '../../../api/courseApi';
+import { getCourseLanguage } from '../../../utils/courseLanguage';
 
 interface MultiChoiceModeProps {
   courseCode: string;
@@ -14,6 +15,7 @@ export default function MultiChoiceMode({
   lessonSlug,
   onRecordResult
 }: MultiChoiceModeProps) {
+  const language = getCourseLanguage(courseCode);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export default function MultiChoiceMode({
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ja-JP';
+      u.lang = language.speechLocale;
       u.rate = 0.9;
       window.speechSynthesis.speak(u);
     }

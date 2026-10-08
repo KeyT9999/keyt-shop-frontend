@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
+import { getCourseLanguage } from '../../../utils/courseLanguage';
 
 interface TimeAttackModeProps {
   items: VocabularyItem[];
@@ -35,6 +36,7 @@ export default function TimeAttackMode({
   lessonSlug,
   onRecordResult
 }: TimeAttackModeProps) {
+  const language = getCourseLanguage(courseCode);
   const [isPlaying, setIsPlaying] = useState(false);
   const [timeLeftMs, setTimeLeftMs] = useState(60000); // 60s
   const [score, setScore] = useState(0);
@@ -67,11 +69,11 @@ export default function TimeAttackMode({
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ja-JP';
+      u.lang = language.speechLocale;
       u.rate = 1.05;
       window.speechSynthesis.speak(u);
     }
-  }, []);
+  }, [language.speechLocale]);
 
   // Generate a random 4-choice question
   const generateQuestion = useCallback((): QuickQuestion | null => {
@@ -262,7 +264,7 @@ export default function TimeAttackMode({
         </h3>
 
         <p className="text-xs sm:text-sm text-slate-500 mb-6 leading-relaxed max-w-md mx-auto">
-          Thử thách tốc độ đọc hiểu từ vựng tiếng Nhật trong 60 giây! Đúng liên tiếp tạo <strong>Combo Streak (x1.5, x2, x3)</strong> và cộng thêm <strong>+2s</strong>; Trả lời sai bị phạt trừ <strong>-3s</strong>!
+          Thử thách tốc độ đọc hiểu từ vựng {language.languageName} trong 60 giây! Đúng liên tiếp tạo <strong>Combo Streak (x1.5, x2, x3)</strong> và cộng thêm thời gian; trả lời sai bị trừ thời gian.
         </p>
 
         {highScore > 0 && (

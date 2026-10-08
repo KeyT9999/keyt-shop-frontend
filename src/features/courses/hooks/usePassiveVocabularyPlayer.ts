@@ -6,25 +6,31 @@ import {
   createBrowserPassiveSpeechAdapter,
   type PassiveSpeechAdapter
 } from '../services/passiveSpeechSynthesis';
+import { getCourseLanguage } from '../utils/courseLanguage';
 
 const browserPassiveSpeechAdapter = createBrowserPassiveSpeechAdapter();
 
 export function usePassiveVocabularyPlayer(
   items: VocabularyItem[],
-  speechAdapter: PassiveSpeechAdapter = browserPassiveSpeechAdapter
+  speechAdapter: PassiveSpeechAdapter = browserPassiveSpeechAdapter,
+  courseCode = 'jpd123'
 ) {
-  const sequence = useMemo(() => preparePassiveListeningSequence(items), [items]);
+  const language = getCourseLanguage(courseCode);
+  const sequence = useMemo(
+    () => preparePassiveListeningSequence(items, language.kind === 'chinese'),
+    [items, language.kind]
+  );
   const player = useMemo(
-    () => new PassiveVocabularyPlayer(sequence.entries, speechAdapter),
-    [sequence.entries, speechAdapter]
+    () => new PassiveVocabularyPlayer(sequence.entries, speechAdapter, undefined, language.speechLocale),
+    [sequence.entries, speechAdapter, language.speechLocale]
   );
   const snapshot = useSyncExternalStore(player.subscribe, player.getSnapshot, player.getSnapshot);
 
   useEffect(() => {
-    player.refreshVoiceAvailability();
     const unsubscribeVoices = speechAdapter.subscribeVoicesChanged(() => {
       player.refreshVoiceAvailability();
     });
+    player.refreshVoiceAvailability();
     const syncTimeWhenVisible = () => {
       if (document.visibilityState === 'visible') player.syncTime();
     };

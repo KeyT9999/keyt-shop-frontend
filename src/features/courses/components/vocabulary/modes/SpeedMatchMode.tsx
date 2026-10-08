@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
+import { getCourseLanguage } from '../../../utils/courseLanguage';
 
 interface SpeedMatchModeProps {
   items: VocabularyItem[];
@@ -34,6 +35,7 @@ export default function SpeedMatchMode({
   lessonSlug,
   onRecordResult
 }: SpeedMatchModeProps) {
+  const language = getCourseLanguage(courseCode);
   const [cards, setCards] = useState<MatchCard[]>([]);
   const [selectedCard, setSelectedCard] = useState<MatchCard | null>(null);
   const [matchedWordKeys, setMatchedWordKeys] = useState<Set<string>>(new Set());
@@ -80,11 +82,11 @@ export default function SpeedMatchMode({
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ja-JP';
+      u.lang = language.speechLocale;
       u.rate = 1.0;
       window.speechSynthesis.speak(u);
     }
-  }, []);
+  }, [language.speechLocale]);
 
   // Stop Stopwatch
   const stopTimer = useCallback(() => {
@@ -450,7 +452,7 @@ export default function SpeedMatchMode({
 
       {/* ── Helper Instruction ── */}
       <div className="mt-6 text-center text-xs text-slate-400 font-medium">
-        💡 Click 1 thẻ Tiếng Nhật và 1 thẻ Ý Nghĩa để ghép cặp. Đúng thẻ sẽ lóe xanh và biến mất, sai thẻ sẽ đỏ để tiếp tục ghép cho đến khi xong 6 cặp!
+        Chọn một thẻ {language.languageName} và một thẻ nghĩa tiếng Việt để ghép cặp. Ghép đúng cả 6 cặp để hoàn thành lượt chơi.
       </div>
 
       {/* ── Victory Modal ── */}

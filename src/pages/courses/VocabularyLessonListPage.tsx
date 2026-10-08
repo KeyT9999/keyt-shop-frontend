@@ -4,6 +4,7 @@ import { BookMarked } from 'lucide-react';
 import { useAuthContext } from '../../context/useAuthContext';
 import { courseApi } from '../../features/courses/api/courseApi';
 import type { CourseLesson } from '../../features/courses/types';
+import { getCourseLanguage } from '../../features/courses/utils/courseLanguage';
 import CourseBreadcrumb from '../../features/courses/components/common/CourseBreadcrumb';
 import LessonCard from '../../features/courses/components/vocabulary/LessonCard';
 import Seo from '../../components/Seo';
@@ -43,13 +44,16 @@ export default function VocabularyLessonListPage() {
   }, [courseCode, token]);
 
   const upperCode = courseCode.toUpperCase();
+  const language = getCourseLanguage(courseCode);
   const totalItems = lessons.reduce((acc, l) => acc + (l.itemCount || 0), 0);
+  const fallbackLessonCount = upperCode === 'JPD113' ? 9 : upperCode === 'HSK1' ? 11 : 12;
+  const fallbackItemCount = upperCode === 'JPD113' ? 264 : upperCode === 'HSK1' ? 150 : 180;
 
   return (
     <>
       <Seo
-        title={`Từ Vựng ${upperCode} - Danh Sách ${lessons.length || (upperCode === 'JPD113' ? 9 : 12)} Bài Học | Mindora AI`}
-        description={`Học từ vựng tiếng Nhật ${upperCode} qua các bài học chi tiết với chế độ Flashcard 3D, luyện gõ và trắc nghiệm.`}
+        title={`Từ Vựng ${language.languageName} ${upperCode} - Danh Sách ${lessons.length || fallbackLessonCount} Bài Học | Mindora AI`}
+        description={`Học từ vựng ${language.languageName.toLowerCase()} ${upperCode} qua các bài học với Flashcard 3D, luyện gõ và trắc nghiệm.`}
         canonicalPath={`/courses/${courseCode.toLowerCase()}/vocabulary`}
       />
 
@@ -57,7 +61,7 @@ export default function VocabularyLessonListPage() {
         <CourseBreadcrumb
           items={[
             { label: upperCode, href: `/courses/${courseCode.toLowerCase()}` },
-            { label: 'Từ Vựng (単語)' }
+            { label: `Từ Vựng (${language.kind === 'chinese' ? '词汇' : '単語'})` }
           ]}
         />
 
@@ -66,18 +70,18 @@ export default function VocabularyLessonListPage() {
           <div>
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#F05A28] mb-1">
               <BookMarked size={15} />
-              <span>Chương Trình Từ Vựng Tiếng Nhật</span>
+              <span>Chương Trình Từ Vựng {language.languageName}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
               Danh Sách Bài Học Từ Vựng {upperCode}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Bao gồm {lessons.length || (upperCode === 'JPD113' ? 9 : 12)} bài học trọng tâm chuẩn chương trình giảng dạy, kết hợp luyện nhớ phản xạ nhanh.
+              Bao gồm {lessons.length || fallbackLessonCount} chủ đề từ vựng, kết hợp luyện nhớ và phản xạ nhanh.
             </p>
           </div>
 
           <div className="px-4 py-2 rounded-2xl bg-orange-50 text-[#F05A28] border border-orange-200/60 text-xs font-bold self-start sm:self-auto">
-            {lessons.length || (upperCode === 'JPD113' ? 9 : 12)} Bài học • {totalItems || (upperCode === 'JPD113' ? 264 : 180)} Từ vựng
+            {lessons.length || fallbackLessonCount} Bài học • {totalItems || fallbackItemCount} Từ vựng
           </div>
         </div>
 

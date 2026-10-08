@@ -17,11 +17,13 @@ import TimeAttackMode from '../../features/courses/components/vocabulary/modes/T
 import MistakeBusterMode from '../../features/courses/components/vocabulary/modes/MistakeBusterMode';
 import PassiveListeningMode from '../../features/courses/components/vocabulary/modes/PassiveListeningMode';
 import { weakWordsStorage } from '../../features/courses/utils/weakWordsStorage';
+import { getCourseLanguage } from '../../features/courses/utils/courseLanguage';
 import { IS_PASSIVE_LISTENING_ENABLED } from '../../config/features';
 import Seo from '../../components/Seo';
 
 export default function VocabularyDetailPage() {
   const { courseCode = 'jpd123', lessonSlug = '' } = useParams();
+  const language = getCourseLanguage(courseCode);
   const { token, user } = useAuthContext();
 
   const [lesson, setLesson] = useState<CourseLesson | null>(null);
@@ -156,7 +158,7 @@ export default function VocabularyDetailPage() {
     <>
       <Seo
         title={`Bài ${lesson.lessonCode}: ${cleanTitle} - Từ Vựng ${upperCode} | Mindora AI`}
-        description={`Học từ vựng bài ${lesson.lessonCode}: ${cleanTitle} (${items.length} từ vựng). Luyện Flashcard, gõ từ và làm bài tập trắc nghiệm miễn phí.`}
+        description={`Học từ vựng ${language.languageName.toLowerCase()} bài ${lesson.lessonCode}: ${cleanTitle} (${items.length} từ). Luyện Flashcard, gõ từ và làm bài tập trắc nghiệm.`}
         canonicalPath={`/courses/${courseCode.toLowerCase()}/vocabulary/${lesson.slug}`}
       />
 
@@ -164,7 +166,7 @@ export default function VocabularyDetailPage() {
         <CourseBreadcrumb
           items={[
             { label: upperCode, href: `/courses/${courseCode.toLowerCase()}` },
-            { label: 'Từ Vựng', href: `/courses/${courseCode.toLowerCase()}/vocabulary` },
+            { label: `Từ Vựng (${language.kind === 'chinese' ? '词汇' : '単語'})`, href: `/courses/${courseCode.toLowerCase()}/vocabulary` },
             { label: `Bài ${lesson.lessonCode}` }
           ]}
         />
@@ -234,6 +236,7 @@ export default function VocabularyDetailPage() {
           {activeMode === 'typing' && (
             <TypingMode
               items={items}
+              courseCode={courseCode}
               onRecordResult={handleRecordResult}
             />
           )}
@@ -293,6 +296,7 @@ export default function VocabularyDetailPage() {
               </div>
               <VocabularyTable
                 items={items}
+                courseCode={courseCode}
                 onToggleBookmark={handleToggleBookmark}
               />
             </div>
@@ -302,6 +306,7 @@ export default function VocabularyDetailPage() {
             <PassiveListeningMode
               key={`${courseCode}:${lessonSlug}`}
               items={items}
+              courseCode={courseCode}
             />
           )}
         </div>
@@ -317,6 +322,7 @@ export default function VocabularyDetailPage() {
             </div>
             <VocabularyTable
               items={items}
+              courseCode={courseCode}
               onToggleBookmark={handleToggleBookmark}
             />
           </div>

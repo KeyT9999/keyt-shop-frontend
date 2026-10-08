@@ -2,13 +2,16 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, CheckCircle2, XCircle, ArrowRight, RotateCcw, Volume2, Sparkles } from 'lucide-react';
 import type { VocabularyItem } from '../../../types';
 import { courseApi } from '../../../api/courseApi';
+import { getCourseLanguage } from '../../../utils/courseLanguage';
 
 interface TypingModeProps {
   items: VocabularyItem[];
+  courseCode?: string;
   onRecordResult: (id: string, isCorrect: boolean) => void;
 }
 
-export default function TypingMode({ items, onRecordResult }: TypingModeProps) {
+export default function TypingMode({ items, courseCode = 'jpd123', onRecordResult }: TypingModeProps) {
+  const language = getCourseLanguage(courseCode);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<'ja-to-vi' | 'vi-to-ja'>('vi-to-ja');
   const [userInput, setUserInput] = useState('');
@@ -36,7 +39,7 @@ export default function TypingMode({ items, onRecordResult }: TypingModeProps) {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ja-JP';
+      u.lang = language.speechLocale;
       u.rate = 0.9;
       window.speechSynthesis.speak(u);
     }
@@ -102,14 +105,22 @@ export default function TypingMode({ items, onRecordResult }: TypingModeProps) {
           className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 hover:text-slate-900 transition-all cursor-pointer font-medium"
         >
           <RotateCcw size={12} />
-          <span>{direction === 'vi-to-ja' ? 'Nghĩa → Gõ Nhật' : 'Từ Nhật → Gõ Nghĩa'}</span>
+          <span>
+            {direction === 'vi-to-ja'
+              ? `Nghĩa → Gõ ${language.kind === 'chinese' ? 'Trung' : 'Nhật'}`
+              : `Từ ${language.kind === 'chinese' ? 'Trung' : 'Nhật'} → Gõ Nghĩa`}
+          </span>
         </button>
       </div>
 
       {/* Question Card */}
       <div className="w-full p-8 rounded-3xl bg-white border-2 border-slate-200 shadow-lg text-center mb-6">
         <span className="text-xs uppercase font-bold tracking-wider text-slate-400 block mb-2">
-          {direction === 'vi-to-ja' ? 'Hãy gõ chữ Hán hoặc Hiragana của từ:' : 'Hãy gõ nghĩa tiếng Việt của từ:'}
+          {direction === 'vi-to-ja'
+            ? language.kind === 'chinese'
+              ? 'Hãy gõ chữ Hán hoặc Pinyin của từ:'
+              : 'Hãy gõ Kanji hoặc Hiragana của từ:'
+            : 'Hãy gõ nghĩa tiếng Việt của từ:'}
         </span>
 
         {direction === 'vi-to-ja' ? (

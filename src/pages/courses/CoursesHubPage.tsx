@@ -3,7 +3,8 @@ import {
   GraduationCap,
   ArrowRight,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  Languages
 } from 'lucide-react';
 import Seo from '../../components/Seo';
 
@@ -68,8 +69,8 @@ export default function CoursesHubPage() {
   return (
     <>
       <Seo
-        title="Cổng Học Tập Tiếng Nhật FPT - Môn JPD113 & JPD123 | Mindora AI"
-        description="Hệ thống luyện thi và học tập tiếng Nhật chuẩn chương trình Đại học FPT dành cho 2 môn học riêng biệt: JPD113 (Bài 1-3) và JPD123 (Bài 4-7)."
+        title="Cổng Học Ngoại Ngữ - JPD113, JPD123 & HSK1 | Mindora AI"
+        description="Học tiếng Nhật theo các học phần JPD113, JPD123 của Đại học FPT và luyện từ vựng tiếng Trung sơ cấp HSK1 với 11 chủ đề."
         canonicalPath="/courses"
       />
 
@@ -79,15 +80,15 @@ export default function CoursesHubPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-50 border border-orange-200/80 text-[#F05A28] text-xs font-bold uppercase tracking-wider mb-4">
               <GraduationCap size={16} />
-              <span>Chương Trình Tiếng Nhật Khảo Thí Đại Học FPT</span>
+              <span>Khóa Học Tiếng Nhật &amp; Tiếng Trung</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
-              Cổng Môn Học Tiếng Nhật FPT
+              Cổng Học Ngoại Ngữ
             </h1>
 
             <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              Hai môn học độc lập trong lộ trình đào tạo chuẩn Đại học FPT. Vui lòng chọn đúng môn học bạn đang theo học để truy cập ngân hàng đề thi, bài giảng và phòng thi nói 1-1 tương ứng.
+              Chọn học phần tiếng Nhật JPD113, JPD123 theo chương trình Đại học FPT hoặc bắt đầu 11 chủ đề từ vựng tiếng Trung HSK1.
             </p>
           </div>
         </div>
@@ -122,7 +123,7 @@ export default function CoursesHubPage() {
           </div>
         </div>
 
-        {/* 2 Distinct Course Cards Grid */}
+        {/* Japanese course cards */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {courses.map((c) => (
@@ -241,6 +242,29 @@ export default function CoursesHubPage() {
               </div>
             ))}
           </div>
+
+          <Link
+            to="/courses/hsk1/vocabulary"
+            className="group mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5 rounded-3xl border border-orange-200 bg-white p-6 sm:p-8 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-xl cursor-pointer"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-[#F05A28] border border-orange-100">
+                <Languages size={26} />
+              </div>
+              <div>
+                <div className="mb-1 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#F05A28]">Tiếng Trung</span>
+                  <span className="text-xs font-semibold text-slate-500">11 chủ đề • 150 từ</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900">HSK1: Từ vựng tiếng Trung sơ cấp</h2>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Học chữ Hán giản thể và Pinyin qua flashcard, luyện gõ, trắc nghiệm, ghép cặp và các chế độ ôn tập.</p>
+              </div>
+            </div>
+            <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#1E293B] px-5 py-3.5 text-sm font-black text-white transition-colors group-hover:bg-[#F05A28]">
+              <span>Vào học từ vựng HSK1</span>
+              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+            </span>
+          </Link>
         </div>
       </div>
     </>

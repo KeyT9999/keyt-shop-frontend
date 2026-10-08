@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
+import { getCourseLanguage } from '../../../utils/courseLanguage';
 
 interface FlashcardModeProps {
   items: VocabularyItem[];
@@ -35,10 +36,11 @@ export default function FlashcardMode({
   lessonSlug = '',
   onRecordResult
 }: FlashcardModeProps) {
+  const language = getCourseLanguage(courseCode);
   const [cardList, setCardList] = useState<VocabularyItem[]>(items);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [showFuriganaOnFront, setShowFuriganaOnFront] = useState(true);
+  const [showReadingOnFront, setShowReadingOnFront] = useState(true);
   const [isShuffled, setIsShuffled] = useState(false);
   const [autoPlay, setAutoPlay] = useState(false);
   const [autoSpeak] = useState(true);
@@ -67,14 +69,14 @@ export default function FlashcardMode({
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ja-JP';
+      u.lang = language.speechLocale;
       u.rate = rate;
       setPlayingSpeed(rate);
       u.onend = () => setPlayingSpeed(null);
       u.onerror = () => setPlayingSpeed(null);
       window.speechSynthesis.speak(u);
     }
-  }, []);
+  }, [language.speechLocale]);
 
   const handleFlip = useCallback(() => {
     setIsFlipped((prev) => {
@@ -322,15 +324,15 @@ export default function FlashcardMode({
               <span className="hidden sm:inline">Xáo thẻ</span>
             </button>
 
-            {/* Furigana Toggle */}
+            {/* Reading Toggle */}
             <button
               type="button"
-              onClick={() => setShowFuriganaOnFront((prev) => !prev)}
+              onClick={() => setShowReadingOnFront((prev) => !prev)}
               className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer flex items-center gap-1.5"
-              title="Bật/Tắt Furigana trên mặt trước"
+              title={`Bật/Tắt ${language.readingName} trên mặt trước`}
             >
-              {showFuriganaOnFront ? <Eye size={13} /> : <EyeOff size={13} />}
-              <span className="hidden sm:inline">Furigana</span>
+              {showReadingOnFront ? <Eye size={13} /> : <EyeOff size={13} />}
+              <span className="hidden sm:inline">{language.readingName}</span>
             </button>
           </div>
         </div>
@@ -362,7 +364,7 @@ export default function FlashcardMode({
             <div className="w-full flex items-center justify-between text-xs">
               <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase tracking-wider text-[11px]">
                 <BookOpen size={14} className="text-[#F05A28]" />
-                <span>Mặt Trước • Tiếng Nhật</span>
+                <span>Mặt Trước • {language.languageName}</span>
               </div>
 
               {/* Audio Pronunciation Button */}
@@ -404,14 +406,14 @@ export default function FlashcardMode({
 
             {/* Front Main Body */}
             <div className="my-auto py-2 flex flex-col items-center">
-              {/* Furigana Reading Pill */}
-              {showFuriganaOnFront && currentCard.reading && currentCard.reading !== currentCard.term && (
+              {/* Reading Pill */}
+              {showReadingOnFront && currentCard.reading && currentCard.reading !== currentCard.term && (
                 <div className="inline-flex items-center gap-1 text-sm sm:text-base font-bold text-[#F05A28] bg-orange-50/80 px-3 py-0.5 rounded-full border border-orange-200/60 mb-2 font-japanese">
                   <span>{currentCard.reading}</span>
                 </div>
               )}
 
-              {/* Main Japanese Term */}
+              {/* Main Vocabulary Term */}
               <h3 className="text-4xl sm:text-6xl font-black text-slate-900 font-japanese tracking-wide leading-tight">
                 {currentCard.term}
               </h3>
@@ -476,7 +478,7 @@ export default function FlashcardMode({
 
             {/* Back Main Content */}
             <div className="my-auto py-1 w-full max-w-md flex flex-col items-center">
-              {/* Hiragana reading display */}
+              {/* Reading display */}
               <div className="text-xl sm:text-2xl font-black text-[#F05A28] font-japanese tracking-wide mb-1">
                 {currentCard.reading}
               </div>
@@ -486,7 +488,7 @@ export default function FlashcardMode({
                 {currentCard.meaning}
               </h4>
 
-              {/* Part of speech & Kanji Info */}
+              {/* Part of speech and writing system label */}
               <div className="flex items-center gap-2 mb-3">
                 {currentCard.partOfSpeech && (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/80">
@@ -495,7 +497,7 @@ export default function FlashcardMode({
                 )}
                 {currentCard.term !== currentCard.reading && (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-orange-50 text-[#F05A28] border border-orange-200/60">
-                    Kanji: {currentCard.term}
+                    {language.writingName}: {currentCard.term}
                   </span>
                 )}
               </div>

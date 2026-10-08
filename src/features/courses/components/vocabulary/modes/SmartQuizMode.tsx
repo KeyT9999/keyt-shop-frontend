@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
+import { getCourseLanguage } from '../../../utils/courseLanguage';
 
 interface SmartQuizModeProps {
   items: VocabularyItem[];
@@ -52,6 +53,7 @@ export default function SmartQuizMode({
   lessonSlug,
   onRecordResult
 }: SmartQuizModeProps) {
+  const language = getCourseLanguage(courseCode);
   // Question pool and quiz configuration
   const defaultCount = Math.min(10, Math.max(3, items.length));
   const [questionCount, setQuestionCount] = useState<number>(defaultCount);
@@ -84,11 +86,11 @@ export default function SmartQuizMode({
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ja-JP';
+      u.lang = language.speechLocale;
       u.rate = 0.95;
       window.speechSynthesis.speak(u);
     }
-  }, []);
+  }, [language.speechLocale]);
 
   // Generate quiz questions
   const generateQuiz = useCallback(
@@ -139,11 +141,13 @@ export default function SmartQuizMode({
           question = {
             id: `q_${index}`,
             format,
-            formatLabel: 'Hán Tự → Cách Đọc Hiragana',
+            formatLabel: language.kind === 'chinese' ? 'Hán tự → Pinyin' : 'Kanji → Hiragana',
             formatIcon: FileText,
             badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
             prompt: target.term,
-            subprompt: `Chữ Hán trên có cách đọc Hiragana đúng là gì? (Nghĩa: ${target.meaning})`,
+            subprompt: language.kind === 'chinese'
+              ? `Chữ Hán trên đọc theo Pinyin là gì? (Nghĩa: ${target.meaning})`
+              : `Chữ Hán trên có cách đọc Hiragana đúng là gì? (Nghĩa: ${target.meaning})`,
             audioTextToPlay: target.term,
             targetItem: target,
             options: rawOptions.map((opt, i) => ({
@@ -219,7 +223,7 @@ export default function SmartQuizMode({
             formatLabel: 'Luyện Tai Nghe & Phản Xạ',
             formatIcon: Headphones,
             badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-            prompt: '🔊 Nhấn loa để nghe phát âm',
+            prompt: 'Nhấn loa để nghe phát âm',
             subprompt: 'Chọn nghĩa tiếng Việt chính xác của từ bạn vừa nghe được:',
             audioTextToPlay: target.term,
             targetItem: target,
@@ -251,11 +255,11 @@ export default function SmartQuizMode({
           question = {
             id: `q_${index}`,
             format: 'viet-to-jp',
-            formatLabel: 'Phản Xạ Việt → Nhật',
+            formatLabel: `Phản Xạ Việt → ${language.kind === 'chinese' ? 'Trung' : 'Nhật'}`,
             formatIcon: BookOpen,
             badgeColor: 'bg-orange-50 text-[#F05A28] border-orange-200',
             prompt: `「${target.meaning}」`,
-            subprompt: 'Từ vựng tiếng Nhật nào tương ứng với ý nghĩa trên?',
+            subprompt: `Từ vựng ${language.languageName.toLowerCase()} nào tương ứng với ý nghĩa trên?`,
             audioTextToPlay: target.term,
             targetItem: target,
             options: rawOptions.map((opt, i) => ({
@@ -280,7 +284,7 @@ export default function SmartQuizMode({
       setWrongItems([]);
       setAnswersHistory([]);
     },
-    [items, questionCount]
+    [items, questionCount, language.kind, language.languageName]
   );
 
   // Generate on mount or when lessonSlug changes
@@ -681,7 +685,7 @@ export default function SmartQuizMode({
             type="button"
             onClick={() => speak(currentQ.audioTextToPlay!)}
             className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-orange-50 text-[#F05A28] hover:bg-[#F05A28] hover:text-white border border-orange-200 transition-all flex items-center justify-center cursor-pointer shadow-2xs"
-            title="Phát âm tiếng Nhật"
+            title={`Phát âm tiếng ${language.kind === 'chinese' ? 'Trung' : 'Nhật'}`}
           >
             <Volume2 size={16} />
           </button>

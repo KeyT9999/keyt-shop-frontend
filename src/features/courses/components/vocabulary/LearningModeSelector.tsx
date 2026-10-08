@@ -71,7 +71,7 @@ export default function LearningModeSelector({
     {
       id: 'speed-match',
       label: 'Ghép cặp',
-      badge: 'GAME ⚡',
+      badge: 'GAME',
       badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
       icon: Zap
     },
@@ -85,7 +85,7 @@ export default function LearningModeSelector({
     {
       id: 'time-attack',
       label: 'Đấu trí 60s',
-      badge: 'HOT 🔥',
+      badge: 'HOT',
       badgeColor: 'bg-rose-100 text-rose-800 border-rose-300',
       icon: Flame
     },

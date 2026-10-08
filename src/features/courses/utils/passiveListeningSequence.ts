@@ -8,6 +8,7 @@ export interface PassiveListeningEntry {
   romaji: string;
   japaneseText: string;
   vietnameseText: string;
+  audioUrl?: string;
 }
 
 export interface PassiveListeningSequence {
@@ -44,6 +45,7 @@ export function preparePassiveListeningSequence(
       const vietnameseText = typeof item?.meaning === 'string' ? item.meaning.trim() : '';
       const romaji = typeof item?.romaji === 'string' ? item.romaji.trim() : '';
       const itemId = typeof item?._id === 'string' ? item._id.trim() : '';
+      const audioUrl = normalizeSavedAudioUrl(item?.audioUrl);
       const order =
         typeof item?.order === 'number' && Number.isFinite(item.order)
           ? item.order
@@ -57,7 +59,8 @@ export function preparePassiveListeningSequence(
           reading,
           romaji,
           japaneseText,
-          vietnameseText
+          vietnameseText,
+          ...(audioUrl ? { audioUrl } : {})
         },
         originalIndex
       };
@@ -72,4 +75,16 @@ export function preparePassiveListeningSequence(
     entries,
     skippedCount: lessonItems.length - entries.length
   };
+}
+
+function normalizeSavedAudioUrl(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim()) return null;
+
+  try {
+    const url = new URL(value.trim());
+    if (url.protocol !== 'https:' || url.username || url.password) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
 }

@@ -324,7 +324,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
   const isJapaneseActive =
     location.pathname.startsWith('/courses/jpd') ||
     kanaTools.some((item) => location.pathname === item.href);
-  const isChineseActive = location.pathname.startsWith('/courses/hsk1');
+  const isChineseActive = /^\/courses\/hsk[12](?:\/|$)/i.test(location.pathname);
 
   return (
     <div className="header-wrapper">
@@ -650,7 +650,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   <Languages size={15} className="text-[#F05A28]" />
                   <span>Tiếng Trung</span>
                   <span className="text-[10px] font-bold bg-[#F05A28]/10 text-[#F05A28] px-1.5 py-0.5 rounded-full border border-orange-200">
-                    HSK1
+                    2 Khóa
                   </span>
                   <ChevronDown
                     size={14}
@@ -666,35 +666,56 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                       </div>
                       <div>
                         <span className="chinese-dropdown-eyebrow">TIẾNG TRUNG SƠ CẤP</span>
-                        <h3>HSK1</h3>
-                        <p>Làm quen từ vựng tiếng Trung nền tảng</p>
+                        <h3>HSK1 • HSK2</h3>
+                        <p>Học từ vựng tiếng Trung theo từng cấp độ</p>
                       </div>
                     </div>
 
-                    <div className="chinese-dropdown-stats" aria-label="Nội dung khóa học HSK1">
+                    <div className="chinese-dropdown-stats" aria-label="Nội dung khóa học HSK1 và HSK2">
                       <div>
-                        <strong>11</strong>
+                        <strong>22</strong>
                         <span>chủ đề</span>
                       </div>
                       <div>
-                        <strong>150</strong>
-                        <span>từ vựng</span>
+                        <strong>290</strong>
+                        <span>mục từ</span>
                       </div>
                       <div>
-                        <strong>HSK1</strong>
+                        <strong>HSK1–2</strong>
                         <span>cấp độ</span>
                       </div>
                     </div>
 
-                    <Link
-                      to="/courses/hsk1/vocabulary"
-                      className="chinese-dropdown-cta cursor-pointer"
-                      onClick={() => setActiveDropdown(null)}
-                    >
-                      <BookMarked size={17} />
-                      <span>Học từ vựng HSK1</span>
-                      <ArrowRight size={16} />
-                    </Link>
+                    <nav className="chinese-dropdown-courses" aria-label="Chọn cấp độ tiếng Trung">
+                      <Link
+                        to="/courses/hsk1/vocabulary"
+                        className="chinese-dropdown-cta cursor-pointer"
+                        onClick={() => setActiveDropdown(null)}
+                      >
+                        <span className="chinese-dropdown-cta-main">
+                          <span className="chinese-dropdown-cta-icon"><BookMarked size={17} /></span>
+                          <span className="chinese-dropdown-cta-label">
+                            <strong>Học từ vựng HSK1</strong>
+                            <span>150 từ vựng</span>
+                          </span>
+                        </span>
+                        <ArrowRight size={17} className="chinese-dropdown-cta-arrow" />
+                      </Link>
+                      <Link
+                        to="/courses/hsk2/vocabulary"
+                        className="chinese-dropdown-cta cursor-pointer"
+                        onClick={() => setActiveDropdown(null)}
+                      >
+                        <span className="chinese-dropdown-cta-main">
+                          <span className="chinese-dropdown-cta-icon"><BookMarked size={17} /></span>
+                          <span className="chinese-dropdown-cta-label">
+                            <strong>Học từ vựng HSK2</strong>
+                            <span>140 từ vựng</span>
+                          </span>
+                        </span>
+                        <ArrowRight size={17} className="chinese-dropdown-cta-arrow" />
+                      </Link>
+                    </nav>
                     <p className="chinese-dropdown-note">Flashcard, luyện gõ, trắc nghiệm và nghe thụ động</p>
                   </div>
                 )}
@@ -967,6 +988,15 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             <BookMarked size={16} className="text-[#F05A28]" />
             <span>Từ vựng HSK1</span>
             <span className="mobile-badge">150 từ</span>
+          </Link>
+          <Link
+            to="/courses/hsk2/vocabulary"
+            className={`mobile-sub-link ${location.pathname.startsWith('/courses/hsk2') ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <BookMarked size={16} className="text-[#F05A28]" />
+            <span>Từ vựng HSK2</span>
+            <span className="mobile-badge">140 từ</span>
           </Link>
 
           {/* Divider */}

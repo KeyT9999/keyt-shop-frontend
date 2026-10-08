@@ -300,25 +300,99 @@
   font-weight: 600;
 }
 
+.chinese-dropdown-courses {
+  display: grid;
+  gap: 0.6rem;
+}
+
 .chinese-dropdown-cta {
   display: flex;
-  min-height: 46px;
+  min-height: 56px;
   align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  border-radius: 12px;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 14px;
   background: var(--brand-navy);
   color: #FFFFFF;
   font-size: 0.875rem;
   font-weight: 750;
   text-decoration: none;
-  transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chinese-dropdown-cta-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.chinese-dropdown-cta-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.chinese-dropdown-cta-label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+}
+
+.chinese-dropdown-cta-label strong {
+  overflow: hidden;
+  max-width: 100%;
+  color: inherit;
+  font-size: 0.84rem;
+  font-weight: 750;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chinese-dropdown-cta-label > span {
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: color 0.2s ease;
+}
+
+.chinese-dropdown-cta-arrow {
+  flex: 0 0 auto;
+  transition: transform 0.2s ease;
 }
 
 .chinese-dropdown-cta:hover {
-  transform: translateY(-1px);
-  background: #1E293B;
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
+  border-color: #FED7AA;
+  background: #FFF7ED;
+  color: #1E293B;
+  box-shadow: 0 5px 12px rgba(240, 90, 40, 0.1);
+}
+
+.chinese-dropdown-cta:hover .chinese-dropdown-cta-icon {
+  border-color: #FED7AA;
+  background: #FFEDD5;
+  color: #C2410C;
+}
+
+.chinese-dropdown-cta:hover .chinese-dropdown-cta-label > span {
+  color: #475569;
+}
+
+.chinese-dropdown-cta:hover .chinese-dropdown-cta-arrow {
+  transform: translateX(2px);
 }
 
 .chinese-dropdown-cta:focus-visible {

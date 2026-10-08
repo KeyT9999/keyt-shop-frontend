@@ -241,7 +241,9 @@ export default function PassiveListeningMode({ items, courseCode = 'jpd123', spe
           </p>
         )}
         <p className="text-xs leading-5 text-slate-500">
-          Giọng đọc dùng trên thiết bị của bạn. Một số trình duyệt có thể dừng phát khi chuyển ứng dụng hoặc khóa màn hình.
+          {player.usesSavedChineseAudio
+            ? 'Từ tiếng Trung phát bằng âm thanh đã lưu; nghĩa tiếng Việt dùng giọng đọc trên thiết bị.'
+            : 'Giọng đọc dùng trên thiết bị của bạn. Một số trình duyệt có thể dừng phát khi chuyển ứng dụng hoặc khóa màn hình.'}
         </p>
       </div>
     </section>

@@ -66,11 +66,30 @@ export default function CoursesHubPage() {
     }
   ];
 
+  const chineseCourses = [
+    {
+      code: 'HSK1',
+      title: 'Từ vựng tiếng Trung sơ cấp',
+      topics: 11,
+      vocabulary: 150,
+      description: 'Học chữ Hán giản thể và Pinyin qua flashcard, luyện gõ, trắc nghiệm, ghép cặp và các chế độ ôn tập.',
+      href: '/courses/hsk1/vocabulary'
+    },
+    {
+      code: 'HSK2',
+      title: 'Từ vựng tiếng Trung sơ cấp 2',
+      topics: 11,
+      vocabulary: 140,
+      description: 'Ôn từ vựng theo 11 chủ đề HSK2 với chữ Hán giản thể, Pinyin và nghĩa tiếng Việt.',
+      href: '/courses/hsk2/vocabulary'
+    }
+  ];
+
   return (
     <>
       <Seo
-        title="Cổng Học Ngoại Ngữ - JPD113, JPD123 & HSK1 | Mindora AI"
-        description="Học tiếng Nhật theo các học phần JPD113, JPD123 của Đại học FPT và luyện từ vựng tiếng Trung sơ cấp HSK1 với 11 chủ đề."
+        title="Cổng Học Ngoại Ngữ - JPD113, JPD123, HSK1 & HSK2 | Mindora AI"
+        description="Học tiếng Nhật theo các học phần JPD113, JPD123 của Đại học FPT và luyện từ vựng tiếng Trung HSK1, HSK2."
         canonicalPath="/courses"
       />
 
@@ -88,7 +107,7 @@ export default function CoursesHubPage() {
             </h1>
 
             <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              Chọn học phần tiếng Nhật JPD113, JPD123 theo chương trình Đại học FPT hoặc bắt đầu 11 chủ đề từ vựng tiếng Trung HSK1.
+              Chọn học phần tiếng Nhật JPD113, JPD123 theo chương trình Đại học FPT hoặc học từ vựng tiếng Trung HSK1, HSK2.
             </p>
           </div>
         </div>
@@ -243,28 +262,33 @@ export default function CoursesHubPage() {
             ))}
           </div>
 
-          <Link
-            to="/courses/hsk1/vocabulary"
-            className="group mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5 rounded-3xl border border-orange-200 bg-white p-6 sm:p-8 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-xl cursor-pointer"
-          >
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-[#F05A28] border border-orange-100">
-                <Languages size={26} />
-              </div>
-              <div>
-                <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#F05A28]">Tiếng Trung</span>
-                  <span className="text-xs font-semibold text-slate-500">11 chủ đề • 150 từ</span>
+          <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            {chineseCourses.map((course) => (
+              <Link
+                key={course.code}
+                to={course.href}
+                className="group flex flex-col justify-between gap-5 rounded-3xl border border-orange-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-xl cursor-pointer sm:flex-row sm:items-center sm:p-8"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-[#F05A28] border border-orange-100">
+                    <Languages size={26} />
+                  </div>
+                  <div>
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#F05A28]">Tiếng Trung</span>
+                      <span className="text-xs font-semibold text-slate-500">{course.topics} chủ đề • {course.vocabulary} từ</span>
+                    </div>
+                    <h2 className="text-xl font-black text-slate-900">{course.code}: {course.title}</h2>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{course.description}</p>
+                  </div>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900">HSK1: Từ vựng tiếng Trung sơ cấp</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">Học chữ Hán giản thể và Pinyin qua flashcard, luyện gõ, trắc nghiệm, ghép cặp và các chế độ ôn tập.</p>
-              </div>
-            </div>
-            <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#1E293B] px-5 py-3.5 text-sm font-black text-white transition-colors group-hover:bg-[#F05A28]">
-              <span>Vào học từ vựng HSK1</span>
-              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-            </span>
-          </Link>
+                <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#1E293B] px-5 py-3.5 text-sm font-black text-white transition-colors group-hover:bg-[#F05A28]">
+                  <span>Vào học {course.code}</span>
+                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </>

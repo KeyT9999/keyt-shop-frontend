@@ -56,6 +56,7 @@ export class PassiveVocabularyPlayer {
   private readonly speech: PassiveSpeechAdapter;
   private readonly clock: PassiveListeningClock;
   private readonly primaryLocale: 'ja-JP' | 'zh-CN';
+  private activeAudioPlayback = false;
   private snapshot: PassiveVocabularyPlayerSnapshot;
   private sessionId = 0;
   private deadline = 0;
@@ -82,7 +83,7 @@ export class PassiveVocabularyPlayer {
       cycleNumber: 1,
       remainingMs: 0,
       errorMessage: null,
-      voiceAvailability: speech.getVoiceAvailability(primaryLocale)
+      voiceAvailability: this.getVoiceAvailability()
     };
   }
 
@@ -95,7 +96,7 @@ export class PassiveVocabularyPlayer {
 
   refreshVoiceAvailability() {
     if (this.disposed) return;
-    const nextAvailability = this.speech.getVoiceAvailability(this.primaryLocale);
+    const nextAvailability = this.getVoiceAvailability();
     if (
       nextAvailability.japanese === this.snapshot.voiceAvailability.japanese &&
       nextAvailability.vietnamese === this.snapshot.voiceAvailability.vietnamese
@@ -145,7 +146,8 @@ export class PassiveVocabularyPlayer {
 
     this.clearCountdown();
     this.preservePendingDelay();
-    this.speech.pause();
+    if (this.activeAudioPlayback && this.speech.pauseAudio) this.speech.pauseAudio();
+    else this.speech.pause();
     this.publish({ status: 'paused', remainingMs: this.pausedRemainingMs });
   }
 
@@ -154,7 +156,8 @@ export class PassiveVocabularyPlayer {
 
     this.deadline = this.clock.now() + this.pausedRemainingMs;
     this.publish({ status: 'playing', remainingMs: this.pausedRemainingMs });
-    this.speech.resume();
+    if (this.activeAudioPlayback && this.speech.resumeAudio) this.speech.resumeAudio();
+    else this.speech.resume();
 
     const activeSessionId = this.sessionId;
     this.startCountdown(activeSessionId);
@@ -215,14 +218,37 @@ export class PassiveVocabularyPlayer {
     }
 
     this.publish({ phase: 'japanese' });
-    this.speak(entry.japaneseText, this.primaryLocale, activeSessionId, () => {
+    const onSpoken = () => {
       this.scheduleDelay(
         activeSessionId,
         PASSIVE_LISTENING_JAPANESE_MEANING_GAP_MS,
         'gap-before-meaning',
         () => this.speakVietnamese(activeSessionId)
       );
-    });
+    };
+
+    if (this.primaryLocale === 'zh-CN' && entry.audioUrl && this.speech.playAudio) {
+      this.activeAudioPlayback = true;
+      try {
+        this.speech.playAudio(entry.audioUrl, {
+          onEnd: () => {
+            if (!this.canContinue(activeSessionId)) return;
+            this.activeAudioPlayback = false;
+            onSpoken();
+          },
+          onError: () => {
+            if (!this.canContinue(activeSessionId)) return;
+            this.activeAudioPlayback = false;
+            this.speak(entry.japaneseText, this.primaryLocale, activeSessionId, onSpoken);
+          }
+        });
+        return;
+      } catch {
+        this.activeAudioPlayback = false;
+      }
+    }
+
+    this.speak(entry.japaneseText, this.primaryLocale, activeSessionId, onSpoken);
   }
 
   private speakVietnamese(activeSessionId: number) {
@@ -374,8 +400,23 @@ export class PassiveVocabularyPlayer {
 
   private invalidateAndCancelSpeech() {
     this.sessionId += 1;
+    this.activeAudioPlayback = false;
     this.clearAllTimers();
     this.speech.cancel();
+  }
+
+  private getVoiceAvailability() {
+    const availability = this.speech.getVoiceAvailability(this.primaryLocale);
+    const hasSavedChineseAudio =
+      this.primaryLocale === 'zh-CN' &&
+      this.entries.length > 0 &&
+      typeof this.speech.playAudio === 'function' &&
+      this.entries.every((entry) => Boolean(entry.audioUrl));
+
+    return {
+      ...availability,
+      japanese: availability.japanese || hasSavedChineseAudio
+    };
   }
 
   private clearAllTimers() {

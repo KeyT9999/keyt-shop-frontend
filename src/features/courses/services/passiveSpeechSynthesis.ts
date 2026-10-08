@@ -9,6 +9,9 @@ export interface PassiveSpeechAdapter {
   readonly isSupported: boolean;
   getVoiceAvailability: (primaryLocale?: PassiveSpeechLocale) => { japanese: boolean; vietnamese: boolean };
   speak: (text: string, locale: PassiveSpeechLocale, callbacks: PassiveSpeechCallbacks) => void;
+  playAudio?: (url: string, callbacks: PassiveSpeechCallbacks) => void;
+  pauseAudio?: () => void;
+  resumeAudio?: () => void;
   pause: () => void;
   resume: () => void;
   cancel: () => void;
@@ -37,6 +40,22 @@ function findVoice(voices: SpeechSynthesisVoice[], locale: PassiveSpeechLocale) 
 }
 
 export function createBrowserPassiveSpeechAdapter(): PassiveSpeechAdapter {
+  let currentAudio: HTMLAudioElement | null = null;
+  let currentAudioCallbacks: PassiveSpeechCallbacks | null = null;
+
+  const cancelCurrentAudio = () => {
+    if (!currentAudio) {
+      currentAudioCallbacks = null;
+      return;
+    }
+    currentAudio.onended = null;
+    currentAudio.onerror = null;
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+    currentAudioCallbacks = null;
+  };
+
   return {
     get isSupported() {
       return getSpeechSynthesis() !== null && getUtteranceConstructor() !== null;
@@ -85,6 +104,54 @@ export function createBrowserPassiveSpeechAdapter(): PassiveSpeechAdapter {
       }
     },
 
+    playAudio(url, callbacks) {
+      if (typeof Audio === 'undefined') {
+        callbacks.onError('audio-unavailable');
+        return;
+      }
+
+      cancelCurrentAudio();
+      const audio = new Audio(url);
+      audio.preload = 'auto';
+      currentAudio = audio;
+      currentAudioCallbacks = callbacks;
+      audio.onended = () => {
+        if (currentAudio !== audio) return;
+        currentAudio = null;
+        currentAudioCallbacks = null;
+        callbacks.onEnd();
+      };
+      audio.onerror = () => {
+        if (currentAudio !== audio) return;
+        currentAudio = null;
+        currentAudioCallbacks = null;
+        callbacks.onError('audio-playback-error');
+      };
+
+      void audio.play().catch(() => {
+        if (currentAudio !== audio) return;
+        currentAudio = null;
+        currentAudioCallbacks = null;
+        callbacks.onError('audio-playback-error');
+      });
+    },
+
+    pauseAudio() {
+      currentAudio?.pause();
+    },
+
+    resumeAudio() {
+      if (!currentAudio) return;
+      const audio = currentAudio;
+      void audio.play().catch(() => {
+        if (currentAudio !== audio) return;
+        currentAudio = null;
+        const callbacks = currentAudioCallbacks;
+        currentAudioCallbacks = null;
+        callbacks?.onError('audio-playback-error');
+      });
+    },
+
     pause() {
       getSpeechSynthesis()?.pause();
     },
@@ -94,6 +161,7 @@ export function createBrowserPassiveSpeechAdapter(): PassiveSpeechAdapter {
     },
 
     cancel() {
+      cancelCurrentAudio();
       getSpeechSynthesis()?.cancel();
     },
 

@@ -46,8 +46,8 @@ export default function VocabularyLessonListPage() {
   const upperCode = courseCode.toUpperCase();
   const language = getCourseLanguage(courseCode);
   const totalItems = lessons.reduce((acc, l) => acc + (l.itemCount || 0), 0);
-  const fallbackLessonCount = upperCode === 'JPD113' ? 9 : upperCode === 'HSK1' ? 11 : 12;
-  const fallbackItemCount = upperCode === 'JPD113' ? 264 : upperCode === 'HSK1' ? 150 : 180;
+  const fallbackLessonCount = upperCode === 'JPD113' ? 9 : upperCode.startsWith('HSK') ? 11 : 12;
+  const fallbackItemCount = upperCode === 'JPD113' ? 264 : upperCode === 'HSK1' ? 150 : upperCode === 'HSK2' ? 140 : 180;
 
   return (
     <>

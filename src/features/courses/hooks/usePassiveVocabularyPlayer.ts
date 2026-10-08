@@ -25,10 +25,14 @@ export function usePassiveVocabularyPlayer(
     [sequence.entries, speechAdapter, language.speechLocale]
   );
   const snapshot = useSyncExternalStore(player.subscribe, player.getSnapshot, player.getSnapshot);
+  const savedChineseAudioCount = language.kind === 'chinese'
+    ? sequence.entries.filter((entry) => Boolean(entry.audioUrl)).length
+    : 0;
   const usesSavedChineseAudio =
     language.kind === 'chinese' &&
     sequence.entries.length > 0 &&
-    sequence.entries.every((entry) => Boolean(entry.audioUrl));
+    typeof speechAdapter.playAudio === 'function' &&
+    savedChineseAudioCount === sequence.entries.length;
 
   useEffect(() => {
     const unsubscribeVoices = speechAdapter.subscribeVoicesChanged(() => {
@@ -52,6 +56,7 @@ export function usePassiveVocabularyPlayer(
     currentEntry: sequence.entries[snapshot.currentIndex] ?? null,
     totalCount: sequence.entries.length,
     skippedCount: sequence.skippedCount,
+    savedChineseAudioCount,
     usesSavedChineseAudio,
     isSupported: speechAdapter.isSupported,
     start: (durationMinutes: number) => player.start(durationMinutes),

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PassiveListeningEntry } from '../utils/passiveListeningSequence';
 import {
+  PASSIVE_LISTENING_JAPANESE_MEANING_GAP_MS,
   PassiveVocabularyPlayer,
   type PassiveListeningClock
 } from './passiveVocabularyPlayer';
@@ -185,5 +186,52 @@ describe('PassiveVocabularyPlayer', () => {
 
     expect(speech.cancel).toHaveBeenCalledOnce();
     expect(calls).toHaveLength(1);
+  });
+
+  it('plays saved Chinese audio without a Chinese device voice, then reads the Vietnamese meaning', () => {
+    const chineseEntry: PassiveListeningEntry = {
+      id: 'ni', order: 1, term: '你', reading: 'nǐ', romaji: '',
+      japaneseText: '你', vietnameseText: 'bạn', audioUrl: 'https://example.com/ni.mp3'
+    };
+    let audioCallbacks: PassiveSpeechCallbacks | undefined;
+    speech.getVoiceAvailability = vi.fn(() => ({ japanese: false, vietnamese: true }));
+    speech.playAudio = vi.fn((_url, callbacks) => { audioCallbacks = callbacks; });
+    speech.pauseAudio = vi.fn();
+    speech.resumeAudio = vi.fn();
+    const chinesePlayer = new PassiveVocabularyPlayer([chineseEntry], speech, clock, 'zh-CN');
+
+    expect(chinesePlayer.getSnapshot().voiceAvailability.japanese).toBe(true);
+    expect(chinesePlayer.start(1)).toBe(true);
+    expect(speech.playAudio).toHaveBeenCalledWith(chineseEntry.audioUrl, expect.any(Object));
+    expect(speech.speak).not.toHaveBeenCalled();
+
+    chinesePlayer.pause();
+    expect(speech.pauseAudio).toHaveBeenCalledOnce();
+    chinesePlayer.resume();
+    expect(speech.resumeAudio).toHaveBeenCalledOnce();
+
+    audioCallbacks?.onEnd();
+    vi.advanceTimersByTime(PASSIVE_LISTENING_JAPANESE_MEANING_GAP_MS);
+    expect(speech.speak).toHaveBeenCalledWith('bạn', 'vi-VN', expect.any(Object));
+    chinesePlayer.dispose();
+  });
+
+  it('reports a saved Chinese audio error instead of switching to the browser voice', () => {
+    const chineseEntry: PassiveListeningEntry = {
+      id: 'ni', order: 1, term: '你', reading: 'nǐ', romaji: '',
+      japaneseText: '你', vietnameseText: 'bạn', audioUrl: 'https://example.com/ni.mp3'
+    };
+    speech.playAudio = vi.fn((_url, callbacks) => callbacks.onError('audio-playback-error'));
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const chinesePlayer = new PassiveVocabularyPlayer([chineseEntry], speech, clock, 'zh-CN');
+
+    chinesePlayer.start(1);
+
+    expect(chinesePlayer.getSnapshot()).toMatchObject({
+      status: 'error',
+      errorMessage: expect.stringContaining('âm thanh tiếng Trung đã lưu')
+    });
+    expect(speech.speak).not.toHaveBeenCalled();
+    chinesePlayer.dispose();
   });
 });

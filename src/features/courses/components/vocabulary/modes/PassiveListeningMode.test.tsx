@@ -114,4 +114,23 @@ describe('PassiveListeningMode', () => {
     });
     expect((screen.getByRole('button', { name: 'Bắt đầu nghe' }) as HTMLButtonElement).disabled).toBe(true);
   });
+
+  it('shows saved Mandarin audio coverage and plays it for HSK2', () => {
+    const playAudio = vi.fn();
+    const speechAdapter = createSpeechAdapter({
+      getVoiceAvailability: () => ({ japanese: false, vietnamese: true }),
+      playAudio
+    });
+    const chinese: VocabularyItem[] = [{
+      ...vocabulary[0], term: '就', reading: 'jiù', meaning: 'thì, liền',
+      audioUrl: 'https://example.com/jiu.mp3'
+    }];
+    render(<PassiveListeningMode items={chinese} courseCode="hsk2" speechAdapter={speechAdapter} />);
+
+    expect(screen.getByText('Âm thanh tiếng Trung: 1/1 từ')).not.toBeNull();
+    expect(screen.queryByText(/chưa cung cấp giọng đọc tiếng Trung/i)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu nghe' }));
+    expect(playAudio).toHaveBeenCalledWith(chinese[0].audioUrl, expect.any(Object));
+    expect(speechAdapter.speak).not.toHaveBeenCalled();
+  });
 });

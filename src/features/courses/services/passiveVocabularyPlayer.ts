@@ -236,15 +236,12 @@ export class PassiveVocabularyPlayer {
             this.activeAudioPlayback = false;
             onSpoken();
           },
-          onError: () => {
-            if (!this.canContinue(activeSessionId)) return;
-            this.activeAudioPlayback = false;
-            this.speak(entry.japaneseText, this.primaryLocale, activeSessionId, onSpoken);
-          }
+          onError: () => this.failSession(activeSessionId, 'saved-audio-error', 'zh-CN')
         });
         return;
       } catch {
-        this.activeAudioPlayback = false;
+        this.failSession(activeSessionId, 'saved-audio-error', 'zh-CN');
+        return;
       }
     }
 
@@ -375,7 +372,7 @@ export class PassiveVocabularyPlayer {
 
   private failSession(activeSessionId: number, reason: string, locale: PassiveSpeechLocale) {
     if (!this.canContinue(activeSessionId)) return;
-    console.warn('[PassiveVocabularyPlayer] Speech synthesis failed.', {
+    console.warn('[PassiveVocabularyPlayer] Playback failed.', {
       sessionId: activeSessionId,
       phase: this.snapshot.phase,
       reason
@@ -387,9 +384,11 @@ export class PassiveVocabularyPlayer {
       status: 'error',
       phase: 'idle',
       remainingMs: 0,
-      errorMessage: unavailableVoice
-        ? `Không có giọng đọc ${languageName} phù hợp. Hãy cài hoặc bật giọng đọc này trên thiết bị rồi thử lại.`
-        : 'Giọng đọc bị gián đoạn. Hãy kiểm tra giọng đọc trên thiết bị rồi thử lại.'
+      errorMessage: reason === 'saved-audio-error'
+        ? 'Không phát được âm thanh tiếng Trung đã lưu. Hãy kiểm tra kết nối rồi thử lại.'
+        : unavailableVoice
+          ? `Không có giọng đọc ${languageName} phù hợp. Hãy cài hoặc bật giọng đọc này trên thiết bị rồi thử lại.`
+          : 'Giọng đọc bị gián đoạn. Hãy kiểm tra giọng đọc trên thiết bị rồi thử lại.'
     });
   }
 

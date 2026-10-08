@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { BookOpen, Sparkles, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Sparkles, CheckCircle2, Headphones } from 'lucide-react';
 import { useAuthContext } from '../../context/useAuthContext';
 import { courseApi } from '../../features/courses/api/courseApi';
 import type { CourseLesson, VocabularyItem, LearningMode } from '../../features/courses/types';
@@ -30,6 +30,8 @@ export default function VocabularyDetailPage() {
   const [items, setItems] = useState<VocabularyItem[]>([]);
   const [activeMode, setActiveMode] = useState<LearningMode>('flashcard');
   const [loading, setLoading] = useState(true);
+  const [passiveAudioLoading, setPassiveAudioLoading] = useState(false);
+  const [passiveAudioError, setPassiveAudioError] = useState(false);
 
   useEffect(() => {
     let isCancelled = false;
@@ -58,6 +60,38 @@ export default function VocabularyDetailPage() {
       isCancelled = true;
     };
   }, [courseCode, lessonSlug, token]);
+
+  useEffect(() => {
+    if (!IS_PASSIVE_LISTENING_ENABLED || activeMode !== 'passive-listening' || language.kind !== 'chinese') return;
+    let isCancelled = false;
+
+    setPassiveAudioLoading(true);
+    setPassiveAudioError(false);
+    const refreshAudio = async () => {
+      try {
+        const data = await courseApi.getLessonItems(courseCode, 'vocabulary', lessonSlug, token);
+        if (!isCancelled) {
+          if (!Array.isArray(data?.items)) throw new Error('Invalid vocabulary items response.');
+          setItems(data.items);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          console.error('Failed to refresh vocabulary audio:', error);
+          setPassiveAudioError(true);
+        }
+      } finally {
+        if (!isCancelled) setPassiveAudioLoading(false);
+      }
+    };
+
+    void refreshAudio();
+    return () => { isCancelled = true; };
+  }, [activeMode, courseCode, language.kind, lessonSlug, token]);
+
+  const handleSelectMode = (mode: LearningMode) => {
+    if (mode === 'passive-listening' && language.kind === 'chinese') setPassiveAudioLoading(true);
+    setActiveMode(mode);
+  };
 
   const handleRecordResult = async (id: string, isCorrect: boolean) => {
     // Optimistic UI state update
@@ -217,7 +251,7 @@ export default function VocabularyDetailPage() {
         {/* Learning Mode Tabs */}
         <LearningModeSelector
           activeMode={activeMode}
-          onSelectMode={setActiveMode}
+          onSelectMode={handleSelectMode}
           weakWordsCount={weakWordsStorage.getWeakWordIds(courseCode, lesson.slug).length}
           passiveListeningEnabled={IS_PASSIVE_LISTENING_ENABLED}
         />
@@ -303,11 +337,25 @@ export default function VocabularyDetailPage() {
           )}
 
           {activeMode === 'passive-listening' && IS_PASSIVE_LISTENING_ENABLED && (
-            <PassiveListeningMode
-              key={`${courseCode}:${lessonSlug}`}
-              items={items}
-              courseCode={courseCode}
-            />
+            passiveAudioLoading ? (
+              <div role="status" className="flex items-center gap-3 rounded-3xl border border-orange-200 bg-white px-5 py-6 text-sm font-semibold text-[#1E293B] shadow-sm sm:px-8">
+                <Headphones aria-hidden="true" size={20} className="shrink-0 text-[#F05A28]" />
+                Đang cập nhật âm thanh tiếng Trung của bài học...
+              </div>
+            ) : (
+              <>
+                {passiveAudioError && (
+                  <p role="alert" className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
+                    Không cập nhật được danh sách âm thanh. Bạn có thể tải lại trang để thử lại.
+                  </p>
+                )}
+                <PassiveListeningMode
+                  key={`${courseCode}:${lessonSlug}`}
+                  items={items}
+                  courseCode={courseCode}
+                />
+              </>
+            )
           )}
         </div>
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Headphones, Pause, Play, RotateCcw, Square } from 'lucide-react';
+import { Headphones, Pause, Play, RotateCcw, Square, Volume2 } from 'lucide-react';
 import type { VocabularyItem } from '../../../types';
 import { usePassiveVocabularyPlayer } from '../../../hooks/usePassiveVocabularyPlayer';
 import { parsePassiveListeningDuration } from '../../../utils/passiveListeningSequence';
@@ -39,7 +39,11 @@ export default function PassiveListeningMode({ items, courseCode = 'jpd123', spe
 
   let statusMessage = 'Chọn thời lượng rồi bắt đầu nghe danh sách từ của bài này.';
   if (player.status === 'playing') {
-    if (player.phase === 'japanese') statusMessage = `Đang đọc từ tiếng ${language.kind === 'chinese' ? 'Trung' : 'Nhật'}`;
+    if (player.phase === 'japanese') {
+      statusMessage = language.kind === 'chinese' && player.currentEntry?.audioUrl
+        ? 'Đang phát âm thanh tiếng Trung đã lưu'
+        : `Đang đọc từ tiếng ${language.kind === 'chinese' ? 'Trung' : 'Nhật'}`;
+    }
     else if (player.phase === 'vietnamese') statusMessage = 'Đang đọc nghĩa tiếng Việt';
     else if (player.phase === 'gap-before-meaning') statusMessage = 'Đang nghỉ trước khi đọc nghĩa';
     else if (player.phase === 'gap-before-next') statusMessage = 'Đang nghỉ trước từ tiếp theo';
@@ -70,6 +74,16 @@ export default function PassiveListeningMode({ items, courseCode = 'jpd123', spe
             <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
               Nghe {language.languageName.toLowerCase()}, nghỉ ngắn rồi nghe nghĩa tiếng Việt. Danh sách tự lặp lại đến hết thời gian bạn chọn.
             </p>
+            {language.kind === 'chinese' && player.totalCount > 0 && (
+              <p className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold ${
+                player.usesSavedChineseAudio
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                  : 'border-amber-200 bg-amber-50 text-amber-900'
+              }`}>
+                <Volume2 aria-hidden="true" size={15} />
+                Âm thanh tiếng Trung: {player.savedChineseAudioCount}/{player.totalCount} từ
+              </p>
+            )}
           </div>
         </div>
       </div>

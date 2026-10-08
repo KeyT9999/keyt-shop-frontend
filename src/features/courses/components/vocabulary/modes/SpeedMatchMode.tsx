@@ -426,13 +426,13 @@ export default function SpeedMatchMode({
               {card.type === 'japanese' ? (
                 <div className="space-y-1">
                   {card.subtext && (
-                    <div className={`text-xs font-bold font-japanese leading-none ${
+                    <div className={`text-xs font-bold leading-none ${language.kind === 'english' ? '' : 'font-japanese'} ${
                       isWrong || isJustMatched ? 'text-white/90' : 'text-[#F05A28]'
                     }`}>
                       {card.subtext}
                     </div>
                   )}
-                  <div className={`text-xl sm:text-2xl font-black font-japanese leading-snug ${
+                  <div className={`text-xl sm:text-2xl font-black leading-snug ${language.kind === 'english' ? '' : 'font-japanese'} ${
                     isWrong || isJustMatched ? 'text-white' : 'text-slate-900'
                   }`}>
                     {card.text}

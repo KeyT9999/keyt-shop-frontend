@@ -109,7 +109,7 @@ export default function SmartQuizMode({
       selectedPool.forEach((target, index) => {
         // Determine available formats
         const formatOptions: QuestionFormat[] = ['viet-to-jp', 'audio-listening'];
-        if (target.term !== target.reading) {
+        if (language.kind !== 'english' && target.term !== target.reading) {
           formatOptions.push('kanji-to-reading');
         }
         if (target.examples && target.examples.length > 0) {
@@ -255,10 +255,10 @@ export default function SmartQuizMode({
           question = {
             id: `q_${index}`,
             format: 'viet-to-jp',
-            formatLabel: `Phản Xạ Việt → ${language.kind === 'chinese' ? 'Trung' : 'Nhật'}`,
+            formatLabel: `Phản Xạ Việt → ${language.languageShortName}`,
             formatIcon: BookOpen,
             badgeColor: 'bg-orange-50 text-[#F05A28] border-orange-200',
-            prompt: `「${target.meaning}」`,
+            prompt: language.kind === 'english' ? `“${target.meaning}”` : `「${target.meaning}」`,
             subprompt: `Từ vựng ${language.languageName.toLowerCase()} nào tương ứng với ý nghĩa trên?`,
             audioTextToPlay: target.term,
             targetItem: target,
@@ -284,7 +284,7 @@ export default function SmartQuizMode({
       setWrongItems([]);
       setAnswersHistory([]);
     },
-    [items, questionCount, language.kind, language.languageName]
+    [items, questionCount, language.kind, language.languageName, language.languageShortName]
   );
 
   // Generate on mount or when lessonSlug changes
@@ -685,7 +685,7 @@ export default function SmartQuizMode({
             type="button"
             onClick={() => speak(currentQ.audioTextToPlay!)}
             className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-orange-50 text-[#F05A28] hover:bg-[#F05A28] hover:text-white border border-orange-200 transition-all flex items-center justify-center cursor-pointer shadow-2xs"
-            title={`Phát âm tiếng ${language.kind === 'chinese' ? 'Trung' : 'Nhật'}`}
+            title={`Phát âm ${language.languageName.toLowerCase()}`}
           >
             <Volume2 size={16} />
           </button>
@@ -707,7 +707,7 @@ export default function SmartQuizMode({
             </div>
           </div>
         ) : (
-          <h3 className="text-3xl sm:text-5xl font-black text-slate-900 font-japanese my-3 tracking-wide leading-tight">
+          <h3 className={`text-3xl sm:text-5xl font-black text-slate-900 my-3 tracking-wide leading-tight ${language.kind === 'english' ? '' : 'font-japanese'}`}>
             {currentQ.prompt}
           </h3>
         )}

@@ -151,7 +151,7 @@ export default function MultiChoiceMode({
         </span>
 
         <div className="flex items-center justify-center gap-3 my-2">
-          <h3 className="text-4xl sm:text-5xl font-black text-slate-900 font-japanese">
+          <h3 className={`text-4xl sm:text-5xl font-black text-slate-900 ${language.kind === 'english' ? '' : 'font-japanese'}`}>
             {currentQ.term}
           </h3>
           <button
@@ -164,7 +164,7 @@ export default function MultiChoiceMode({
           </button>
         </div>
 
-        <div className="text-sm font-semibold text-[#F05A28] font-japanese mb-2">
+        <div className={`text-sm font-semibold text-[#F05A28] mb-2 ${language.kind === 'english' ? '' : 'font-japanese'}`}>
           {currentQ.reading}
         </div>
         <span className="inline-block px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600">

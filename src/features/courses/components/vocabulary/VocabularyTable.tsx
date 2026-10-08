@@ -112,12 +112,19 @@ export default function VocabularyTable({
                       </button>
 
                       <div className="text-left">
-                        <JapaneseRuby
-                          term={item.term}
-                          reading={item.reading}
-                          showReading={showReading}
-                          size="md"
-                        />
+                        {language.kind === 'english' ? (
+                          <div className="text-left">
+                            <div className="text-base font-bold text-slate-900">{item.term}</div>
+                            {showReading && item.reading && <div className="mt-0.5 text-xs font-medium text-[#F05A28]">/{item.reading}/</div>}
+                          </div>
+                        ) : (
+                          <JapaneseRuby
+                            term={item.term}
+                            reading={item.reading}
+                            showReading={showReading}
+                            size="md"
+                          />
+                        )}
                         {item.romaji && (
                           <span className="text-[10px] text-slate-400 block font-mono">
                             {item.romaji}

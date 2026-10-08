@@ -65,8 +65,6 @@ export default function VocabularyDetailPage() {
     if (!IS_PASSIVE_LISTENING_ENABLED || activeMode !== 'passive-listening' || language.kind !== 'chinese') return;
     let isCancelled = false;
 
-    setPassiveAudioLoading(true);
-    setPassiveAudioError(false);
     const refreshAudio = async () => {
       try {
         const data = await courseApi.getLessonItems(courseCode, 'vocabulary', lessonSlug, token);
@@ -89,7 +87,10 @@ export default function VocabularyDetailPage() {
   }, [activeMode, courseCode, language.kind, lessonSlug, token]);
 
   const handleSelectMode = (mode: LearningMode) => {
-    if (mode === 'passive-listening' && language.kind === 'chinese') setPassiveAudioLoading(true);
+    if (mode === 'passive-listening' && language.kind === 'chinese') {
+      setPassiveAudioLoading(true);
+      setPassiveAudioError(false);
+    }
     setActiveMode(mode);
   };
 
@@ -200,7 +201,7 @@ export default function VocabularyDetailPage() {
         <CourseBreadcrumb
           items={[
             { label: upperCode, href: `/courses/${courseCode.toLowerCase()}` },
-            { label: `Từ Vựng (${language.kind === 'chinese' ? '词汇' : '単語'})`, href: `/courses/${courseCode.toLowerCase()}/vocabulary` },
+            { label: `Từ Vựng (${language.kind === 'chinese' ? '词汇' : language.kind === 'english' ? 'Vocabulary' : '単語'})`, href: `/courses/${courseCode.toLowerCase()}/vocabulary` },
             { label: `Bài ${lesson.lessonCode}` }
           ]}
         />

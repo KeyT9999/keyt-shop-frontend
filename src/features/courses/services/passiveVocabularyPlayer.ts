@@ -55,7 +55,7 @@ export class PassiveVocabularyPlayer {
   private readonly entries: PassiveListeningEntry[];
   private readonly speech: PassiveSpeechAdapter;
   private readonly clock: PassiveListeningClock;
-  private readonly primaryLocale: 'ja-JP' | 'zh-CN';
+  private readonly primaryLocale: 'ja-JP' | 'zh-CN' | 'en-GB';
   private activeAudioPlayback = false;
   private snapshot: PassiveVocabularyPlayerSnapshot;
   private sessionId = 0;
@@ -70,7 +70,7 @@ export class PassiveVocabularyPlayer {
     entries: PassiveListeningEntry[],
     speech: PassiveSpeechAdapter,
     clock: PassiveListeningClock = browserClock,
-    primaryLocale: 'ja-JP' | 'zh-CN' = 'ja-JP'
+    primaryLocale: 'ja-JP' | 'zh-CN' | 'en-GB' = 'ja-JP'
   ) {
     this.entries = entries;
     this.speech = speech;
@@ -379,7 +379,13 @@ export class PassiveVocabularyPlayer {
     });
     this.invalidateAndCancelSpeech();
     const unavailableVoice = reason === 'language-unavailable' || reason === 'voice-unavailable';
-    const languageName = locale === 'zh-CN' ? 'tiếng Trung' : locale === 'ja-JP' ? 'tiếng Nhật' : 'tiếng Việt';
+    const languageName = locale === 'zh-CN'
+      ? 'tiếng Trung'
+      : locale === 'en-GB'
+        ? 'tiếng Anh'
+        : locale === 'ja-JP'
+          ? 'tiếng Nhật'
+          : 'tiếng Việt';
     this.publish({
       status: 'error',
       phase: 'idle',

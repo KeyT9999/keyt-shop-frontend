@@ -4,7 +4,8 @@ import {
   ArrowRight,
   CheckCircle2,
   Sparkles,
-  Languages
+  Languages,
+  BookOpen
 } from 'lucide-react';
 import Seo from '../../components/Seo';
 
@@ -84,12 +85,18 @@ export default function CoursesHubPage() {
       href: '/courses/hsk2/vocabulary'
     }
   ];
+  const englishCourse = {
+    code: 'ENG1000',
+    topics: 50,
+    vocabulary: 1044,
+    href: '/courses/eng1000/vocabulary'
+  };
 
   return (
     <>
       <Seo
-        title="Cổng Học Ngoại Ngữ - JPD113, JPD123, HSK1 & HSK2 | Mindora AI"
-        description="Học tiếng Nhật theo các học phần JPD113, JPD123 của Đại học FPT và luyện từ vựng tiếng Trung HSK1, HSK2."
+        title="Cổng Học Ngoại Ngữ - Tiếng Nhật, Trung và Anh | Mindora AI"
+        description="Học tiếng Nhật, từ vựng tiếng Trung HSK1–2 và 1.000 từ tiếng Anh theo chủ đề."
         canonicalPath="/courses"
       />
 
@@ -99,7 +106,7 @@ export default function CoursesHubPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-50 border border-orange-200/80 text-[#F05A28] text-xs font-bold uppercase tracking-wider mb-4">
               <GraduationCap size={16} />
-              <span>Khóa Học Tiếng Nhật &amp; Tiếng Trung</span>
+              <span>Khóa Học Tiếng Nhật, Trung &amp; Anh</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
@@ -107,7 +114,7 @@ export default function CoursesHubPage() {
             </h1>
 
             <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              Chọn học phần tiếng Nhật JPD113, JPD123 theo chương trình Đại học FPT hoặc học từ vựng tiếng Trung HSK1, HSK2.
+              Chọn học phần tiếng Nhật, từ vựng tiếng Trung HSK1–2 hoặc 1.000 từ tiếng Anh theo 50 chủ đề.
             </p>
           </div>
         </div>
@@ -289,6 +296,29 @@ export default function CoursesHubPage() {
               </Link>
             ))}
           </div>
+
+          <Link
+            to={englishCourse.href}
+            className="group mt-5 flex flex-col justify-between gap-5 rounded-3xl border border-orange-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-xl cursor-pointer sm:flex-row sm:items-center sm:p-8"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-orange-100 bg-orange-50 text-[#F05A28]">
+                <BookOpen size={26} />
+              </div>
+              <div>
+                <div className="mb-1 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#F05A28]">Tiếng Anh</span>
+                  <span className="text-xs font-semibold text-slate-500">{englishCourse.topics} chủ đề • {englishCourse.vocabulary.toLocaleString('vi-VN')} mục từ</span>
+                </div>
+                <h2 className="text-xl font-black text-slate-900">1.000 từ tiếng Anh thông dụng</h2>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Học theo 50 chủ đề từ gia đình, quần áo đến công sở; có IPA và nghĩa tiếng Việt.</p>
+              </div>
+            </div>
+            <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#1E293B] px-5 py-3.5 text-sm font-black text-white transition-colors group-hover:bg-[#F05A28]">
+              <span>Vào học ENG1000</span>
+              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+            </span>
+          </Link>
         </div>
       </div>
     </>

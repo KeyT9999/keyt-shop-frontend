@@ -42,7 +42,7 @@ export default function PassiveListeningMode({ items, courseCode = 'jpd123', spe
     if (player.phase === 'japanese') {
       statusMessage = language.kind === 'chinese' && player.currentEntry?.audioUrl
         ? 'Đang phát âm thanh tiếng Trung đã lưu'
-        : `Đang đọc từ tiếng ${language.kind === 'chinese' ? 'Trung' : 'Nhật'}`;
+        : `Đang đọc từ ${language.languageName.toLowerCase()}`;
     }
     else if (player.phase === 'vietnamese') statusMessage = 'Đang đọc nghĩa tiếng Việt';
     else if (player.phase === 'gap-before-meaning') statusMessage = 'Đang nghỉ trước khi đọc nghĩa';

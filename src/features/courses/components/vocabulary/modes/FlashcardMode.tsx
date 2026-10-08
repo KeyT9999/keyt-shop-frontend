@@ -408,13 +408,13 @@ export default function FlashcardMode({
             <div className="my-auto py-2 flex flex-col items-center">
               {/* Reading Pill */}
               {showReadingOnFront && currentCard.reading && currentCard.reading !== currentCard.term && (
-                <div className="inline-flex items-center gap-1 text-sm sm:text-base font-bold text-[#F05A28] bg-orange-50/80 px-3 py-0.5 rounded-full border border-orange-200/60 mb-2 font-japanese">
+                <div className={`inline-flex items-center gap-1 text-sm sm:text-base font-bold text-[#F05A28] bg-orange-50/80 px-3 py-0.5 rounded-full border border-orange-200/60 mb-2 ${language.kind === 'english' ? '' : 'font-japanese'}`}>
                   <span>{currentCard.reading}</span>
                 </div>
               )}
 
               {/* Main Vocabulary Term */}
-              <h3 className="text-4xl sm:text-6xl font-black text-slate-900 font-japanese tracking-wide leading-tight">
+              <h3 className={`text-4xl sm:text-6xl font-black text-slate-900 tracking-wide leading-tight ${language.kind === 'english' ? '' : 'font-japanese'}`}>
                 {currentCard.term}
               </h3>
 
@@ -479,7 +479,7 @@ export default function FlashcardMode({
             {/* Back Main Content */}
             <div className="my-auto py-1 w-full max-w-md flex flex-col items-center">
               {/* Reading display */}
-              <div className="text-xl sm:text-2xl font-black text-[#F05A28] font-japanese tracking-wide mb-1">
+              <div className={`text-xl sm:text-2xl font-black text-[#F05A28] tracking-wide mb-1 ${language.kind === 'english' ? '' : 'font-japanese'}`}>
                 {currentCard.reading}
               </div>
 

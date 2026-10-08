@@ -107,8 +107,8 @@ export default function TypingMode({ items, courseCode = 'jpd123', onRecordResul
           <RotateCcw size={12} />
           <span>
             {direction === 'vi-to-ja'
-              ? `Nghĩa → Gõ ${language.kind === 'chinese' ? 'Trung' : 'Nhật'}`
-              : `Từ ${language.kind === 'chinese' ? 'Trung' : 'Nhật'} → Gõ Nghĩa`}
+              ? `Nghĩa → Gõ ${language.languageShortName}`
+              : `Từ ${language.languageShortName} → Gõ Nghĩa`}
           </span>
         </button>
       </div>
@@ -117,9 +117,11 @@ export default function TypingMode({ items, courseCode = 'jpd123', onRecordResul
       <div className="w-full p-8 rounded-3xl bg-white border-2 border-slate-200 shadow-lg text-center mb-6">
         <span className="text-xs uppercase font-bold tracking-wider text-slate-400 block mb-2">
           {direction === 'vi-to-ja'
-            ? language.kind === 'chinese'
-              ? 'Hãy gõ chữ Hán hoặc Pinyin của từ:'
-              : 'Hãy gõ Kanji hoặc Hiragana của từ:'
+            ? language.kind === 'english'
+              ? 'Hãy gõ từ tiếng Anh:'
+              : language.kind === 'chinese'
+                ? 'Hãy gõ chữ Hán hoặc Pinyin của từ:'
+                : 'Hãy gõ Kanji hoặc Hiragana của từ:'
             : 'Hãy gõ nghĩa tiếng Việt của từ:'}
         </span>
 
@@ -135,7 +137,7 @@ export default function TypingMode({ items, courseCode = 'jpd123', onRecordResul
         ) : (
           <div>
             <div className="flex items-center justify-center gap-2">
-              <h3 className="text-4xl sm:text-5xl font-black text-slate-900 font-japanese">
+              <h3 className={`text-4xl sm:text-5xl font-black text-slate-900 ${language.kind === 'english' ? '' : 'font-japanese'}`}>
                 {currentItem.term}
               </h3>
               <button
@@ -146,9 +148,7 @@ export default function TypingMode({ items, courseCode = 'jpd123', onRecordResul
                 <Volume2 size={18} />
               </button>
             </div>
-            <div className="text-sm font-semibold text-[#F05A28] mt-1 font-japanese">
-              {currentItem.reading}
-            </div>
+            {currentItem.reading && <div className="text-sm font-semibold text-[#F05A28] mt-1">{currentItem.reading}</div>}
           </div>
         )}
 
@@ -163,7 +163,7 @@ export default function TypingMode({ items, courseCode = 'jpd123', onRecordResul
               disabled={isSubmitted}
               placeholder={
                 direction === 'vi-to-ja'
-                  ? 'Ví dụ: きた hoặc 北...'
+                  ? language.kind === 'english' ? 'Ví dụ: family...' : 'Ví dụ: きた hoặc 北...'
                   : 'Ví dụ: phía bắc...'
               }
               className={`w-full py-4 pl-5 pr-14 rounded-2xl text-base sm:text-lg font-bold border-2 transition-all outline-none ${

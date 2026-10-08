@@ -325,6 +325,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     location.pathname.startsWith('/courses/jpd') ||
     kanaTools.some((item) => location.pathname === item.href);
   const isChineseActive = /^\/courses\/hsk[12](?:\/|$)/i.test(location.pathname);
+  const isEnglishActive = /^\/courses\/eng1000(?:\/|$)/i.test(location.pathname);
 
   return (
     <div className="header-wrapper">
@@ -720,6 +721,68 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   </div>
                 )}
               </li>
+
+              {/* 7. Tiếng Anh Dropdown */}
+              <li
+                className="header-nav-item dropdown-trigger"
+                onMouseEnter={() => handleMouseEnter('english')}
+                onMouseLeave={handleMouseLeave}
+              >
+                <button
+                  type="button"
+                  className={`header-nav-link dropdown-btn flex items-center gap-1.5 cursor-pointer ${isEnglishActive ? 'active' : ''}`}
+                  aria-expanded={activeDropdown === 'english'}
+                  aria-controls="english-course-menu"
+                  onClick={() => setActiveDropdown(activeDropdown === 'english' ? null : 'english')}
+                >
+                  <BookOpen size={15} className="text-[#F05A28]" />
+                  <span>Tiếng Anh</span>
+                  <span className="text-[10px] font-bold bg-[#F05A28]/10 text-[#F05A28] px-1.5 py-0.5 rounded-full border border-orange-200">
+                    1 Khóa
+                  </span>
+                  <ChevronDown
+                    size={14}
+                    className={`dropdown-chevron ${activeDropdown === 'english' ? 'open' : ''}`}
+                  />
+                </button>
+
+                {activeDropdown === 'english' && (
+                  <div className="modern-dropdown-menu chinese-dropdown" id="english-course-menu">
+                    <div className="chinese-dropdown-heading">
+                      <div className="chinese-dropdown-icon"><BookOpen size={20} /></div>
+                      <div>
+                        <span className="chinese-dropdown-eyebrow">TIẾNG ANH THEO CHỦ ĐỀ</span>
+                        <h3>1.000 từ thông dụng</h3>
+                        <p>Học theo 50 chủ đề, giữ nguyên dữ liệu nguồn</p>
+                      </div>
+                    </div>
+
+                    <div className="chinese-dropdown-stats" aria-label="Nội dung khóa học từ vựng tiếng Anh">
+                      <div><strong>50</strong><span>chủ đề</span></div>
+                      <div><strong>1.044</strong><span>mục từ</span></div>
+                      <div><strong>IPA</strong><span>phát âm</span></div>
+                    </div>
+
+                    <nav className="chinese-dropdown-courses" aria-label="Chọn khóa học tiếng Anh">
+                      <Link
+                        to="/courses/eng1000/vocabulary"
+                        className="chinese-dropdown-cta cursor-pointer"
+                        onClick={() => setActiveDropdown(null)}
+                      >
+                        <span className="chinese-dropdown-cta-main">
+                          <span className="chinese-dropdown-cta-icon"><BookMarked size={17} /></span>
+                          <span className="chinese-dropdown-cta-label">
+                            <strong>Học 1.000 từ tiếng Anh</strong>
+                            <span>1.044 mục từ • 50 chủ đề</span>
+                          </span>
+                        </span>
+                        <ArrowRight size={17} className="chinese-dropdown-cta-arrow" />
+                      </Link>
+                    </nav>
+                    <p className="chinese-dropdown-note">Flashcard, luyện gõ, trắc nghiệm và nghe thụ động</p>
+                  </div>
+                )}
+              </li>
             </ul>
           </nav>
 
@@ -997,6 +1060,26 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             <BookMarked size={16} className="text-[#F05A28]" />
             <span>Từ vựng HSK2</span>
             <span className="mobile-badge">140 từ</span>
+          </Link>
+
+          <div className="mobile-group-title flex items-center justify-between">
+            <span>Tiếng Anh</span>
+            <Link
+              to="/courses/eng1000/vocabulary"
+              className="text-[11px] font-bold text-[#F05A28] lowercase cursor-pointer"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              vào học →
+            </Link>
+          </div>
+          <Link
+            to="/courses/eng1000/vocabulary"
+            className={`mobile-sub-link ${isEnglishActive ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <BookOpen size={16} className="text-[#F05A28]" />
+            <span>1.000 từ tiếng Anh</span>
+            <span className="mobile-badge">1.044 từ</span>
           </Link>
 
           {/* Divider */}

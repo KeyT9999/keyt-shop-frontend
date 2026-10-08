@@ -424,12 +424,12 @@ export default function TimeAttackMode({
         </button>
 
         {currentQ.promptReading !== currentQ.promptTerm && (
-          <div className="inline-flex px-3 py-0.5 rounded-full bg-orange-50 text-[#F05A28] font-bold text-sm font-japanese border border-orange-200/60 mb-2">
+          <div className={`inline-flex px-3 py-0.5 rounded-full bg-orange-50 text-[#F05A28] font-bold text-sm border border-orange-200/60 mb-2 ${language.kind === 'english' ? '' : 'font-japanese'}`}>
             {currentQ.promptReading}
           </div>
         )}
 
-        <h3 className="text-4xl sm:text-6xl font-black text-slate-900 font-japanese tracking-wide my-2">
+        <h3 className={`text-4xl sm:text-6xl font-black text-slate-900 tracking-wide my-2 ${language.kind === 'english' ? '' : 'font-japanese'}`}>
           {currentQ.promptTerm}
         </h3>
 

@@ -17,7 +17,7 @@ export function usePassiveVocabularyPlayer(
 ) {
   const language = getCourseLanguage(courseCode);
   const sequence = useMemo(
-    () => preparePassiveListeningSequence(items, language.kind === 'chinese'),
+    () => preparePassiveListeningSequence(items, language.kind !== 'japanese'),
     [items, language.kind]
   );
   const player = useMemo(

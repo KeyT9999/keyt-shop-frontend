@@ -1,19 +1,33 @@
 export interface CourseLanguageConfig {
-  kind: 'japanese' | 'chinese';
-  speechLocale: 'ja-JP' | 'zh-CN';
-  languageName: 'Tiếng Nhật' | 'Tiếng Trung';
-  readingName: 'Furigana' | 'Pinyin';
-  writingName: 'Kanji' | 'Hán tự';
+  kind: 'japanese' | 'chinese' | 'english';
+  speechLocale: 'ja-JP' | 'zh-CN' | 'en-GB';
+  languageName: 'Tiếng Nhật' | 'Tiếng Trung' | 'Tiếng Anh';
+  languageShortName: 'Nhật' | 'Trung' | 'Anh';
+  readingName: 'Furigana' | 'Pinyin' | 'IPA';
+  writingName: 'Kanji' | 'Hán tự' | 'Từ tiếng Anh';
 }
 
 export function getCourseLanguage(courseCode?: string): CourseLanguageConfig {
-  if ((courseCode || '').toUpperCase().startsWith('HSK')) {
+  const normalizedCode = (courseCode || '').toUpperCase();
+  if (normalizedCode.startsWith('HSK')) {
     return {
       kind: 'chinese',
       speechLocale: 'zh-CN',
       languageName: 'Tiếng Trung',
+      languageShortName: 'Trung',
       readingName: 'Pinyin',
       writingName: 'Hán tự'
+    };
+  }
+
+  if (normalizedCode.startsWith('ENG')) {
+    return {
+      kind: 'english',
+      speechLocale: 'en-GB',
+      languageName: 'Tiếng Anh',
+      languageShortName: 'Anh',
+      readingName: 'IPA',
+      writingName: 'Từ tiếng Anh'
     };
   }
 
@@ -21,6 +35,7 @@ export function getCourseLanguage(courseCode?: string): CourseLanguageConfig {
     kind: 'japanese',
     speechLocale: 'ja-JP',
     languageName: 'Tiếng Nhật',
+    languageShortName: 'Nhật',
     readingName: 'Furigana',
     writingName: 'Kanji'
   };

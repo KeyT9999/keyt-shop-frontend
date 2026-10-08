@@ -1,4 +1,4 @@
-export type PassiveSpeechLocale = 'ja-JP' | 'zh-CN' | 'vi-VN';
+export type PassiveSpeechLocale = 'ja-JP' | 'zh-CN' | 'en-GB' | 'vi-VN';
 
 export interface PassiveSpeechCallbacks {
   onEnd: () => void;
@@ -82,7 +82,7 @@ export function createBrowserPassiveSpeechAdapter(): PassiveSpeechAdapter {
         const speakWithVoice = (voice: SpeechSynthesisVoice | null, canRetryWithDefault: boolean) => {
           const utterance = new Utterance(text);
           utterance.lang = locale;
-          utterance.rate = locale === 'ja-JP' || locale === 'zh-CN' ? 0.9 : 0.95;
+          utterance.rate = locale === 'ja-JP' || locale === 'zh-CN' || locale === 'en-GB' ? 0.9 : 0.95;
           utterance.voice = voice;
           utterance.onend = callbacks.onEnd;
           utterance.onerror = (event) => {

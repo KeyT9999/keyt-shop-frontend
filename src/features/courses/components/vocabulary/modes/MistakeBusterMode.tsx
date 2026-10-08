@@ -231,11 +231,11 @@ export default function MistakeBusterMode({
             /* Front: Japanese Term */
             <div className="space-y-3">
               {currentItem.reading && currentItem.reading !== currentItem.term && (
-                <div className="inline-flex px-3 py-0.5 rounded-full bg-orange-50 text-[#F05A28] font-bold text-sm font-japanese border border-orange-200/60">
+                <div className={`inline-flex px-3 py-0.5 rounded-full bg-orange-50 text-[#F05A28] font-bold text-sm border border-orange-200/60 ${language.kind === 'english' ? '' : 'font-japanese'}`}>
                   {currentItem.reading}
                 </div>
               )}
-              <h3 className="text-4xl sm:text-6xl font-black text-slate-900 font-japanese">
+              <h3 className={`text-4xl sm:text-6xl font-black text-slate-900 ${language.kind === 'english' ? '' : 'font-japanese'}`}>
                 {currentItem.term}
               </h3>
               <p className="text-xs text-slate-400 font-medium">Nhấn thẻ để xem ý nghĩa</p>
@@ -243,7 +243,7 @@ export default function MistakeBusterMode({
           ) : (
             /* Back: Meaning & Example */
             <div className="space-y-3 animate-fadeIn max-w-md">
-              <div className="text-xl sm:text-2xl font-black text-[#F05A28] font-japanese">
+              <div className={`text-xl sm:text-2xl font-black text-[#F05A28] ${language.kind === 'english' ? '' : 'font-japanese'}`}>
                 {currentItem.reading}
               </div>
               <h4 className="text-2xl sm:text-3xl font-black text-slate-900">

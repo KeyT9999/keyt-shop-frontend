@@ -197,7 +197,7 @@ export default function VocabularyDetailPage() {
         canonicalPath={`/courses/${courseCode.toLowerCase()}/vocabulary/${lesson.slug}`}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
         <CourseBreadcrumb
           items={[
             { label: upperCode, href: `/courses/${courseCode.toLowerCase()}` },
@@ -207,8 +207,8 @@ export default function VocabularyDetailPage() {
         />
 
         {/* Lesson Header */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-xs mb-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="mb-5 rounded-3xl border border-slate-200/90 bg-white p-4 shadow-xs sm:mb-8 sm:p-6 lg:p-8">
+          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center lg:gap-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="px-3 py-1 rounded-full text-xs font-black bg-orange-50 text-[#F05A28] border border-orange-200">
@@ -218,7 +218,7 @@ export default function VocabularyDetailPage() {
                   {items.length} từ vựng
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+              <h1 className="text-xl font-extrabold leading-tight text-slate-900 sm:text-2xl lg:text-3xl">
                 {lesson.lessonCode}: {cleanTitle}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
@@ -227,7 +227,7 @@ export default function VocabularyDetailPage() {
             </div>
 
             {/* Progress Bar Widget */}
-            <div className="min-w-[220px] max-w-xs p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+            <div className="w-full rounded-2xl border border-slate-200/80 bg-slate-50 p-3.5 lg:w-auto lg:min-w-[220px] lg:max-w-xs lg:p-4">
               <div className="flex justify-between items-center text-xs font-semibold text-slate-600 mb-1.5">
                 <span className="flex items-center gap-1">
                   <CheckCircle2 size={13} className="text-emerald-500" />

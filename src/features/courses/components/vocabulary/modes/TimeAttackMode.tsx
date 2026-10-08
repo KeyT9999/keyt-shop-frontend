@@ -245,7 +245,7 @@ export default function TimeAttackMode({
 
   if (items.length < 3) {
     return (
-      <div className="p-12 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-500 sm:p-10">
         Bài học cần ít nhất 3 từ vựng để mở chế độ Đấu Trí Phản Xạ 60 Giây.
       </div>
     );
@@ -254,13 +254,13 @@ export default function TimeAttackMode({
   // Pre-game Welcome Screen
   if (!isPlaying && !isFinished) {
     return (
-      <div className="max-w-xl mx-auto p-8 sm:p-12 bg-white rounded-3xl border border-slate-200 shadow-xl text-center animate-scaleUp">
+      <div className="mx-auto w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-xl animate-scaleUp sm:p-8 lg:p-12">
         <div className="w-20 h-20 rounded-3xl bg-linear-to-tr from-amber-500 via-[#F05A28] to-rose-600 text-white flex items-center justify-center mx-auto mb-5 shadow-lg shadow-orange-500/30">
           <Flame size={44} className="animate-pulse" />
         </div>
 
         <h3 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2">
-          Đấu Trí Phản Xạ 60 Giây 🔥
+          Đấu Trí Phản Xạ 60 Giây
         </h3>
 
         <p className="text-xs sm:text-sm text-slate-500 mb-6 leading-relaxed max-w-md mx-auto">
@@ -277,7 +277,7 @@ export default function TimeAttackMode({
         <button
           type="button"
           onClick={startGame}
-          className="w-full py-4 px-6 rounded-2xl bg-linear-to-r from-[#F05A28] to-amber-500 hover:brightness-110 text-white font-black text-base transition-all shadow-lg shadow-orange-500/30 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2.5 cursor-pointer"
+          className="flex min-h-12 w-full items-center justify-center gap-2.5 rounded-2xl bg-linear-to-r from-[#F05A28] to-amber-500 px-4 py-3 text-base font-black text-white shadow-lg shadow-orange-500/30 transition-all hover:brightness-110 cursor-pointer sm:px-6 sm:py-4"
         >
           <Zap size={20} />
           <span>Bắt Đầu Đua Ngay!</span>
@@ -293,7 +293,7 @@ export default function TimeAttackMode({
   // End Game Screen
   if (isFinished) {
     return (
-      <div className="max-w-xl mx-auto p-8 sm:p-12 bg-white rounded-3xl border border-slate-200 shadow-2xl text-center animate-scaleUp">
+      <div className="mx-auto w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-2xl animate-scaleUp sm:p-8 lg:p-12">
         <div className={`w-20 h-20 rounded-3xl mx-auto mb-4 border-2 flex items-center justify-center font-black text-4xl shadow-md ${rankInfo.color}`}>
           {rankInfo.rank}
         </div>
@@ -353,11 +353,11 @@ export default function TimeAttackMode({
   if (!currentQ) return null;
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col items-center select-none">
+    <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-0 select-none sm:px-2">
       {/* ── Arcade HUD Top Bar ── */}
-      <div className="w-full mb-4 p-4 rounded-3xl bg-slate-900 text-white shadow-xl flex items-center justify-between gap-4 border border-slate-800">
+      <div className="mb-3 grid w-full grid-cols-2 items-center gap-x-3 gap-y-2 rounded-2xl border border-slate-800 bg-slate-900 p-3 text-white shadow-xl sm:mb-4 sm:flex sm:justify-between sm:gap-4 sm:rounded-3xl sm:p-4">
         {/* Stopwatch & Bonus */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
           <div className="w-10 h-10 rounded-2xl bg-orange-500/20 text-[#F05A28] flex items-center justify-center font-bold">
             <Timer size={22} className={timeLeftMs < 10000 ? 'text-rose-400 animate-spin' : ''} />
           </div>
@@ -387,14 +387,14 @@ export default function TimeAttackMode({
 
         {/* Combo Fire */}
         {comboStreak >= 2 && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-linear-to-r from-orange-500 to-amber-500 text-white font-black text-xs shadow-md animate-pulse">
+          <div className="col-span-2 flex items-center justify-center gap-1.5 rounded-full bg-linear-to-r from-orange-500 to-amber-500 px-3 py-1.5 text-xs font-black text-white shadow-md animate-pulse sm:col-span-1">
             <Flame size={14} />
             <span>Combo x{comboStreak}!</span>
           </div>
         )}
 
         {/* Score Counter */}
-        <div className="text-right">
+        <div className="text-right sm:ml-auto">
           <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
             Điểm Số
           </div>
@@ -406,7 +406,7 @@ export default function TimeAttackMode({
 
       {/* ── Question Card with Flash Effect ── */}
       <div
-        className={`w-full p-6 sm:p-8 rounded-3xl bg-white border-2 transition-all shadow-xl text-center mb-6 relative ${
+        className={`relative mb-5 w-full rounded-3xl border-2 bg-white p-4 pt-14 text-center shadow-xl transition-all sm:mb-6 sm:p-6 sm:pt-8 md:p-8 ${
           feedbackEffect === 'correct'
             ? 'border-emerald-500 bg-emerald-50/50 ring-4 ring-emerald-200'
             : feedbackEffect === 'wrong'
@@ -417,7 +417,7 @@ export default function TimeAttackMode({
         <button
           type="button"
           onClick={() => speak(currentQ.promptTerm)}
-          className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-orange-50 text-[#F05A28] hover:bg-[#F05A28] hover:text-white border border-orange-200 transition-all flex items-center justify-center cursor-pointer"
+          className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-[#F05A28] transition-colors hover:bg-[#F05A28] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 cursor-pointer sm:right-4 sm:top-4"
           title="Phát âm"
         >
           <Volume2 size={16} />
@@ -429,7 +429,7 @@ export default function TimeAttackMode({
           </div>
         )}
 
-        <h3 className={`text-4xl sm:text-6xl font-black text-slate-900 tracking-wide my-2 ${language.kind === 'english' ? '' : 'font-japanese'}`}>
+        <h3 className={`my-2 break-words text-3xl font-black tracking-wide text-slate-900 sm:text-5xl lg:text-6xl ${language.kind === 'english' ? '' : 'font-japanese'}`}>
           {currentQ.promptTerm}
         </h3>
 
@@ -443,13 +443,13 @@ export default function TimeAttackMode({
             key={opt.id}
             type="button"
             onClick={() => handleAnswer(opt.isCorrect)}
-            className="p-4 rounded-2xl bg-white text-slate-800 border-2 border-slate-200 hover:border-orange-400 hover:bg-orange-50/30 hover:shadow-md transition-all flex items-center justify-between gap-3 cursor-pointer text-left active:scale-95"
+            className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border-2 border-slate-200 bg-white p-3 text-left text-slate-800 transition-colors hover:border-orange-400 hover:bg-orange-50/30 hover:shadow-md cursor-pointer sm:p-4"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <span className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-bold font-mono text-xs flex items-center justify-center shrink-0 border border-slate-200">
                 {opt.id}
               </span>
-              <span className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+              <span className="min-w-0 flex-1 break-words text-sm font-bold leading-tight text-slate-900 sm:text-base">
                 {opt.text}
               </span>
             </div>

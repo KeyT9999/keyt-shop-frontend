@@ -315,18 +315,18 @@ export default function SpeedMatchMode({
 
   if (!items || items.length < 2) {
     return (
-      <div className="p-12 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-500 sm:p-10">
         Bài học cần ít nhất 2 từ vựng để mở trò chơi Ghép Cặp Thần Tốc.
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col items-center select-none">
+    <div className="mx-auto flex w-full max-w-3xl flex-col items-center px-0 select-none sm:px-2">
       {/* ── Top Bar: Stopwatch, Score, Remaining & Best ── */}
-      <div className="w-full mb-6 p-4 rounded-3xl bg-white border border-slate-200/90 shadow-sm flex items-center justify-between gap-4">
+      <div className="mb-4 grid w-full grid-cols-2 items-center gap-3 rounded-2xl border border-slate-200/90 bg-white p-3 shadow-sm sm:mb-6 sm:flex sm:justify-between sm:gap-4 sm:rounded-3xl sm:p-4">
         {/* Left: Stopwatch */}
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold transition-colors ${
             isStarted ? 'bg-orange-500 text-white shadow-md shadow-orange-500/30' : 'bg-orange-50 text-[#F05A28]'
           }`}>
@@ -343,7 +343,7 @@ export default function SpeedMatchMode({
         </div>
 
         {/* Center: Score & Remaining */}
-        <div className="flex items-center gap-2">
+        <div className="col-span-2 grid grid-cols-2 gap-2 sm:col-span-1 sm:flex sm:items-center sm:gap-2">
           {streakCount >= 2 && (
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-linear-to-r from-orange-500 to-amber-500 text-white font-black text-xs shadow-xs animate-bounce">
               <Flame size={14} />
@@ -351,17 +351,17 @@ export default function SpeedMatchMode({
             </div>
           )}
 
-          <div className="px-3 py-1.5 rounded-xl bg-orange-50 text-[#F05A28] border border-orange-200/60 font-black text-xs">
+          <div className="rounded-xl border border-orange-200/60 bg-orange-50 px-2.5 py-2 text-center text-xs font-black text-[#F05A28] sm:px-3 sm:py-1.5">
             {score} Điểm
           </div>
 
-          <span className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs">
+          <span className="rounded-xl bg-slate-100 px-2.5 py-2 text-center text-xs font-bold text-slate-600 sm:px-3 sm:py-1.5">
             Còn lại: <strong className="text-slate-900">{remainingPairs}</strong> cặp
           </span>
         </div>
 
         {/* Right: Personal Best & Restart */}
-        <div className="flex items-center gap-2">
+        <div className="col-span-2 flex items-center justify-end gap-2 sm:col-span-1 sm:justify-start">
           {personalBest !== null && (
             <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 border border-amber-200/80 text-xs font-bold">
               <Trophy size={14} className="text-amber-500" />
@@ -372,7 +372,7 @@ export default function SpeedMatchMode({
           <button
             type="button"
             onClick={initGame}
-            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 cursor-pointer"
             title="Làm mới bảng thẻ (6 từ mới)"
           >
             <RotateCcw size={16} />
@@ -381,7 +381,7 @@ export default function SpeedMatchMode({
       </div>
 
       {/* ── Match Cards Grid (3x4 or 4x3) ── */}
-      <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-3.5 min-h-[380px]">
+      <div className="min-h-[320px] w-full grid grid-cols-2 gap-2.5 sm:min-h-[380px] sm:grid-cols-3 sm:gap-3 md:grid-cols-4 md:gap-3.5">
         {cards.map((card) => {
           const isMatched = matchedWordKeys.has(card.wordKey);
           const isSelected = selectedCard?.id === card.id;
@@ -421,7 +421,7 @@ export default function SpeedMatchMode({
               type="button"
               onClick={() => handleCardClick(card)}
               disabled={isMatched}
-              className={`min-h-[110px] sm:min-h-[125px] p-4 rounded-2xl flex flex-col items-center justify-center text-center transition-all duration-200 cursor-pointer ${cardStyle}`}
+              className={`flex min-h-[100px] flex-col items-center justify-center rounded-2xl p-2.5 text-center transition-all duration-200 cursor-pointer sm:min-h-[125px] sm:p-4 ${cardStyle}`}
             >
               {card.type === 'japanese' ? (
                 <div className="space-y-1">
@@ -432,7 +432,7 @@ export default function SpeedMatchMode({
                       {card.subtext}
                     </div>
                   )}
-                  <div className={`text-xl sm:text-2xl font-black leading-snug ${language.kind === 'english' ? '' : 'font-japanese'} ${
+                  <div className={`break-words text-xl font-black leading-snug sm:text-2xl ${language.kind === 'english' ? '' : 'font-japanese'} ${
                     isWrong || isJustMatched ? 'text-white' : 'text-slate-900'
                   }`}>
                     {card.text}
@@ -465,8 +465,8 @@ export default function SpeedMatchMode({
               <span className="text-[10px] font-bold uppercase tracking-wider mt-0.5">{getRank(finalTimeSec, wrongCount).title}</span>
             </div>
 
-            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 mb-1">
-              Ghép Cặp Hoàn Tất! ⚡
+            <h3 className="mb-1 text-xl font-black text-slate-900 sm:text-3xl">
+              Ghép Cặp Hoàn Tất!
             </h3>
 
             <p className="text-xs sm:text-sm text-slate-500 mb-6">
@@ -497,7 +497,7 @@ export default function SpeedMatchMode({
             </div>
 
             {/* Mistakes & Personal Best details */}
-            <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs font-semibold text-slate-600 mb-6">
+            <div className="mb-6 flex flex-col items-start justify-between gap-3 rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600 sm:flex-row sm:items-center">
               <span className="flex items-center gap-1.5">
                 <Target size={14} className="text-slate-400" />
                 Ghép sai: <strong className="text-slate-900">{wrongCount} lần</strong>
@@ -520,7 +520,7 @@ export default function SpeedMatchMode({
               <button
                 type="button"
                 onClick={initGame}
-                className="w-full py-3.5 px-4 rounded-xl bg-[#F05A28] hover:bg-[#d94817] text-white font-bold text-sm transition-all shadow-md shadow-orange-500/25 flex items-center justify-center gap-2 cursor-pointer"
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#F05A28] px-4 py-3.5 text-sm font-bold text-white shadow-md shadow-orange-500/25 transition-colors hover:bg-[#d94817] cursor-pointer"
               >
                 <span>Chơi vòng mới (6 cặp khác)</span>
                 <ChevronRight size={16} />
@@ -529,7 +529,7 @@ export default function SpeedMatchMode({
               <button
                 type="button"
                 onClick={() => setIsVictory(false)}
-                className="w-full py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer"
+                className="min-h-11 w-full rounded-xl bg-slate-100 px-4 py-3 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-200 cursor-pointer"
               >
                 Xem lại bảng chơi
               </button>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from 'react';
 import {
   Shuffle,
   RotateCw,
@@ -53,6 +54,8 @@ export default function FlashcardMode({
   const [isSessionComplete, setIsSessionComplete] = useState(false);
 
   const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const swipeStartRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
+  const suppressFlipClickUntilRef = useRef(0);
 
   // Sync with prop items
   useEffect(() => {
@@ -102,6 +105,48 @@ export default function FlashcardMode({
     setIsSessionComplete(false);
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : cardList.length - 1));
   }, [cardList.length]);
+
+  const handleCardPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    // Clear a stale suppression if the browser did not emit a click after the last swipe.
+    suppressFlipClickUntilRef.current = 0;
+    if (event.pointerType !== 'touch') return;
+
+    const target = event.target;
+    if (target instanceof Element && target.closest('button')) return;
+
+    // Keep the browser's edge-swipe navigation available on mobile.
+    if (event.clientX <= 24 || event.clientX >= window.innerWidth - 24) return;
+
+    swipeStartRef.current = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+    };
+  };
+
+  const handleCardPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start || start.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    if (Math.abs(deltaX) < 55 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.2) return;
+
+    // A completed swipe should navigate the deck, not also flip the card.
+    suppressFlipClickUntilRef.current = Date.now() + 500;
+    if (deltaX > 0) handleNext();
+    else handlePrev();
+  };
+
+  const handleCardClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (Date.now() < suppressFlipClickUntilRef.current) {
+      suppressFlipClickUntilRef.current = 0;
+      event.preventDefault();
+      return;
+    }
+    handleFlip();
+  };
 
   // 4-Level Anki SRS Spaced Repetition
   const handleRate = (level: 'again' | 'hard' | 'good' | 'easy') => {
@@ -238,7 +283,7 @@ export default function FlashcardMode({
 
   if (!currentCard || cardList.length === 0) {
     return (
-      <div className="p-12 text-center text-slate-500 bg-white rounded-3xl border border-slate-200 max-w-lg mx-auto shadow-xs">
+      <div className="mx-auto max-w-lg rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-500 shadow-xs sm:p-10">
         <BookOpen size={40} className="mx-auto text-slate-300 mb-3" />
         <h4 className="text-base font-bold text-slate-800 mb-1">Không có thẻ từ vựng nào</h4>
         <p className="text-xs text-slate-500 mb-4">
@@ -260,7 +305,7 @@ export default function FlashcardMode({
   const progressPercent = Math.round(((currentIndex + 1) / cardList.length) * 100);
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col items-center select-none">
+    <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-0 select-none sm:px-2">
       {/* ── Top Multi-metric Progress & Controls ── */}
       <div className="w-full mb-4 space-y-3">
         {/* Metric Badges */}
@@ -298,7 +343,7 @@ export default function FlashcardMode({
             <button
               type="button"
               onClick={() => setAutoPlay((prev) => !prev)}
-              className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl border p-2 text-xs font-bold transition-colors cursor-pointer ${
                 autoPlay
                   ? 'bg-orange-50 text-[#F05A28] border-orange-200 shadow-xs'
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
@@ -313,7 +358,7 @@ export default function FlashcardMode({
             <button
               type="button"
               onClick={handleShuffleToggle}
-              className={`p-2 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl border p-2 text-xs font-bold transition-colors cursor-pointer ${
                 isShuffled
                   ? 'bg-indigo-50 text-indigo-700 border-indigo-200 shadow-xs'
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
@@ -328,7 +373,7 @@ export default function FlashcardMode({
             <button
               type="button"
               onClick={() => setShowReadingOnFront((prev) => !prev)}
-              className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer flex items-center gap-1.5"
+              className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white p-2 text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 cursor-pointer"
               title={`Bật/Tắt ${language.readingName} trên mặt trước`}
             >
               {showReadingOnFront ? <Eye size={13} /> : <EyeOff size={13} />}
@@ -348,8 +393,11 @@ export default function FlashcardMode({
 
       {/* ── 3D Flashcard Presentation Card ── */}
       <div
-        className="w-full h-[360px] sm:h-[420px] [perspective:1200px] cursor-pointer select-none mb-6 relative group"
-        onClick={handleFlip}
+        className="relative mb-5 h-[340px] w-full cursor-pointer select-none [perspective:1200px] touch-pan-y group sm:mb-6 sm:h-[420px]"
+        onPointerDown={handleCardPointerDown}
+        onPointerUp={handleCardPointerUp}
+        onPointerCancel={() => { swipeStartRef.current = null; }}
+        onClick={handleCardClick}
       >
         <div
           className={`relative w-full h-full duration-500 [transform-style:preserve-3d] transition-transform rounded-3xl ${
@@ -359,7 +407,7 @@ export default function FlashcardMode({
           {/* ══════════════════════════════════════════
               MẶT TRƯỚC (FRONT FACE) - PURE CLEAN LIGHT
              ══════════════════════════════════════════ */}
-          <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] rounded-3xl bg-white border-2 border-slate-200/90 p-6 sm:p-8 flex flex-col justify-between items-center text-center shadow-lg hover:border-orange-300 hover:shadow-2xl transition-all duration-300">
+          <div className="absolute inset-0 flex h-full w-full flex-col items-center justify-between rounded-3xl border-2 border-slate-200/90 bg-white p-4 text-center shadow-lg transition-all duration-300 hover:border-orange-300 hover:shadow-2xl [backface-visibility:hidden] sm:p-6 md:p-8">
             {/* Front Header */}
             <div className="w-full flex items-center justify-between text-xs">
               <div className="flex items-center gap-1.5 text-slate-400 font-bold uppercase tracking-wider text-[11px]">
@@ -414,7 +462,7 @@ export default function FlashcardMode({
               )}
 
               {/* Main Vocabulary Term */}
-              <h3 className={`text-4xl sm:text-6xl font-black text-slate-900 tracking-wide leading-tight ${language.kind === 'english' ? '' : 'font-japanese'}`}>
+              <h3 className={`break-words text-4xl font-black leading-tight tracking-wide text-slate-900 sm:text-6xl ${language.kind === 'english' ? '' : 'font-japanese'}`}>
                 {currentCard.term}
               </h3>
 
@@ -440,7 +488,7 @@ export default function FlashcardMode({
           {/* ═════════════════════════════════════════════════════════════════════════
               MẶT SAU (BACK FACE) - MODERN WARM LIGHT (HOÀN TOÀN LOẠI BỎ NỀN ĐEN U ÁM)
              ═════════════════════════════════════════════════════════════════════════ */}
-          <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-3xl bg-gradient-to-b from-white via-orange-50/20 to-slate-50/90 border-2 border-orange-200/90 p-6 sm:p-8 flex flex-col justify-between items-center text-center shadow-xl">
+          <div className="absolute inset-0 flex h-full w-full flex-col items-center justify-between rounded-3xl border-2 border-orange-200/90 bg-gradient-to-b from-white via-orange-50/20 to-slate-50/90 p-4 text-center shadow-xl [backface-visibility:hidden] [transform:rotateY(180deg)] sm:p-6 md:p-8">
             {/* Back Header */}
             <div className="w-full flex items-center justify-between text-xs">
               <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[11px] text-[#F05A28]">
@@ -484,7 +532,7 @@ export default function FlashcardMode({
               </div>
 
               {/* Primary Vietnamese Meaning */}
-              <h4 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2 leading-tight tracking-tight">
+              <h4 className="mb-2 break-words text-2xl font-black leading-tight tracking-tight text-slate-900 sm:text-3xl">
                 {currentCard.meaning}
               </h4>
 
@@ -546,7 +594,7 @@ export default function FlashcardMode({
       </div>
 
       {/* ── Action Assessment Controls (3-Level SRS Buttons) ── */}
-      <div className="w-full flex items-center justify-between gap-2.5 sm:gap-3">
+      <div className="grid w-full grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
         {/* Previous Button */}
         <button
           type="button"
@@ -561,7 +609,7 @@ export default function FlashcardMode({
         <button
           type="button"
           onClick={() => handleRate('again')}
-          className="flex-1 py-3 px-1.5 sm:px-3 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-xs sm:text-sm border border-rose-200 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+          className="flex min-h-12 items-center justify-center gap-1 rounded-2xl border border-rose-200 bg-rose-50 px-2 py-3 text-xs font-black text-rose-700 shadow-2xs transition-colors hover:bg-rose-100 cursor-pointer sm:px-3 sm:text-sm"
           title="Lặp lại sau 1 thẻ [1/A]"
         >
           <XCircle size={16} className="text-rose-600 shrink-0" />
@@ -573,7 +621,7 @@ export default function FlashcardMode({
         <button
           type="button"
           onClick={() => handleRate('hard')}
-          className="flex-1 py-3 px-1.5 sm:px-3 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-black text-xs sm:text-sm border border-amber-200 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+          className="flex min-h-12 items-center justify-center gap-1 rounded-2xl border border-amber-200 bg-amber-50 px-2 py-3 text-xs font-black text-amber-800 shadow-2xs transition-colors hover:bg-amber-100 cursor-pointer sm:px-3 sm:text-sm"
           title="Lặp lại sau 3 thẻ [2/S]"
         >
           <HelpCircle size={16} className="text-amber-600 shrink-0" />
@@ -585,7 +633,7 @@ export default function FlashcardMode({
         <button
           type="button"
           onClick={() => handleRate('good')}
-          className="flex-1 py-3 px-1.5 sm:px-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-xs sm:text-sm border border-emerald-200 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+          className="flex min-h-12 items-center justify-center gap-1 rounded-2xl border border-emerald-200 bg-emerald-50 px-2 py-3 text-xs font-black text-emerald-700 shadow-2xs transition-colors hover:bg-emerald-100 cursor-pointer sm:px-3 sm:text-sm"
           title="Đã nhớ bình thường [3/D]"
         >
           <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
@@ -597,7 +645,7 @@ export default function FlashcardMode({
         <button
           type="button"
           onClick={() => handleRate('easy')}
-          className="flex-1 py-3 px-1.5 sm:px-3 rounded-2xl bg-sky-50 hover:bg-sky-100 text-sky-800 font-black text-xs sm:text-sm border border-sky-200 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-[0.98]"
+          className="flex min-h-12 items-center justify-center gap-1 rounded-2xl border border-sky-200 bg-sky-50 px-2 py-3 text-xs font-black text-sky-800 shadow-2xs transition-colors hover:bg-sky-100 cursor-pointer sm:px-3 sm:text-sm"
           title="Đã thuộc làu làu [4/F]"
         >
           <Sparkles size={16} className="text-sky-600 shrink-0" />

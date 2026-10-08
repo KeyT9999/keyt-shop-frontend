@@ -80,17 +80,17 @@ export default function TypingMode({ items, courseCode = 'jpd123', onRecordResul
 
   if (!currentItem) {
     return (
-      <div className="p-12 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-500 sm:p-10">
         Không có từ vựng nào để luyện gõ.
       </div>
     );
   }
 
   return (
-    <div className="max-w-xl mx-auto flex flex-col items-center">
+    <div className="mx-auto flex w-full max-w-xl flex-col items-center px-0 sm:px-2">
       {/* Direction & Stats Header */}
-      <div className="w-full flex items-center justify-between mb-4 px-2 text-xs font-semibold">
-        <div className="flex items-center gap-2">
+      <div className="mb-3 flex w-full flex-col gap-3 px-1 text-xs font-semibold sm:mb-4 sm:flex-row sm:items-center sm:justify-between sm:px-2">
+        <div className="flex items-center justify-between gap-2 sm:justify-start">
           <span className="bg-slate-100 text-slate-800 font-mono font-bold px-3 py-1 rounded-full border border-slate-200">
             {currentIndex + 1} / {items.length}
           </span>
@@ -102,7 +102,7 @@ export default function TypingMode({ items, courseCode = 'jpd123', onRecordResul
         <button
           type="button"
           onClick={() => setDirection((prev) => (prev === 'vi-to-ja' ? 'ja-to-vi' : 'vi-to-ja'))}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 hover:text-slate-900 transition-all cursor-pointer font-medium"
+          className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 font-medium text-slate-700 transition-colors hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 cursor-pointer sm:w-auto sm:rounded-full"
         >
           <RotateCcw size={12} />
           <span>
@@ -114,7 +114,7 @@ export default function TypingMode({ items, courseCode = 'jpd123', onRecordResul
       </div>
 
       {/* Question Card */}
-      <div className="w-full p-8 rounded-3xl bg-white border-2 border-slate-200 shadow-lg text-center mb-6">
+      <div className="mb-5 w-full rounded-3xl border-2 border-slate-200 bg-white p-4 text-center shadow-lg sm:mb-6 sm:p-6 md:p-8">
         <span className="text-xs uppercase font-bold tracking-wider text-slate-400 block mb-2">
           {direction === 'vi-to-ja'
             ? language.kind === 'english'
@@ -127,7 +127,7 @@ export default function TypingMode({ items, courseCode = 'jpd123', onRecordResul
 
         {direction === 'vi-to-ja' ? (
           <div>
-            <h3 className="text-3xl sm:text-4xl font-black text-slate-900 mb-2">
+            <h3 className="mb-2 break-words text-3xl font-black text-slate-900 sm:text-4xl">
               {currentItem.meaning}
             </h3>
             <span className="inline-block px-3 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600">
@@ -191,7 +191,7 @@ export default function TypingMode({ items, courseCode = 'jpd123', onRecordResul
         {/* Feedback Area */}
         {isSubmitted && (
           <div
-            className={`mt-6 p-4 rounded-2xl border flex items-center justify-between gap-4 text-left animate-fadeIn ${
+            className={`mt-5 flex flex-col items-stretch justify-between gap-3 rounded-2xl border p-4 text-left animate-fadeIn sm:mt-6 sm:flex-row sm:items-center sm:gap-4 ${
               isCorrect
                 ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                 : 'bg-rose-50 border-rose-200 text-rose-900'
@@ -221,7 +221,7 @@ export default function TypingMode({ items, courseCode = 'jpd123', onRecordResul
             <button
               type="button"
               onClick={handleNext}
-              className="py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-xs"
+              className="flex min-h-11 w-full shrink-0 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-xs transition-colors hover:bg-slate-800 cursor-pointer sm:w-auto sm:text-sm"
             >
               <span>Từ tiếp theo</span>
               <ArrowRight size={14} />

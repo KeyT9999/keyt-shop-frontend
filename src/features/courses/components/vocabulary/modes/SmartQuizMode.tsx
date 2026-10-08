@@ -396,7 +396,7 @@ export default function SmartQuizMode({
 
   if (!items || items.length < 2) {
     return (
-      <div className="p-12 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-500 sm:p-10">
         Bài học cần ít nhất 2 từ vựng để tạo Smart Quiz 4 dạng.
       </div>
     );
@@ -410,7 +410,7 @@ export default function SmartQuizMode({
     const finalPoints = score * 100;
 
     return (
-      <div className="max-w-2xl mx-auto p-6 sm:p-8 bg-white rounded-3xl border border-slate-200 shadow-xl text-center animate-scaleUp">
+      <div className="mx-auto w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-4 text-center shadow-xl animate-scaleUp sm:p-8">
         {/* Rank Avatar */}
         <div
           className={`w-20 h-20 rounded-3xl bg-linear-to-tr ${rankInfo.color} text-white flex flex-col items-center justify-center mx-auto mb-4 shadow-xl shadow-orange-500/20`}
@@ -428,7 +428,7 @@ export default function SmartQuizMode({
         </p>
 
         {/* Scorecard Boxes */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="mb-6 grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
           <div className="p-4 rounded-2xl bg-orange-50 border border-orange-200/80">
             <div className="text-2xl sm:text-3xl font-black text-[#F05A28] font-mono">
               {finalPoints}
@@ -579,10 +579,10 @@ export default function SmartQuizMode({
   // ── SCREEN: ACTIVE QUIZ QUESTION ─────────────────────────────
   // ─────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-2xl mx-auto flex flex-col items-center select-none">
+    <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-0 select-none sm:px-2">
       {/* ── Top Bar: Progress, Format, Score & Question Count Config ── */}
-      <div className="w-full mb-4 space-y-2">
-        <div className="flex items-center justify-between gap-2 px-1 text-xs">
+      <div className="mb-4 w-full space-y-2">
+        <div className="flex flex-col gap-2 px-1 text-xs sm:flex-row sm:items-center sm:justify-between">
           {/* Format Badge */}
           <div
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-bold text-xs border shadow-2xs ${currentQ.badgeColor}`}
@@ -592,8 +592,8 @@ export default function SmartQuizMode({
           </div>
 
           {/* Question Counter & Controls */}
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-slate-900 text-white font-mono font-bold text-xs">
+          <div className="flex items-center justify-between gap-2 sm:justify-end">
+            <span className="rounded-full bg-slate-900 px-3 py-1.5 font-mono text-xs font-bold text-white">
               Câu {currentIndex + 1} / {questions.length}
             </span>
             <span className="text-slate-500 font-bold text-xs">
@@ -604,7 +604,7 @@ export default function SmartQuizMode({
             <button
               type="button"
               onClick={() => setShowConfig(!showConfig)}
-              className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+              className="flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 cursor-pointer"
               title="Tùy chỉnh số lượng câu hỏi"
             >
               <Sliders size={14} />
@@ -622,17 +622,17 @@ export default function SmartQuizMode({
 
         {/* Expandable Question Count Selector */}
         {showConfig && (
-          <div className="p-3 bg-white border border-slate-200 rounded-2xl shadow-md flex flex-wrap items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex flex-col items-stretch gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-md animate-fadeIn sm:flex-row sm:items-center sm:justify-between">
             <div className="text-xs font-bold text-slate-700">
               Chọn số lượng câu hỏi:
             </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2">
               {[5, 10, 15, 20].map((count) => (
                 <button
                   key={count}
                   type="button"
                   onClick={() => applyQuestionCount(count)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  className={`min-h-10 rounded-lg px-3 py-2 text-xs font-bold transition-colors cursor-pointer ${
                     questionCount === count
                       ? 'bg-[#F05A28] text-white shadow-xs'
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -645,7 +645,7 @@ export default function SmartQuizMode({
               <button
                 type="button"
                 onClick={() => applyQuestionCount(items.length)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  className={`min-h-10 rounded-lg px-3 py-2 text-xs font-bold transition-colors cursor-pointer ${
                   questionCount === items.length
                     ? 'bg-[#F05A28] text-white shadow-xs'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -655,19 +655,19 @@ export default function SmartQuizMode({
               </button>
 
               {/* Custom number input */}
-              <div className="flex items-center gap-1 ml-1 border-l pl-2 border-slate-200">
+              <div className="flex items-center gap-2 sm:ml-1 sm:border-l sm:border-slate-200 sm:pl-2">
                 <input
                   type="number"
                   min={2}
                   max={items.length}
                   value={customInputCount}
                   onChange={(e) => setCustomInputCount(e.target.value)}
-                  className="w-14 px-2 py-1 text-xs font-bold border border-slate-300 rounded-lg text-center"
+                  className="min-h-10 w-16 rounded-lg border border-slate-300 px-2 py-2 text-xs font-bold text-center"
                 />
                 <button
                   type="button"
                   onClick={() => applyQuestionCount(parseInt(customInputCount, 10) || 10)}
-                  className="px-2.5 py-1 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="min-h-10 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-slate-800 cursor-pointer"
                 >
                   Áp dụng
                 </button>
@@ -678,13 +678,13 @@ export default function SmartQuizMode({
       </div>
 
       {/* ── Main Question Card ── */}
-      <div className="w-full p-6 sm:p-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-lg text-center mb-6 relative">
+      <div className="relative mb-5 w-full rounded-3xl border-2 border-slate-200/90 bg-white p-4 pt-14 text-center shadow-lg sm:mb-6 sm:p-6 md:p-8">
         {/* Audio helper button top right */}
         {currentQ.audioTextToPlay && (
           <button
             type="button"
             onClick={() => speak(currentQ.audioTextToPlay!)}
-            className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-orange-50 text-[#F05A28] hover:bg-[#F05A28] hover:text-white border border-orange-200 transition-all flex items-center justify-center cursor-pointer shadow-2xs"
+          className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-[#F05A28] shadow-2xs transition-colors hover:bg-[#F05A28] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 cursor-pointer sm:right-4 sm:top-4"
             title={`Phát âm ${language.languageName.toLowerCase()}`}
           >
             <Volume2 size={16} />
@@ -707,7 +707,7 @@ export default function SmartQuizMode({
             </div>
           </div>
         ) : (
-          <h3 className={`text-3xl sm:text-5xl font-black text-slate-900 my-3 tracking-wide leading-tight ${language.kind === 'english' ? '' : 'font-japanese'}`}>
+          <h3 className={`my-3 break-words text-2xl font-black leading-tight tracking-wide text-slate-900 sm:text-4xl lg:text-5xl ${language.kind === 'english' ? '' : 'font-japanese'}`}>
             {currentQ.prompt}
           </h3>
         )}
@@ -753,9 +753,9 @@ export default function SmartQuizMode({
               type="button"
               onClick={() => handleSelectOption(opt.id)}
               disabled={isAnswered}
-              className={`min-h-[76px] p-4 rounded-2xl text-left transition-all duration-200 flex items-center justify-between gap-3 cursor-pointer ${btnStyle}`}
+              className={`min-h-[60px] rounded-2xl p-3 text-left transition-colors duration-200 flex items-center justify-between gap-3 cursor-pointer sm:min-h-[72px] sm:p-4 ${btnStyle}`}
             >
-              <div className="flex items-center gap-3 w-full">
+              <div className="flex min-w-0 w-full items-center gap-3">
                 {/* Letter Badge [A, B, C, D] */}
                 <span
                   className={`w-8 h-8 rounded-xl font-bold font-mono text-xs flex items-center justify-center shrink-0 border transition-colors ${
@@ -768,7 +768,7 @@ export default function SmartQuizMode({
                 </span>
 
                 {/* Option Text with Furigana / Hiragana on top if Kanji */}
-                <div className="flex flex-col text-left">
+                <div className="flex min-w-0 flex-1 flex-col text-left">
                   {/* Furigana / Hiragana reading ALWAYS visible above Kanji */}
                   {opt.subtext && (
                     <span
@@ -782,7 +782,7 @@ export default function SmartQuizMode({
 
                   {/* Main text (Kanji, Kana, or Vietnamese) */}
                   <span
-                    className={`text-base sm:text-lg font-black font-japanese leading-snug transition-colors ${
+                    className={`break-words text-base font-black font-japanese leading-snug transition-colors sm:text-lg ${
                       isHighlighted ? 'text-white' : 'text-slate-900'
                     }`}
                   >

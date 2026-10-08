@@ -85,7 +85,7 @@ export default function MultiChoiceMode({
 
   if (loading) {
     return (
-      <div className="p-16 text-center text-slate-500 bg-white rounded-3xl border border-slate-200 animate-pulse">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-500 animate-pulse sm:p-12">
         <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
         <span className="text-sm font-semibold">Đang chuẩn bị câu hỏi trắc nghiệm...</span>
       </div>
@@ -94,7 +94,7 @@ export default function MultiChoiceMode({
 
   if (questions.length === 0) {
     return (
-      <div className="p-12 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 text-center text-slate-500 sm:p-10">
         Chưa có đủ từ vựng để tạo bài trắc nghiệm.
       </div>
     );
@@ -104,7 +104,7 @@ export default function MultiChoiceMode({
   if (isCompleted) {
     const percent = Math.round((score / questions.length) * 100);
     return (
-      <div className="max-w-md mx-auto p-8 rounded-3xl bg-white border border-slate-200 shadow-xl text-center">
+      <div className="mx-auto w-full max-w-md rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-xl sm:p-8">
         <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
           <Trophy size={32} />
         </div>
@@ -133,9 +133,9 @@ export default function MultiChoiceMode({
   }
 
   return (
-    <div className="max-w-xl mx-auto flex flex-col items-center">
+    <div className="mx-auto flex w-full max-w-xl flex-col items-center px-0 sm:px-2">
       {/* Top Header */}
-      <div className="w-full flex items-center justify-between mb-4 px-2 text-xs font-semibold text-slate-500">
+      <div className="mb-3 flex w-full items-center justify-between gap-2 px-1 text-xs font-semibold text-slate-500 sm:mb-4 sm:px-2">
         <span className="bg-slate-100 text-slate-800 font-mono font-bold px-3 py-1 rounded-full border border-slate-200">
           Câu {currentIndex + 1} / {questions.length}
         </span>
@@ -145,13 +145,13 @@ export default function MultiChoiceMode({
       </div>
 
       {/* Question Box */}
-      <div className="w-full p-8 rounded-3xl bg-white border-2 border-slate-200 shadow-lg text-center mb-6">
+      <div className="mb-5 w-full rounded-3xl border-2 border-slate-200 bg-white p-4 text-center shadow-lg sm:mb-6 sm:p-6 md:p-8">
         <span className="text-xs uppercase font-bold tracking-wider text-slate-400 block mb-2">
           Nghĩa của từ vựng này là gì?
         </span>
 
         <div className="flex items-center justify-center gap-3 my-2">
-          <h3 className={`text-4xl sm:text-5xl font-black text-slate-900 ${language.kind === 'english' ? '' : 'font-japanese'}`}>
+          <h3 className={`break-words text-3xl font-black text-slate-900 sm:text-5xl ${language.kind === 'english' ? '' : 'font-japanese'}`}>
             {currentQ.term}
           </h3>
           <button
@@ -198,13 +198,13 @@ export default function MultiChoiceMode({
                 type="button"
                 disabled={isAnswered}
                 onClick={() => handleSelectOption(opt.id)}
-                className={`py-3.5 px-4 rounded-2xl text-left font-semibold text-sm border-2 transition-all flex items-center justify-between gap-2 cursor-pointer ${btnClasses}`}
+                className={`min-h-[52px] rounded-2xl border-2 px-3 py-3.5 text-left text-sm font-semibold transition-colors duration-200 flex items-center justify-between gap-2 cursor-pointer sm:px-4 ${btnClasses}`}
               >
-                <div className="flex items-center gap-2.5 truncate">
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
                   <span className="w-7 h-7 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-bold text-xs font-mono shrink-0 shadow-2xs">
                     {opt.id}
                   </span>
-                  <span className="truncate">{opt.text}</span>
+                  <span className="min-w-0 break-words whitespace-normal">{opt.text}</span>
                 </div>
 
                 {isAnswered && isCorrectOption && (
@@ -220,8 +220,8 @@ export default function MultiChoiceMode({
 
         {/* Next Question Bar */}
         {isAnswered && (
-          <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-4 animate-fadeIn">
-            <div className="text-xs font-semibold text-slate-500">
+          <div className="mt-5 flex flex-col items-stretch justify-between gap-3 border-t border-slate-100 pt-4 animate-fadeIn sm:mt-6 sm:flex-row sm:items-center sm:gap-4">
+            <div className="min-w-0 text-xs font-semibold leading-relaxed text-slate-600">
               {selectedOptionId === currentQ.correctOptionId ? (
                 <span className="text-emerald-600 font-bold flex items-center gap-1">
                   <CheckCircle2 size={14} /> Chính xác!
@@ -237,7 +237,7 @@ export default function MultiChoiceMode({
             <button
               type="button"
               onClick={handleNext}
-              className="py-2.5 px-5 rounded-xl bg-slate-900 hover:bg-[#F05A28] text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+              className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-[#F05A28] cursor-pointer sm:w-auto sm:text-sm"
             >
               <span>{currentIndex < questions.length - 1 ? 'Câu tiếp theo' : 'Xem kết quả'}</span>
               <ArrowRight size={14} />

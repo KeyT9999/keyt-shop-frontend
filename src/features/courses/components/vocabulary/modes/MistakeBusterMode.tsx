@@ -123,7 +123,7 @@ export default function MistakeBusterMode({
   // Zero-state: No weak words!
   if (weakList.length === 0) {
     return (
-      <div className="max-w-xl mx-auto p-8 sm:p-12 bg-white rounded-3xl border border-slate-200 shadow-xl text-center animate-scaleUp">
+      <div className="mx-auto w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-xl animate-scaleUp sm:p-8 lg:p-12">
         <div className="w-18 h-18 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-5 shadow-inner">
           <ShieldCheck size={40} />
         </div>
@@ -170,10 +170,10 @@ export default function MistakeBusterMode({
   const currentStreak = streaks[currentItem._id] || 0;
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col items-center select-none">
+    <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-0 select-none sm:px-2">
       {/* ── Top Rescue Mission Banner ── */}
-      <div className="w-full mb-4 p-4 rounded-3xl bg-linear-to-r from-rose-500 via-[#F05A28] to-amber-500 text-white shadow-md flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="mb-4 flex w-full flex-col gap-3 rounded-2xl bg-linear-to-r from-rose-500 via-[#F05A28] to-amber-500 p-4 text-white shadow-md sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:rounded-3xl">
+        <div className="flex min-w-0 items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-white font-bold shrink-0">
             <Sparkles size={20} />
           </div>
@@ -187,7 +187,7 @@ export default function MistakeBusterMode({
           </div>
         </div>
 
-        <div className="px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-xs font-mono font-bold text-xs shrink-0">
+        <div className="self-end rounded-xl bg-white/20 px-3 py-1.5 font-mono text-xs font-bold backdrop-blur-xs sm:self-auto">
           {currentIndex + 1} / {weakList.length}
         </div>
       </div>
@@ -203,7 +203,7 @@ export default function MistakeBusterMode({
       {/* ── Word Card ── */}
       <div
         onClick={() => setIsFlipped((prev) => !prev)}
-        className="w-full min-h-[320px] sm:min-h-[360px] p-6 sm:p-8 rounded-3xl bg-white border-2 border-slate-200 shadow-xl hover:border-orange-300 transition-all flex flex-col justify-between items-center text-center cursor-pointer mb-6 relative group"
+        className="relative mb-5 flex min-h-[300px] w-full cursor-pointer flex-col items-center justify-between rounded-3xl border-2 border-slate-200 bg-white p-4 text-center shadow-xl transition-all hover:border-orange-300 sm:mb-6 sm:min-h-[360px] sm:p-6 md:p-8 group"
       >
         {/* Card Header */}
         <div className="w-full flex items-center justify-between text-xs">
@@ -235,7 +235,7 @@ export default function MistakeBusterMode({
                   {currentItem.reading}
                 </div>
               )}
-              <h3 className={`text-4xl sm:text-6xl font-black text-slate-900 ${language.kind === 'english' ? '' : 'font-japanese'}`}>
+              <h3 className={`break-words text-4xl font-black text-slate-900 sm:text-6xl ${language.kind === 'english' ? '' : 'font-japanese'}`}>
                 {currentItem.term}
               </h3>
               <p className="text-xs text-slate-400 font-medium">Nhấn thẻ để xem ý nghĩa</p>
@@ -271,12 +271,12 @@ export default function MistakeBusterMode({
       </div>
 
       {/* ── Action Assessment Buttons ── */}
-      <div className="w-full flex items-center justify-center gap-3">
+      <div className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
         {/* Still Wrong */}
         <button
           type="button"
           onClick={() => handleAnswer(false)}
-          className="flex-1 py-3.5 px-4 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-xs sm:text-sm border border-rose-200 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs hover:scale-[1.02] active:scale-[0.98]"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3.5 text-xs font-black text-rose-700 shadow-xs transition-colors hover:bg-rose-100 cursor-pointer sm:text-sm"
         >
           <XCircle size={18} />
           <span>Vẫn chưa nhớ [1 / A]</span>
@@ -286,7 +286,7 @@ export default function MistakeBusterMode({
         <button
           type="button"
           onClick={() => handleAnswer(true)}
-          className="flex-1 py-3.5 px-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-xs sm:text-sm border border-emerald-200 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs hover:scale-[1.02] active:scale-[0.98]"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 text-xs font-black text-emerald-700 shadow-xs transition-colors hover:bg-emerald-100 cursor-pointer sm:text-sm"
         >
           <CheckCircle2 size={18} />
           <span>Đã nhớ rồi! [2 / D]</span>

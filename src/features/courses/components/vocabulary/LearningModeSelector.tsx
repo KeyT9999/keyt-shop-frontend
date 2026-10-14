@@ -7,7 +7,8 @@ import {
   HelpCircle,
   Flame,
   ShieldAlert,
-  Headphones
+  Headphones,
+  GraduationCap
 } from 'lucide-react';
 import type { LearningMode } from '../../types';
 
@@ -35,6 +36,12 @@ export default function LearningModeSelector({
       label: 'Flashcard 3D',
       badge: 'SRS',
       icon: Layers
+    },
+    {
+      id: 'mastery-loop',
+      label: 'Luyện thuộc 100%',
+      badge: 'LEITNER',
+      icon: GraduationCap
     },
     {
       id: 'typing',

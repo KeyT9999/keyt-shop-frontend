@@ -10,6 +10,7 @@ export type LearningMode =
   | 'speed-match'
   | 'time-attack'
   | 'mistake-buster'
+  | 'mastery-loop'
   | 'table'
   | 'passive-listening';
 

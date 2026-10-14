@@ -9,6 +9,7 @@ import CourseProgressBar from '../../features/courses/components/common/CoursePr
 import LearningModeSelector from '../../features/courses/components/vocabulary/LearningModeSelector';
 import VocabularyTable from '../../features/courses/components/vocabulary/VocabularyTable';
 import FlashcardMode from '../../features/courses/components/vocabulary/modes/FlashcardMode';
+import MasteryLoopMode from '../../features/courses/components/vocabulary/modes/MasteryLoopMode';
 import TypingMode from '../../features/courses/components/vocabulary/modes/TypingMode';
 import MultiChoiceMode from '../../features/courses/components/vocabulary/modes/MultiChoiceMode';
 import SpeedMatchMode from '../../features/courses/components/vocabulary/modes/SpeedMatchMode';
@@ -261,6 +262,15 @@ export default function VocabularyDetailPage() {
         <div className="mb-12">
           {activeMode === 'flashcard' && (
             <FlashcardMode
+              items={items}
+              courseCode={courseCode}
+              lessonSlug={lesson.slug}
+              onRecordResult={handleRecordResult}
+            />
+          )}
+
+          {activeMode === 'mastery-loop' && (
+            <MasteryLoopMode
               items={items}
               courseCode={courseCode}
               lessonSlug={lesson.slug}

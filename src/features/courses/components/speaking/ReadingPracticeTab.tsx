@@ -64,7 +64,18 @@ export function ReadingPracticeTab({
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
-  const [groupFilter, setGroupFilter] = useState<'all' | '1-7' | '8-14' | '15-21' | '22-28'>('all');
+  const [groupFilter, setGroupFilter] = useState<'all' | 'official' | '1-7' | '8-14' | '15-18'>('all');
+
+  const handleGroupFilterChange = (filter: 'all' | 'official' | '1-7' | '8-14' | '15-18') => {
+    setGroupFilter(filter);
+    if (filter === 'official') {
+      const isCurOfficial = currentPassage?.isOfficialExam || currentPassage?.code?.startsWith('Đề A');
+      if (!isCurOfficial) {
+        const firstOfficial = passages.find((p) => p.isOfficialExam || p.code?.startsWith('Đề A'));
+        if (firstOfficial) setSelectedPassageId(firstOfficial.id);
+      }
+    }
+  };
 
   // Sentence Audio Playback
   const [activeSentenceIndex, setActiveSentenceIndex] = useState<number | null>(null);
@@ -258,13 +269,14 @@ export function ReadingPracticeTab({
   // Filter passages by search term and group
   const filteredPassages = useMemo(() => {
     return passages.filter((p) => {
+      const isOfficial = p.isOfficialExam || p.code?.startsWith('Đề A') || (p.lessonNum && p.lessonNum >= 19);
       const numMatch = p.code.match(/\d+/);
-      const num = numMatch ? parseInt(numMatch[0], 10) : 0;
+      const num = p.lessonNum || (numMatch ? parseInt(numMatch[0], 10) : 0);
 
-      if (groupFilter === '1-7' && (num < 1 || num > 7)) return false;
-      if (groupFilter === '8-14' && (num < 8 || num > 14)) return false;
-      if (groupFilter === '15-21' && (num < 15 || num > 21)) return false;
-      if (groupFilter === '22-28' && (num < 22 || num > 28)) return false;
+      if (groupFilter === 'official' && !isOfficial) return false;
+      if (groupFilter === '1-7' && (isOfficial || num < 1 || num > 7)) return false;
+      if (groupFilter === '8-14' && (isOfficial || num < 8 || num > 14)) return false;
+      if (groupFilter === '15-18' && (isOfficial || num < 15 || num > 18)) return false;
 
       if (searchTerm.trim()) {
         const q = searchTerm.toLowerCase().trim();
@@ -333,58 +345,59 @@ export function ReadingPracticeTab({
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin text-xs">
           <button
             type="button"
-            onClick={() => setGroupFilter('all')}
+            onClick={() => handleGroupFilterChange('all')}
             className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
               groupFilter === 'all'
                 ? 'bg-slate-900 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            Tất cả (28)
+            Tất cả ({passages.length})
           </button>
           <button
             type="button"
-            onClick={() => setGroupFilter('1-7')}
+            onClick={() => handleGroupFilterChange('official')}
+            className={`px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+              groupFilter === 'official'
+                ? 'bg-[#F05A28] text-white shadow-xs'
+                : 'bg-orange-50 text-[#F05A28] border border-orange-200/80 hover:bg-orange-100'
+            }`}
+          >
+            <Sparkles size={13} className="text-amber-400 fill-amber-400" />
+            <span>10 Đề Thi Thật FE (Đề A1–A10)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleGroupFilterChange('1-7')}
             className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
               groupFilter === '1-7'
                 ? 'bg-slate-900 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            Lesson 1–7 (Khởi động)
+            Minna 1–7 (Khởi động)
           </button>
           <button
             type="button"
-            onClick={() => setGroupFilter('8-14')}
+            onClick={() => handleGroupFilterChange('8-14')}
             className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
               groupFilter === '8-14'
                 ? 'bg-slate-900 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            Lesson 8–14 (Sinh hoạt & Địa danh)
+            Minna 8–14 (Sinh hoạt & Địa danh)
           </button>
           <button
             type="button"
-            onClick={() => setGroupFilter('15-21')}
+            onClick={() => handleGroupFilterChange('15-18')}
             className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
-              groupFilter === '15-21'
+              groupFilter === '15-18'
                 ? 'bg-slate-900 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            Lesson 15–21 (Ước muốn & Học tập)
-          </button>
-          <button
-            type="button"
-            onClick={() => setGroupFilter('22-28')}
-            className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
-              groupFilter === '22-28'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            Lesson 22–28 (Du lịch & Đời sống)
+            Minna 15–18 (Ôn tập ngữ pháp)
           </button>
         </div>
 
@@ -392,6 +405,7 @@ export function ReadingPracticeTab({
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin pt-1">
           {filteredPassages.map((p) => {
             const isSelected = p.id === selectedPassageId;
+            const isOfficial = p.isOfficialExam || p.code?.startsWith('Đề A');
             return (
               <button
                 key={p.id}
@@ -400,17 +414,23 @@ export function ReadingPracticeTab({
                 className={`px-3.5 py-2 rounded-2xl text-xs font-bold shrink-0 transition-all cursor-pointer border flex items-center gap-1.5 ${
                   isSelected
                     ? 'bg-[#1E293B] text-white border-[#1E293B] shadow-sm'
+                    : isOfficial
+                    ? 'bg-orange-50/70 text-slate-800 border-orange-200 hover:border-[#F05A28] hover:bg-orange-100/50'
                     : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
-                <span className={isSelected ? 'text-[#F05A28]' : 'text-[#F05A28] font-bold'}>
+                <span className={isSelected ? 'text-[#F05A28]' : isOfficial ? 'text-[#F05A28] font-bold' : 'text-slate-500 font-semibold'}>
                   {p.code}:
                 </span>
                 <span className="truncate max-w-[140px] sm:max-w-[180px]">{p.title}</span>
                 {p.sentenceCount && (
                   <span
                     className={`text-[10px] px-1.5 py-0.2 rounded-md ${
-                      isSelected ? 'bg-slate-700 text-slate-200' : 'bg-slate-100 text-slate-500'
+                      isSelected
+                        ? 'bg-slate-700 text-slate-200'
+                        : isOfficial
+                        ? 'bg-orange-100 text-[#F05A28]'
+                        : 'bg-slate-100 text-slate-500'
                     }`}
                   >
                     {p.sentenceCount} câu
@@ -428,9 +448,16 @@ export function ReadingPracticeTab({
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-100">
             <div>
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-orange-50 text-[#F05A28] border border-orange-200/60">
-                  桜花 {currentPassage.code}
-                </span>
+                {(currentPassage.isOfficialExam || currentPassage.code?.startsWith('Đề A')) ? (
+                  <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#F05A28] text-white flex items-center gap-1 shadow-xs">
+                    <Sparkles size={11} />
+                    <span>ĐỀ THI THẬT FE • {currentPassage.code}</span>
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-orange-50 text-[#F05A28] border border-orange-200/60">
+                    桜花 {currentPassage.code}
+                  </span>
+                )}
                 <span className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-200/60">
                   Chủ đề: <strong className="text-sky-900">{currentPassage.topic}</strong>
                 </span>
@@ -480,11 +507,14 @@ export function ReadingPracticeTab({
                   aria-label="Chọn bài đọc JPD123"
                   className="text-xs font-bold bg-transparent text-slate-800 border-none focus:outline-none cursor-pointer py-1 px-1.5"
                 >
-                  {passages.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.code}: {p.title}
-                    </option>
-                  ))}
+                  {passages.map((p) => {
+                    const isOfficial = p.isOfficialExam || p.code?.startsWith('Đề A');
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {isOfficial ? `[Thi FE] ${p.code}` : p.code}: {p.title}
+                      </option>
+                    );
+                  })}
                 </select>
 
                 <button

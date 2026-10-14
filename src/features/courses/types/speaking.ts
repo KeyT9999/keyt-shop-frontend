@@ -17,6 +17,7 @@ export interface SpeakingReadingPassage {
   id: string;
   code: string;
   lessonNum?: number;
+  isOfficialExam?: boolean;
   title: string;
   topic: string;
   description?: string;
@@ -59,6 +60,21 @@ export interface SpeakingQuestion {
   };
 }
 
+export interface SpeakingCanDoReadingSentence {
+  index: number;
+  japanese: string;
+  furigana: string;
+  romaji: string;
+  vietnamese: string;
+}
+
+export interface SpeakingCanDoSlot {
+  slot: number;
+  part: number;
+  canDo: string;
+  readingSentences: SpeakingCanDoReadingSentence[];
+}
+
 export interface QALessonOverview {
   lesson: number;
   title: string;
@@ -69,12 +85,14 @@ export interface QALessonOverview {
   tips: string;
   nonImageCount: number;
   imageCount: number;
-  parts: {
+  readingSentenceCount?: number;
+  parts?: {
     part: number;
     title: string;
     goal: string;
     questionCount: number;
   }[];
+  slots?: SpeakingCanDoSlot[];
 }
 
 export interface SurvivalManner {

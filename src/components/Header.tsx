@@ -24,6 +24,7 @@ import {
   Layers,
   ArrowRight,
   Search,
+  Flame,
   type LucideIcon
 } from 'lucide-react';
 import { useAuthContext } from '../context/useAuthContext';
@@ -325,7 +326,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     location.pathname.startsWith('/courses/jpd') ||
     kanaTools.some((item) => location.pathname === item.href);
   const isChineseActive = /^\/courses\/hsk[12](?:\/|$)/i.test(location.pathname);
-  const isEnglishActive = /^\/courses\/(eng1000|toeic120)(?:\/|$)/i.test(location.pathname);
+  const isEnglishActive = /^\/courses\/(eng1000|toeic120|toeichackers)(?:\/|$)/i.test(location.pathname);
 
   return (
     <div className="header-wrapper">
@@ -752,28 +753,31 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                       <div className="chinese-dropdown-icon"><BookOpen size={20} /></div>
                       <div>
                         <span className="chinese-dropdown-eyebrow">TIẾNG ANH GIAO TIẾP &amp; TOEIC</span>
-                        <h3>1.000 từ • 120 thành ngữ TOEIC</h3>
-                        <p>Từ vựng thông dụng &amp; 120 cụm từ then chốt kèm 6 bài Quiz</p>
+                        <h3>Hackers TOEIC • 1.000 từ • 120 thành ngữ</h3>
+                        <p>30 chủ đề Hackers TOEIC, 1.000 từ thông dụng &amp; 120 cụm từ kèm Quiz</p>
                       </div>
                     </div>
 
                     <div className="chinese-dropdown-stats" aria-label="Nội dung khóa học từ vựng tiếng Anh">
-                      <div><strong>56</strong><span>chủ đề / phần</span></div>
-                      <div><strong>1.164</strong><span>mục từ</span></div>
-                      <div><strong>TOEIC</strong><span>&amp; Giao tiếp</span></div>
+                      <div><strong>86</strong><span>chủ đề / ngày</span></div>
+                      <div><strong>5.932</strong><span>từ &amp; cụm từ</span></div>
+                      <div><strong>Hackers</strong><span>&amp; TOEIC</span></div>
                     </div>
 
                     <nav className="chinese-dropdown-courses" aria-label="Chọn khóa học tiếng Anh">
                       <Link
-                        to="/courses/eng1000/vocabulary"
+                        to="/courses/toeichackers/vocabulary"
                         className="chinese-dropdown-cta cursor-pointer"
                         onClick={() => setActiveDropdown(null)}
                       >
                         <span className="chinese-dropdown-cta-main">
-                          <span className="chinese-dropdown-cta-icon"><BookMarked size={17} /></span>
+                          <span className="chinese-dropdown-cta-icon text-[#F05A28]"><Flame size={17} /></span>
                           <span className="chinese-dropdown-cta-label">
-                            <strong>Học 1.000 từ tiếng Anh</strong>
-                            <span>1.044 mục từ • 50 chủ đề</span>
+                            <span className="flex items-center gap-1.5">
+                              <strong>Hackers TOEIC (Day 1 – 30)</strong>
+                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-orange-100 text-[#F05A28] uppercase">HOT</span>
+                            </span>
+                            <span>4.768 từ vựng • 30 Day chuẩn ngữ cảnh</span>
                           </span>
                         </span>
                         <ArrowRight size={17} className="chinese-dropdown-cta-arrow" />
@@ -788,15 +792,29 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                           <span className="chinese-dropdown-cta-label">
                             <span className="flex items-center gap-1.5">
                               <strong>120 thành ngữ &amp; cụm từ TOEIC</strong>
-                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-orange-100 text-[#F05A28] uppercase">Mới</span>
+                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-600 uppercase">Quiz</span>
                             </span>
                             <span>120 cụm từ • 6 bài Quiz (Trang 516–521)</span>
                           </span>
                         </span>
                         <ArrowRight size={17} className="chinese-dropdown-cta-arrow" />
                       </Link>
+                      <Link
+                        to="/courses/eng1000/vocabulary"
+                        className="chinese-dropdown-cta cursor-pointer"
+                        onClick={() => setActiveDropdown(null)}
+                      >
+                        <span className="chinese-dropdown-cta-main">
+                          <span className="chinese-dropdown-cta-icon"><BookMarked size={17} /></span>
+                          <span className="chinese-dropdown-cta-label">
+                            <strong>Học 1.000 từ tiếng Anh</strong>
+                            <span>1.044 mục từ • 50 chủ đề</span>
+                          </span>
+                        </span>
+                        <ArrowRight size={17} className="chinese-dropdown-cta-arrow" />
+                      </Link>
                     </nav>
-                    <p className="chinese-dropdown-note">Flashcard, luyện gõ, 6 bài Quiz trắc nghiệm và nghe phát âm</p>
+                    <p className="chinese-dropdown-note">Flashcard 3D, luyện gõ, trắc nghiệm phản xạ và nghe phát âm bản xứ</p>
                   </div>
                 )}
               </li>
@@ -1090,13 +1108,13 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             </Link>
           </div>
           <Link
-            to="/courses/eng1000/vocabulary"
-            className={`mobile-sub-link ${location.pathname.startsWith('/courses/eng1000') ? 'active' : ''}`}
+            to="/courses/toeichackers/vocabulary"
+            className={`mobile-sub-link ${location.pathname.startsWith('/courses/toeichackers') ? 'active' : ''}`}
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            <BookOpen size={16} className="text-[#F05A28]" />
-            <span>1.000 từ tiếng Anh</span>
-            <span className="mobile-badge">1.044 từ</span>
+            <Flame size={16} className="text-[#F05A28]" />
+            <span>Hackers TOEIC (Day 1–30)</span>
+            <span className="mobile-badge bg-orange-100 text-[#F05A28] font-bold">4.768 từ</span>
           </Link>
           <Link
             to="/courses/toeic120/vocabulary"
@@ -1106,6 +1124,15 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             <Sparkles size={16} className="text-[#F05A28]" />
             <span>120 thành ngữ TOEIC</span>
             <span className="mobile-badge">6 Quiz</span>
+          </Link>
+          <Link
+            to="/courses/eng1000/vocabulary"
+            className={`mobile-sub-link ${location.pathname.startsWith('/courses/eng1000') ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <BookOpen size={16} className="text-[#F05A28]" />
+            <span>1.000 từ tiếng Anh</span>
+            <span className="mobile-badge">1.044 từ</span>
           </Link>
 
           {/* Divider */}

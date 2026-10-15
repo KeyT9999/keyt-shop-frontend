@@ -189,22 +189,23 @@ export default function VocabularyDetailPage() {
   }
 
   const isToeic = upperCode === 'TOEIC120';
-  const cleanTitle = isToeic ? lesson.title : lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '');
+  const isHackers = upperCode === 'TOEIC_HACKERS' || upperCode === 'TOEICHACKERS';
+  const cleanTitle = isToeic || isHackers ? lesson.title : lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '');
 
   return (
     <>
       <Seo
-        title={`${isToeic ? `Quiz ${lesson.order}: ${cleanTitle}` : `Bài ${lesson.lessonCode}: ${cleanTitle}`} - ${isToeic ? '120 Thành Ngữ TOEIC' : `Từ Vựng ${upperCode}`} | Mindora AI`}
-        description={isToeic ? `Luyện tập Quiz ${lesson.order}: ${cleanTitle} (${items.length} cụm từ) với Flashcard 3D, luyện gõ và trắc nghiệm phản xạ.` : `Học từ vựng ${language.languageName.toLowerCase()} bài ${lesson.lessonCode}: ${cleanTitle} (${items.length} từ). Luyện Flashcard, gõ từ và làm bài tập trắc nghiệm.`}
+        title={`${isToeic ? `Quiz ${lesson.order}: ${cleanTitle}` : isHackers ? `${cleanTitle}` : `Bài ${lesson.lessonCode}: ${cleanTitle}`} - ${isToeic ? '120 Thành Ngữ TOEIC' : isHackers ? 'Hackers TOEIC Vocabulary' : `Từ Vựng ${upperCode}`} | Mindora AI`}
+        description={isToeic ? `Luyện tập Quiz ${lesson.order}: ${cleanTitle} (${items.length} cụm từ) với Flashcard 3D, luyện gõ và trắc nghiệm phản xạ.` : isHackers ? `Học từ vựng Hackers TOEIC ${cleanTitle} (${items.length} từ vựng) với Flashcard 3D, luyện gõ, làm Quiz trắc nghiệm và nghe phát âm chuẩn.` : `Học từ vựng ${language.languageName.toLowerCase()} bài ${lesson.lessonCode}: ${cleanTitle} (${items.length} từ). Luyện Flashcard, gõ từ và làm bài tập trắc nghiệm.`}
         canonicalPath={`/courses/${courseCode.toLowerCase()}/vocabulary/${lesson.slug}`}
       />
 
       <div className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
         <CourseBreadcrumb
           items={[
-            { label: isToeic ? 'TOEIC 120' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
+            { label: isToeic ? 'TOEIC 120' : isHackers ? 'Hackers TOEIC' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
             { label: `${isToeic ? 'Thành Ngữ & Cụm Từ' : 'Từ Vựng'} (${language.kind === 'chinese' ? '词汇' : language.kind === 'english' ? 'Vocabulary' : '単語'})`, href: `/courses/${courseCode.toLowerCase()}/vocabulary` },
-            { label: isToeic ? `Quiz ${lesson.order}` : `Bài ${lesson.lessonCode}` }
+            { label: isToeic ? `Quiz ${lesson.order}` : isHackers ? `Day ${lesson.order}` : `Bài ${lesson.lessonCode}` }
           ]}
         />
 
@@ -214,7 +215,7 @@ export default function VocabularyDetailPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="px-3 py-1 rounded-full text-xs font-black bg-orange-50 text-[#F05A28] border border-orange-200">
-                  {isToeic ? `QUIZ ${lesson.order}` : `LESSON ${lesson.lessonCode}`}
+                  {isToeic ? `QUIZ ${lesson.order}` : isHackers ? `DAY ${lesson.order}` : `LESSON ${lesson.lessonCode}`}
                 </span>
                 <span className="text-xs font-semibold text-slate-500">
                   {items.length} {isToeic ? 'cụm từ' : 'từ vựng'}

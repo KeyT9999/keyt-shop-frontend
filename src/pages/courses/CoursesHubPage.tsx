@@ -87,13 +87,13 @@ export default function CoursesHubPage() {
   ];
   const englishCourses = [
     {
-      code: 'ENG1000',
-      title: '1.000 từ tiếng Anh thông dụng',
-      topics: 50,
-      topicUnit: 'chủ đề',
-      vocabulary: 1044,
-      description: 'Học theo 50 chủ đề từ gia đình, quần áo đến công sở; có IPA và nghĩa tiếng Việt.',
-      href: '/courses/eng1000/vocabulary'
+      code: 'TOEIC_HACKERS',
+      title: 'Hackers TOEIC Vocabulary (Day 1 – 30)',
+      topics: 30,
+      topicUnit: 'ngày / chủ đề',
+      vocabulary: 4768,
+      description: '30 chủ đề từ vựng Hackers TOEIC kinh điển với 4.768 từ & cụm từ, kèm nghĩa tiếng Việt, phát âm IPA và đa dạng chế độ học Flashcard, Quiz.',
+      href: '/courses/toeichackers/vocabulary'
     },
     {
       code: 'TOEIC120',
@@ -103,6 +103,15 @@ export default function CoursesHubPage() {
       vocabulary: 120,
       description: 'Nắm vững 120 thành ngữ & cụm từ TOEIC then chốt (Trang 516 - 521), kèm 6 bài Quiz và Flashcard.',
       href: '/courses/toeic120/vocabulary'
+    },
+    {
+      code: 'ENG1000',
+      title: '1.000 từ tiếng Anh thông dụng',
+      topics: 50,
+      topicUnit: 'chủ đề',
+      vocabulary: 1044,
+      description: 'Học theo 50 chủ đề từ gia đình, quần áo đến công sở; có IPA và nghĩa tiếng Việt.',
+      href: '/courses/eng1000/vocabulary'
     }
   ];
 
@@ -110,7 +119,7 @@ export default function CoursesHubPage() {
     <>
       <Seo
         title="Cổng Học Ngoại Ngữ - Tiếng Nhật, Trung và Anh | Mindora AI"
-        description="Học tiếng Nhật, từ vựng tiếng Trung HSK1–2 và 1.000 từ tiếng Anh theo chủ đề."
+        description="Học tiếng Nhật, từ vựng tiếng Trung HSK1–2, Hackers TOEIC Vocabulary 30 Day và 1.000 từ tiếng Anh theo chủ đề."
         canonicalPath="/courses"
       />
 

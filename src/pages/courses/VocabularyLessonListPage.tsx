@@ -46,26 +46,31 @@ export default function VocabularyLessonListPage() {
   const upperCode = courseCode.toUpperCase();
   const language = getCourseLanguage(courseCode);
   const totalItems = lessons.reduce((acc, l) => acc + (l.itemCount || 0), 0);
-  const fallbackLessonCount = upperCode === 'JPD113' ? 9 : upperCode.startsWith('HSK') ? 11 : upperCode === 'ENG1000' ? 50 : upperCode === 'TOEIC120' ? 6 : 12;
-  const fallbackItemCount = upperCode === 'JPD113' ? 264 : upperCode === 'HSK1' ? 150 : upperCode === 'HSK2' ? 140 : upperCode === 'ENG1000' ? 1044 : upperCode === 'TOEIC120' ? 120 : 180;
-
   const isToeic = upperCode === 'TOEIC120';
-  const pageHeading = isToeic ? '120 Thành Ngữ & Cụm Từ TOEIC (6 Phần Quiz)' : `Danh Sách Bài Học Từ Vựng ${upperCode}`;
-  const unitName = isToeic ? 'phần / Quiz' : 'chủ đề từ vựng';
+  const isHackers = upperCode === 'TOEIC_HACKERS' || upperCode === 'TOEICHACKERS';
+  const fallbackLessonCount = upperCode === 'JPD113' ? 9 : upperCode.startsWith('HSK') ? 11 : upperCode === 'ENG1000' ? 50 : isToeic ? 6 : isHackers ? 30 : 12;
+  const fallbackItemCount = upperCode === 'JPD113' ? 264 : upperCode === 'HSK1' ? 150 : upperCode === 'HSK2' ? 140 : upperCode === 'ENG1000' ? 1044 : isToeic ? 120 : isHackers ? 4768 : 180;
+
+  const pageHeading = isToeic
+    ? '120 Thành Ngữ & Cụm Từ TOEIC (6 Phần Quiz)'
+    : isHackers
+    ? 'Hackers TOEIC Vocabulary — 30 Chủ Đề (Day 1 – 30)'
+    : `Danh Sách Bài Học Từ Vựng ${upperCode}`;
+  const unitName = isToeic ? 'phần / Quiz' : isHackers ? 'ngày / chủ đề' : 'chủ đề từ vựng';
   const termTypeName = isToeic ? 'Cụm từ' : 'Từ vựng';
 
   return (
     <>
       <Seo
-        title={`${isToeic ? '120 Thành Ngữ và Cụm Từ TOEIC (6 Quiz)' : `Từ Vựng ${language.languageName} ${upperCode}`} - Danh Sách ${lessons.length || fallbackLessonCount} Bài Học | Mindora AI`}
-        description={isToeic ? 'Luyện tập 120 thành ngữ và cụm từ TOEIC qua 6 bài Quiz, Flashcard 3D, luyện gõ và phản xạ nhanh.' : `Học từ vựng ${language.languageName.toLowerCase()} ${upperCode} qua các bài học với Flashcard 3D, luyện gõ và trắc nghiệm.`}
+        title={`${isToeic ? '120 Thành Ngữ và Cụm Từ TOEIC (6 Quiz)' : isHackers ? 'Hackers TOEIC Vocabulary 30 Day (4.768 Từ Vựng)' : `Từ Vựng ${language.languageName} ${upperCode}`} - Danh Sách ${lessons.length || fallbackLessonCount} Bài Học | Mindora AI`}
+        description={isToeic ? 'Luyện tập 120 thành ngữ và cụm từ TOEIC qua 6 bài Quiz, Flashcard 3D, luyện gõ và phản xạ nhanh.' : isHackers ? 'Trọn bộ 30 ngày từ vựng Hackers TOEIC với 4.768 từ và cụm từ theo ngữ cảnh bài thi, luyện Flashcard 3D, làm Quiz trắc nghiệm và gõ từ.' : `Học từ vựng ${language.languageName.toLowerCase()} ${upperCode} qua các bài học với Flashcard 3D, luyện gõ và trắc nghiệm.`}
         canonicalPath={`/courses/${courseCode.toLowerCase()}/vocabulary`}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <CourseBreadcrumb
           items={[
-            { label: isToeic ? 'TOEIC 120' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
+            { label: isToeic ? 'TOEIC 120' : isHackers ? 'Hackers TOEIC' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
             { label: `${isToeic ? 'Thành Ngữ & Cụm Từ' : 'Từ Vựng'} (${language.kind === 'chinese' ? '词汇' : language.kind === 'english' ? 'Vocabulary' : '単語'})` }
           ]}
         />

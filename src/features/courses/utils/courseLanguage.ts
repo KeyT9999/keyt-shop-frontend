@@ -20,10 +20,10 @@ export function getCourseLanguage(courseCode?: string): CourseLanguageConfig {
     };
   }
 
-  if (normalizedCode.startsWith('ENG') || normalizedCode.startsWith('TOEIC')) {
+  if (normalizedCode.startsWith('ENG') || normalizedCode.startsWith('TOEIC') || normalizedCode.includes('HACKERS')) {
     return {
       kind: 'english',
-      speechLocale: normalizedCode.startsWith('TOEIC') ? 'en-US' : 'en-GB',
+      speechLocale: (normalizedCode.startsWith('TOEIC') || normalizedCode.includes('HACKERS')) ? 'en-US' : 'en-GB',
       languageName: 'Tiếng Anh',
       languageShortName: 'Anh',
       readingName: 'IPA',

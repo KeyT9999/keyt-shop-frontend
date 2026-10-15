@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Volume2,
   CheckCircle2,
@@ -94,6 +94,10 @@ export default function MasteryLoopMode({
 
   // Shake animation trigger on wrong answer
   const [shakeCard, setShakeCard] = useState(false);
+
+  // Ref to prevent initializeSession from running more than once per items change
+  const hasInitializedRef = useRef(false);
+  const prevItemsRef = useRef(validItems);
 
   // Helper SpeechSynthesis
   const speak = useCallback(
@@ -227,12 +231,17 @@ export default function MasteryLoopMode({
     setStreak(0);
     setRoundCorrectCount(0);
     setRoundTotalAnswered(0);
-  }, [buildQuestion, validItems]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [validItems]);
 
-  // Run initial setup on mount or when items change
+  // Run initial setup on mount or when items actually change (reference check)
   useEffect(() => {
-    initializeSession();
-  }, [initializeSession]);
+    if (!hasInitializedRef.current || prevItemsRef.current !== validItems) {
+      hasInitializedRef.current = true;
+      prevItemsRef.current = validItems;
+      initializeSession();
+    }
+  }, [validItems, initializeSession]);
 
   const currentQ = roundQuestions[currentQIndex];
 
@@ -317,31 +326,30 @@ export default function MasteryLoopMode({
   };
 
   // Next Question or Trigger Round Summary
-  const handleNextQuestion = () => {
-    if (currentQIndex < roundQuestions.length - 1) {
-      setCurrentQIndex((prev) => prev + 1);
-      setSelectedOptionId(null);
-      setIsAnswered(false);
-      setIsCorrectAnswer(null);
-    } else {
-      // Round completed! Evaluate if all items reached Level 2 (100% Mastered)
-      evaluateRoundCompletion();
-    }
-  };
-
-  // Evaluate Round Completion
-  const evaluateRoundCompletion = () => {
-    // Check which items are NOT yet mastered (level < 2)
-    const unmastered = Object.values(progressMap).filter((state) => state.level < 2);
-
-    if (unmastered.length === 0) {
-      // ALL items reached level 2! Victory 100%!
-      setIsSessionFinished(true);
-    } else {
-      // Need next round to practice unmastered items
-      setIsRoundSummary(true);
-    }
-  };
+  const handleNextQuestion = useCallback(() => {
+    setCurrentQIndex((prevIdx) => {
+      if (prevIdx < roundQuestions.length - 1) {
+        // Move to next question
+        setSelectedOptionId(null);
+        setIsAnswered(false);
+        setIsCorrectAnswer(null);
+        return prevIdx + 1;
+      } else {
+        // Round completed! Evaluate if all items reached Level 2
+        // Use setProgressMap to read the LATEST state (avoids stale closure)
+        setProgressMap((latestMap) => {
+          const unmastered = Object.values(latestMap).filter((state) => state.level < 2);
+          if (unmastered.length === 0) {
+            setIsSessionFinished(true);
+          } else {
+            setIsRoundSummary(true);
+          }
+          return latestMap; // Don't modify, just read
+        });
+        return prevIdx; // Keep current index
+      }
+    });
+  }, [roundQuestions.length]);
 
   // Start Next Round with unmastered items
   const handleStartNextRound = () => {
@@ -376,13 +384,21 @@ export default function MasteryLoopMode({
     setRoundTotalAnswered(0);
   };
 
+  // Use refs for handlers so keyboard effect always calls the latest version
+  const handleNextQuestionRef = useRef(handleNextQuestion);
+  handleNextQuestionRef.current = handleNextQuestion;
+  const handleStartNextRoundRef = useRef(handleStartNextRound);
+  handleStartNextRoundRef.current = handleStartNextRound;
+  const initializeSessionRef = useRef(initializeSession);
+  initializeSessionRef.current = initializeSession;
+
   // Keyboard navigation shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isRoundSummary || isSessionFinished) {
         if (e.key === 'Enter') {
-          if (isRoundSummary) handleStartNextRound();
-          else initializeSession();
+          if (isRoundSummary) handleStartNextRoundRef.current();
+          else initializeSessionRef.current();
         }
         return;
       }
@@ -395,7 +411,7 @@ export default function MasteryLoopMode({
       } else {
         if (e.key === 'Enter' || e.code === 'Space') {
           e.preventDefault();
-          handleNextQuestion();
+          handleNextQuestionRef.current();
         }
       }
 

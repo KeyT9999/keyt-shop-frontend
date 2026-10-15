@@ -96,8 +96,8 @@ export default function MasteryLoopMode({
   const [shakeCard, setShakeCard] = useState(false);
 
   // Ref to prevent initializeSession from running more than once per items change
-  const hasInitializedRef = useRef(false);
-  const prevItemsRef = useRef(validItems);
+  // Track by item IDs (stable identity) instead of array reference (changes on every parent re-render)
+  const prevItemsKeyRef = useRef('');
 
   // Helper SpeechSynthesis
   const speak = useCallback(
@@ -234,14 +234,20 @@ export default function MasteryLoopMode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [validItems]);
 
-  // Run initial setup on mount or when items actually change (reference check)
+  // Stable key: only changes when actual vocabulary IDs change (not parent progress updates)
+  const itemsKey = useMemo(
+    () => validItems.map((i) => i._id).sort().join(','),
+    [validItems]
+  );
+
+  // Run initial setup on mount or when the ACTUAL vocabulary list changes
   useEffect(() => {
-    if (!hasInitializedRef.current || prevItemsRef.current !== validItems) {
-      hasInitializedRef.current = true;
-      prevItemsRef.current = validItems;
+    if (itemsKey && itemsKey !== prevItemsKeyRef.current) {
+      prevItemsKeyRef.current = itemsKey;
       initializeSession();
     }
-  }, [validItems, initializeSession]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemsKey]);
 
   const currentQ = roundQuestions[currentQIndex];
 

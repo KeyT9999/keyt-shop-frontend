@@ -234,20 +234,21 @@ export default function MasteryLoopMode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [validItems]);
 
-  // Stable key: only changes when actual vocabulary IDs change (not parent progress updates)
+  // Stable session key: only changes when lesson changes or actual vocabulary IDs change
   const itemsKey = useMemo(
     () => validItems.map((i) => i._id).sort().join(','),
     [validItems]
   );
+  const sessionKey = `${lessonSlug}_${itemsKey}`;
 
-  // Run initial setup on mount or when the ACTUAL vocabulary list changes
+  // Run initial setup on mount or when the lesson / vocabulary items list actually changes
   useEffect(() => {
-    if (itemsKey && itemsKey !== prevItemsKeyRef.current) {
-      prevItemsKeyRef.current = itemsKey;
+    if (itemsKey && sessionKey !== prevItemsKeyRef.current) {
+      prevItemsKeyRef.current = sessionKey;
       initializeSession();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemsKey]);
+  }, [sessionKey]);
 
   const currentQ = roundQuestions[currentQIndex];
 
@@ -331,31 +332,23 @@ export default function MasteryLoopMode({
     }
   };
 
-  // Next Question or Trigger Round Summary
+  // Next Question or Trigger Round Summary (Clean, direct state updates without nested updater side-effects)
   const handleNextQuestion = useCallback(() => {
-    setCurrentQIndex((prevIdx) => {
-      if (prevIdx < roundQuestions.length - 1) {
-        // Move to next question
-        setSelectedOptionId(null);
-        setIsAnswered(false);
-        setIsCorrectAnswer(null);
-        return prevIdx + 1;
+    if (currentQIndex < roundQuestions.length - 1) {
+      setCurrentQIndex((prev) => prev + 1);
+      setSelectedOptionId(null);
+      setIsAnswered(false);
+      setIsCorrectAnswer(null);
+    } else {
+      // Round completed! Evaluate if all items reached Level 2 (100% Mastered)
+      const unmastered = Object.values(progressMap).filter((state) => state.level < 2);
+      if (unmastered.length === 0) {
+        setIsSessionFinished(true);
       } else {
-        // Round completed! Evaluate if all items reached Level 2
-        // Use setProgressMap to read the LATEST state (avoids stale closure)
-        setProgressMap((latestMap) => {
-          const unmastered = Object.values(latestMap).filter((state) => state.level < 2);
-          if (unmastered.length === 0) {
-            setIsSessionFinished(true);
-          } else {
-            setIsRoundSummary(true);
-          }
-          return latestMap; // Don't modify, just read
-        });
-        return prevIdx; // Keep current index
+        setIsRoundSummary(true);
       }
-    });
-  }, [roundQuestions.length]);
+    }
+  }, [currentQIndex, roundQuestions.length, progressMap]);
 
   // Start Next Round with unmastered items
   const handleStartNextRound = () => {
@@ -436,12 +429,14 @@ export default function MasteryLoopMode({
     speak
   ]);
 
-  // Compute Overall Mastery Stats
+  // Compute Overall Mastery Stats (Leitner 2-point system: 1 pt for Level 1, 2 pts for Level 2)
   const totalItemsCount = validItems.length;
   const masteredItemsCount = Object.values(progressMap).filter((s) => s.level === 2).length;
   const familiarItemsCount = Object.values(progressMap).filter((s) => s.level === 1).length;
+  const maxLeitnerPoints = totalItemsCount * 2;
+  const earnedLeitnerPoints = (masteredItemsCount * 2) + familiarItemsCount;
   const overallMasteryPercent =
-    totalItemsCount > 0 ? Math.round((masteredItemsCount / totalItemsCount) * 100) : 0;
+    maxLeitnerPoints > 0 ? Math.round((earnedLeitnerPoints / maxLeitnerPoints) * 100) : 0;
 
   // Empty State Guard
   if (validItems.length < 2) {
@@ -626,8 +621,8 @@ export default function MasteryLoopMode({
             </span>
           </div>
 
-          {/* Overall Mastery Percentage */}
-          <div className="flex items-center gap-2">
+          {/* Overall Mastery Percentage & Dual Progress */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             {streak > 1 && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 font-bold border border-orange-200 text-[11px] animate-pulse">
                 <Flame size={13} className="text-[#F05A28] fill-orange-500" />
@@ -635,10 +630,23 @@ export default function MasteryLoopMode({
               </span>
             )}
 
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 text-[11px]">
-              <Award size={13} className="text-emerald-600" />
+            {/* Level 2: Đã thuộc 100% */}
+            <div
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 text-[11px]"
+              title="Số từ đã thuộc 100% (đúng 2 lần ở cả 2 chiều câu hỏi)"
+            >
+              <Award size={13} className="text-emerald-600 shrink-0" />
               <span>Thuộc: <strong>{masteredItemsCount}/{totalItemsCount}</strong></span>
-              <span className="text-emerald-600 font-mono">({overallMasteryPercent}%)</span>
+            </div>
+
+            {/* Level 1: Tạm nhớ (Đang trong tiến trình) */}
+            <div
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px]"
+              title="Số từ đã trả lời đúng 1 lần (cần 1 lần đảo chiều ở vòng sau để thuộc 100%)"
+            >
+              <Check size={12} className="text-amber-600 shrink-0" />
+              <span>Tạm nhớ: <strong>{familiarItemsCount}</strong></span>
+              <span className="text-amber-700 font-mono font-black">({overallMasteryPercent}%)</span>
             </div>
           </div>
         </div>
@@ -722,16 +730,20 @@ export default function MasteryLoopMode({
 
             let btnClasses =
               'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/90 hover:border-slate-300';
+            let badgeClasses = 'border-slate-200 bg-white text-slate-700';
 
             if (isAnswered) {
               if (isCorrectOption) {
                 btnClasses =
                   'bg-emerald-50 text-emerald-950 border-emerald-500 ring-2 ring-emerald-500/20 font-bold';
+                badgeClasses = 'border-emerald-500 bg-emerald-500 text-white font-bold';
               } else if (isSelected && !isCorrectOption) {
                 btnClasses =
                   'bg-rose-50 text-rose-950 border-rose-500 ring-2 ring-rose-500/20 font-bold';
+                badgeClasses = 'border-rose-500 bg-rose-500 text-white font-bold';
               } else {
                 btnClasses = 'bg-slate-50 text-slate-400 border-slate-100 opacity-60';
+                badgeClasses = 'border-slate-200 bg-slate-100 text-slate-400';
               }
             }
 
@@ -744,7 +756,7 @@ export default function MasteryLoopMode({
                 className={`min-h-[54px] rounded-2xl border-2 px-3.5 py-3 text-left text-sm font-semibold transition-all duration-200 flex items-center justify-between gap-2.5 cursor-pointer ${btnClasses}`}
               >
                 <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white font-mono text-xs font-bold text-slate-700 shadow-2xs">
+                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border font-mono text-xs shadow-2xs transition-colors duration-200 ${badgeClasses}`}>
                     {opt.id}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -774,36 +786,52 @@ export default function MasteryLoopMode({
         {isAnswered && (
           <div className="mt-5 border-t border-slate-100 pt-4 animate-fadeIn">
             {/* Incorrect Answer Cognitive Feedback Card */}
-            {!isCorrectAnswer && (
-              <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50/70 p-3.5 text-left text-xs text-rose-900">
-                <div className="flex items-center gap-1.5 font-bold text-rose-700 mb-1">
-                  <XCircle size={15} />
-                  <span>Chưa chính xác! Cùng học lại từ này nhé:</span>
+            {!isCorrectAnswer && (() => {
+              const correctOptionObj = currentQ.options.find((o) => o.id === currentQ.correctOptionId);
+              return (
+                <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50/80 p-3.5 text-left text-xs text-rose-900">
+                  <div className="flex items-center gap-1.5 font-bold text-rose-700 mb-1.5">
+                    <XCircle size={16} className="shrink-0" />
+                    <span>Chưa chính xác! Cùng học lại từ này nhé:</span>
+                  </div>
+                  <div className="space-y-1 pl-5">
+                    <p className="font-semibold text-slate-900">
+                      Đáp án đúng:{' '}
+                      <span className="text-emerald-700 font-bold">
+                        {currentQ.correctOptionId}. {correctOptionObj?.text || currentQ.targetItem.meaning}
+                      </span>
+                      {correctOptionObj?.subtext && (
+                        <span className="ml-1 text-slate-500 font-mono text-xs">
+                          ({correctOptionObj.subtext})
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-slate-600">
+                      Từ vựng: <strong className="text-slate-900">{currentQ.targetItem.term}</strong>
+                      {currentQ.targetItem.reading && currentQ.targetItem.reading !== currentQ.targetItem.term && (
+                        <span> ({currentQ.targetItem.reading})</span>
+                      )}
+                      {' — '}
+                      <span>{currentQ.targetItem.meaning}</span>
+                    </p>
+                    {currentQ.targetItem.examples && currentQ.targetItem.examples.length > 0 && (
+                      <div className="mt-2 pt-2 border-t border-rose-200/60 text-slate-700 text-[11px] italic">
+                        <span>Ví dụ: "{currentQ.targetItem.examples[0].japanese || currentQ.targetItem.examples[0].reading}" — {currentQ.targetItem.examples[0].vietnamese}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="space-y-1 pl-5">
-                  <p className="font-semibold text-slate-900">
-                    Đáp án đúng: <span className="text-emerald-700 font-bold">{currentQ.correctOptionId}. {currentQ.targetItem.meaning}</span>
-                  </p>
-                  <p className="text-slate-600">
-                    Từ gốc: <strong className="text-slate-900">{currentQ.targetItem.term}</strong> ({currentQ.targetItem.reading})
-                  </p>
-                  {currentQ.targetItem.examples && currentQ.targetItem.examples.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-rose-200/60 text-slate-700 text-[11px] italic">
-                      <span>Ví dụ: "{currentQ.targetItem.examples[0].japanese || currentQ.targetItem.examples[0].reading}" — {currentQ.targetItem.examples[0].vietnamese}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Correct Answer Encouragement */}
             {isCorrectAnswer && (
-              <div className="mb-3 text-xs font-bold text-emerald-700 flex items-center justify-center gap-1.5">
-                <CheckCircle2 size={16} className="text-emerald-600" />
+              <div className="mb-3 text-xs font-bold text-emerald-800 flex items-center justify-center gap-1.5 bg-emerald-50 border border-emerald-200 py-2.5 px-3 rounded-xl">
+                <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
                 <span>
                   {isTargetAtLevel1
-                    ? 'Chính xác! Từ này đã đạt chuẩn THÀNH THẠO 100%!'
-                    : 'Chính xác! Từ đã được chuyển sang trạng thái Tạm Nhớ.'}
+                    ? 'Xuất sắc! Từ này đã đạt chuẩn THÀNH THẠO 100%!'
+                    : 'Chính xác! Từ đã được chuyển sang trạng thái Tạm Nhớ (Cần xác thực 1 lần nữa ở vòng sau).'}
                 </span>
               </div>
             )}
@@ -812,7 +840,7 @@ export default function MasteryLoopMode({
             <button
               type="button"
               onClick={handleNextQuestion}
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#1E293B] hover:bg-[#F05A28] px-6 py-3 text-sm font-bold text-white shadow-md transition-colors cursor-pointer active:scale-98"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#1E293B] hover:bg-[#F05A28] px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-200 cursor-pointer active:scale-98"
             >
               <span>
                 {currentQIndex < roundQuestions.length - 1 ? 'Câu tiếp theo' : 'Hoàn thành Vòng này'}

@@ -46,22 +46,27 @@ export default function VocabularyLessonListPage() {
   const upperCode = courseCode.toUpperCase();
   const language = getCourseLanguage(courseCode);
   const totalItems = lessons.reduce((acc, l) => acc + (l.itemCount || 0), 0);
-  const fallbackLessonCount = upperCode === 'JPD113' ? 9 : upperCode.startsWith('HSK') ? 11 : upperCode === 'ENG1000' ? 50 : 12;
-  const fallbackItemCount = upperCode === 'JPD113' ? 264 : upperCode === 'HSK1' ? 150 : upperCode === 'HSK2' ? 140 : upperCode === 'ENG1000' ? 1044 : 180;
+  const fallbackLessonCount = upperCode === 'JPD113' ? 9 : upperCode.startsWith('HSK') ? 11 : upperCode === 'ENG1000' ? 50 : upperCode === 'TOEIC120' ? 6 : 12;
+  const fallbackItemCount = upperCode === 'JPD113' ? 264 : upperCode === 'HSK1' ? 150 : upperCode === 'HSK2' ? 140 : upperCode === 'ENG1000' ? 1044 : upperCode === 'TOEIC120' ? 120 : 180;
+
+  const isToeic = upperCode === 'TOEIC120';
+  const pageHeading = isToeic ? '120 Thành Ngữ & Cụm Từ TOEIC (6 Phần Quiz)' : `Danh Sách Bài Học Từ Vựng ${upperCode}`;
+  const unitName = isToeic ? 'phần / Quiz' : 'chủ đề từ vựng';
+  const termTypeName = isToeic ? 'Cụm từ' : 'Từ vựng';
 
   return (
     <>
       <Seo
-        title={`Từ Vựng ${language.languageName} ${upperCode} - Danh Sách ${lessons.length || fallbackLessonCount} Bài Học | Mindora AI`}
-        description={`Học từ vựng ${language.languageName.toLowerCase()} ${upperCode} qua các bài học với Flashcard 3D, luyện gõ và trắc nghiệm.`}
+        title={`${isToeic ? '120 Thành Ngữ và Cụm Từ TOEIC (6 Quiz)' : `Từ Vựng ${language.languageName} ${upperCode}`} - Danh Sách ${lessons.length || fallbackLessonCount} Bài Học | Mindora AI`}
+        description={isToeic ? 'Luyện tập 120 thành ngữ và cụm từ TOEIC qua 6 bài Quiz, Flashcard 3D, luyện gõ và phản xạ nhanh.' : `Học từ vựng ${language.languageName.toLowerCase()} ${upperCode} qua các bài học với Flashcard 3D, luyện gõ và trắc nghiệm.`}
         canonicalPath={`/courses/${courseCode.toLowerCase()}/vocabulary`}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <CourseBreadcrumb
           items={[
-            { label: upperCode, href: `/courses/${courseCode.toLowerCase()}` },
-            { label: `Từ Vựng (${language.kind === 'chinese' ? '词汇' : language.kind === 'english' ? 'Vocabulary' : '単語'})` }
+            { label: isToeic ? 'TOEIC 120' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
+            { label: `${isToeic ? 'Thành Ngữ & Cụm Từ' : 'Từ Vựng'} (${language.kind === 'chinese' ? '词汇' : language.kind === 'english' ? 'Vocabulary' : '単語'})` }
           ]}
         />
 
@@ -70,18 +75,18 @@ export default function VocabularyLessonListPage() {
           <div>
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#F05A28] mb-1">
               <BookMarked size={15} />
-              <span>Chương Trình Từ Vựng {language.languageName}</span>
+              <span>Chương Trình {isToeic ? 'Thành Ngữ & Cụm Từ TOEIC' : `Từ Vựng ${language.languageName}`}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              Danh Sách Bài Học Từ Vựng {upperCode}
+              {pageHeading}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Bao gồm {lessons.length || fallbackLessonCount} chủ đề từ vựng, kết hợp luyện nhớ và phản xạ nhanh.
+              Bao gồm {lessons.length || fallbackLessonCount} {unitName}, {isToeic ? 'chia từ Trang 516 đến Trang 521 kèm 6 bài Quiz trắc nghiệm và phản xạ nhanh.' : 'kết hợp luyện nhớ và phản xạ nhanh.'}
             </p>
           </div>
 
           <div className="px-4 py-2 rounded-2xl bg-orange-50 text-[#F05A28] border border-orange-200/60 text-xs font-bold self-start sm:self-auto">
-            {lessons.length || fallbackLessonCount} Bài học • {(totalItems || fallbackItemCount).toLocaleString('vi-VN')} Từ vựng
+            {lessons.length || fallbackLessonCount} {isToeic ? 'Phần Quiz' : 'Bài học'} • {(totalItems || fallbackItemCount).toLocaleString('vi-VN')} {termTypeName}
           </div>
         </div>
 

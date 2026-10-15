@@ -85,12 +85,26 @@ export default function CoursesHubPage() {
       href: '/courses/hsk2/vocabulary'
     }
   ];
-  const englishCourse = {
-    code: 'ENG1000',
-    topics: 50,
-    vocabulary: 1044,
-    href: '/courses/eng1000/vocabulary'
-  };
+  const englishCourses = [
+    {
+      code: 'ENG1000',
+      title: '1.000 từ tiếng Anh thông dụng',
+      topics: 50,
+      topicUnit: 'chủ đề',
+      vocabulary: 1044,
+      description: 'Học theo 50 chủ đề từ gia đình, quần áo đến công sở; có IPA và nghĩa tiếng Việt.',
+      href: '/courses/eng1000/vocabulary'
+    },
+    {
+      code: 'TOEIC120',
+      title: '120 thành ngữ & cụm từ TOEIC',
+      topics: 6,
+      topicUnit: 'phần / Quiz',
+      vocabulary: 120,
+      description: 'Nắm vững 120 thành ngữ & cụm từ TOEIC then chốt (Trang 516 - 521), kèm 6 bài Quiz và Flashcard.',
+      href: '/courses/toeic120/vocabulary'
+    }
+  ];
 
   return (
     <>
@@ -297,28 +311,33 @@ export default function CoursesHubPage() {
             ))}
           </div>
 
-          <Link
-            to={englishCourse.href}
-            className="group mt-5 flex flex-col justify-between gap-5 rounded-3xl border border-orange-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-xl cursor-pointer sm:flex-row sm:items-center sm:p-8"
-          >
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-orange-100 bg-orange-50 text-[#F05A28]">
-                <BookOpen size={26} />
-              </div>
-              <div>
-                <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#F05A28]">Tiếng Anh</span>
-                  <span className="text-xs font-semibold text-slate-500">{englishCourse.topics} chủ đề • {englishCourse.vocabulary.toLocaleString('vi-VN')} mục từ</span>
+          <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            {englishCourses.map((course) => (
+              <Link
+                key={course.code}
+                to={course.href}
+                className="group flex flex-col justify-between gap-5 rounded-3xl border border-orange-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-xl cursor-pointer sm:flex-row sm:items-center sm:p-8"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-orange-100 bg-orange-50 text-[#F05A28]">
+                    <BookOpen size={26} />
+                  </div>
+                  <div>
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#F05A28]">Tiếng Anh</span>
+                      <span className="text-xs font-semibold text-slate-500">{course.topics} {course.topicUnit} • {course.vocabulary.toLocaleString('vi-VN')} mục</span>
+                    </div>
+                    <h2 className="text-xl font-black text-slate-900">{course.code}: {course.title}</h2>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{course.description}</p>
+                  </div>
                 </div>
-                <h2 className="text-xl font-black text-slate-900">1.000 từ tiếng Anh thông dụng</h2>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">Học theo 50 chủ đề từ gia đình, quần áo đến công sở; có IPA và nghĩa tiếng Việt.</p>
-              </div>
-            </div>
-            <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#1E293B] px-5 py-3.5 text-sm font-black text-white transition-colors group-hover:bg-[#F05A28]">
-              <span>Vào học ENG1000</span>
-              <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-            </span>
-          </Link>
+                <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#1E293B] px-5 py-3.5 text-sm font-black text-white transition-colors group-hover:bg-[#F05A28]">
+                  <span>Vào học {course.code}</span>
+                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </>

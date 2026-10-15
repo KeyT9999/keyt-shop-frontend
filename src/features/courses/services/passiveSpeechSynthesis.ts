@@ -1,4 +1,4 @@
-export type PassiveSpeechLocale = 'ja-JP' | 'zh-CN' | 'en-GB' | 'vi-VN';
+export type PassiveSpeechLocale = 'ja-JP' | 'zh-CN' | 'en-GB' | 'en-US' | 'vi-VN';
 
 export interface PassiveSpeechCallbacks {
   onEnd: () => void;

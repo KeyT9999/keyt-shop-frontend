@@ -1,6 +1,6 @@
 export interface CourseLanguageConfig {
   kind: 'japanese' | 'chinese' | 'english';
-  speechLocale: 'ja-JP' | 'zh-CN' | 'en-GB';
+  speechLocale: 'ja-JP' | 'zh-CN' | 'en-GB' | 'en-US';
   languageName: 'Tiếng Nhật' | 'Tiếng Trung' | 'Tiếng Anh';
   languageShortName: 'Nhật' | 'Trung' | 'Anh';
   readingName: 'Furigana' | 'Pinyin' | 'IPA';
@@ -20,10 +20,10 @@ export function getCourseLanguage(courseCode?: string): CourseLanguageConfig {
     };
   }
 
-  if (normalizedCode.startsWith('ENG')) {
+  if (normalizedCode.startsWith('ENG') || normalizedCode.startsWith('TOEIC')) {
     return {
       kind: 'english',
-      speechLocale: 'en-GB',
+      speechLocale: normalizedCode.startsWith('TOEIC') ? 'en-US' : 'en-GB',
       languageName: 'Tiếng Anh',
       languageShortName: 'Anh',
       readingName: 'IPA',

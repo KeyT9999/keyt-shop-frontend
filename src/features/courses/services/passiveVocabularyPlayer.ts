@@ -55,7 +55,7 @@ export class PassiveVocabularyPlayer {
   private readonly entries: PassiveListeningEntry[];
   private readonly speech: PassiveSpeechAdapter;
   private readonly clock: PassiveListeningClock;
-  private readonly primaryLocale: 'ja-JP' | 'zh-CN' | 'en-GB';
+  private readonly primaryLocale: 'ja-JP' | 'zh-CN' | 'en-GB' | 'en-US';
   private activeAudioPlayback = false;
   private snapshot: PassiveVocabularyPlayerSnapshot;
   private sessionId = 0;
@@ -70,7 +70,7 @@ export class PassiveVocabularyPlayer {
     entries: PassiveListeningEntry[],
     speech: PassiveSpeechAdapter,
     clock: PassiveListeningClock = browserClock,
-    primaryLocale: 'ja-JP' | 'zh-CN' | 'en-GB' = 'ja-JP'
+    primaryLocale: 'ja-JP' | 'zh-CN' | 'en-GB' | 'en-US' = 'ja-JP'
   ) {
     this.entries = entries;
     this.speech = speech;

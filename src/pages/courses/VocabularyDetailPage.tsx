@@ -188,22 +188,23 @@ export default function VocabularyDetailPage() {
     );
   }
 
-  const cleanTitle = lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '');
+  const isToeic = upperCode === 'TOEIC120';
+  const cleanTitle = isToeic ? lesson.title : lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '');
 
   return (
     <>
       <Seo
-        title={`Bài ${lesson.lessonCode}: ${cleanTitle} - Từ Vựng ${upperCode} | Mindora AI`}
-        description={`Học từ vựng ${language.languageName.toLowerCase()} bài ${lesson.lessonCode}: ${cleanTitle} (${items.length} từ). Luyện Flashcard, gõ từ và làm bài tập trắc nghiệm.`}
+        title={`${isToeic ? `Quiz ${lesson.order}: ${cleanTitle}` : `Bài ${lesson.lessonCode}: ${cleanTitle}`} - ${isToeic ? '120 Thành Ngữ TOEIC' : `Từ Vựng ${upperCode}`} | Mindora AI`}
+        description={isToeic ? `Luyện tập Quiz ${lesson.order}: ${cleanTitle} (${items.length} cụm từ) với Flashcard 3D, luyện gõ và trắc nghiệm phản xạ.` : `Học từ vựng ${language.languageName.toLowerCase()} bài ${lesson.lessonCode}: ${cleanTitle} (${items.length} từ). Luyện Flashcard, gõ từ và làm bài tập trắc nghiệm.`}
         canonicalPath={`/courses/${courseCode.toLowerCase()}/vocabulary/${lesson.slug}`}
       />
 
       <div className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
         <CourseBreadcrumb
           items={[
-            { label: upperCode, href: `/courses/${courseCode.toLowerCase()}` },
-            { label: `Từ Vựng (${language.kind === 'chinese' ? '词汇' : language.kind === 'english' ? 'Vocabulary' : '単語'})`, href: `/courses/${courseCode.toLowerCase()}/vocabulary` },
-            { label: `Bài ${lesson.lessonCode}` }
+            { label: isToeic ? 'TOEIC 120' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
+            { label: `${isToeic ? 'Thành Ngữ & Cụm Từ' : 'Từ Vựng'} (${language.kind === 'chinese' ? '词汇' : language.kind === 'english' ? 'Vocabulary' : '単語'})`, href: `/courses/${courseCode.toLowerCase()}/vocabulary` },
+            { label: isToeic ? `Quiz ${lesson.order}` : `Bài ${lesson.lessonCode}` }
           ]}
         />
 
@@ -213,14 +214,14 @@ export default function VocabularyDetailPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="px-3 py-1 rounded-full text-xs font-black bg-orange-50 text-[#F05A28] border border-orange-200">
-                  LESSON {lesson.lessonCode}
+                  {isToeic ? `QUIZ ${lesson.order}` : `LESSON ${lesson.lessonCode}`}
                 </span>
                 <span className="text-xs font-semibold text-slate-500">
-                  {items.length} từ vựng
+                  {items.length} {isToeic ? 'cụm từ' : 'từ vựng'}
                 </span>
               </div>
               <h1 className="text-xl font-extrabold leading-tight text-slate-900 sm:text-2xl lg:text-3xl">
-                {lesson.lessonCode}: {cleanTitle}
+                {isToeic ? cleanTitle : `${lesson.lessonCode}: ${cleanTitle}`}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
                 {lesson.description}

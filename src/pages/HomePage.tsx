@@ -14,15 +14,21 @@ import {
   Check,
   ShieldCheck,
   ChevronRight,
-  Star,
   GraduationCap,
   Mic,
   BookOpen,
   BookMarked,
   Layers,
   Award,
-  UserCheck,
-  Headphones
+  Headphones,
+  Languages,
+  FileSearch,
+  RotateCw,
+  Keyboard,
+  Clock,
+  Lock,
+  Compass,
+  Play
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────
@@ -46,12 +52,11 @@ function TiltCard({ children, className = '', onClick, style = {} }: TiltCardPro
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
 
-    // Subtle 3D tilt angles (max 7 degrees for elegance)
-    const rotateX = (0.5 - y) * 10;
-    const rotateY = (x - 0.5) * 10;
+    const rotateX = (0.5 - y) * 8;
+    const rotateY = (x - 0.5) * 8;
 
-    setTransform(`perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.015, 1.015, 1.015)`);
-    setGlare({ x: x * 100, y: y * 100, opacity: 0.15 });
+    setTransform(`perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.01, 1.01, 1.01)`);
+    setGlare({ x: x * 100, y: y * 100, opacity: 0.14 });
   };
 
   const handleMouseLeave = () => {
@@ -72,7 +77,6 @@ function TiltCard({ children, className = '', onClick, style = {} }: TiltCardPro
         ...style,
       }}
     >
-      {/* Specular Glare Overlay */}
       <div
         className="pointer-events-none absolute inset-0 rounded-[inherit] transition-opacity duration-300 z-30"
         style={{
@@ -86,10 +90,66 @@ function TiltCard({ children, className = '', onClick, style = {} }: TiltCardPro
 }
 
 // ─────────────────────────────────────────────
-// Main HomePage Component
+// Interactive Flashcard Demo Data (JP / CN / EN)
 // ─────────────────────────────────────────────
+const DEMO_FLASHCARDS = {
+  jp: {
+    code: 'JP',
+    badge: 'Tiếng Nhật • JPD113 / JPD123',
+    accent: 'from-rose-500 to-[#F05A28]',
+    lightBg: 'bg-orange-50 text-[#F05A28] border-orange-200',
+    word: '先生',
+    reading: 'せんせい • Sensei',
+    meaning: 'Thầy giáo, Cô giáo, Chuyên gia',
+    extra: 'Âm Hán Việt: TIÊN SINH • Bài 1 JPD113',
+    example: '佐藤先生は日本語の先生です。',
+    exampleVi: 'Thầy Sato là giáo viên tiếng Nhật.',
+    href: '/courses/jpd113/kanji'
+  },
+  cn: {
+    code: 'CN',
+    badge: 'Tiếng Trung • HSK 1 & HSK 2',
+    accent: 'from-emerald-600 to-teal-500',
+    lightBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    word: '老师',
+    reading: 'lǎo shī • Lão sư',
+    meaning: 'Giáo viên, Thầy cô giáo',
+    extra: 'Chủ đề: Trường học & Con người • HSK 1',
+    example: '她是我们的汉语老师。',
+    exampleVi: 'Cô ấy là giáo viên tiếng Trung của chúng tôi.',
+    href: '/courses/hsk1/vocabulary'
+  },
+  en: {
+    code: 'EN',
+    badge: 'Tiếng Anh • Hackers TOEIC',
+    accent: 'from-blue-600 to-indigo-600',
+    lightBg: 'bg-blue-50 text-blue-700 border-blue-200',
+    word: 'Negotiate',
+    reading: '/nɪˈɡoʊ.ʃi.eɪt/ • Verb',
+    meaning: 'Đàm phán, thương lượng hợp đồng',
+    extra: 'Hackers TOEIC Day 1 • 4.768 Từ vựng',
+    example: 'We successfully negotiated a new contract.',
+    exampleVi: 'Chúng tôi đã đàm phán thành công hợp đồng mới.',
+    href: '/courses/toeichackers/vocabulary'
+  }
+} as const;
+
+type HeroTabType = 'overview' | 'otp' | 'languages' | 'studio';
+type LangFilterType = 'all' | 'jp' | 'cn' | 'en';
+type FlashcardLangType = 'jp' | 'cn' | 'en';
+
 export default function HomePage() {
   const navigate = useNavigate();
+
+  // Hero Command Preview Tab
+  const [heroTab, setHeroTab] = useState<HeroTabType>('overview');
+
+  // Language Section Filter
+  const [langFilter, setLangFilter] = useState<LangFilterType>('all');
+
+  // Interactive 3D Flashcard Demo State
+  const [cardLang, setCardLang] = useState<FlashcardLangType>('jp');
+  const [isCardFlipped, setIsCardFlipped] = useState(false);
 
   // 1. Automated Before/After scanner for Photo Frame Box
   const [scannerPos, setScannerPos] = useState(58);
@@ -140,1106 +200,1705 @@ export default function HomePage() {
     setTimeout(() => setOtpCopied(false), 2000);
   };
 
-  // 4. Automated Compression live counter
-  const [compressPercent, setCompressPercent] = useState(90.3);
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCompressPercent((prev) => (prev === 90.3 ? 91.2 : 90.3));
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // 5. Automated JPD Speaking Simulation State
-  const [jpdCourse, setJpdCourse] = useState<'jpd123' | 'jpd113'>('jpd123');
-  const [examCycleStep, setExamCycleStep] = useState<number>(0); // 0: Sensei Question, 1: Student speak & Waveform, 2: Realtime Phonetic Tokens, 3: FPT Scorecard
-  const [kanjiIndex, setKanjiIndex] = useState<number>(0);
-
-  // Cycle speaking exam steps every 3.8s
-  useEffect(() => {
-    const cycleTimer = setInterval(() => {
-      setExamCycleStep((prev) => (prev + 1) % 4);
-    }, 3800);
-    return () => clearInterval(cycleTimer);
-  }, []);
-
-  // Switch Kanji word every 4s
-  useEffect(() => {
-    const wordTimer = setInterval(() => {
-      setKanjiIndex((prev) => (prev + 1) % 5);
-    }, 4000);
-    return () => clearInterval(wordTimer);
-  }, []);
-
-  // JPD Course Showcase Data
-  const jpdShowcaseData = {
-    jpd123: {
-      code: 'JPD123',
-      title: 'Tiếng Nhật JPD123',
-      level: 'N5 Nâng Cao • Bài 4 đến Bài 7',
-      term: 'Kỳ 2 FPT',
-      vocabCount: 251,
-      kanjiCount: 42,
-      grammarCount: 23,
-      mockTitle: 'Phòng Khảo Thí FPT - Luyện Thi Nói 1-1 AI',
-      sensei: 'Thầy Tanaka (Giám thị AI FPT)',
-      questionJp: '「休みの日は、いつも何をしますか？」',
-      questionVi: 'Ngày nghỉ em thường làm những gì?',
-      studentJp: '「友達と サッカーを して、日本語を 勉強します。」',
-      studentVi: 'Em đá bóng với bạn rồi sau đó học tiếng Nhật ạ.',
-      tokens: [
-        { word: '友達と', conf: '100%' },
-        { word: 'サッカーを', conf: '96%' },
-        { word: 'して、', conf: '99%' },
-        { word: '日本語を', conf: '98%' },
-        { word: '勉強します', conf: '95%' }
-      ],
-      scores: { content: '45/45', pron: '42/45', manner: '10/10', total: 97, result: 'PASSED' },
-      kanjiCards: [
-        { kanji: '学', onyomi: 'ガク (gaku)', kunyomi: 'まな.ぶ', hanviet: 'HỌC', example: '大学 (daigaku) • Đại học' },
-        { kanji: '先', onyomi: 'セン (sen)', kunyomi: 'さき', hanviet: 'TIÊN', example: '先生 (sensei) • Thầy cô' },
-        { kanji: '生', onyomi: 'セイ (sei)', kunyomi: 'い.きる', hanviet: 'SINH', example: '学生 (gakusei) • Học sinh' },
-        { kanji: '本', onyomi: 'ホン (hon)', kunyomi: 'もと', hanviet: 'BẢN', example: '日本 (nihon) • Nhật Bản' },
-        { kanji: '語', onyomi: 'ゴ (go)', kunyomi: 'かた.る', hanviet: 'NGỮ', example: '日本語 (nihongo) • Tiếng Nhật' }
-      ]
+  // Quick-launch dock items (6 core pillars)
+  const quickLaunchItems = [
+    {
+      id: 'otp',
+      title: 'Lấy Mã OTP & 2FA Live',
+      subtitle: 'ChatGPT • Gemini • TOTP 30s',
+      badge: 'LIVE 24/7',
+      badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      iconBg: 'from-emerald-500 to-teal-600 shadow-emerald-500/25',
+      icon: KeyRound,
+      href: '/get-otp',
     },
-    jpd113: {
-      code: 'JPD113',
-      title: 'Tiếng Nhật JPD113',
-      level: 'N5 Khởi Động • Bài 1 đến Bài 3',
-      term: 'Kỳ 1 FPT',
-      vocabCount: 379,
-      kanjiCount: 35,
-      grammarCount: 21,
-      mockTitle: 'Phòng Khảo Thí FPT - Luyện Thi Nói 1-1 AI',
-      sensei: 'Cô Sato (Giám thị AI FPT)',
-      questionJp: '「お名前は？ お国はどちらですか？」',
-      questionVi: 'Em tên là gì? Em đến từ đất nước nào?',
-      studentJp: '「私は ナムです。ベトナムから 来ました。」',
-      studentVi: 'Em tên là Nam. Em đến từ Việt Nam ạ.',
-      tokens: [
-        { word: '私は', conf: '100%' },
-        { word: 'ナムです。', conf: '98%' },
-        { word: 'ベトナムから', conf: '100%' },
-        { word: '来ました。', conf: '97%' }
-      ],
-      scores: { content: '45/45', pron: '44/45', manner: '10/10', total: 99, result: 'PASSED' },
-      kanjiCards: [
-        { kanji: '日', onyomi: 'ニチ, ジツ', kunyomi: 'ひ, か', hanviet: 'NHẬT', example: '日曜日 (nichiyoubi) • Chủ nhật' },
-        { kanji: '月', onyomi: 'ゲツ, ガツ', kunyomi: 'つき', hanviet: 'NGUYỆT', example: '月曜日 (getsuyoubi) • Thứ hai' },
-        { kanji: '人', onyomi: 'ジン, ニン', kunyomi: 'ひと', hanviet: 'NHÂN', example: '日本人 (nihonjin) • Người Nhật' },
-        { kanji: '山', onyomi: 'サン', kunyomi: 'やま', hanviet: 'SƠN', example: '富士山 (fujisan) • Núi Phú Sĩ' },
-        { kanji: '川', onyomi: 'セン', kunyomi: 'かわ', hanviet: 'XUYÊN', example: '川 (kawa) • Con sông' }
-      ]
-    }
-  };
+    {
+      id: 'photo-frame',
+      title: 'Tạo Khung Ảnh EXIF',
+      subtitle: 'Leica • Sony • Fujifilm • Apple',
+      badge: '4K / 8K',
+      badgeClass: 'bg-orange-50 text-[#F05A28] border-orange-200',
+      iconBg: 'from-[#F05A28] to-amber-500 shadow-orange-500/25',
+      icon: Frame,
+      href: '/photo-frame',
+    },
+    {
+      id: 'japanese',
+      title: 'Tiếng Nhật FPT & Kana',
+      subtitle: 'JPD113 • JPD123 • Giám thị AI',
+      badge: 'AI 1-1',
+      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+      iconBg: 'from-rose-500 to-[#F05A28] shadow-rose-500/25',
+      icon: GraduationCap,
+      href: '/courses',
+    },
+    {
+      id: 'chinese',
+      title: 'Tiếng Trung HSK 1–2',
+      subtitle: '290 Từ • Pinyin • Nghe thụ động',
+      badge: '22 BÀI',
+      badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
+      iconBg: 'from-amber-500 to-orange-600 shadow-amber-500/25',
+      icon: Languages,
+      href: '/courses/hsk1/vocabulary',
+    },
+    {
+      id: 'english',
+      title: 'Tiếng Anh TOEIC & 1000 Từ',
+      subtitle: 'Hackers 30 Day • 120 Idioms',
+      badge: '5.900+ TỪ',
+      badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
+      iconBg: 'from-blue-600 to-indigo-600 shadow-blue-500/25',
+      icon: BookOpen,
+      href: '/courses/toeichackers/vocabulary',
+    },
+    {
+      id: 'ai-tools',
+      title: 'Xóa Nền AI & Nén Ảnh',
+      subtitle: 'Tách nền • Nén 90% • YouTube AI',
+      badge: 'AI STUDIO',
+      badgeClass: 'bg-violet-50 text-violet-700 border-violet-200',
+      iconBg: 'from-violet-600 to-indigo-600 shadow-violet-500/25',
+      icon: Wand2,
+      href: '/ai-image',
+    },
+  ];
 
-  const activeCourseData = jpdShowcaseData[jpdCourse];
-  const activeKanji = activeCourseData.kanjiCards[kanjiIndex % activeCourseData.kanjiCards.length];
+  const currentFlashcard = DEMO_FLASHCARDS[cardLang];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-[#F05A28]/20 selection:text-[#F05A28]">
-      {/* ── Background Subtle Ambient Orbs ───────────────────────── */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[720px] h-[500px] bg-gradient-to-b from-[#F05A28]/10 via-amber-500/5 to-transparent rounded-full blur-3xl opacity-70" />
-        <div className="absolute top-[35%] -left-32 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
-        <div className="absolute top-[60%] -right-32 w-96 h-96 bg-[#F05A28]/5 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-[#F05A28]/15 selection:text-[#F05A28] overflow-x-hidden relative font-sans">
+      {/* ── Ambient Argon Glass Background Mesh ─────────────────────── */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div
+          className="absolute -top-44 left-1/2 -translate-x-1/2 w-[1150px] h-[580px] rounded-full blur-3xl opacity-55"
+          style={{
+            background:
+              'radial-gradient(ellipse at center, rgba(240, 90, 40, 0.13) 0%, rgba(59, 130, 246, 0.09) 48%, transparent 75%)',
+          }}
+        />
+        <div
+          className="absolute top-[38%] -right-48 w-[640px] h-[640px] rounded-full blur-3xl opacity-45"
+          style={{
+            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.06) 55%, transparent 75%)',
+          }}
+        />
+        <div
+          className="absolute bottom-10 -left-48 w-[620px] h-[620px] rounded-full blur-3xl opacity-45"
+          style={{
+            background: 'radial-gradient(circle, rgba(240, 90, 40, 0.09) 0%, transparent 70%)',
+          }}
+        />
+        {/* Subtle Argon Dot Matrix */}
+        <div
+          className="absolute inset-0 opacity-[0.32]"
+          style={{
+            backgroundImage: 'radial-gradient(#CBD5E1 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+          }}
+        />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-24">
-        {/* ── 1. HERO STATEMENT SECTION ───────────────────────────── */}
-        <section className="text-center max-w-4xl mx-auto pt-6 pb-12 sm:pb-16">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/80 shadow-xs mb-6 backdrop-blur-md">
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F05A28] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F05A28]"></span>
+      {/* ── Main Content Wrapper ────────────────────────────────────── */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-10 pb-24">
+
+        {/* ============================================================
+            SECTION 1: ARGON COMMAND HUB HERO + QUICK-LAUNCH DOCK
+           ============================================================ */}
+        <section className="text-center max-w-6xl mx-auto pt-2 sm:pt-4 pb-10 sm:pb-14">
+          {/* Top Argon Glass Status Pill */}
+          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/90 border border-slate-200/90 shadow-xs mb-6 backdrop-blur-md">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F05A28] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#F05A28]" />
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
-              Khảo Thí Tiếng Nhật FPT JPD113 & JPD123 • Tiện Ích AI 2.0
-            </span>
-            <span className="text-[11px] font-semibold text-[#F05A28] bg-orange-50 px-2 py-0.5 rounded-md">
-              HOT
+            <span className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-700">
+              <span className="sm:hidden">KeyT Hub • Nhật Trung Anh • OTP 2FA &amp; Ảnh AI</span>
+              <span className="hidden sm:inline">
+                KeyT Super Hub • Ngoại Ngữ AI (Nhật • Trung • Anh) • Cổng OTP 2FA &amp; Studio Ảnh
+              </span>
             </span>
           </div>
 
-          {/* Heading */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.15] mb-6">
-            Luyện Thi Tiếng Nhật{' '}
+          {/* Main Headline */}
+          <h1 className="text-3xl sm:text-5xl lg:text-[56px] font-black tracking-tight text-slate-900 leading-[1.12] mb-5">
+            Hệ Sinh Thái{' '}
             <span className="bg-gradient-to-r from-[#F05A28] via-[#EA580C] to-amber-500 bg-clip-text text-transparent">
-              Giám Thị AI 1-1
-            </span>{' '}
-            & Công Cụ Sáng Tạo Số
+              Ngoại Ngữ AI,
+            </span>
+            <br className="hidden sm:inline" />{' '}
+            Cổng OTP 2FA &amp; Studio Nhiếp Ảnh Số
           </h1>
 
-          {/* Subtitle */}
-          <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed mb-8">
-            Phòng thi nói tiếng Nhật FPT JPD113 & JPD123 mô phỏng 100 điểm với AI chấm phát âm siêu tốc, kết hợp studio lồng khung ảnh EXIF nghệ thuật và tiện ích AI miễn phí.
+          {/* Subtitle covering all pillars */}
+          <p className="text-base sm:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed mb-8 font-normal">
+            Truy cập tức thì toàn bộ tiện ích trên một nền tảng duy nhất: Lấy mã{' '}
+            <strong className="font-bold text-slate-800">OTP ChatGPT / Gemini &amp; 2FA Live 30s</strong>, học{' '}
+            <strong className="font-bold text-slate-800">Tiếng Nhật FPT (JPD113 • JPD123 • Kana)</strong>,{' '}
+            <strong className="font-bold text-slate-800">Tiếng Trung HSK 1–2</strong>,{' '}
+            <strong className="font-bold text-slate-800">Tiếng Anh Hackers TOEIC (5.900+ từ)</strong> cùng bộ công cụ{' '}
+            <strong className="font-bold text-slate-800">Khung Ảnh EXIF, Xóa Nền AI &amp; Nén Ảnh HD</strong>.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-3.5 mb-10">
+          {/* Primary Action Buttons */}
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center gap-3 sm:gap-4 mb-10 max-w-md sm:max-w-none mx-auto">
             <button
-              onClick={() => navigate('/courses/jpd123/speaking?tab=mock')}
-              className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#F05A28] to-[#EA580C] text-white font-bold text-sm sm:text-base shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer"
+              onClick={() => navigate('/courses')}
+              className="group relative inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#F05A28] to-[#EA580C] text-white font-bold text-sm sm:text-base shadow-lg shadow-[#F05A28]/25 hover:shadow-xl hover:shadow-[#F05A28]/35 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
             >
-              <Mic size={18} />
-              <span>Thi thử nói JPD123 1-1 ngay</span>
-              <ArrowRight size={16} />
+              <GraduationCap size={19} />
+              <span>Học Viện Nhật • Trung • Anh</span>
+              <ArrowRight size={17} className="group-hover:translate-x-1 transition-transform" />
             </button>
 
-            <a
-              href="#jpd-showcase"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-white text-slate-700 font-semibold text-sm sm:text-base border border-slate-200/90 shadow-xs hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-all duration-200 cursor-pointer"
+            <button
+              onClick={() => navigate('/get-otp')}
+              className="group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full bg-[#0F172A] text-white font-bold text-sm sm:text-base shadow-md hover:bg-slate-800 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
             >
-              <GraduationCap size={18} className="text-[#F05A28]" />
-              <span>Cổng 2 Môn JPD113 & JPD123</span>
-            </a>
+              <KeyRound size={17} className="text-emerald-400" />
+              <span>Lấy Mã OTP &amp; 2FA Live</span>
+              <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                30s
+              </span>
+            </button>
 
-            <a
-              href="#bento-tools"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-white/70 text-slate-600 font-semibold text-sm sm:text-base border border-slate-200/80 hover:bg-white hover:text-slate-900 transition-all duration-200 cursor-pointer"
+            <button
+              onClick={() => navigate('/photo-frame')}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white text-slate-800 font-bold text-sm sm:text-base border border-slate-200/90 shadow-xs hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
             >
-              <Sliders size={16} />
-              <span>Công cụ sáng tạo AI</span>
-            </a>
+              <Frame size={17} className="text-[#F05A28]" />
+              <span>Tạo Khung Ảnh EXIF</span>
+            </button>
           </div>
 
-          {/* Trust Metrics Pill Bar */}
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm font-medium text-slate-500">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
-              <span>Chuẩn format Khảo thí FPT University</span>
+          {/* ── ARGON QUICK-LAUNCH DOCK (6 PILLARS) ─────────────────── */}
+          <div className="rounded-3xl bg-white/85 backdrop-blur-xl border border-slate-200/90 shadow-[0_18px_50px_-15px_rgba(15,23,42,0.08)] p-3.5 sm:p-5 mb-10 text-left">
+            <div className="flex items-center justify-between px-2 pb-3 mb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                <Compass size={14} className="text-[#F05A28] shrink-0" />
+                <span>Lối Tắt Truy Cập Nhanh Toàn Bộ Chức Năng (1 Chạm)</span>
+              </div>
+              <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-600">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                Tất cả dịch vụ đang hoạt động ổn định
+              </span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Zap size={16} className="text-[#F05A28] flex-shrink-0" />
-              <span>AI chấm phát âm 4 tiêu chí dưới 1 giây</span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {quickLaunchItems.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => navigate(item.href)}
+                    className="group flex items-center justify-between gap-2.5 p-3.5 rounded-2xl bg-slate-50/80 hover:bg-white border border-slate-200/80 hover:border-[#F05A28]/40 hover:shadow-md transition-all duration-200 text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.iconBg} text-white flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform`}
+                      >
+                        <IconComponent size={19} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-extrabold text-[13.5px] text-slate-900 group-hover:text-[#F05A28] transition-colors whitespace-nowrap">
+                          {item.title}
+                        </div>
+                        <p className="text-[11.5px] text-slate-500 whitespace-nowrap mt-0.5">{item.subtitle}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold border whitespace-nowrap ${item.badgeClass}`}
+                      >
+                        {item.badge}
+                      </span>
+                      <ChevronRight
+                        size={15}
+                        className="text-slate-400 group-hover:text-[#F05A28] group-hover:translate-x-0.5 transition-all"
+                      />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck size={16} className="text-blue-500 flex-shrink-0" />
-              <span>Flashcard 3D & 630 từ vựng N5 miễn phí</span>
+          </div>
+
+          {/* ── INTERACTIVE ARGON COMMAND PREVIEW WINDOW ────────────── */}
+          <div className="relative mx-auto max-w-6xl">
+            <div className="rounded-3xl bg-white/90 backdrop-blur-xl border border-slate-200/90 shadow-[0_24px_60px_-15px_rgba(15,23,42,0.1)] p-3 sm:p-5">
+              {/* Top Window Bar + Interactive Tab Switcher */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-rose-400/80" />
+                  <span className="w-3 h-3 rounded-full bg-amber-400/80" />
+                  <span className="w-3 h-3 rounded-full bg-emerald-400/80" />
+                  <span className="ml-2 text-xs font-bold text-slate-500 tracking-wide">
+                    keyt-hub://interactive-preview
+                  </span>
+                </div>
+
+                {/* 4 Switchable Preview Tabs */}
+                <div className="flex flex-wrap items-center gap-1.5 bg-slate-100/90 p-1 rounded-2xl border border-slate-200/60">
+                  {[
+                    { id: 'overview', label: 'Toàn Cảnh Hệ Sinh Thái', icon: Layers },
+                    { id: 'otp', label: 'Cổng OTP & 2FA 30s', icon: KeyRound },
+                    { id: 'languages', label: 'Nhật • Trung • Anh', icon: GraduationCap },
+                    { id: 'studio', label: 'Studio Ảnh EXIF & AI', icon: Frame },
+                  ].map((tab) => {
+                    const TabIcon = tab.icon;
+                    const active = heroTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setHeroTab(tab.id as HeroTabType)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          active
+                            ? 'bg-slate-900 text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                        }`}
+                      >
+                        <TabIcon size={13} className={active ? 'text-[#F05A28]' : 'text-slate-500'} />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* TAB 1: OVERVIEW (3 Pillars Side-by-Side Live Preview) */}
+              {heroTab === 'overview' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left animate-fadeIn">
+                  {/* Card A: OTP & 2FA Live */}
+                  <div
+                    onClick={() => navigate('/get-otp')}
+                    className="rounded-2xl bg-[#0F172A] text-white p-5 border border-slate-800 flex flex-col justify-between hover:border-emerald-500/40 transition-all cursor-pointer group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-[11px] font-bold border border-emerald-500/30">
+                          <KeyRound size={12} /> Cổng OTP &amp; 2FA
+                        </span>
+                        <span className="text-xs font-mono font-bold text-orange-400 bg-orange-950/60 px-2 py-0.5 rounded border border-orange-800/40">
+                          Làm mới: {otpTimer}s
+                        </span>
+                      </div>
+                      <h3 className="text-base font-extrabold text-white mb-1 group-hover:text-emerald-300 transition-colors">
+                        Lấy Mã OTP ChatGPT, Gemini &amp; 2FA
+                      </h3>
+                      <p className="text-xs text-slate-400 leading-relaxed mb-4">
+                        Nhận mã xác thực tự động thời gian thực 24/7 chỉ với 1 cú click.
+                      </p>
+                    </div>
+
+                    <div>
+                      <div className="grid grid-cols-6 gap-1.5 mb-3">
+                        {otpCode.split('').map((digit, idx) => (
+                          <div
+                            key={idx}
+                            className="h-10 rounded-lg bg-slate-800/90 border border-emerald-500/30 flex items-center justify-center font-mono font-black text-base text-emerald-300"
+                          >
+                            {digit}
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleCopyOtp}
+                        className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          otpCopied
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-white/10 hover:bg-white/20 text-white border border-white/10'
+                        }`}
+                      >
+                        {otpCopied ? <Check size={13} /> : <Copy size={13} />}
+                        <span>{otpCopied ? 'Đã sao chép mã OTP!' : 'Sao chép mã thử nghiệm'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Card B: Multi-Language Academy (JP / CN / EN) */}
+                  <div
+                    onClick={() => navigate('/courses')}
+                    className="rounded-2xl bg-slate-50 p-5 border border-slate-200/80 flex flex-col justify-between hover:border-[#F05A28]/50 transition-all cursor-pointer group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-100 text-[#F05A28] text-[11px] font-bold">
+                          <GraduationCap size={12} /> 3 Ngôn Ngữ
+                        </span>
+                        <span className="text-[11px] font-bold text-slate-500">6.800+ Từ vựng</span>
+                      </div>
+                      <h3 className="text-base font-extrabold text-slate-900 mb-2 group-hover:text-[#F05A28] transition-colors">
+                        Học Viện Nhật • Trung • Anh
+                      </h3>
+
+                      <div className="space-y-2 my-3">
+                        <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/70 text-xs">
+                          <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                            <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-black text-[10px]">
+                              JP
+                            </span>
+                            JPD113 • JPD123 • Kana
+                          </span>
+                          <span className="text-[#F05A28] font-bold">Thi nói AI 1-1</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/70 text-xs">
+                          <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-black text-[10px]">
+                              CN
+                            </span>
+                            Tiếng Trung HSK 1 &amp; 2
+                          </span>
+                          <span className="text-emerald-700 font-bold">290 Từ • 22 Bài</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/70 text-xs">
+                          <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                            <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-black text-[10px]">
+                              EN
+                            </span>
+                            Hackers TOEIC &amp; 1000 Từ
+                          </span>
+                          <span className="text-blue-700 font-bold">5.932 Mục từ</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between text-xs font-bold text-[#F05A28]">
+                      <span>Vào cổng học tập miễn phí</span>
+                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+
+                  {/* Card C: EXIF Photo Studio & AI Image */}
+                  <div
+                    onClick={() => navigate('/photo-frame')}
+                    className="rounded-2xl bg-slate-50 p-5 border border-slate-200/80 flex flex-col justify-between hover:border-blue-500/40 transition-all cursor-pointer group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-[11px] font-bold">
+                          <Frame size={12} /> Studio Ảnh &amp; AI
+                        </span>
+                        <span className="text-[11px] font-bold text-emerald-600">100% Free</span>
+                      </div>
+                      <h3 className="text-base font-extrabold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
+                        Khung EXIF, Xóa Nền &amp; Nén HD
+                      </h3>
+
+                      {/* Mini EXIF frame visual */}
+                      <div className="rounded-xl bg-white p-2.5 border border-slate-200 shadow-xs mb-3">
+                        <div className="h-20 rounded-lg bg-gradient-to-tr from-slate-800 via-indigo-900 to-[#F05A28] relative overflow-hidden flex items-center justify-center">
+                          <span className="text-[11px] font-bold text-white/90 px-2.5 py-1 rounded-full bg-black/35 backdrop-blur-xs">
+                            Leica Q3 • 28mm f/1.7 • ISO 100
+                          </span>
+                        </div>
+                        <div className="pt-2 flex items-center justify-between text-[10px] font-mono text-slate-600">
+                          <span className="font-bold text-slate-900">LEICA CAMERA AG</span>
+                          <span>1/1000s • 4K Lossless</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-1.5 text-[11px] font-bold text-center">
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/photo-frame');
+                        }}
+                        className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-[#F05A28] hover:text-[#F05A28] transition-colors"
+                      >
+                        Khung EXIF
+                      </span>
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/ai-image');
+                        }}
+                        className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-violet-600 hover:text-violet-600 transition-colors"
+                      >
+                        Xóa Nền AI
+                      </span>
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/compress');
+                        }}
+                        className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-emerald-600 hover:text-emerald-600 transition-colors"
+                      >
+                        Nén Ảnh 90%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: OTP & 2FA LIVE DETAIL PREVIEW */}
+              {heroTab === 'otp' && (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 text-left animate-fadeIn">
+                  <div className="md:col-span-7 rounded-2xl bg-[#0F172A] text-white p-6 border border-slate-800 flex flex-col justify-between">
+                    <div>
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-bold mb-3 border border-emerald-500/30">
+                        <ShieldCheck size={14} />
+                        <span>Cổng Xác Thực Tự Động Thời Gian Thực</span>
+                      </div>
+                      <h3 className="text-xl sm:text-2xl font-black mb-2">
+                        Lấy Mã OTP ChatGPT Plus, Gemini &amp; 2FA TOTP
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-5">
+                        Hệ thống tự động trích xuất mã xác thực đăng nhập cho tài khoản ChatGPT, Gemini Advanced và giải mã khóa 2FA (TOTP 6 chữ số) tự làm mới mỗi 30 giây.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/get-otp')}
+                        className="px-4 py-2.5 rounded-xl bg-[#F05A28] hover:bg-[#EA580C] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all"
+                      >
+                        <KeyRound size={14} /> Lấy OTP ChatGPT
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/get-otp-gemini')}
+                        className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all"
+                      >
+                        <Sparkles size={14} /> Lấy OTP Gemini
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/2falive')}
+                        className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all"
+                      >
+                        <Lock size={14} /> Công Cụ 2FA Live
+                      </button>
+                    </div>
+                  </div>
+                  <div className="md:col-span-5 rounded-2xl bg-slate-900 text-white p-5 border border-slate-800 flex flex-col justify-center">
+                    <div className="flex items-center justify-between text-xs mb-3">
+                      <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                        2FA TOTP LIVE GENERATOR
+                      </span>
+                      <span className="font-mono text-orange-400 font-bold">{otpTimer}s còn lại</span>
+                    </div>
+                    <div className="grid grid-cols-6 gap-2 my-3">
+                      {otpCode.split('').map((c, i) => (
+                        <div
+                          key={i}
+                          className="h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-mono text-lg font-black text-white"
+                        >
+                          {c}
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCopyOtp}
+                      className="mt-2 w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                    >
+                      {otpCopied ? <Check size={14} /> : <Copy size={14} />}
+                      <span>{otpCopied ? 'Đã sao chép!' : 'Sao chép mã 6 số'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: LANGUAGES PREVIEW */}
+              {heroTab === 'languages' && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left animate-fadeIn">
+                  <div
+                    onClick={() => navigate('/courses/jpd123')}
+                    className="p-5 rounded-2xl bg-rose-50/60 border border-rose-200/80 hover:shadow-md transition-all cursor-pointer"
+                  >
+                    <span className="px-2.5 py-1 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase">
+                      TIẾNG NHẬT FPT
+                    </span>
+                    <h4 className="text-base font-extrabold text-slate-900 mt-3 mb-1">
+                      JPD113 • JPD123 &amp; Bảng Kana
+                    </h4>
+                    <p className="text-xs text-slate-600 mb-3">
+                      77 Hán tự 3D, 630 từ vựng, 44 ngữ pháp, Thi nói 1-1 Giám thị AI &amp; Kana Quiz kiểu Tofugu.
+                    </p>
+                    <span className="text-xs font-bold text-rose-600 inline-flex items-center gap-1">
+                      Học Tiếng Nhật ngay <ArrowRight size={13} />
+                    </span>
+                  </div>
+
+                  <div
+                    onClick={() => navigate('/courses/hsk1/vocabulary')}
+                    className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 hover:shadow-md transition-all cursor-pointer"
+                  >
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase">
+                      TIẾNG TRUNG HSK
+                    </span>
+                    <h4 className="text-base font-extrabold text-slate-900 mt-3 mb-1">
+                      Từ Vựng HSK 1 &amp; HSK 2
+                    </h4>
+                    <p className="text-xs text-slate-600 mb-3">
+                      290 từ vựng theo 22 chủ đề, chữ Hán giản thể, Pinyin, luyện gõ, ghép cặp &amp; Nghe thụ động.
+                    </p>
+                    <span className="text-xs font-bold text-emerald-700 inline-flex items-center gap-1">
+                      Học Tiếng Trung ngay <ArrowRight size={13} />
+                    </span>
+                  </div>
+
+                  <div
+                    onClick={() => navigate('/courses/toeichackers/vocabulary')}
+                    className="p-5 rounded-2xl bg-blue-50/60 border border-blue-200/80 hover:shadow-md transition-all cursor-pointer"
+                  >
+                    <span className="px-2.5 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase">
+                      TIẾNG ANH TOEIC
+                    </span>
+                    <h4 className="text-base font-extrabold text-slate-900 mt-3 mb-1">
+                      Hackers TOEIC, 120 Idioms &amp; 1000 Từ
+                    </h4>
+                    <p className="text-xs text-slate-600 mb-3">
+                      4.768 từ Hackers TOEIC (Day 1–30), 120 Thành ngữ kèm 6 Quiz &amp; 1.044 từ thông dụng 50 chủ đề.
+                    </p>
+                    <span className="text-xs font-bold text-blue-700 inline-flex items-center gap-1">
+                      Học Tiếng Anh ngay <ArrowRight size={13} />
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: STUDIO PREVIEW */}
+              {heroTab === 'studio' && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-left animate-fadeIn">
+                  {[
+                    {
+                      title: 'Khung Ảnh EXIF',
+                      desc: 'Tự động đọc metadata Leica, Sony, Fujifilm, Apple, xuất ảnh 4K.',
+                      href: '/photo-frame',
+                      badge: 'Nhiếp ảnh',
+                      color: 'text-[#F05A28] bg-orange-50 border-orange-200',
+                    },
+                    {
+                      title: 'AI Xử Lý & Xóa Nền',
+                      desc: 'Tách nền 100% miễn phí, viết Caption & Hashtag bằng AI.',
+                      href: '/ai-image',
+                      badge: 'AI Studio',
+                      color: 'text-violet-700 bg-violet-50 border-violet-200',
+                    },
+                    {
+                      title: 'Nén Ảnh HD 90%',
+                      desc: 'Giảm tới 90% dung lượng WebP, PNG, JPEG giữ nguyên độ nét.',
+                      href: '/compress',
+                      badge: 'Tối ưu Web',
+                      color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+                    },
+                    {
+                      title: 'YouTube & Evidence AI',
+                      desc: 'Tóm tắt video YouTube siêu tốc & Kiểm tra bằng chứng AI.',
+                      href: '/summarizer',
+                      badge: 'Trợ lý AI',
+                      color: 'text-blue-700 bg-blue-50 border-blue-200',
+                    },
+                  ].map((tool, i) => (
+                    <div
+                      key={i}
+                      onClick={() => navigate(tool.href)}
+                      className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
+                    >
+                      <div>
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${tool.color}`}>
+                          {tool.badge}
+                        </span>
+                        <h4 className="text-sm font-extrabold text-slate-900 mt-2.5 mb-1">{tool.title}</h4>
+                        <p className="text-xs text-slate-500 leading-relaxed">{tool.desc}</p>
+                      </div>
+                      <span className="mt-3 text-xs font-bold text-slate-900 inline-flex items-center gap-1">
+                        Mở công cụ <ArrowRight size={12} />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </section>
 
+        {/* ============================================================
+            SECTION 2: CỔNG XÁC THỰC OTP & 2FA LIVE (SPOTLIGHT COMMAND BAR)
+           ============================================================ */}
+        <section className="py-8 sm:py-10">
+          <div className="rounded-3xl bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white p-6 sm:p-8 lg:p-10 shadow-xl border border-slate-800 relative overflow-hidden">
+            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-[#F05A28]/15 blur-3xl pointer-events-none" />
 
-        {/* ── 2. JPD113 & JPD123 JAPANESE LEARNING AI SHOWCASE (AUTOMATED) ── */}
-        <section id="jpd-showcase" className="pt-4 pb-20 scroll-mt-20">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-[#F05A28] text-xs font-bold uppercase tracking-wider mb-2 border border-orange-200/60">
-              <GraduationCap size={15} />
-              <span>Cổng Khảo Thí Tiếng Nhật Đại Học FPT</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900">
-              Luyện Thi Nói 1-1 AI & Chinh Phục Điểm FE JPD113 - JPD123
-            </h2>
-            <p className="text-slate-500 text-sm sm:text-base mt-2 max-w-2xl mx-auto">
-              Quan sát trực quan mô phỏng bài thi nói 1-1 thực tế: Giám thị AI đặt câu hỏi, phân tích âm vị học tiếng Nhật theo thời gian thực và xuất phiếu điểm chuẩn FPT.
-            </p>
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              {/* Left 7 Cols: OTP Services Info & Direct Buttons */}
+              <div className="lg:col-span-7">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-bold uppercase tracking-wider mb-4">
+                  <KeyRound size={14} />
+                  <span>Cổng Xác Thực Số Tự Động 24/7</span>
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                </div>
 
-            {/* Course Selector Tabs */}
-            <div className="inline-flex items-center gap-2 bg-slate-200/80 p-1.5 rounded-2xl mt-6 shadow-inner">
-              <button
-                type="button"
-                onClick={() => setJpdCourse('jpd123')}
-                className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  jpdCourse === 'jpd123'
-                    ? 'bg-[#F05A28] text-white shadow-md'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <GraduationCap size={16} />
-                <span>Môn JPD123 (Kỳ 2 • Minna 4-7)</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${jpdCourse === 'jpd123' ? 'bg-white/20 text-white' : 'bg-orange-100 text-[#F05A28]'}`}>
-                  NÂNG CAO
-                </span>
-              </button>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight mb-3">
+                  Lấy Mã OTP ChatGPT, Gemini &amp; Tạo Mã 2FA Tức Thì
+                </h2>
+                <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6 max-w-2xl">
+                  Không cần chờ đợi admin gửi mã thủ công. Hệ thống tự động đọc mã xác thực đăng nhập{' '}
+                  <strong className="text-white">ChatGPT Plus</strong>,{' '}
+                  <strong className="text-white">Gemini Advanced</strong> và tích hợp trình tạo mã{' '}
+                  <strong className="text-white">2FA Live (TOTP 6 số)</strong> chuẩn bảo mật, tự làm mới mỗi 30 giây.
+                </p>
 
-              <button
-                type="button"
-                onClick={() => setJpdCourse('jpd113')}
-                className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  jpdCourse === 'jpd113'
-                    ? 'bg-[#1E293B] text-white shadow-md'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <BookOpen size={16} />
-                <span>Môn JPD113 (Kỳ 1 • Minna 1-3)</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${jpdCourse === 'jpd113' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'}`}>
-                  NỀN TẢNG
-                </span>
-              </button>
-            </div>
-          </div>
-
-          {/* Bento JPD Presentation Matrix */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-            {/* ── LEFT: FLAGSHIP 1-1 AI SPEAKING EXAM SIMULATOR (7 COLS) ── */}
-            <div className="lg:col-span-7 rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-8 shadow-sm hover:shadow-xl hover:border-orange-300 transition-all flex flex-col justify-between">
-              <div>
-                {/* Header bar of Simulator */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 mb-5">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-orange-50 text-[#F05A28] flex items-center justify-center font-bold">
-                      <Mic size={18} />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs sm:text-sm font-extrabold text-slate-900">
-                          {activeCourseData.mockTitle}
-                        </span>
-                        <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                          Live Demo AI
-                        </span>
-                      </div>
-                      <span className="text-xs text-slate-400">
-                        {activeCourseData.level} • Khảo Thí 100 Điểm
+                {/* 3 Direct Sub-Portal Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/get-otp')}
+                    className="group p-4 rounded-2xl bg-white/8 hover:bg-white/14 border border-white/10 hover:border-[#F05A28]/60 text-left transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="px-2 py-0.5 rounded bg-[#F05A28] text-white text-[10px] font-extrabold">
+                        PHỔ BIẾN NHẤT
                       </span>
+                      <ArrowRight size={15} className="text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
                     </div>
-                  </div>
+                    <div className="font-bold text-sm text-white mb-0.5">OTP ChatGPT Plus</div>
+                    <div className="text-xs text-slate-400">Nhận mã đăng nhập OpenAI</div>
+                  </button>
 
                   <button
                     type="button"
-                    onClick={() => navigate(`/courses/${jpdCourse}/speaking?tab=mock`)}
-                    className="px-3.5 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer ml-auto"
+                    onClick={() => navigate('/get-otp-gemini')}
+                    className="group p-4 rounded-2xl bg-white/8 hover:bg-white/14 border border-white/10 hover:border-blue-400/60 text-left transition-all cursor-pointer"
                   >
-                    <span>Vào phòng thi thật</span>
-                    <ArrowRight size={13} />
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="px-2 py-0.5 rounded bg-blue-600 text-white text-[10px] font-extrabold">
+                        GOOGLE AI
+                      </span>
+                      <ArrowRight size={15} className="text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                    <div className="font-bold text-sm text-white mb-0.5">OTP Gemini Advanced</div>
+                    <div className="text-xs text-slate-400">Nhận mã xác thực Google</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/2falive')}
+                    className="group p-4 rounded-2xl bg-white/8 hover:bg-white/14 border border-white/10 hover:border-emerald-400/60 text-left transition-all cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-extrabold">
+                        TOTP 30 GIÂY
+                      </span>
+                      <ArrowRight size={15} className="text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                    <div className="font-bold text-sm text-white mb-0.5">Công Cụ 2FA Live</div>
+                    <div className="text-xs text-slate-400">Giải mã Secret Key 2FA</div>
                   </button>
                 </div>
+              </div>
 
-                {/* Step Flow Selector Bar */}
-                <div className="grid grid-cols-4 gap-1.5 mb-5 bg-slate-100/90 p-1 rounded-xl text-center">
-                  {[
-                    { title: '1. Chào hỏi', score: '10đ' },
-                    { title: '2. Đọc Đề A', score: '45đ' },
-                    { title: '3. Vấn đáp B', score: '45đ' },
-                    { title: '4. Phiếu điểm', score: '100đ' }
-                  ].map((s, idx) => (
+              {/* Right 5 Cols: Interactive Live OTP Terminal */}
+              <div className="lg:col-span-5">
+                <div className="rounded-2xl bg-slate-950/90 border border-slate-800 p-5 sm:p-6 shadow-2xl">
+                  <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping" />
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-400">
+                        Mô Phỏng Mã OTP / 2FA Thực Tế
+                      </span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-xs font-mono font-bold text-orange-400 bg-orange-950/70 px-2.5 py-1 rounded-lg border border-orange-800/50">
+                      <Clock size={12} /> {otpTimer}s
+                    </span>
+                  </div>
+
+                  {/* 6-Digit Display */}
+                  <div className="grid grid-cols-6 gap-2 my-4">
+                    {otpCode.split('').map((char, idx) => (
+                      <div
+                        key={idx}
+                        className="h-12 sm:h-14 rounded-xl bg-slate-900 border border-emerald-500/35 flex items-center justify-center font-mono font-black text-xl sm:text-2xl text-white shadow-inner"
+                      >
+                        {char}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-4">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-400 to-[#F05A28] transition-all duration-1000"
+                      style={{ width: `${(otpTimer / 30) * 100}%` }}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <button
-                      key={idx}
                       type="button"
-                      onClick={() => setExamCycleStep(idx)}
-                      className={`py-1.5 px-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                        examCycleStep === idx
-                          ? 'bg-white text-[#F05A28] shadow-xs'
-                          : 'text-slate-500 hover:text-slate-800'
+                      onClick={handleCopyOtp}
+                      className={`py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        otpCopied
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
                       }`}
                     >
-                      <span>{s.title}</span>
-                      <span className="hidden sm:inline text-[10px] text-slate-400 ml-1">({s.score})</span>
+                      {otpCopied ? <Check size={14} /> : <Copy size={14} />}
+                      <span>{otpCopied ? 'Đã sao chép!' : 'Copy mã thử nghiệm'}</span>
                     </button>
-                  ))}
+
+                    <button
+                      type="button"
+                      onClick={() => navigate('/get-otp')}
+                      className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#F05A28] to-[#EA580C] hover:brightness-110 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      <span>Mở Cổng Lấy Mã Ngay</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================
+            SECTION 3: HỌC VIỆN NGOẠI NGỮ ĐA QUỐC GIA (NHẬT • TRUNG • ANH)
+           ============================================================ */}
+        <section className="py-12 sm:py-16">
+          {/* Section Header + Language Filter Tabs */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200/80 text-[#F05A28] text-xs font-extrabold uppercase tracking-wider mb-3">
+                <GraduationCap size={15} />
+                <span>Học Viện Ngoại Ngữ Đa Quốc Gia • Nhật • Trung • Anh</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                Làm Chủ 3 Ngôn Ngữ Với Công Nghệ AI Tương Tác
+              </h2>
+              <p className="text-slate-600 text-sm sm:text-base mt-2 max-w-2xl">
+                Từ luyện thi nói 1-1 Giám thị AI môn tiếng Nhật FPT (JPD113/123 &amp; Kana), từ vựng tiếng Trung HSK 1–2 có nghe thụ động, đến bộ 4.768 từ Hackers TOEIC &amp; 1.000 từ tiếng Anh thông dụng.
+              </p>
+            </div>
+
+            {/* Filter Pills */}
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 bg-white p-1.5 rounded-2xl border border-slate-200/90 shadow-xs self-start md:self-auto shrink-0">
+              {[
+                { id: 'all', label: 'Tất Cả (3 Ngôn Ngữ)' },
+                { id: 'jp', label: 'Tiếng Nhật FPT' },
+                { id: 'cn', label: 'Tiếng Trung HSK' },
+                { id: 'en', label: 'Tiếng Anh TOEIC' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setLangFilter(tab.id as LangFilterType)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer ${
+                    langFilter === tab.id
+                      ? 'bg-[#0F172A] text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ── 3 LANGUAGE PILLAR CARDS ─────────────────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* PILLAR 1: TIẾNG NHẬT (JPD113, JPD123, KANA QUIZ) */}
+            {(langFilter === 'all' || langFilter === 'jp') && (
+              <div
+                className={`rounded-3xl bg-white border border-slate-200/90 shadow-sm hover:shadow-xl transition-all p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden ${
+                  langFilter === 'jp' ? 'lg:col-span-3' : ''
+                }`}
+              >
+                <div className="absolute -right-6 -top-6 text-8xl font-black text-rose-500/5 select-none pointer-events-none">
+                  日本語
                 </div>
 
-                {/* Simulated Conversation Box */}
-                <div className="rounded-2xl bg-slate-950 text-white p-5 sm:p-6 shadow-inner border border-slate-800 relative overflow-hidden min-h-[260px] flex flex-col justify-between">
-                  {/* Subtle Background Mesh Glow */}
-                  <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#F05A28]/15 rounded-full blur-2xl pointer-events-none" />
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-xs font-extrabold">
+                      <span className="px-1.5 py-0.2 bg-rose-600 text-white rounded text-[10px]">JP</span>
+                      Tiếng Nhật Chuẩn FPT
+                    </span>
+                    <span className="text-xs font-bold text-[#F05A28] bg-orange-50 px-2.5 py-1 rounded-full border border-orange-200">
+                      Có Giám Thị AI 1-1
+                    </span>
+                  </div>
 
-                  {/* ── STEP 0: Sensei Question (Giám thị hỏi) ── */}
-                  {examCycleStep === 0 && (
-                    <div className="space-y-4 animate-fadeIn">
-                      <div className="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-slate-800">
-                        <span className="flex items-center gap-1.5 font-bold text-orange-400">
-                          <UserCheck size={14} />
-                          {activeCourseData.sensei}
-                        </span>
-                        <span className="bg-slate-800 px-2 py-0.5 rounded text-[11px] font-mono">
-                          Phần 3: Vấn đáp phản xạ (45đ)
-                        </span>
-                      </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">
+                    JPD113 • JPD123 &amp; Bảng Chữ Cái Kana
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-5">
+                    Bám sát giáo trình Minna no Nihongo (Bài 1–7) tại Đại học FPT: học 77 Hán tự 3D, 630 từ vựng, 44 mẫu ngữ pháp, luyện đề Final Exam 60 phút và phòng thi nói 1-1 với Giám thị AI.
+                  </p>
 
-                      <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
-                        <div className="text-lg sm:text-xl font-bold text-white font-japanese tracking-wide leading-relaxed">
-                          {activeCourseData.questionJp}
+                  {/* Sub-courses list */}
+                  <div className="space-y-2.5 mb-6">
+                    <div
+                      onClick={() => navigate('/courses/jpd113')}
+                      className="group p-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50/60 border border-slate-200/80 hover:border-blue-300 transition-all cursor-pointer flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-blue-600 text-white text-[10px] font-black shrink-0 whitespace-nowrap">
+                            JPD113
+                          </span>
+                          <span className="font-bold text-sm text-slate-900 group-hover:text-blue-700 truncate">
+                            Tiếng Nhật Sơ Cấp 1 (Bài 1 – 3)
+                          </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-2 italic">
-                          Dịch nghĩa: {activeCourseData.questionVi}
+                        <p className="text-xs text-slate-500 mt-1">
+                          35 Hán tự • 379 Từ vựng • 21 Ngữ pháp • Thi nói AI &amp; 2 Đề FE
                         </p>
                       </div>
-
-                      <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <div className="flex items-center gap-1 text-emerald-400 font-mono">
-                          <Headphones size={13} />
-                          <span>TTS Audio 100% bản xứ</span>
-                        </div>
-                        <span>•</span>
-                        <span>Đang chuyển sang thí sinh trả lời...</span>
-                      </div>
+                      <ChevronRight size={18} className="text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0" />
                     </div>
-                  )}
 
-                  {/* ── STEP 1: Student Speaking & Audio Waveform ── */}
-                  {examCycleStep === 1 && (
-                    <div className="space-y-4 animate-fadeIn">
-                      <div className="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-slate-800">
-                        <span className="flex items-center gap-1.5 font-bold text-red-400">
-                          <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                          Thí sinh đang trả lời qua Micro (Live REC)
-                        </span>
-                        <span className="font-mono text-red-400 font-bold">00:04s / 15s</span>
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-slate-900 border border-red-900/40">
-                        <div className="text-base sm:text-lg font-bold text-white font-japanese">
-                          {activeCourseData.studentJp}
+                    <div
+                      onClick={() => navigate('/courses/jpd123')}
+                      className="group p-3.5 rounded-2xl bg-slate-50 hover:bg-orange-50/60 border border-slate-200/80 hover:border-orange-300 transition-all cursor-pointer flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-[#F05A28] text-white text-[10px] font-black shrink-0 whitespace-nowrap">
+                            JPD123
+                          </span>
+                          <span className="font-bold text-sm text-slate-900 group-hover:text-[#F05A28] truncate">
+                            Tiếng Nhật Sơ Cấp 2 (Bài 4 – 7)
+                          </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-1 italic">
-                          Dịch nghĩa: {activeCourseData.studentVi}
+                        <p className="text-xs text-slate-500 mt-1">
+                          42 Hán tự • 251 Từ vựng • 23 Ngữ pháp • 73 câu FE &amp; Thi nói tranh
                         </p>
                       </div>
-
-                      {/* Live Audio Visualizer Bars */}
-                      <div className="flex items-center justify-between h-9 px-2 py-1.5 bg-slate-900/80 rounded-xl gap-1">
-                        {[40, 70, 95, 60, 30, 85, 100, 75, 45, 90, 80, 50, 70, 90, 40, 85].map((val, i) => (
-                          <div
-                            key={i}
-                            className="flex-1 bg-gradient-to-t from-[#F05A28] to-red-400 rounded-full transition-all duration-150"
-                            style={{ height: `${Math.min(100, Math.max(20, (val + (waveSeed * 9 + i * 11) % 40)))}%` }}
-                          />
-                        ))}
-                      </div>
+                      <ChevronRight size={18} className="text-slate-400 group-hover:text-[#F05A28] group-hover:translate-x-0.5 transition-all shrink-0" />
                     </div>
-                  )}
 
-                  {/* ── STEP 2: Realtime Phonetic Tokens Matching ── */}
-                  {examCycleStep === 2 && (
-                    <div className="space-y-4 animate-fadeIn">
-                      <div className="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-slate-800">
-                        <span className="flex items-center gap-1.5 font-bold text-orange-400">
-                          <Sparkles size={14} />
-                          Whisper AI • Phân tích ngữ âm tiếng Nhật
-                        </span>
-                        <span className="text-emerald-400 font-bold font-mono">Độ chính xác: 98%</span>
+                    <div
+                      onClick={() => navigate('/courses/kana')}
+                      className="group p-3.5 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 border border-slate-200/80 hover:border-indigo-300 transition-all cursor-pointer flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-indigo-600 text-white text-[10px] font-black shrink-0 whitespace-nowrap">
+                            KANA
+                          </span>
+                          <span className="font-bold text-sm text-slate-900 group-hover:text-indigo-700 truncate">
+                            Phản Xạ Hiragana &amp; Katakana
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Gõ Romaji chuẩn Tofugu • Âm đục, âm ghép • Đa dạng font chữ
+                        </p>
                       </div>
+                      <ChevronRight size={18} className="text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </div>
+                  </div>
+                </div>
 
+                <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/courses/jpd123/speaking')}
+                    className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#F05A28] to-[#EA580C] text-white font-bold text-xs flex items-center justify-center gap-1.5 whitespace-nowrap hover:brightness-110 transition-all cursor-pointer"
+                  >
+                    <Mic size={14} className="shrink-0" /> <span>Thi Nói AI 1-1</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/courses/kana')}
+                    className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer"
+                  >
+                    <Keyboard size={14} className="shrink-0" /> <span>Luyện Gõ Kana</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* PILLAR 2: TIẾNG TRUNG (HSK 1 & HSK 2) */}
+            {(langFilter === 'all' || langFilter === 'cn') && (
+              <div
+                className={`rounded-3xl bg-white border border-slate-200/90 shadow-sm hover:shadow-xl transition-all p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden ${
+                  langFilter === 'cn' ? 'lg:col-span-3' : ''
+                }`}
+              >
+                <div className="absolute -right-6 -top-6 text-8xl font-black text-emerald-500/5 select-none pointer-events-none">
+                  中文
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-extrabold">
+                      <span className="px-1.5 py-0.2 bg-emerald-600 text-white rounded text-[10px]">CN</span>
+                      Tiếng Trung Sơ Cấp
+                    </span>
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                      290 Từ • 22 Chủ Đề
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">
+                    Từ Vựng HSK 1 &amp; HSK 2 Đa Chế Độ
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-5">
+                    Chinh phục chữ Hán giản thể, phiên âm Pinyin và nghĩa tiếng Việt qua 5 chế độ: Flashcard 3D, Luyện gõ chữ Hán, Trắc nghiệm, Ghép cặp và đặc biệt là <strong className="text-slate-800">Nghe thụ động (Passive Listening)</strong>.
+                  </p>
+
+                  <div className="space-y-2.5 mb-6">
+                    <div
+                      onClick={() => navigate('/courses/hsk1/vocabulary')}
+                      className="group p-3.5 rounded-2xl bg-slate-50 hover:bg-emerald-50/60 border border-slate-200/80 hover:border-emerald-300 transition-all cursor-pointer flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-black shrink-0 whitespace-nowrap">
+                            HSK 1
+                          </span>
+                          <span className="font-bold text-sm text-slate-900 group-hover:text-emerald-700 truncate">
+                            Tiếng Trung Sơ Cấp 1 (150 Từ)
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          11 chủ đề giao tiếp nền tảng • Chữ Hán giản thể + Pinyin chuẩn
+                        </p>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </div>
+
+                    <div
+                      onClick={() => navigate('/courses/hsk2/vocabulary')}
+                      className="group p-3.5 rounded-2xl bg-slate-50 hover:bg-teal-50/60 border border-slate-200/80 hover:border-teal-300 transition-all cursor-pointer flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-teal-600 text-white text-[10px] font-black shrink-0 whitespace-nowrap">
+                            HSK 2
+                          </span>
+                          <span className="font-bold text-sm text-slate-900 group-hover:text-teal-700 truncate">
+                            Tiếng Trung Sơ Cấp 2 (140 Từ)
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          11 chủ đề mở rộng • Ôn tập phản xạ trắc nghiệm &amp; viết chữ Hán
+                        </p>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-400 group-hover:text-teal-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </div>
+
+                    {/* Highlight Feature: Passive Listening */}
+                    <div
+                      onClick={() => navigate('/courses/hsk1/vocabulary')}
+                      className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center gap-3 cursor-pointer hover:bg-emerald-100/60 transition-all"
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                        <Headphones size={17} />
+                      </div>
                       <div>
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                          So khớp từng từ vựng & âm tiết (Moras):
-                        </span>
-                        <div className="flex flex-wrap gap-2">
-                          {activeCourseData.tokens.map((token, i) => (
-                            <div
-                              key={i}
-                              className="px-3 py-1.5 rounded-xl bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 font-japanese text-sm font-bold flex items-center gap-1.5 shadow-xs"
-                            >
-                              <span>{token.word}</span>
-                              <span className="text-[10px] font-mono font-normal text-emerald-400 bg-emerald-900/80 px-1 py-0.2 rounded">
-                                {token.conf}
-                              </span>
-                            </div>
-                          ))}
+                        <div className="text-xs font-extrabold text-emerald-900">
+                          Chế Độ Nghe Thụ Động (Passive Listening)
                         </div>
-                      </div>
-
-                      <div className="p-3 bg-slate-900/90 rounded-xl text-xs text-slate-300 flex items-center justify-between border border-slate-800">
-                        <span>Tốc độ đọc: <strong className="text-white">3.6 mora/s</strong> (Chuẩn tự nhiên)</span>
-                        <span className="text-emerald-400 font-bold">✓ Không ngập ngừng</span>
+                        <p className="text-[11px] text-emerald-700">
+                          Tự động phát tuần tự: Tiếng Trung → Nghĩa Tiếng Việt giúp nhớ từ ngay cả khi đang bận.
+                        </p>
                       </div>
                     </div>
-                  )}
+                  </div>
+                </div>
 
-                  {/* ── STEP 3: FPT Scorecard Summary ── */}
-                  {examCycleStep === 3 && (
-                    <div className="space-y-3.5 animate-fadeIn">
-                      <div className="flex items-center justify-between text-xs text-slate-400 pb-2 border-b border-slate-800">
-                        <span className="flex items-center gap-1.5 font-bold text-amber-400">
-                          <Award size={15} />
-                          Phiếu Điểm Khảo Thí FPT University
-                        </span>
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-500 text-slate-950">
-                          {activeCourseData.scores.result}
-                        </span>
-                      </div>
+                <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/courses/hsk1/vocabulary')}
+                    className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer"
+                  >
+                    <BookOpen size={14} className="shrink-0" /> <span>Học HSK 1 Ngay</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/courses/hsk2/vocabulary')}
+                    className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer"
+                  >
+                    <Layers size={14} className="shrink-0" /> <span>Học HSK 2 Ngay</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
-                        <div>
-                          <span className="text-xs text-slate-400">Tổng điểm bài thi nói:</span>
-                          <div className="text-2xl sm:text-3xl font-black text-[#F05A28]">
-                            {activeCourseData.scores.total} <span className="text-sm font-normal text-slate-400">/ 100 điểm</span>
-                          </div>
+            {/* PILLAR 3: TIẾNG ANH (HACKERS TOEIC, 120 IDIOMS, 1000 WORDS) */}
+            {(langFilter === 'all' || langFilter === 'en') && (
+              <div
+                className={`rounded-3xl bg-white border border-slate-200/90 shadow-sm hover:shadow-xl transition-all p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden ${
+                  langFilter === 'en' ? 'lg:col-span-3' : ''
+                }`}
+              >
+                <div className="absolute -right-4 -top-6 text-8xl font-black text-blue-500/5 select-none pointer-events-none">
+                  ENG
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-extrabold whitespace-nowrap">
+                      <span className="px-1.5 py-0.2 bg-blue-600 text-white rounded text-[10px]">EN</span>
+                      Tiếng Anh Thực Chiến
+                    </span>
+                    <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 whitespace-nowrap shrink-0">
+                      5.932 Mục Từ
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">
+                    Hackers TOEIC, 120 Idioms &amp; 1.000 Từ
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-5">
+                    Hệ thống từ vựng tiếng Anh đồ sộ có phiên âm IPA, âm thanh bản xứ, Flashcard và bài tập Quiz thực chiến cho sinh viên &amp; người đi làm luyện thi TOEIC.
+                  </p>
+
+                  <div className="space-y-2.5 mb-6">
+                    <div
+                      onClick={() => navigate('/courses/toeichackers/vocabulary')}
+                      className="group p-3.5 rounded-2xl bg-slate-50 hover:bg-blue-50/60 border border-slate-200/80 hover:border-blue-300 transition-all cursor-pointer flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-blue-600 text-white text-[10px] font-black shrink-0 whitespace-nowrap">
+                            HACKERS
+                          </span>
+                          <span className="font-bold text-sm text-slate-900 group-hover:text-blue-700 truncate">
+                            Hackers TOEIC (Day 1 – 30)
+                          </span>
                         </div>
-
-                        <div className="text-right space-y-0.5 text-xs">
-                          <div className="text-slate-300">Nội dung: <strong className="text-white">{activeCourseData.scores.content}</strong></div>
-                          <div className="text-slate-300">Phát âm: <strong className="text-white">{activeCourseData.scores.pron}</strong></div>
-                          <div className="text-slate-300">Tác phong: <strong className="text-white">{activeCourseData.scores.manner}</strong></div>
-                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          4.768 từ &amp; cụm từ chia theo 30 ngày luyện thi kinh điển
+                        </p>
                       </div>
-
-                      <p className="text-xs text-emerald-400 font-medium italic">
-                        ✓ Nhận xét AI: Phát âm chuẩn xác, phản xạ nhanh dưới 2 giây và chào hỏi đúng tác phong chuẩn FPT.
-                      </p>
+                      <ChevronRight size={18} className="text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0" />
                     </div>
-                  )}
 
-                  {/* Simulator Automation Progress Bar */}
-                  <div className="pt-2">
-                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-[#F05A28] to-amber-400 h-full rounded-full transition-all duration-500"
-                        style={{ width: `${((examCycleStep + 1) / 4) * 100}%` }}
-                      />
+                    <div
+                      onClick={() => navigate('/courses/toeic120/vocabulary')}
+                      className="group p-3.5 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 border border-slate-200/80 hover:border-indigo-300 transition-all cursor-pointer flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-indigo-600 text-white text-[10px] font-black shrink-0 whitespace-nowrap">
+                            120 IDIOMS
+                          </span>
+                          <span className="font-bold text-sm text-slate-900 group-hover:text-indigo-700 truncate">
+                            120 Thành Ngữ &amp; Cụm Từ
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Trích xuất trang 516–521 • Tích hợp 6 bài Quiz kiểm tra phản xạ
+                        </p>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0" />
                     </div>
+
+                    <div
+                      onClick={() => navigate('/courses/eng1000/vocabulary')}
+                      className="group p-3.5 rounded-2xl bg-slate-50 hover:bg-sky-50/60 border border-slate-200/80 hover:border-sky-300 transition-all cursor-pointer flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-sky-600 text-white text-[10px] font-black shrink-0 whitespace-nowrap">
+                            1000 TỪ
+                          </span>
+                          <span className="font-bold text-sm text-slate-900 group-hover:text-sky-700 truncate">
+                            1.000 Từ Thông Dụng Nhất
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          1.044 từ vựng chia theo 50 chủ đề đời sống, gia đình &amp; công sở
+                        </p>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-400 group-hover:text-sky-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/courses/toeichackers/vocabulary')}
+                    className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer"
+                  >
+                    <Award size={14} className="shrink-0" /> <span>Hackers TOEIC</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/courses/eng1000/vocabulary')}
+                    className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer"
+                  >
+                    <BookMarked size={14} className="shrink-0" /> <span>1.000 Từ Cốt Lõi</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── INTERACTIVE LANGUAGE PLAYGROUND: AI SPEAKING + 3D MULTILINGUAL FLASHCARD ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left 7 Cols: AI 1-1 Speaking Room Showcase */}
+            <div className="lg:col-span-7 rounded-3xl bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white p-6 sm:p-8 border border-slate-800 shadow-lg flex flex-col justify-between relative overflow-hidden">
+              <div className="absolute -right-16 -bottom-16 w-64 h-64 rounded-full bg-[#F05A28]/20 blur-3xl pointer-events-none" />
+
+              <div>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F05A28]/20 border border-[#F05A28]/40 text-orange-300 text-xs font-bold">
+                    <Mic size={13} /> Phòng Thi Nói 1-1 Giám Thị AI
+                  </span>
+                  <span className="text-xs font-mono text-emerald-400 font-bold flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                    Chấm điểm ngữ âm tức thì
+                  </span>
+                </div>
+
+                <h3 className="text-xl sm:text-2xl font-black mb-2">
+                  Luyện Phản Xạ Nói &amp; Chấm Phát Âm Từng Từ Bằng AI
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-5">
+                  Mô phỏng 100% quy trình khảo thí vấn đáp tại Đại học FPT (Đọc đoạn văn + Hỏi đáp Q&amp;A ngẫu nhiên hoặc câu hỏi tranh). AI lắng nghe qua Micro, phát hiện từ phát âm sai và hướng dẫn cách sửa ngay lập tức.
+                </p>
+
+                {/* Simulated Live Speech Waveform Box */}
+                <div className="rounded-2xl bg-slate-950/80 border border-slate-800 p-4 mb-5">
+                  <div className="flex items-center justify-between text-xs mb-2">
+                    <span className="text-slate-400 font-medium">
+                      Câu hỏi AI: <strong className="text-white">「毎日、何時に起きますか？」</strong>
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[11px]">
+                      Độ chính xác: 96%
+                    </span>
+                  </div>
+
+                  {/* Animated bars */}
+                  <div className="flex items-center gap-1 h-9 my-2">
+                    {Array.from({ length: 32 }).map((_, i) => {
+                      const height = 22 + ((Math.sin((i + waveSeed) * 0.6) + 1) * 36);
+                      return (
+                        <div
+                          key={i}
+                          className="flex-1 rounded-full bg-gradient-to-t from-[#F05A28] to-emerald-400 transition-all duration-200"
+                          style={{ height: `${Math.min(100, Math.max(18, height))}%` }}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-400">
+                    <span>Phản hồi: Phát âm trường âm và ngữ điệu câu hỏi rất tự nhiên!</span>
+                    <span className="text-orange-400 font-bold">9.5 / 10 điểm</span>
                   </div>
                 </div>
               </div>
 
-              {/* Bottom Quick Links & Stats */}
-              <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-                <div className="flex items-center gap-4">
-                  <span><strong>{activeCourseData.vocabCount}</strong> Từ vựng</span>
-                  <span><strong>{activeCourseData.kanjiCount}</strong> Hán tự</span>
-                  <span><strong>{activeCourseData.grammarCount}</strong> Ngữ pháp</span>
-                </div>
+              <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={() => navigate(`/courses/${jpdCourse}/speaking?tab=mock`)}
-                  className="font-bold text-[#F05A28] hover:underline flex items-center gap-1 cursor-pointer"
+                  onClick={() => navigate('/courses/jpd113/speaking')}
+                  className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/15 transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  <span>Bắt đầu thi thử 1-1</span>
-                  <ArrowRight size={13} />
+                  <Mic size={14} className="text-blue-400" /> Phòng Thi Nói JPD113
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/courses/jpd123/speaking')}
+                  className="px-5 py-2.5 rounded-xl bg-[#F05A28] hover:bg-[#EA580C] text-white font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 shadow-md shadow-[#F05A28]/25"
+                >
+                  <Mic size={14} /> Phòng Thi Nói JPD123 <ArrowRight size={14} />
                 </button>
               </div>
             </div>
 
-
-            {/* ── RIGHT: 3 COMPLEMENTARY JPD CARDS (5 COLS) ── */}
-            <div className="lg:col-span-5 flex flex-col gap-6">
-
-              {/* ── CARD 1: Automated 3D Kanji Flashcard ── */}
-              <TiltCard
-                onClick={() => navigate(`/courses/${jpdCourse}/kanji`)}
-                className="group rounded-3xl bg-white border border-slate-200/90 p-5 sm:p-6 shadow-sm hover:shadow-xl hover:border-rose-300 transition-all flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-600 text-xs font-bold">
-                      <BookOpen size={13} />
-                      <span>Hán Tự Flashcard 3D</span>
-                    </span>
-                    <span className="text-[11px] font-mono text-slate-400">
-                      Tự động lật 3s
-                    </span>
-                  </div>
-
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-rose-600 transition-colors flex items-center gap-1">
-                    {activeCourseData.kanjiCount} Chữ Hán Cốt Lõi {activeCourseData.code}
-                    <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-1 group-hover:text-rose-600 transition-all" />
-                  </h3>
-                </div>
-
-                {/* 3D Kanji Visual Showcase */}
-                <div className="my-3 p-4 rounded-2xl bg-gradient-to-br from-rose-50/60 to-orange-50/40 border border-rose-100 flex items-center justify-between gap-4">
-                  {/* The Big Kanji character */}
-                  <div className="w-20 h-20 rounded-2xl bg-white border border-rose-200 flex items-center justify-center font-japanese font-black text-4xl text-rose-600 shadow-md transform transition-transform duration-500 group-hover:scale-105">
-                    {activeKanji.kanji}
-                  </div>
-
-                  {/* Animated details */}
-                  <div className="flex-1 space-y-1 text-left">
-                    <div className="text-xs font-extrabold text-slate-900 flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-700 text-[11px]">
-                        Hán Việt: {activeKanji.hanviet}
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-600">
-                      On: <span className="font-japanese font-bold text-slate-800">{activeKanji.onyomi}</span>
-                    </div>
-                    <div className="text-xs text-slate-600">
-                      Kun: <span className="font-japanese font-bold text-slate-800">{activeKanji.kunyomi}</span>
-                    </div>
-                    <div className="text-[11px] text-slate-500 truncate mt-1">
-                      Ví dụ: <strong>{activeKanji.example}</strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                  <span>Có phát âm giọng đọc bản xứ</span>
-                  <span className="font-bold text-rose-600 group-hover:underline flex items-center gap-1">
-                    Luyện Hán tự <ArrowRight size={13} />
+            {/* Right 5 Cols: Interactive 3D Flashcard Demo (Switch JP / CN / EN) */}
+            <div className="lg:col-span-5 rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-7 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <RotateCw size={13} className="text-[#F05A28]" />
+                    Thử Tương Tác Flashcard 3D
                   </span>
-                </div>
-              </TiltCard>
 
-              {/* ── CARD 2: Vocabulary & Quiz Bank ── */}
-              <TiltCard
-                onClick={() => navigate(`/courses/${jpdCourse}/vocabulary`)}
-                className="group rounded-3xl bg-white border border-slate-200/90 p-5 sm:p-6 shadow-sm hover:shadow-xl hover:border-orange-300 transition-all flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-[#F05A28] text-xs font-bold">
-                      <BookMarked size={13} />
-                      <span>Từ Vựng Chuẩn Minna</span>
-                    </span>
-                    <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
-                      {activeCourseData.vocabCount} Từ
-                    </span>
-                  </div>
-
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#F05A28] transition-colors flex items-center gap-1">
-                    Smart Quiz &amp; Furigana Tra Cứu
-                    <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-1 group-hover:text-[#F05A28] transition-all" />
-                  </h3>
-                </div>
-
-                {/* Vocabulary Chips Preview */}
-                <div className="my-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-700">Chế độ học: Flashcard • Quiz 4 lựa chọn</span>
-                    <span className="text-[10px] text-orange-600 font-bold bg-orange-100/60 px-1.5 py-0.5 rounded">Furigana ON</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {['家族 (Gia đình)', '勉強 (Học tập)', '写真 (Bức ảnh)', '友達 (Bạn bè)'].map((word, i) => (
-                      <span key={i} className="text-xs font-japanese px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shadow-2xs font-semibold">
-                        {word}
-                      </span>
+                  {/* Language Switcher for Flashcard */}
+                  <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                    {(['jp', 'cn', 'en'] as FlashcardLangType[]).map((langKey) => (
+                      <button
+                        key={langKey}
+                        type="button"
+                        onClick={() => {
+                          setCardLang(langKey);
+                          setIsCardFlipped(false);
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-black uppercase transition-all cursor-pointer ${
+                          cardLang === langKey
+                            ? 'bg-slate-900 text-white shadow-2xs'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        {langKey.toUpperCase()}
+                      </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                  <span>Học theo từng bài nhỏ Minna</span>
-                  <span className="font-bold text-[#F05A28] group-hover:underline flex items-center gap-1">
-                    Học từ vựng ngay <ArrowRight size={13} />
-                  </span>
-                </div>
-              </TiltCard>
-
-              {/* ── CARD 3: Final Exam (FE) 60-Min Mock Test ── */}
-              <TiltCard
-                onClick={() => navigate(`/courses/${jpdCourse}/exam`)}
-                className="group rounded-3xl bg-white border border-slate-200/90 p-5 sm:p-6 shadow-sm hover:shadow-xl hover:border-emerald-300 transition-all flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">
-                      <Award size={13} />
-                      <span>Đề Thi Final Exam (FE)</span>
-                    </span>
-                    <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
-                      60 Phút
-                    </span>
-                  </div>
-
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition-colors flex items-center gap-1">
-                    Bộ Đề Khảo Thí FPT Có Lời Giải
-                    <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-1 group-hover:text-emerald-700 transition-all" />
-                  </h3>
-                </div>
-
-                <div className="my-3 p-3 rounded-2xl bg-emerald-50/50 border border-emerald-100 text-xs space-y-1.5">
-                  <div className="flex items-center justify-between font-bold text-emerald-950">
-                    <span>Trắc nghiệm Từ vựng, Ngữ pháp &amp; Đọc hiểu</span>
-                    <span className="text-emerald-700">73+ Câu</span>
-                  </div>
-                  <p className="text-slate-500 text-[11px] leading-relaxed">
-                    Mô phỏng đồng hồ đếm ngược 60 phút như thi EOS/Khảo thí thật, kèm giải thích chi tiết từng đáp án sai.
-                  </p>
-                </div>
-
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                  <span>Chấm điểm tức thì</span>
-                  <span className="font-bold text-emerald-700 group-hover:underline flex items-center gap-1">
-                    Làm đề thi thử <ArrowRight size={13} />
-                  </span>
-                </div>
-              </TiltCard>
-
-            </div>
-          </div>
-
-          {/* Bottom 4 Navigation Modules Bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-            {[
-              {
-                title: 'Hán Tự & Flashcard',
-                desc: 'Học chữ Hán, bộ thủ, âm Hán Việt',
-                icon: BookOpen,
-                href: `/courses/${jpdCourse}/kanji`,
-                color: 'text-rose-600 bg-rose-50'
-              },
-              {
-                title: 'Từ Vựng Chuẩn FPT',
-                desc: 'Tra cứu & luyện trắc nghiệm nhớ lâu',
-                icon: BookMarked,
-                href: `/courses/${jpdCourse}/vocabulary`,
-                color: 'text-[#F05A28] bg-orange-50'
-              },
-              {
-                title: 'Ngữ Pháp Minna',
-                desc: 'Công thức mẫu câu & ví dụ thực tế',
-                icon: Layers,
-                href: `/courses/${jpdCourse}/grammar`,
-                color: 'text-indigo-600 bg-indigo-50'
-              },
-              {
-                title: 'Cẩm Nang Cứu Cánh',
-                desc: 'Mẹo phòng thi & câu hỏi khó trả lời',
-                icon: ShieldCheck,
-                href: `/courses/${jpdCourse}/speaking?tab=survival`,
-                color: 'text-blue-600 bg-blue-50'
-              }
-            ].map((mod, idx) => {
-              const Icon = mod.icon;
-              return (
+                {/* Clickable Flip Card */}
                 <div
-                  key={idx}
-                  onClick={() => navigate(mod.href)}
-                  className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer flex items-center gap-3.5 group"
+                  onClick={() => setIsCardFlipped(!isCardFlipped)}
+                  className="group rounded-2xl border border-slate-200/90 bg-gradient-to-br from-slate-50 via-white to-slate-50 p-6 min-h-[210px] flex flex-col justify-between cursor-pointer hover:border-[#F05A28]/50 hover:shadow-md transition-all relative overflow-hidden"
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${mod.color}`}>
-                    <Icon size={18} />
+                  <div className="flex items-center justify-between">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${currentFlashcard.lightBg}`}>
+                      {currentFlashcard.badge}
+                    </span>
+                    <span className="text-[11px] font-bold text-slate-400 group-hover:text-[#F05A28] flex items-center gap-1">
+                      <RotateCw size={12} /> Bấm để lật thẻ
+                    </span>
                   </div>
-                  <div className="min-w-0">
-                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#F05A28] transition-colors truncate">
-                      {mod.title}
-                    </h4>
-                    <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                      {mod.desc}
-                    </p>
+
+                  {!isCardFlipped ? (
+                    <div className="my-4 text-center animate-fadeIn">
+                      <div className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-2">
+                        {currentFlashcard.word}
+                      </div>
+                      <div className="text-sm font-bold text-[#F05A28]">{currentFlashcard.reading}</div>
+                      <div className="text-xs text-slate-500 mt-1">{currentFlashcard.extra}</div>
+                    </div>
+                  ) : (
+                    <div className="my-4 text-left animate-fadeIn">
+                      <div className="text-xs font-extrabold uppercase text-slate-400 mb-1">Nghĩa tiếng Việt:</div>
+                      <div className="text-lg font-black text-slate-900 mb-3">{currentFlashcard.meaning}</div>
+                      <div className="p-3 rounded-xl bg-slate-100/80 border border-slate-200/70">
+                        <div className="text-xs font-bold text-slate-800">{currentFlashcard.example}</div>
+                        <div className="text-xs text-slate-500 mt-0.5">{currentFlashcard.exampleVi}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100">
+                    <span>Trạng thái: {isCardFlipped ? 'Mặt sau (Nghĩa & Ví dụ)' : 'Mặt trước (Từ vựng)'}</span>
+                    <span className="font-bold text-slate-700">Hỗ trợ phát âm chuẩn</span>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigate(currentFlashcard.href)}
+                className="mt-4 w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <span>Mở Kho Flashcard {currentFlashcard.code} Đầy Đủ</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
           </div>
         </section>
 
-
-        {/* ── 3. CREATIVE 3D BENTO GRID SECTION ──────────────────── */}
-        <section id="bento-tools" className="pt-4 pb-16">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-[#F05A28] mb-2">
-              <Sparkles size={14} />
-              <span>Visual Bento Showcase</span>
+        {/* ============================================================
+            SECTION 4: STUDIO NHIẾP ẢNH EXIF & TIỆN ÍCH AI SÁNG TẠO (BENTO)
+           ============================================================ */}
+        <section className="py-12 sm:py-16 border-t border-slate-200/80">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-extrabold uppercase tracking-wider mb-3">
+                <Frame size={14} />
+                <span>Studio Nhiếp Ảnh &amp; Công Cụ AI Thông Minh</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                Bộ Công Cụ Xử Lý Ảnh &amp; Trợ Lý AI Trên Trình Duyệt
+              </h2>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              Công Cụ Sáng Tạo Trực Quan Đa Năng
-            </h2>
-            <p className="text-slate-500 text-sm mt-1.5">
-              Di chuột để cảm nhận chiều sâu 3D và quan sát tính năng hoạt động tự động
+            <p className="text-slate-600 text-sm sm:text-base max-w-md">
+              Xử lý ảnh độ phân giải gốc 4K/8K, tự động gắn thông số máy ảnh EXIF, tách nền bằng AI và nén dung lượng tới 90% hoàn toàn miễn phí.
             </p>
           </div>
 
-          {/* Bento Matrix Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            {/* ── BOX 1: Photo Frame Studio (Hero Bento - Spans 2 Cols) ── */}
+          {/* Bento Grid: 12 Columns */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* BOX 1 (7 Cols): PHOTO FRAME EXIF STUDIO */}
             <TiltCard
               onClick={() => navigate('/photo-frame')}
-              className="lg:col-span-2 group rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-8 shadow-sm hover:shadow-xl hover:border-[#F05A28]/40 overflow-hidden flex flex-col justify-between min-h-[420px]"
-            >
-              {/* Header Info */}
-              <div className="flex items-start justify-between gap-4 mb-6 z-10">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold mb-2.5">
-                    <Frame size={14} />
-                    <span>Photo Frame Studio</span>
-                    <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">HOT</span>
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-slate-900 group-hover:text-[#F05A28] transition-colors flex items-center gap-2">
-                    Lồng Khung EXIF Nghệ Thuật
-                    <ChevronRight size={18} className="text-slate-400 group-hover:translate-x-1 group-hover:text-[#F05A28] transition-all" />
-                  </h3>
-                  <p className="text-sm text-slate-500 mt-1 max-w-md">
-                    Tự động đọc thông số máy ảnh (Leica, Sony, Canon...), tạo khung viền nghệ thuật phong cách nhiếp ảnh gia chuyên nghiệp.
-                  </p>
-                </div>
-
-                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/70 text-xs font-semibold text-slate-600">
-                  <span>Auto Scanner</span>
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                </div>
-              </div>
-
-              {/* Interactive Visual Canvas: Before / After Automated Comparison */}
-              <div className="relative w-full h-[230px] sm:h-[260px] rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 shadow-inner group/preview">
-                {/* Background Image: Raw Shot (Left) */}
-                <div
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{
-                    backgroundImage: `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80')`,
-                    filter: 'contrast(0.95) brightness(0.9)',
-                  }}
-                >
-                  <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-bold text-white tracking-wide">
-                    Ảnh gốc chưa lồng khung
-                  </div>
-                </div>
-
-                {/* Foreground Image: Framed with Leica EXIF Badge (Clipped by scannerPos) */}
-                <div
-                  className="absolute inset-0 overflow-hidden transition-all duration-75"
-                  style={{ clipPath: `polygon(${scannerPos}% 0%, 100% 0%, 100% 100%, ${scannerPos}% 100%)` }}
-                >
-                  <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{
-                      backgroundImage: `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80')`,
-                      filter: 'contrast(1.08) saturate(1.15)',
-                    }}
-                  />
-                  {/* Leica EXIF Bottom Frame Bar */}
-                  <div className="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-md px-4 py-2.5 flex items-center justify-between border-t border-slate-200">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-5 h-5 rounded-full bg-[#E51837] flex items-center justify-center text-[10px] font-black text-white shadow-xs">
-                        L
-                      </div>
-                      <div>
-                        <div className="text-[11px] font-bold text-slate-900 tracking-wider font-mono">LEICA M11</div>
-                        <div className="text-[9px] font-semibold text-slate-500">APO-SUMMICRON-M 35mm f/2</div>
-                      </div>
-                    </div>
-                    <div className="text-right font-mono text-[10px] text-slate-700 font-bold">
-                      <div>35mm • f/2.0 • 1/1000s</div>
-                      <div className="text-slate-400 font-normal">ISO 64 • 2026.09.16</div>
-                    </div>
-                  </div>
-                  <div className="absolute top-3 right-3 bg-[#F05A28] px-2.5 py-1 rounded-lg text-[11px] font-bold text-white shadow-sm flex items-center gap-1">
-                    <Sparkles size={11} />
-                    <span>Khung EXIF Pro</span>
-                  </div>
-                </div>
-
-                {/* Laser Scanner Divider Line */}
-                <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-[#F05A28] to-transparent shadow-[0_0_12px_#F05A28] pointer-events-none z-20"
-                  style={{ left: `${scannerPos}%` }}
-                >
-                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-[#F05A28] text-white flex items-center justify-center shadow-lg text-[10px]">
-                    ↔
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Quick Action Tag */}
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span className="flex items-center gap-1.5 font-medium">
-                  <Star size={13} className="text-amber-500 fill-amber-500" />
-                  Hỗ trợ 100+ mẫu khung ảnh Leica, Sony, Fujifilm, Polaroid
-                </span>
-                <span className="font-bold text-[#F05A28] group-hover:underline flex items-center gap-1">
-                  Mở công cụ <ArrowRight size={13} />
-                </span>
-              </div>
-            </TiltCard>
-
-            {/* ── BOX 2: YouTube Summarizer (1 Col) ── */}
-            <TiltCard
-              onClick={() => navigate('/summarizer')}
-              className="group rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-7 shadow-sm hover:shadow-xl hover:border-red-400/40 overflow-hidden flex flex-col justify-between min-h-[420px]"
+              className="lg:col-span-7 group rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-8 shadow-sm hover:shadow-xl hover:border-[#F05A28]/40 transition-all flex flex-col justify-between overflow-hidden"
             >
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-red-600 text-xs font-bold mb-2.5">
-                  <Youtube size={14} />
-                  <span>YouTube Summarizer</span>
-                  <span className="bg-red-600 text-white text-[10px] px-1.5 rounded-full font-bold">AI</span>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-50 text-[#F05A28] border border-orange-200 text-xs font-extrabold">
+                    <Frame size={13} /> Tạo Khung Ảnh EXIF Nghệ Thuật
+                  </span>
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                    100% Miễn Phí • Xuất Ảnh 4K/8K
+                  </span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 group-hover:text-red-600 transition-colors flex items-center gap-1.5">
-                  Tóm Tắt Video Siêu Tốc
-                  <ChevronRight size={18} className="text-slate-400 group-hover:translate-x-1 group-hover:text-red-600 transition-all" />
+
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 group-hover:text-[#F05A28] transition-colors mb-2">
+                  Tự Động Đọc Metadata EXIF &amp; Đóng Khung Chuyên Nghiệp
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Dán link video YouTube, AI phân tích và cô đọng nội dung chính xác chỉ sau vài giây.
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-6">
+                  Trích xuất tức thì thông số tiêu cự, khẩu độ, tốc độ màn trập, ISO và tự động nhận diện thương hiệu máy ảnh (<strong className="text-slate-800">Leica, Sony, Fujifilm, Canon, Nikon, Apple...</strong>) để tạo khung viền triển lãm tinh tế.
                 </p>
-              </div>
 
-              {/* Visual Demo: Simulated Input & Audio Waveform + Bullets */}
-              <div className="my-4 p-4 rounded-2xl bg-slate-900 text-white shadow-inner border border-slate-800 flex flex-col gap-3">
-                {/* Fake URL Bar */}
-                <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-2 rounded-xl text-xs font-mono text-slate-300 border border-slate-700/60">
-                  <span className="text-red-400 font-bold">YT:</span>
-                  <span className="truncate text-slate-300">youtube.com/watch?v=ai-mastery...</span>
-                </div>
+                {/* Live Interactive Scanner Preview */}
+                <div className="rounded-2xl bg-slate-900 p-4 sm:p-5 border border-slate-800 relative overflow-hidden mb-5">
+                  <div className="relative h-44 sm:h-52 rounded-xl overflow-hidden bg-gradient-to-br from-slate-800 via-indigo-950 to-slate-900 flex items-center justify-center">
+                    {/* Simulated Photo Landscape */}
+                    <div
+                      className="absolute inset-0 opacity-90"
+                      style={{
+                        background:
+                          'linear-gradient(135deg, #0F172A 0%, #1E3A8A 40%, #F05A28 85%, #F59E0B 100%)',
+                      }}
+                    />
 
-                {/* Animated Audio Waveform */}
-                <div className="flex items-center justify-between h-8 px-1 py-1 gap-1">
-                  {[45, 80, 30, 95, 60, 40, 85, 70, 50, 90, 65, 35, 75, 55, 90, 40].map((h, idx) => {
-                    const dynamicHeight = Math.min(100, Math.max(20, (h + (waveSeed * 7 + idx * 13) % 40)));
-                    return (
+                    {/* After EXIF Frame Overlay (Clipped by scannerPos) */}
+                    <div
+                      className="absolute inset-0 bg-white p-3 sm:p-4 flex flex-col justify-between transition-none"
+                      style={{ clipPath: `inset(0 ${100 - scannerPos}% 0 0)` }}
+                    >
                       <div
-                        key={idx}
-                        className="flex-1 bg-gradient-to-t from-red-600 to-orange-400 rounded-full transition-all duration-200"
-                        style={{ height: `${dynamicHeight}%` }}
+                        className="flex-1 rounded-lg"
+                        style={{
+                          background:
+                            'linear-gradient(135deg, #0F172A 0%, #1E3A8A 40%, #F05A28 85%, #F59E0B 100%)',
+                        }}
                       />
-                    );
-                  })}
-                </div>
+                      <div className="pt-2.5 px-1 flex items-center justify-between text-[11px] text-slate-800 font-mono">
+                        <div>
+                          <div className="font-black text-slate-900 text-xs">FUJIFILM X100VI</div>
+                          <div className="text-[10px] text-slate-500">Fujinon 23mm f/2.0 II</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-slate-900">23mm • f/2.0 • 1/1000s • ISO 125</div>
+                          <div className="text-[10px] text-[#F05A28] font-bold">Classic Negative • KeyT Frame</div>
+                        </div>
+                      </div>
+                    </div>
 
-                {/* Generated Summary Bullets */}
-                <div className="space-y-1.5 text-[11px] text-slate-300 pt-1">
-                  <div className="flex items-start gap-1.5 bg-slate-800/50 p-1.5 rounded-lg border border-slate-800">
-                    <span className="text-amber-400 font-bold">⚡ 01:20</span>
-                    <span className="text-slate-200">Bản chất của các mô hình LLM tiên tiến</span>
-                  </div>
-                  <div className="flex items-start gap-1.5 bg-slate-800/50 p-1.5 rounded-lg border border-slate-800">
-                    <span className="text-emerald-400 font-bold">💡 05:45</span>
-                    <span className="text-slate-200">5 ứng dụng thực tiễn nâng 300% hiệu suất</span>
+                    {/* Scanner Divider Line */}
+                    <div
+                      className="absolute top-0 bottom-0 w-0.5 bg-[#F05A28] shadow-[0_0_12px_#F05A28] z-20"
+                      style={{ left: `${scannerPos}%` }}
+                    >
+                      <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[#F05A28] text-white flex items-center justify-center shadow-lg">
+                        <Sliders size={13} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                  <CheckCircle2 size={13} /> Tiết kiệm 90% thời gian
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
+                <span className="text-slate-500 font-medium">
+                  Hỗ trợ xuất hàng loạt (Batch Export) &amp; Chữ ký cá nhân
                 </span>
-                <span className="font-bold text-red-600 group-hover:underline flex items-center gap-1">
-                  Dùng thử <ArrowRight size={13} />
+                <span className="font-extrabold text-[#F05A28] inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Mở Studio Khung Ảnh <ArrowRight size={14} />
                 </span>
               </div>
             </TiltCard>
 
-            {/* ── BOX 3: AI Xử Lý Ảnh & Tách Nền (1 Col) ── */}
+            {/* BOX 2 (5 Cols): AI IMAGE STUDIO (REMOVE BG + CAPTION AI) */}
             <TiltCard
               onClick={() => navigate('/ai-image')}
-              className="group rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-7 shadow-sm hover:shadow-xl hover:border-orange-400/40 overflow-hidden flex flex-col justify-between"
+              className="lg:col-span-5 group rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-8 shadow-sm hover:shadow-xl hover:border-violet-400/50 transition-all flex flex-col justify-between"
             >
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 text-[#F05A28] text-xs font-bold mb-2.5">
-                  <Wand2 size={14} />
-                  <span>AI Xử Lý Ảnh</span>
-                  <span className="bg-[#F05A28] text-white text-[10px] px-1.5 rounded-full font-bold">PRO</span>
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-200 text-xs font-extrabold">
+                    <Wand2 size={13} /> AI Xử Lý Ảnh Đa Năng
+                  </span>
+                  <span className="text-xs font-bold text-violet-700">Không Cần Key Khi Xóa Nền</span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 group-hover:text-[#F05A28] transition-colors flex items-center gap-1.5">
-                  Tách Nền &amp; Caption AI
-                  <ChevronRight size={18} className="text-slate-400 group-hover:translate-x-1 group-hover:text-[#F05A28] transition-all" />
+
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 group-hover:text-violet-700 transition-colors mb-2">
+                  Tách Nền Chủ Thể 1 Chạm &amp; Viết Caption AI
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Tự động xóa phông nền siêu mượt và tạo caption, hashtag bắt trend chỉ với 1 click.
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-5">
+                  Tự động tách nền ảnh chân dung, sản phẩm sắc nét từng sợi tóc ngay trên trình duyệt. Kết hợp AI phân tích bức ảnh để gợi ý Caption &amp; bộ Hashtag bắt trend mạng xã hội.
                 </p>
-              </div>
 
-              {/* Visual: Transparent Cutout Simulation */}
-              <div className="my-4 relative h-36 rounded-2xl overflow-hidden border border-slate-200 bg-[radial-gradient(#CBD5E1_1px,transparent_1px)] [background-size:12px_12px] flex items-center justify-center">
-                {/* Floating Cutout Object Badge */}
-                <div className="relative z-10 p-3 rounded-xl bg-white/90 backdrop-blur-md shadow-md border border-white flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-tr from-[#F05A28] to-amber-400 flex items-center justify-center text-white shadow-sm">
-                    <Wand2 size={22} className="animate-spin-slow" />
-                  </div>
-                  <div className="text-left">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                      Tách nền sạch 100%
-                    </span>
-                    <div className="text-xs font-bold text-slate-800 mt-0.5">Auto Background Removal</div>
-                  </div>
-                </div>
-
-                {/* AI Laser beam line animation */}
-                <div className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-[#F05A28] to-transparent shadow-[0_0_8px_#F05A28] animate-bounce" style={{ top: '35%' }} />
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Không cần đăng nhập</span>
-                <span className="font-bold text-[#F05A28] group-hover:underline flex items-center gap-1">
-                  Trải nghiệm <ArrowRight size={13} />
-                </span>
-              </div>
-            </TiltCard>
-
-            {/* ── BOX 4: Nén Ảnh Siêu Tốc (1 Col) ── */}
-            <TiltCard
-              onClick={() => navigate('/compress')}
-              className="group rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-7 shadow-sm hover:shadow-xl hover:border-amber-400/40 overflow-hidden flex flex-col justify-between"
-            >
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-xs font-bold mb-2.5">
-                  <Zap size={14} />
-                  <span>Nén Ảnh Online</span>
-                  <span className="bg-amber-600 text-white text-[10px] px-1.5 rounded-full font-bold">-90%</span>
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 group-hover:text-amber-600 transition-colors flex items-center gap-1.5">
-                  Nén Ảnh Chuẩn HD
-                  <ChevronRight size={18} className="text-slate-400 group-hover:translate-x-1 group-hover:text-amber-600 transition-all" />
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Giảm dung lượng ảnh tối đa tới 90% nhưng vẫn giữ trọn vẹn 100% độ sắc nét nguyên bản.
-                </p>
-              </div>
-
-              {/* Visual: Compression Meter */}
-              <div className="my-4 p-4 rounded-2xl bg-gradient-to-br from-amber-50/70 to-orange-50/30 border border-amber-200/60 flex flex-col justify-center">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-slate-600">Dung lượng tối ưu:</span>
-                  <span className="text-xs font-mono font-extrabold text-amber-600 bg-amber-100/70 px-2 py-0.5 rounded-md">
-                    -{compressPercent}%
-                  </span>
-                </div>
-                {/* Progress bar */}
-                <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden p-0.5">
-                  <div
-                    className="h-full bg-gradient-to-r from-amber-500 to-[#F05A28] rounded-full transition-all duration-700"
-                    style={{ width: `${compressPercent}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-[11px] font-mono text-slate-500 mt-2">
-                  <span>Gốc: 12.4 MB</span>
-                  <span className="font-bold text-emerald-600">Còn: 1.18 MB</span>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Hỗ trợ JPG, PNG, WebP</span>
-                <span className="font-bold text-amber-600 group-hover:underline flex items-center gap-1">
-                  Nén ngay <ArrowRight size={13} />
-                </span>
-              </div>
-            </TiltCard>
-
-            {/* ── BOX 5: Cổng OTP & 2FA Live (1 Col) ── */}
-            <TiltCard
-              onClick={() => navigate('/get-otp')}
-              className="group rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-7 shadow-sm hover:shadow-xl hover:border-emerald-400/40 overflow-hidden flex flex-col justify-between"
-            >
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold mb-2.5">
-                  <KeyRound size={14} />
-                  <span>Cổng OTP &amp; 2FA Live</span>
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors flex items-center gap-1.5">
-                  Lấy Mã 2FA Tức Thì
-                  <ChevronRight size={18} className="text-slate-400 group-hover:translate-x-1 group-hover:text-emerald-600 transition-all" />
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Hỗ trợ lấy mã xác thực 2FA ChatGPT, Gemini và tài khoản số thời gian thực không độ trễ.
-                </p>
-              </div>
-
-              {/* Visual: Interactive Live OTP simulation */}
-              <div className="my-4 p-3.5 rounded-2xl bg-slate-900 text-white border border-slate-800 shadow-inner">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-                    Mã hoạt động
-                  </span>
-                  <span className="text-[11px] font-mono text-orange-400 font-bold bg-orange-950/60 px-2 py-0.5 rounded border border-orange-900/50">
-                    {otpTimer}s
-                  </span>
-                </div>
-
-                {/* 6 Digit display */}
-                <div className="flex items-center justify-between gap-1 my-2">
-                  {otpCode.split('').map((char, idx) => (
+                <div className="space-y-2.5 mb-6">
+                  {[
+                    {
+                      title: 'Xóa Nền Tự Động 100% Miễn Phí',
+                      desc: 'Chạy trực tiếp bằng mô hình AI WebGPU/WASM, không cần nhập API Key.',
+                    },
+                    {
+                      title: 'Tạo Caption & Hashtag Đa Phong Cách',
+                      desc: 'Tự động sáng tạo nội dung đăng Facebook, Instagram, Threads từ ảnh.',
+                    },
+                    {
+                      title: 'Gợi Ý Tone Khung & Kiểm Tra Metadata AI',
+                      desc: 'Đề xuất bảng màu khung EXIF hài hòa với gam màu chủ đạo của ảnh.',
+                    },
+                  ].map((feat, idx) => (
                     <div
                       key={idx}
-                      className="flex-1 h-9 rounded-lg bg-slate-800/90 border border-orange-500/30 flex items-center justify-center font-mono font-extrabold text-base text-white shadow-xs"
+                      className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 flex items-start gap-2.5"
                     >
-                      {char}
+                      <CheckCircle2 size={16} className="text-violet-600 shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-xs font-extrabold text-slate-900">{feat.title}</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">{feat.desc}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
-
-                {/* Copy demo button */}
-                <button
-                  type="button"
-                  onClick={handleCopyOtp}
-                  className={`w-full mt-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    otpCopied
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-gradient-to-r from-[#F05A28] to-[#EA580C] text-white hover:brightness-110'
-                  }`}
-                >
-                  {otpCopied ? <Check size={13} /> : <Copy size={13} />}
-                  <span>{otpCopied ? 'Đã sao chép!' : 'Sao chép mã thử'}</span>
-                </button>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>Tự làm mới mỗi 30s</span>
-                <span className="font-bold text-emerald-600 group-hover:underline flex items-center gap-1">
-                  Vào cổng live <ArrowRight size={13} />
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
+                <span className="text-slate-500">Hỗ trợ PNG trong suốt chất lượng cao</span>
+                <span className="font-extrabold text-violet-700 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Thử AI Xử Lý Ảnh <ArrowRight size={14} />
                 </span>
               </div>
             </TiltCard>
 
+            {/* BOX 3 (4 Cols): COMPRESS IMAGE 90% HD */}
+            <TiltCard
+              onClick={() => navigate('/compress')}
+              className="lg:col-span-4 group rounded-3xl bg-white border border-slate-200/90 p-6 shadow-sm hover:shadow-xl hover:border-emerald-400/50 transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-extrabold mb-3">
+                  <Zap size={13} /> Nén Ảnh Online Chuẩn HD
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 group-hover:text-emerald-600 transition-colors mb-2">
+                  Giảm 90% Dung Lượng Không Vỡ Nét
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                  Nén cùng lúc tới 10 bức ảnh (WebP, AVIF, PNG, JPEG). Giảm từ 8.4 MB xuống chỉ còn ~820 KB mà mắt thường không thể phân biệt.
+                </p>
+
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 mb-4">
+                  <div className="flex items-center justify-between text-xs mb-1.5">
+                    <span className="font-bold text-slate-500 line-through">Ảnh gốc: 8.40 MB</span>
+                    <span className="font-extrabold text-emerald-600">Sau nén: 780 KB (-91%)</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                    <div className="w-[91%] h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-600">
+                <span>Nén ảnh ngay trên trình duyệt</span>
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </div>
+            </TiltCard>
+
+            {/* BOX 4 (4 Cols): YOUTUBE SUMMARIZER AI */}
+            <TiltCard
+              onClick={() => navigate('/summarizer')}
+              className="lg:col-span-4 group rounded-3xl bg-white border border-slate-200/90 p-6 shadow-sm hover:shadow-xl hover:border-rose-400/50 transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-xs font-extrabold mb-3">
+                  <Youtube size={13} /> YouTube Summarizer AI
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 group-hover:text-rose-600 transition-colors mb-2">
+                  Tóm Tắt Video YouTube Trong 5 Giây
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                  Chỉ cần dán đường link video bài giảng, podcast hoặc tin tức dài hàng tiếng đồng hồ, AI sẽ trích xuất ngay danh sách ý chính &amp; mốc thời gian.
+                </p>
+
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 mb-4 space-y-1.5 text-xs">
+                  <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                    <Play size={12} className="text-rose-600" /> Tự động đọc phụ đề đa ngôn ngữ
+                  </div>
+                  <div className="text-slate-500 text-[11px]">
+                    Hỗ trợ tóm tắt video tiếng Anh, Nhật, Trung sang tiếng Việt mạch lạc, dễ hiểu.
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-rose-600">
+                <span>Tóm tắt video ngay</span>
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </div>
+            </TiltCard>
+
+            {/* BOX 5 (4 Cols): EVIDENCE CHECKER & DIGITAL STORE */}
+            <TiltCard
+              onClick={() => navigate('/evidence')}
+              className="lg:col-span-4 group rounded-3xl bg-white border border-slate-200/90 p-6 shadow-sm hover:shadow-xl hover:border-blue-400/50 transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-extrabold mb-3">
+                  <FileSearch size={13} /> Evidence Checker &amp; Tiện Ích
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors mb-2">
+                  Kiểm Tra Bằng Chứng &amp; Kho Dịch Vụ Số
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                  Công cụ phân tích, đối chiếu dữ liệu minh chứng thông minh cùng danh mục dịch vụ &amp; tài khoản công nghệ hỗ trợ học tập 24/7.
+                </p>
+
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/evidence');
+                    }}
+                    className="p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 text-xs font-bold text-slate-800 hover:text-blue-700 transition-colors text-left cursor-pointer"
+                  >
+                    Evidence Checker
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/products');
+                    }}
+                    className="p-2.5 rounded-xl bg-slate-50 hover:bg-orange-50 border border-slate-200 text-xs font-bold text-slate-800 hover:text-[#F05A28] transition-colors text-left cursor-pointer"
+                  >
+                    Kho Sản Phẩm Số
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600">
+                <span>Khám phá công cụ kiểm tra</span>
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </div>
+            </TiltCard>
           </div>
         </section>
 
+        {/* ============================================================
+            SECTION 5: THỐNG KÊ HỆ SINH THÁI & 3 BƯỚC TRẢI NGHIỆM
+           ============================================================ */}
+        <section className="py-12 sm:py-16 border-t border-slate-200/80">
+          {/* Ecosystem Metrics Strip */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-14">
+            {[
+              {
+                value: '6.800+',
+                label: 'Từ Vựng & Hán Tự Đa Ngôn Ngữ',
+                sub: 'Nhật (JPD) • Trung (HSK) • Anh (TOEIC)',
+                color: 'text-[#F05A28]',
+              },
+              {
+                value: '30 Giây',
+                label: 'Làm Mới Mã OTP & 2FA Live',
+                sub: 'Hỗ trợ ChatGPT Plus, Gemini & TOTP',
+                color: 'text-emerald-600',
+              },
+              {
+                value: '4K / 8K',
+                label: 'Độ Phân Giải Xuất Ảnh EXIF',
+                sub: 'Giữ nguyên chất lượng gốc & nén HD 90%',
+                color: 'text-blue-600',
+              },
+              {
+                value: '24 / 7',
+                label: 'Giám Thị AI 1-1 & Công Cụ Web',
+                sub: 'Hoạt động mượt trên cả Desktop & Mobile',
+                color: 'text-violet-600',
+              },
+            ].map((stat, i) => (
+              <div
+                key={i}
+                className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs text-center"
+              >
+                <div className={`text-2xl sm:text-4xl font-black tracking-tight ${stat.color} mb-1`}>
+                  {stat.value}
+                </div>
+                <div className="text-xs sm:text-sm font-extrabold text-slate-900">{stat.label}</div>
+                <div className="text-[11px] text-slate-500 mt-1">{stat.sub}</div>
+              </div>
+            ))}
+          </div>
 
-        {/* ── 4. HOW IT WORKS: 3 SIMPLE STEPS ─────────────────────── */}
-        <section className="py-16 border-t border-slate-200/80">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#F05A28]">
-              Trải Nghiệm Mượt Mà
+          {/* 3 Simple Steps */}
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-[#F05A28]">
+              Trải Nghiệm Mượt Mà • Không Cần Cài Đặt
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-              Bắt Đầu Trong 3 Bước Đơn Giản
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+              Bắt Đầu Ngay Trong 3 Bước Đơn Giản
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 step: '01',
-                title: 'Chọn Tiện Ích Hoặc Môn Học',
-                desc: 'Lựa chọn tính năng bạn cần: Thi nói tiếng Nhật 1-1 AI, Hán tự 3D, lồng khung ảnh EXIF hay tóm tắt video.'
+                title: 'Chọn Phân Khu Bạn Cần',
+                desc: 'Truy cập nhanh từ thanh Argon Dock: Lấy mã OTP/2FA, Học ngoại ngữ Nhật - Trung - Anh, hoặc mở Studio Khung Ảnh EXIF & AI.',
               },
               {
                 step: '02',
-                title: 'Tương Tác Trực Tiếp',
-                desc: 'Nói trực tiếp qua Micro để AI chấm ngữ âm hoặc tải bức ảnh yêu thích cần xử lý lên hệ thống.'
+                title: 'Tương Tác Trực Tiếp Trên Web',
+                desc: 'Luyện phát âm qua Micro với Giám thị AI, lật Flashcard 3D, bật Nghe thụ động hoặc kéo thả ảnh cần đóng khung / xóa nền.',
               },
               {
                 step: '03',
-                title: 'Nhận Kết Quả Ngay',
-                desc: 'Hệ thống tự động chấm điểm và trả về thành phẩm sắc nét, đẹp mắt chỉ sau 1 đến 3 giây.'
-              }
+                title: 'Nhận Kết Quả Tức Thì',
+                desc: 'Sao chép mã OTP trong 1 chạm, nhận điểm chấm phát âm chi tiết từng từ hoặc tải về bức ảnh EXIF 4K sắc nét chỉ sau 2 giây.',
+              },
             ].map((step, idx) => (
               <div
                 key={idx}
-                className="relative p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col items-center text-center"
+                className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex flex-col items-center text-center"
               >
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#F05A28] to-amber-500 text-white font-extrabold text-base flex items-center justify-center shadow-md shadow-orange-500/20 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#F05A28] to-amber-500 text-white font-black text-base flex items-center justify-center shadow-md shadow-orange-500/20 mb-4">
                   {step.step}
                 </div>
-                <h4 className="text-lg font-bold text-slate-900 mb-2">{step.title}</h4>
-                <p className="text-sm text-slate-500 leading-relaxed">{step.desc}</p>
+                <h3 className="text-base sm:text-lg font-extrabold text-slate-900 mb-2">{step.title}</h3>
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ── 5. FINAL HIGH-IMPACT CTA BANNER ─────────────────────── */}
-        <section className="mt-8 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#1E293B] text-white p-8 sm:p-12 relative overflow-hidden shadow-xl">
-          {/* Subtle Glows */}
+        {/* ============================================================
+            SECTION 6: FINAL HIGH-IMPACT ARGON CTA BANNER
+           ============================================================ */}
+        <section className="mt-6 rounded-3xl bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white p-8 sm:p-12 relative overflow-hidden shadow-xl border border-slate-800">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#F05A28]/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-72 h-72 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-orange-300 text-xs font-bold mb-4 backdrop-blur-md">
-              <Sparkles size={14} />
-              <span>Học tập &amp; Sáng tạo không giới hạn cùng KeyT</span>
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-orange-300 text-xs font-bold mb-4 backdrop-blur-md">
+                <Sparkles size={14} />
+                <span>Hệ Sinh Thái Học Tập &amp; Sáng Tạo Số Toàn Diện</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black tracking-tight mb-3 leading-tight">
+                Sẵn Sàng Khám Phá Toàn Bộ Tiện Ích Tại KeyT Hub?
+              </h2>
+              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+                Từ cổng lấy mã OTP/2FA tự động, học viện đa ngôn ngữ Nhật • Trung • Anh (JPD, Kana, HSK, TOEIC) đến bộ công cụ nhiếp ảnh EXIF &amp; AI hoàn toàn miễn phí.
+              </p>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4 leading-tight">
-              Sẵn Sàng Bứt Phá Điểm Số &amp; Tác Phẩm Của Bạn?
-            </h2>
-            <p className="text-slate-300 text-base sm:text-lg mb-8 leading-relaxed">
-              Trải nghiệm phòng thi nói 1-1 Giám thị AI JPD123 chuẩn khảo thí FPT và toàn bộ bộ công cụ tiện ích sáng tạo hoàn toàn miễn phí.
-            </p>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-3 shrink-0">
               <button
-                onClick={() => navigate('/courses/jpd123/speaking?tab=mock')}
-                className="px-8 py-3.5 rounded-full bg-[#F05A28] text-white font-bold text-sm sm:text-base shadow-lg shadow-orange-500/30 hover:bg-[#EA580C] hover:-translate-y-0.5 transition-all cursor-pointer flex items-center gap-2"
+                type="button"
+                onClick={() => navigate('/courses')}
+                className="px-6 py-3.5 rounded-full bg-[#F05A28] hover:bg-[#EA580C] text-white font-bold text-sm shadow-lg shadow-orange-500/30 hover:-translate-y-0.5 transition-all cursor-pointer inline-flex items-center gap-2"
               >
-                <Mic size={18} />
-                <span>Thi thử JPD123 ngay</span>
+                <GraduationCap size={18} />
+                <span>Cổng Ngoại Ngữ Nhật • Trung • Anh</span>
                 <ArrowRight size={16} />
               </button>
               <button
-                onClick={() => navigate('/courses')}
-                className="px-7 py-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-sm sm:text-base border border-white/20 transition-all cursor-pointer inline-flex items-center gap-2"
+                type="button"
+                onClick={() => navigate('/get-otp')}
+                className="px-6 py-3.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-600/25 hover:-translate-y-0.5 transition-all cursor-pointer inline-flex items-center gap-2"
               >
-                <GraduationCap size={18} />
-                <span>Cổng 2 Môn Tiếng Nhật</span>
+                <KeyRound size={17} />
+                <span>Cổng OTP &amp; 2FA Live</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/photo-frame')}
+                className="px-6 py-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-sm border border-white/20 transition-all cursor-pointer inline-flex items-center gap-2"
+              >
+                <Frame size={17} />
+                <span>Studio Ảnh EXIF</span>
               </button>
             </div>
           </div>
@@ -1248,19 +1907,12 @@ export default function HomePage() {
 
       {/* ── Scoped CSS Styles for Keyframes ───────────────────────── */}
       <style>{`
-        @keyframes spinSlow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin-slow {
-          animation: spinSlow 12s linear infinite;
-        }
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(6px); }
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-fadeIn {
-          animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          animation: fadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
       `}</style>
     </div>

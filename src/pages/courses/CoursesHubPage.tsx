@@ -103,6 +103,17 @@ export default function CoursesHubPage() {
       href: '/courses/toeichackers/vocabulary'
     },
     {
+      code: 'TIẾNG ANH BÁ KHÍ',
+      badge: 'MỚI • 12 QUIZ',
+      title: 'Từ Vựng Tiếng Anh Bá Khí',
+      topics: 12,
+      topicUnit: 'bài đọc / Quiz',
+      vocabulary: 1017,
+      description:
+        'Chinh phục 1.017 từ vựng & cụm từ học thuật chia thành 12 phần Quiz theo ngữ cảnh bài đọc (Test 1 – Test 4) kèm trường hợp sử dụng thực tế.',
+      href: '/courses/engbk/vocabulary'
+    },
+    {
       code: 'TOEIC 120',
       badge: '6 BÀI QUIZ',
       title: '120 Thành Ngữ & Cụm Từ TOEIC',
@@ -375,15 +386,15 @@ export default function CoursesHubPage() {
                   Phân Khu 03 • Luyện Thi TOEIC &amp; Từ Vựng Thông Dụng
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-0.5">
-                  Tiếng Anh Thực Chiến (5.932 Từ &amp; Cụm Từ)
+                  Tiếng Anh Thực Chiến (6.949 Từ &amp; Cụm Từ)
                 </h2>
               </div>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold self-start sm:self-auto">
-                <Award size={14} /> Chuẩn giáo trình Hackers TOEIC &amp; IPA bản xứ
+                <Award size={14} /> Chuẩn Hackers TOEIC, Tiếng Anh Bá Khí &amp; IPA bản xứ
               </span>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {englishCourses.map((course) => (
                 <Link
                   key={course.code}

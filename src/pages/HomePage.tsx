@@ -1243,15 +1243,15 @@ export default function HomePage() {
                       Tiếng Anh Thực Chiến
                     </span>
                     <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 whitespace-nowrap shrink-0">
-                      5.932 Mục Từ
+                      6.949 Mục Từ
                     </span>
                   </div>
 
                   <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">
-                    Hackers TOEIC, 120 Idioms &amp; 1.000 Từ
+                    Hackers TOEIC, Bá Khí &amp; 1.000 Từ
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-5">
-                    Hệ thống từ vựng tiếng Anh đồ sộ có phiên âm IPA, âm thanh bản xứ, Flashcard và bài tập Quiz thực chiến cho sinh viên &amp; người đi làm luyện thi TOEIC.
+                    Hệ thống 4 khóa từ vựng tiếng Anh đồ sộ có phiên âm IPA, ngữ cảnh bài đọc, Flashcard 3D và bài tập Quiz thực chiến cho sinh viên &amp; người đi làm.
                   </p>
 
                   <div className="space-y-2.5 mb-6">
@@ -1273,6 +1273,26 @@ export default function HomePage() {
                         </p>
                       </div>
                       <ChevronRight size={18} className="text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </div>
+
+                    <div
+                      onClick={() => navigate('/courses/engbk/vocabulary')}
+                      className="group p-3.5 rounded-2xl bg-slate-50 hover:bg-purple-50/60 border border-slate-200/80 hover:border-purple-300 transition-all cursor-pointer flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-purple-600 text-white text-[10px] font-black shrink-0 whitespace-nowrap">
+                            BÁ KHÍ • 12 QUIZ
+                          </span>
+                          <span className="font-bold text-sm text-slate-900 group-hover:text-purple-700 truncate">
+                            Từ Vựng Tiếng Anh Bá Khí
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          1.017 từ &amp; cụm từ học thuật • 12 phần Quiz theo ngữ cảnh bài đọc
+                        </p>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all shrink-0" />
                     </div>
 
                     <div

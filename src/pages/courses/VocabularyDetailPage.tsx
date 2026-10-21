@@ -190,7 +190,8 @@ export default function VocabularyDetailPage() {
 
   const isToeic = upperCode === 'TOEIC120';
   const isHackers = upperCode === 'TOEIC_HACKERS' || upperCode === 'TOEICHACKERS';
-  const cleanTitle = isToeic || isHackers ? lesson.title : lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '');
+  const isBaKhi = upperCode === 'ENGBK' || upperCode === 'ENGBAKHI';
+  const cleanTitle = isToeic || isHackers || isBaKhi ? lesson.title : lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '');
 
   return (
     <>
@@ -203,9 +204,9 @@ export default function VocabularyDetailPage() {
       <div className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
         <CourseBreadcrumb
           items={[
-            { label: isToeic ? 'TOEIC 120' : isHackers ? 'Hackers TOEIC' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
+            { label: isToeic ? 'TOEIC 120' : isHackers ? 'Hackers TOEIC' : isBaKhi ? 'Tiếng Anh Bá Khí' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
             { label: `${isToeic ? 'Thành Ngữ & Cụm Từ' : 'Từ Vựng'} (${language.kind === 'chinese' ? '词汇' : language.kind === 'english' ? 'Vocabulary' : '単語'})`, href: `/courses/${courseCode.toLowerCase()}/vocabulary` },
-            { label: isToeic ? `Quiz ${lesson.order}` : isHackers ? `Day ${lesson.order}` : `Bài ${lesson.lessonCode}` }
+            { label: isToeic || isBaKhi ? `Quiz ${lesson.order}` : isHackers ? `Day ${lesson.order}` : `Bài ${lesson.lessonCode}` }
           ]}
         />
 
@@ -215,14 +216,14 @@ export default function VocabularyDetailPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="px-3 py-1 rounded-full text-xs font-black bg-orange-50 text-[#F05A28] border border-orange-200">
-                  {isToeic ? `QUIZ ${lesson.order}` : isHackers ? `DAY ${lesson.order}` : `LESSON ${lesson.lessonCode}`}
+                  {isToeic || isBaKhi ? `QUIZ ${lesson.order}` : isHackers ? `DAY ${lesson.order}` : `LESSON ${lesson.lessonCode}`}
                 </span>
                 <span className="text-xs font-semibold text-slate-500">
                   {items.length} {isToeic ? 'cụm từ' : 'từ vựng'}
                 </span>
               </div>
               <h1 className="text-xl font-extrabold leading-tight text-slate-900 sm:text-2xl lg:text-3xl">
-                {isToeic ? cleanTitle : `${lesson.lessonCode}: ${cleanTitle}`}
+                {isToeic || isBaKhi ? cleanTitle : `${lesson.lessonCode}: ${cleanTitle}`}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
                 {lesson.description}

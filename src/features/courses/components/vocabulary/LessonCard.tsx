@@ -20,6 +20,7 @@ export default function LessonCard({ lesson, courseCode }: LessonCardProps) {
   const upperCode = courseCode.toUpperCase();
   const isToeic = upperCode === 'TOEIC120';
   const isHackers = upperCode === 'TOEIC_HACKERS' || upperCode === 'TOEICHACKERS';
+  const isBaKhi = upperCode === 'ENGBK' || upperCode === 'ENGBAKHI';
 
   return (
     <div
@@ -34,18 +35,18 @@ export default function LessonCard({ lesson, courseCode }: LessonCardProps) {
               <BookMarked size={18} />
             </div>
             <span className="text-xs font-black uppercase tracking-wider text-[#F05A28] bg-orange-50/80 px-2.5 py-1 rounded-full border border-orange-200/50">
-              {isToeic ? `QUIZ ${lesson.order}` : isHackers ? `DAY ${lesson.order}` : `LESSON ${lesson.lessonCode}`}
+              {isToeic || isBaKhi ? `QUIZ ${lesson.order}` : isHackers ? `DAY ${lesson.order}` : `LESSON ${lesson.lessonCode}`}
             </span>
           </div>
 
           <span className="text-xs font-semibold text-slate-500">
-            {lesson.itemCount} {isToeic ? 'cụm từ' : 'từ vựng'}
+            {lesson.itemCount} {isToeic ? 'cụm từ' : isBaKhi ? 'mục từ' : 'từ vựng'}
           </span>
         </div>
 
         {/* Title & Description */}
         <h4 className="text-lg font-bold text-slate-900 group-hover:text-[#F05A28] transition-colors mb-2 line-clamp-1">
-          {isToeic || isHackers ? lesson.title : `${lesson.lessonCode}: ${lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '')}`}
+          {isToeic || isHackers || isBaKhi ? lesson.title : `${lesson.lessonCode}: ${lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '')}`}
         </h4>
         <p className="text-xs sm:text-sm text-slate-500 line-clamp-2 leading-relaxed mb-6">
           {lesson.description}
@@ -73,7 +74,7 @@ export default function LessonCard({ lesson, courseCode }: LessonCardProps) {
           }}
           className="w-full py-2.5 px-4 rounded-xl bg-slate-900 group-hover:bg-[#F05A28] text-white font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
         >
-          <span>{percent > 0 ? (isToeic ? 'Tiếp tục luyện Quiz' : 'Tiếp tục học') : (isToeic ? 'Bắt đầu Quiz' : 'Bắt đầu học')}</span>
+          <span>{percent > 0 ? (isToeic || isBaKhi ? 'Tiếp tục luyện Quiz' : 'Tiếp tục học') : (isToeic || isBaKhi ? 'Bắt đầu Quiz' : 'Bắt đầu học')}</span>
           <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
         </button>
       </div>

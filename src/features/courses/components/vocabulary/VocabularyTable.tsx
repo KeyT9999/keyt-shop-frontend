@@ -145,8 +145,21 @@ export default function VocabularyTable({
                   <td className="py-4 px-4 font-semibold text-slate-900">
                     {item.meaning}
                     {item.examples && item.examples.length > 0 && (
-                      <div className="text-xs text-slate-500 font-normal mt-1 italic">
-                        VD: {item.examples[0].japanese} ({item.examples[0].vietnamese})
+                      <div className="text-xs text-slate-500 font-normal mt-1.5 space-y-0.5">
+                        {item.examples[0].vietnamese && item.examples[0].vietnamese.startsWith('Chủ đề:') ? (
+                          <>
+                            <div className="text-[11px] font-semibold text-blue-600 not-italic">
+                              {item.examples[0].vietnamese}
+                            </div>
+                            <div className="italic text-slate-500 leading-relaxed">
+                              {item.examples[0].japanese}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="italic">
+                            VD: {item.examples[0].japanese} {item.examples[0].vietnamese ? `(${item.examples[0].vietnamese})` : ''}
+                          </div>
+                        )}
                       </div>
                     )}
                   </td>

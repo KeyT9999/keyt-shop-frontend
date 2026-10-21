@@ -331,7 +331,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     location.pathname.startsWith('/courses/kana') ||
     kanaTools.some((item) => location.pathname === item.href);
   const isChineseActive = /^\/courses\/hsk[12](?:\/|$)/i.test(location.pathname);
-  const isEnglishActive = /^\/courses\/(eng1000|toeic120|toeichackers)(?:\/|$)/i.test(location.pathname);
+  const isEnglishActive = /^\/courses\/(eng1000|engbk|toeic120|toeichackers)(?:\/|$)/i.test(location.pathname);
 
   return (
     <div className="header-wrapper">
@@ -753,7 +753,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 >
                   <BookOpen size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Tiếng Anh</span>
-                  <span className="nav-count-badge">3 Khóa</span>
+                  <span className="nav-count-badge">4 Khóa</span>
                   <ChevronDown
                     size={13}
                     className={`dropdown-chevron ${activeDropdown === 'english' ? 'open' : ''}`}
@@ -765,16 +765,16 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                     <div className="chinese-dropdown-heading">
                       <div className="chinese-dropdown-icon"><BookOpen size={20} /></div>
                       <div>
-                        <span className="chinese-dropdown-eyebrow">TIẾNG ANH GIAO TIẾP &amp; TOEIC</span>
-                        <h3>Hackers TOEIC • 1.000 từ • 120 thành ngữ</h3>
-                        <p>30 chủ đề Hackers TOEIC, 1.000 từ thông dụng &amp; 120 cụm từ kèm Quiz</p>
+                        <span className="chinese-dropdown-eyebrow">TIẾNG ANH GIAO TIẾP, TOEIC &amp; HỌC THUẬT</span>
+                        <h3>Hackers TOEIC • Bá Khí • 1.000 từ • 120 cụm từ</h3>
+                        <p>30 Day Hackers TOEIC, Từ Vựng Bá Khí (12 Quiz), 1.000 từ &amp; 120 cụm từ</p>
                       </div>
                     </div>
 
                     <div className="chinese-dropdown-stats" aria-label="Nội dung khóa học từ vựng tiếng Anh">
-                      <div><strong>86</strong><span>chủ đề / ngày</span></div>
-                      <div><strong>5.932</strong><span>từ &amp; cụm từ</span></div>
-                      <div><strong>Hackers</strong><span>&amp; TOEIC</span></div>
+                      <div><strong>98</strong><span>chủ đề / Quiz</span></div>
+                      <div><strong>6.949</strong><span>từ &amp; cụm từ</span></div>
+                      <div><strong>4 Khóa</strong><span>TOEIC &amp; Quiz</span></div>
                     </div>
 
                     <nav className="chinese-dropdown-courses" aria-label="Chọn khóa học tiếng Anh">
@@ -791,6 +791,23 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                               <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-orange-100 text-[#F05A28] uppercase">HOT</span>
                             </span>
                             <span>4.768 từ vựng • 30 Day chuẩn ngữ cảnh</span>
+                          </span>
+                        </span>
+                        <ArrowRight size={17} className="chinese-dropdown-cta-arrow" />
+                      </Link>
+                      <Link
+                        to="/courses/engbk/vocabulary"
+                        className="chinese-dropdown-cta cursor-pointer"
+                        onClick={() => setActiveDropdown(null)}
+                      >
+                        <span className="chinese-dropdown-cta-main">
+                          <span className="chinese-dropdown-cta-icon text-indigo-600"><Award size={17} /></span>
+                          <span className="chinese-dropdown-cta-label">
+                            <span className="flex items-center gap-1.5">
+                              <strong>Từ Vựng Tiếng Anh Bá Khí</strong>
+                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-indigo-100 text-indigo-700 uppercase">12 Quiz</span>
+                            </span>
+                            <span>1.017 từ &amp; cụm từ • 12 Quiz theo bài đọc</span>
                           </span>
                         </span>
                         <ArrowRight size={17} className="chinese-dropdown-cta-arrow" />
@@ -1144,6 +1161,15 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             <Flame size={16} className="text-[#F05A28]" />
             <span>Hackers TOEIC (Day 1–30)</span>
             <span className="mobile-badge bg-orange-100 text-[#F05A28] font-bold">4.768 từ</span>
+          </Link>
+          <Link
+            to="/courses/engbk/vocabulary"
+            className={`mobile-sub-link ${location.pathname.startsWith('/courses/engbk') ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <Award size={16} className="text-indigo-600" />
+            <span>Từ Vựng Tiếng Anh Bá Khí</span>
+            <span className="mobile-badge bg-indigo-100 text-indigo-700 font-bold">12 Quiz</span>
           </Link>
           <Link
             to="/courses/toeic120/vocabulary"

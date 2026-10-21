@@ -79,12 +79,16 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Close mobile menu on route change
+  // Close menus on browser back/forward navigation
   useEffect(() => {
-    setIsMobileMenuOpen(false);
-    setActiveDropdown(null);
-    setUserMenuOpen(false);
-  }, [location.pathname]);
+    const handlePopState = () => {
+      setIsMobileMenuOpen(false);
+      setActiveDropdown(null);
+      setUserMenuOpen(false);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const handleMouseEnter = (menuKey: string) => {
     if (dropdownTimeoutRef.current) {
@@ -332,30 +336,39 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     <div className="header-wrapper">
       <header className={`modern-header ${isScrolled ? 'scrolled' : ''}`}>
         <div className="header-container">
-          {/* Left: Mobile Menu Toggle & Brand Logo */}
+          {/* Left: Mobile Menu Toggle & Brand Logo Lockup */}
           <div className="header-left">
             <button
               type="button"
               className="mobile-toggle-btn cursor-pointer"
               onClick={() => setIsMobileMenuOpen(true)}
-              aria-label="Mở menu"
+              aria-label="Mở menu điều hướng"
             >
-              <Menu size={22} />
+              <Menu size={20} />
             </button>
 
-            <Link to="/" className="brand-logo-link cursor-pointer">
-              <img src={logo} alt="taphoaKeyT" className="header-logo-img" />
+            <Link to="/" className="brand-logo-link cursor-pointer" aria-label="Tiệm Tạp Hóa KeyT - Trang chủ">
+              <div className="brand-logo-avatar">
+                <img src={logo} alt="taphoaKeyT" className="header-logo-img" />
+              </div>
+              <div className="brand-logo-wordmark">
+                <div className="brand-logo-title-row">
+                  <span className="brand-logo-name">Key<span className="brand-logo-highlight">T</span></span>
+                  <span className="brand-logo-pro-tag">HUB</span>
+                </div>
+                <span className="brand-logo-tagline">AI &amp; Foreign Languages</span>
+              </div>
             </Link>
           </div>
 
-          {/* Center: Desktop Navigation Bar with generous spacing */}
-          <nav className="desktop-navigation">
+          {/* Center: Desktop Navigation Bar (Argon Glass Capsule) */}
+          <nav className="desktop-navigation" aria-label="Điều hướng chính">
             <ul className="header-nav-list">
               {/* 1. Trang chủ */}
               <li className="header-nav-item">
                 <Link
                   to="/"
-                  className={`header-nav-link ${location.pathname === '/' ? 'active' : ''}`}
+                  className={`header-nav-link cursor-pointer ${location.pathname === '/' ? 'active' : ''}`}
                 >
                   <span>Trang chủ</span>
                 </Link>
@@ -369,13 +382,14 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
               >
                 <button
                   type="button"
-                  className={`header-nav-link dropdown-btn ${isAiActive ? 'active' : ''}`}
+                  className={`header-nav-link dropdown-btn cursor-pointer ${isAiActive ? 'active' : ''} ${activeDropdown === 'ai' ? 'is-open' : ''}`}
+                  aria-expanded={activeDropdown === 'ai'}
                   onClick={() => setActiveDropdown(activeDropdown === 'ai' ? null : 'ai')}
                 >
-                  <Sparkles size={15} className="nav-icon-highlight" />
+                  <Sparkles size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Công cụ AI</span>
                   <ChevronDown
-                    size={14}
+                    size={13}
                     className={`dropdown-chevron ${activeDropdown === 'ai' ? 'open' : ''}`}
                   />
                 </button>
@@ -384,7 +398,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   <div className="modern-dropdown-menu">
                     <div className="dropdown-menu-header">
                       <span className="dropdown-menu-tag">Trí tuệ nhân tạo</span>
-                      <span className="dropdown-menu-subtitle">Bộ công cụ thông minh cho học tập & làm việc</span>
+                      <span className="dropdown-menu-subtitle">Bộ công cụ thông minh cho học tập &amp; làm việc</span>
                     </div>
                     <div className="dropdown-items-grid">
                       {aiTools.map((item) => {
@@ -393,7 +407,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                           <Link
                             key={item.href}
                             to={item.href}
-                            className={`dropdown-card-item ${location.pathname === item.href ? 'item-active' : ''}`}
+                            className={`dropdown-card-item cursor-pointer ${location.pathname === item.href ? 'item-active' : ''}`}
                             onClick={() => setActiveDropdown(null)}
                           >
                             <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
@@ -422,12 +436,13 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
               >
                 <button
                   type="button"
-                  className={`header-nav-link dropdown-btn ${isPhotoActive ? 'active' : ''}`}
+                  className={`header-nav-link dropdown-btn cursor-pointer ${isPhotoActive ? 'active' : ''} ${activeDropdown === 'photo' ? 'is-open' : ''}`}
+                  aria-expanded={activeDropdown === 'photo'}
                   onClick={() => setActiveDropdown(activeDropdown === 'photo' ? null : 'photo')}
                 >
                   <span>Tiện ích Ảnh</span>
                   <ChevronDown
-                    size={14}
+                    size={13}
                     className={`dropdown-chevron ${activeDropdown === 'photo' ? 'open' : ''}`}
                   />
                 </button>
@@ -435,7 +450,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 {activeDropdown === 'photo' && (
                   <div className="modern-dropdown-menu">
                     <div className="dropdown-menu-header">
-                      <span className="dropdown-menu-tag">Hình ảnh & Media</span>
+                      <span className="dropdown-menu-tag">Hình ảnh &amp; Media</span>
                       <span className="dropdown-menu-subtitle">Xử lý, nén và tạo khung ảnh chuyên nghiệp</span>
                     </div>
                     <div className="dropdown-items-grid">
@@ -445,7 +460,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                           <Link
                             key={item.href}
                             to={item.href}
-                            className={`dropdown-card-item ${location.pathname === item.href ? 'item-active' : ''}`}
+                            className={`dropdown-card-item cursor-pointer ${location.pathname === item.href ? 'item-active' : ''}`}
                             onClick={() => setActiveDropdown(null)}
                           >
                             <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
@@ -471,34 +486,35 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   to="/get-otp"
                   className={`otp-nav-pill cursor-pointer ${isOtpActive ? 'active' : ''}`}
                 >
-                  <KeyRound size={15} />
-                  <span>Get OTP & 2FA</span>
-                  <span className="otp-live-badge">Live</span>
+                  <KeyRound size={14} className="otp-key-icon" />
+                  <span>Get OTP &amp; 2FA</span>
+                  <span className="otp-live-badge">
+                    <span className="otp-live-dot" />
+                    LIVE
+                  </span>
                 </Link>
               </li>
 
-              {/* 5. Tiếng Nhật Dropdown */}
+              {/* 5. Tiếng Nhật Dropdown (Mega Menu Centered) */}
               <li
-                className="header-nav-item dropdown-trigger"
+                className="header-nav-item dropdown-trigger mega-dropdown-item"
                 onMouseEnter={() => handleMouseEnter('japanese')}
                 onMouseLeave={handleMouseLeave}
               >
                 <button
                   type="button"
-                  className={`header-nav-link dropdown-btn flex items-center gap-1.5 cursor-pointer ${
+                  className={`header-nav-link dropdown-btn cursor-pointer ${
                     isJapaneseActive ? 'active' : ''
-                  }`}
+                  } ${activeDropdown === 'japanese' ? 'is-open' : ''}`}
                   aria-expanded={activeDropdown === 'japanese'}
                   aria-controls="japanese-course-menu"
                   onClick={() => setActiveDropdown(activeDropdown === 'japanese' ? null : 'japanese')}
                 >
-                  <GraduationCap size={15} className="text-[#F05A28]" />
+                  <GraduationCap size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Tiếng Nhật</span>
-                  <span className="text-[10px] font-bold bg-[#F05A28]/10 text-[#F05A28] px-1.5 py-0.5 rounded-full border border-orange-200">
-                    2 Môn
-                  </span>
+                  <span className="nav-count-badge">2 Môn</span>
                   <ChevronDown
-                    size={14}
+                    size={13}
                     className={`dropdown-chevron ${activeDropdown === 'japanese' ? 'open' : ''}`}
                   />
                 </button>
@@ -507,7 +523,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   <div className="modern-dropdown-menu-wide" id="japanese-course-menu">
                     <div className="grid grid-cols-3 gap-3.5">
                       {/* Column 1: JPD113 */}
-                      <div className="p-3 bg-blue-50/40 rounded-2xl border border-blue-100 flex flex-col justify-between">
+                      <div className="p-3 bg-blue-50/60 rounded-2xl border border-blue-100 flex flex-col justify-between">
                         <div>
                           <div className="flex items-center justify-between pb-2 mb-2 border-b border-blue-100/80">
                             <div className="flex items-center gap-1.5">
@@ -523,14 +539,14 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                 <Link
                                   key={item.href}
                                   to={item.href}
-                                  className={`dropdown-card-item ${location.pathname === item.href ? 'item-active' : ''}`}
+                                  className={`dropdown-card-item cursor-pointer ${location.pathname === item.href ? 'item-active' : ''}`}
                                   onClick={() => setActiveDropdown(null)}
                                 >
                                   <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
                                     <Icon size={16} />
                                   </div>
                                   <div className="dropdown-item-content">
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex items-center justify-between gap-1.5">
                                       <span className="dropdown-item-title">{item.title}</span>
                                       {item.badge && <span className="dropdown-item-badge">{item.badge}</span>}
                                     </div>
@@ -544,7 +560,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                       </div>
 
                       {/* Column 2: Bảng Chữ Cái Kana (Ở Giữa) */}
-                      <div className="p-3 bg-emerald-50/40 rounded-2xl border border-emerald-100 flex flex-col justify-between">
+                      <div className="p-3 bg-emerald-50/60 rounded-2xl border border-emerald-100 flex flex-col justify-between">
                         <div>
                           <div className="flex items-center justify-between pb-2 mb-2 border-b border-emerald-100/80">
                             <div className="flex items-center gap-1.5">
@@ -560,14 +576,14 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                 <Link
                                   key={item.title + item.href}
                                   to={item.href}
-                                  className={`dropdown-card-item ${location.pathname === item.href ? 'item-active' : ''}`}
+                                  className={`dropdown-card-item cursor-pointer ${location.pathname === item.href ? 'item-active' : ''}`}
                                   onClick={() => setActiveDropdown(null)}
                                 >
                                   <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
                                     <Icon size={16} />
                                   </div>
                                   <div className="dropdown-item-content">
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex items-center justify-between gap-1.5">
                                       <span className="dropdown-item-title">{item.title}</span>
                                       {item.badge && <span className="dropdown-item-badge">{item.badge}</span>}
                                     </div>
@@ -581,7 +597,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                       </div>
 
                       {/* Column 3: JPD123 */}
-                      <div className="p-3 bg-orange-50/40 rounded-2xl border border-orange-100 flex flex-col justify-between">
+                      <div className="p-3 bg-orange-50/60 rounded-2xl border border-orange-100 flex flex-col justify-between">
                         <div>
                           <div className="flex items-center justify-between pb-2 mb-2 border-b border-orange-100/80">
                             <div className="flex items-center gap-1.5">
@@ -597,14 +613,14 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                                 <Link
                                   key={item.href}
                                   to={item.href}
-                                  className={`dropdown-card-item ${location.pathname === item.href ? 'item-active' : ''}`}
+                                  className={`dropdown-card-item cursor-pointer ${location.pathname === item.href ? 'item-active' : ''}`}
                                   onClick={() => setActiveDropdown(null)}
                                 >
                                   <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
                                     <Icon size={16} />
                                   </div>
                                   <div className="dropdown-item-content">
-                                    <div className="flex items-center gap-1.5">
+                                    <div className="flex items-center justify-between gap-1.5">
                                       <span className="dropdown-item-title">{item.title}</span>
                                       {item.badge && <span className="dropdown-item-badge">{item.badge}</span>}
                                     </div>
@@ -642,20 +658,18 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
               >
                 <button
                   type="button"
-                  className={`header-nav-link dropdown-btn flex items-center gap-1.5 cursor-pointer ${
+                  className={`header-nav-link dropdown-btn cursor-pointer ${
                     isChineseActive ? 'active' : ''
-                  }`}
+                  } ${activeDropdown === 'chinese' ? 'is-open' : ''}`}
                   aria-expanded={activeDropdown === 'chinese'}
                   aria-controls="chinese-course-menu"
                   onClick={() => setActiveDropdown(activeDropdown === 'chinese' ? null : 'chinese')}
                 >
-                  <Languages size={15} className="text-[#F05A28]" />
+                  <Languages size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Tiếng Trung</span>
-                  <span className="text-[10px] font-bold bg-[#F05A28]/10 text-[#F05A28] px-1.5 py-0.5 rounded-full border border-orange-200">
-                    2 Khóa
-                  </span>
+                  <span className="nav-count-badge">2 Khóa</span>
                   <ChevronDown
-                    size={14}
+                    size={13}
                     className={`dropdown-chevron ${activeDropdown === 'chinese' ? 'open' : ''}`}
                   />
                 </button>
@@ -731,18 +745,16 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
               >
                 <button
                   type="button"
-                  className={`header-nav-link dropdown-btn flex items-center gap-1.5 cursor-pointer ${isEnglishActive ? 'active' : ''}`}
+                  className={`header-nav-link dropdown-btn cursor-pointer ${isEnglishActive ? 'active' : ''} ${activeDropdown === 'english' ? 'is-open' : ''}`}
                   aria-expanded={activeDropdown === 'english'}
                   aria-controls="english-course-menu"
                   onClick={() => setActiveDropdown(activeDropdown === 'english' ? null : 'english')}
                 >
-                  <BookOpen size={15} className="text-[#F05A28]" />
+                  <BookOpen size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Tiếng Anh</span>
-                  <span className="text-[10px] font-bold bg-[#F05A28]/10 text-[#F05A28] px-1.5 py-0.5 rounded-full border border-orange-200">
-                    2 Khóa
-                  </span>
+                  <span className="nav-count-badge">2 Khóa</span>
                   <ChevronDown
-                    size={14}
+                    size={13}
                     className={`dropdown-chevron ${activeDropdown === 'english' ? 'open' : ''}`}
                   />
                 </button>
@@ -828,16 +840,17 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 <button
                   type="button"
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="user-profile-trigger cursor-pointer"
+                  className={`user-profile-trigger cursor-pointer ${userMenuOpen ? 'is-open' : ''}`}
+                  aria-expanded={userMenuOpen}
                   title="Tài khoản"
                 >
                   <div className="user-avatar-circle">
                     {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
                   </div>
-                  <span className="user-name-label hidden md:inline">
+                  <span className="user-name-label hidden sm:inline">
                     {user.username || 'User'}
                   </span>
-                  <ChevronDown size={14} className="text-slate-400" />
+                  <ChevronDown size={14} className={`dropdown-chevron ${userMenuOpen ? 'open' : ''}`} />
                 </button>
 
                 {userMenuOpen && (
@@ -851,7 +864,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                       {user.admin && (
                         <Link
                           to="/admin/dashboard"
-                          className="user-popover-link admin-highlight"
+                          className="user-popover-link admin-highlight cursor-pointer"
                           onClick={() => setUserMenuOpen(false)}
                         >
                           <LayoutDashboard size={16} />
@@ -861,7 +874,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
                       <Link
                         to="/profile"
-                        className="user-popover-link"
+                        className="user-popover-link cursor-pointer"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <User size={16} />
@@ -870,7 +883,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
                       <Link
                         to={user.admin ? '/admin/orders' : '/orders'}
-                        className="user-popover-link"
+                        className="user-popover-link cursor-pointer"
                         onClick={() => setUserMenuOpen(false)}
                       >
                         <ShoppingBag size={16} />
@@ -898,7 +911,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   Đăng nhập
                 </Link>
                 <Link to="/register" className="header-register-btn cursor-pointer">
-                  Đăng ký
+                  <span>Đăng ký</span>
                 </Link>
               </div>
             )}
@@ -912,17 +925,31 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
         onClick={() => setIsMobileMenuOpen(false)}
       />
 
-      <aside className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
+      <aside className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`} aria-label="Menu di động">
         <div className="mobile-drawer-header">
-          <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
-            <img src={logo} alt="taphoaKeyT" className="h-9 object-contain" />
+          <Link
+            to="/"
+            className="brand-logo-link cursor-pointer"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <div className="brand-logo-avatar">
+              <img src={logo} alt="taphoaKeyT" className="header-logo-img" />
+            </div>
+            <div className="brand-logo-wordmark">
+              <div className="brand-logo-title-row">
+                <span className="brand-logo-name">Key<span className="brand-logo-highlight">T</span></span>
+                <span className="brand-logo-pro-tag">HUB</span>
+              </div>
+              <span className="brand-logo-tagline">AI &amp; Foreign Languages</span>
+            </div>
           </Link>
           <button
             type="button"
             className="mobile-close-btn cursor-pointer"
             onClick={() => setIsMobileMenuOpen(false)}
+            aria-label="Đóng menu"
           >
-            <X size={22} />
+            <X size={20} />
           </button>
         </div>
 
@@ -931,6 +958,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
           <Search size={16} className="text-slate-400" />
           <input
             type="text"
+            aria-label="Tìm kiếm sản phẩm, dịch vụ"
             placeholder="Tìm kiếm sản phẩm, dịch vụ..."
             value={searchValue}
             onChange={(e) => onSearch(e.target.value)}
@@ -941,7 +969,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
           {/* Main Links */}
           <Link
             to="/"
-            className={`mobile-menu-link ${location.pathname === '/' ? 'active' : ''}`}
+            className={`mobile-menu-link cursor-pointer ${location.pathname === '/' ? 'active' : ''}`}
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Trang chủ

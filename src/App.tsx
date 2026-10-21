@@ -4,6 +4,7 @@ import './App.css';
 import { useAuthContext } from './context/useAuthContext';
 
 import Header from './components/Header';
+import Footer from './components/Footer';
 import FloatingContact from './components/FloatingContact';
 import ChatWidget from './components/chat/ChatWidget';
 import AdminChatBubble from './components/chat/AdminChatBubble';
@@ -62,7 +63,7 @@ const CompressPage = lazy(() => import('./pages/CompressPage'));
 const AiImagePage = lazy(() => import('./pages/AiImagePage'));
 const AdminChatPage = lazy(() => import('./pages/admin/AdminChatPage'));
 
-// Japanese Learning Course Pages
+// Multi-Language Course Pages
 const CoursesHubPage = lazy(() => import('./pages/courses/CoursesHubPage'));
 const CourseLandingPage = lazy(() => import('./pages/courses/CourseLandingPage'));
 const VocabularyLessonListPage = lazy(() => import('./pages/courses/VocabularyLessonListPage'));
@@ -82,14 +83,6 @@ export default function App() {
     const [announcementOpen, setAnnouncementOpen] = useState(false);
     const [announcementTitle, setAnnouncementTitle] = useState('');
     const [announcementMessage, setAnnouncementMessage] = useState('');
-
-    // Debug: Log user admin status
-    useEffect(() => {
-        if (user) {
-            console.log('Current user:', user);
-            console.log('Is admin:', user.admin);
-        }
-    }, [user]);
 
     // Fetch active announcement once after login; dismissal is session-only (no localStorage)
     useEffect(() => {
@@ -117,14 +110,12 @@ export default function App() {
         };
     }, [token, user]);
 
-
-
     const seoConfig = useMemo(() => {
         const path = location.pathname;
         const base = {
-            title: 'Công Cụ AI Hỗ Trợ Học Tập & Sáng Tạo | Mindora AI',
+            title: 'KeyT Hub – Hệ Sinh Thái Ngoại Ngữ AI (Nhật • Trung • Anh), Cổng OTP 2FA & Studio Ảnh',
             description:
-                'Mindora AI - Cung cấp bộ công cụ AI thông minh hỗ trợ học tập và sáng tạo: YouTube Summarizer, Evidence Checker, Photo Frame và các tiện ích công nghệ hữu ích khác. Hỗ trợ 24/7 ✓',
+                'KeyT Hub - Học Tiếng Nhật FPT (JPD113/123 & Kana), Tiếng Trung HSK 1–2, Tiếng Anh Hackers TOEIC, lấy mã OTP ChatGPT/Gemini & 2FA Live 30s, Tạo khung ảnh EXIF 4K và Xử lý ảnh AI miễn phí ✓',
             canonicalPath: path,
             type: 'website' as const,
             noIndex: false,
@@ -161,24 +152,23 @@ export default function App() {
         if (path === '/') {
             return {
                 ...base,
-                title: 'Mindora AI – Công Cụ AI Hỗ Trợ Học Tập & Sáng Tạo',
+                title: 'KeyT Hub – Học Ngoại Ngữ AI (Nhật • Trung • Anh), Lấy Mã OTP 2FA & Khung Ảnh EXIF',
                 description:
-                    'Sử dụng bộ công cụ AI thông minh và tiện ích công nghệ tại Mindora AI: YouTube Summarizer, Evidence Checker, Photo Frame, giúp nâng cao hiệu suất học tập và làm việc. Đăng ký dùng ngay!',
+                    'Khám phá hệ sinh thái KeyT Hub: Cổng lấy mã OTP ChatGPT/Gemini & 2FA Live 30s, Học viện Tiếng Nhật FPT (JPD113/123, Giám thị AI 1-1, Kana), Tiếng Trung HSK 1–2, Hackers TOEIC 5.900+ từ & Studio Ảnh EXIF 4K.',
                 canonicalPath: '/',
             };
         }
 
-        // Removed dynamic logic for /products/:id. ProductDetail will handle its own SEO now.
         if (path.startsWith('/products/') && path !== '/products') {
-           return base; // Let the ProductDetail component override
+            return base;
         }
 
         if (path === '/products') {
             return {
                 ...base,
-                title: 'Danh Sách Công Cụ & Dịch Vụ AI | Mindora AI',
+                title: 'Danh Sách Công Cụ & Dịch Vụ Số | KeyT Hub',
                 description:
-                    'Xem bảng giá và đăng ký các công cụ AI hỗ trợ học tập, làm việc hiệu quả tại Mindora AI. Dịch vụ premium chất lượng, kích hoạt nhanh, bảo hành rõ ràng.',
+                    'Xem bảng giá và đăng ký các công cụ AI hỗ trợ học tập, làm việc hiệu quả tại KeyT Hub. Dịch vụ chất lượng, kích hoạt nhanh, bảo hành rõ ràng.',
                 canonicalPath: '/products',
             };
         }
@@ -186,9 +176,9 @@ export default function App() {
         if (path === '/purchase-guide') {
             return {
                 ...base,
-                title: 'Hướng Dẫn Mua Hàng & Sử Dụng Dịch Vụ | Mindora AI',
+                title: 'Hướng Dẫn Mua Hàng & Sử Dụng Dịch Vụ | KeyT Hub',
                 description:
-                    'Xem hướng dẫn chi tiết các bước đặt mua và sử dụng các công cụ AI, dịch vụ công nghệ tại Mindora AI – thao tác đơn giản, thanh toán an toàn, kích hoạt nhanh chóng.',
+                    'Xem hướng dẫn chi tiết các bước đặt mua và sử dụng các công cụ AI, dịch vụ công nghệ tại KeyT Hub – thao tác đơn giản, thanh toán an toàn, kích hoạt nhanh chóng.',
                 canonicalPath: '/purchase-guide',
             };
         }
@@ -196,9 +186,9 @@ export default function App() {
         if (path === '/faq') {
             return {
                 ...base,
-                title: 'FAQ Mindora AI – Giải Đáp Thắc Mắc Về Dịch Vụ & Bảo Hành',
+                title: 'FAQ KeyT Hub – Giải Đáp Thắc Mắc Về Dịch Vụ & Bảo Hành',
                 description:
-                    'Câu hỏi thường gặp về đặt hàng, thanh toán, thời gian nhận dịch vụ, bảo hành và hoàn tiền khi sử dụng các công cụ AI và dịch vụ công nghệ tại Mindora AI.',
+                    'Câu hỏi thường gặp về đặt hàng, thanh toán, thời gian nhận dịch vụ, bảo hành và hoàn tiền khi sử dụng các công cụ AI và dịch vụ công nghệ tại KeyT Hub.',
                 canonicalPath: '/faq',
             };
         }
@@ -206,9 +196,9 @@ export default function App() {
         if (path === '/warranty-refund') {
             return {
                 ...base,
-                title: 'Chính Sách Bảo Hành & Hoàn Tiền – Mindora AI',
+                title: 'Chính Sách Bảo Hành & Hoàn Tiền – KeyT Hub',
                 description:
-                    'Tìm hiểu chi tiết chính sách bảo hành và hoàn tiền tại Mindora AI: điều kiện được hoàn tiền, thời gian xử lý, phạm vi bảo hành cho các công cụ AI và dịch vụ công nghệ.',
+                    'Tìm hiểu chi tiết chính sách bảo hành và hoàn tiền tại KeyT Hub: điều kiện được hoàn tiền, thời gian xử lý, phạm vi bảo hành cho các công cụ AI và dịch vụ công nghệ.',
                 canonicalPath: '/warranty-refund',
             };
         }
@@ -216,37 +206,37 @@ export default function App() {
         if (path === '/photo-frame') {
             return {
                 ...base,
-                title: 'Tạo Khung Ảnh Chuyên Nghiệp Online Miễn Phí | Tiệm KeyT',
+                title: 'Tạo Khung Ảnh EXIF Chuyên Nghiệp Online Miễn Phí | KeyT Hub',
                 description:
-                    'Công cụ ghép khung ảnh thông minh, tự động thêm số liệu EXIF và watermark dành cho các Photographer. Sử dụng 100% miễn phí ngay trên trình duyệt ✓',
+                    'Công cụ ghép khung ảnh thông minh, tự động thêm số liệu EXIF (Leica, Sony, Fujifilm, Canon, Apple) và watermark dành cho Photographer. Sử dụng 100% miễn phí ngay trên trình duyệt ✓',
                 canonicalPath: '/photo-frame',
-            }
+            };
         }
 
         if (path === '/ai-image') {
             return {
                 ...base,
-                title: 'AI Xử Lý Ảnh Online – Caption AI, Gợi Ý Khung, Xóa Nền | Mindora AI',
+                title: 'AI Xử Lý Ảnh Online – Tách Nền 1 Chạm, Caption AI, Gợi Ý Khung | KeyT Hub',
                 description:
-                    'Công cụ AI xử lý ảnh miễn phí: tự động viết caption + hashtag, gợi ý khung ảnh đẹp, xóa nền và kiểm tra metadata AI. Dùng API key Gemini, OpenAI hoặc DeepSeek của riêng bạn — riêng xóa nền không cần key.',
+                    'Công cụ AI xử lý ảnh miễn phí: tự động viết caption + hashtag, gợi ý khung ảnh đẹp, xóa nền tự động 100% không cần key và kiểm tra metadata AI.',
                 canonicalPath: '/ai-image',
-            }
+            };
         }
 
         if (path === '/compress') {
             return {
                 ...base,
-                title: 'Nén Ảnh Online Miễn Phí – Giảm Dung Lượng Ảnh Nhanh | KeyT Compress',
+                title: 'Nén Ảnh Online Miễn Phí – Giảm 90% Dung Lượng Chuẩn HD | KeyT Compress',
                 description:
-                    'Nén ảnh online miễn phí, hỗ trợ WebP, AVIF, PNG, JPEG, GIF. Giảm dung lượng ảnh tới 90% không giảm chất lượng. Không cần đăng ký, nén tới 10 ảnh cùng lúc. Phù hợp cho website và bán hàng online.',
+                    'Nén ảnh online miễn phí, hỗ trợ WebP, AVIF, PNG, JPEG, GIF. Giảm dung lượng ảnh tới 90% không giảm chất lượng. Không cần đăng ký, nén tới 10 ảnh cùng lúc.',
                 canonicalPath: '/compress',
-            }
+            };
         }
 
         if (path === '/courses/kana' || path.endsWith('/kana')) {
             return {
                 ...base,
-                title: 'Luyện Gõ Bảng Chữ Cái Tiếng Nhật Kana Quiz (Hiragana & Katakana) | Mindora AI',
+                title: 'Luyện Gõ Bảng Chữ Cái Tiếng Nhật Kana Quiz (Hiragana & Katakana) | KeyT Hub',
                 description:
                     'Luyện nhớ và gõ bảng chữ cái Hiragana, Katakana chuẩn Tofugu Kana Quiz. Hỗ trợ đa dạng font chữ Nhật Bản, âm đục, âm ghép và phát âm giọng bản xứ.',
                 canonicalPath: '/courses/kana',
@@ -255,7 +245,6 @@ export default function App() {
 
         return base;
     }, [location.pathname]);
-
 
     const isAdminPage = location.pathname.startsWith('/admin');
     const isAdmin = user?.admin === true;
@@ -280,11 +269,16 @@ export default function App() {
             {!isAdminPage && <Header onSearch={setSearchQuery} searchValue={searchQuery} />}
 
             <main className={isAdminPage ? "main-content-admin" : "main-content-full"}>
-                <Suspense fallback={
-                    <div className="bg-[#fdfbf7] min-h-[70vh] flex items-center justify-center text-slate-800">
-                      <div className="text-xl font-game animate-pulse text-[#F05A28]">LOADING...</div>
-                    </div>
-                }>
+                <Suspense
+                    fallback={
+                        <div className="bg-[#F8FAFC] min-h-[70vh] flex flex-col items-center justify-center gap-3 text-slate-800">
+                            <div className="w-10 h-10 rounded-2xl border-3 border-[#F05A28]/20 border-t-[#F05A28] animate-spin" />
+                            <div className="text-xs font-extrabold uppercase tracking-widest text-slate-500">
+                                Đang tải KeyT Hub...
+                            </div>
+                        </div>
+                    }
+                >
                     <Routes>
                         <Route path="/" element={<HomePage />} />
                         <Route path="/products" element={<ProductList searchQuery={searchQuery} showHero={false} />} />
@@ -321,10 +315,13 @@ export default function App() {
                         <Route path="/compress" element={<CompressPage />} />
                         <Route path="/ai-image" element={<AiImagePage />} />
 
-                        {/* Japanese Course Routes */}
+                        {/* Multi-Language Course Routes */}
                         <Route path="/courses" element={<CoursesHubPage />} />
                         <Route path="/courses/hsk1" element={<Navigate to="/courses/hsk1/vocabulary" replace />} />
                         <Route path="/courses/hsk2" element={<Navigate to="/courses/hsk2/vocabulary" replace />} />
+                        <Route path="/courses/toeichackers" element={<Navigate to="/courses/toeichackers/vocabulary" replace />} />
+                        <Route path="/courses/toeic120" element={<Navigate to="/courses/toeic120/vocabulary" replace />} />
+                        <Route path="/courses/eng1000" element={<Navigate to="/courses/eng1000/vocabulary" replace />} />
                         <Route path="/courses/kana" element={<KanaQuizPage />} />
                         <Route path="/courses/kana/:type" element={<KanaQuizPage />} />
                         <Route path="/courses/:courseCode" element={<CourseLandingPage />} />
@@ -365,6 +362,7 @@ export default function App() {
                 </Suspense>
             </main>
 
+            {!isAdminPage && <Footer />}
         </div>
     );
 }

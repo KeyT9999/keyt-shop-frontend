@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import CourseBreadcrumb from '../../features/courses/components/common/CourseBreadcrumb';
 import Seo from '../../components/Seo';
@@ -11,20 +11,19 @@ import { SurvivalKitTab } from '../../features/courses/components/speaking/Survi
 type SpeakingTab = 'reading' | 'qa' | 'mock' | 'survival';
 
 export default function SpeakingPage() {
-  const { courseCode = 'jpd123' } = useParams();
+  const { courseCode = 'jpd123', tab: routeTab } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [manualTab, setManualTab] = useState<SpeakingTab>('mock');
 
-  const tabParam = searchParams.get('tab') as SpeakingTab | null;
-  const [activeTab, setActiveTab] = useState<SpeakingTab>(tabParam || 'mock');
-
-  useEffect(() => {
-    if (tabParam && ['reading', 'qa', 'mock', 'survival'].includes(tabParam)) {
-      setActiveTab(tabParam);
-    }
-  }, [tabParam]);
+  const queryTab = searchParams.get('tab') as SpeakingTab | null;
+  const candidateTab = queryTab || (routeTab as SpeakingTab | undefined);
+  const activeTab: SpeakingTab =
+    candidateTab && ['reading', 'qa', 'mock', 'survival'].includes(candidateTab)
+      ? candidateTab
+      : manualTab;
 
   const handleTabChange = (tab: SpeakingTab) => {
-    setActiveTab(tab);
+    setManualTab(tab);
     setSearchParams({ tab });
   };
 
@@ -33,7 +32,7 @@ export default function SpeakingPage() {
   return (
     <>
       <Seo
-        title={`Luyện Thi Nói ${upperCode} - Mô Phỏng Phòng Thi 1-1 Chuẩn FPT | Mindora AI`}
+        title={`Luyện Thi Nói ${upperCode} - Mô Phỏng Phòng Thi 1-1 Chuẩn FPT | KeyT Hub`}
         description={`Ôn luyện kỹ năng thi nói tiếng Nhật ${upperCode} chuẩn cấu trúc khảo thí FPT University: Đọc đoạn văn 45đ, Vấn đáp Q&A 45đ, Tác phong & Chào hỏi 10đ với Giám thị AI.`}
         canonicalPath={`/courses/${courseCode.toLowerCase()}/speaking`}
       />

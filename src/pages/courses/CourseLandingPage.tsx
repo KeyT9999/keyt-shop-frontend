@@ -97,7 +97,7 @@ export default function CourseLandingPage() {
   return (
     <>
       <Seo
-        title={`${data.course.title} | Mindora AI`}
+        title={`${data.course.title} | KeyT Hub`}
         description={data.course.description}
         canonicalPath={`/courses/${courseCode.toLowerCase()}`}
         type="website"

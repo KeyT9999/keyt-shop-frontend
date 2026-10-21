@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import Seo from '../../components/Seo';
@@ -19,18 +19,20 @@ export default function KanaQuizPage() {
   const { courseCode, type } = useParams();
   const navigate = useNavigate();
 
-  // Normalize initial kana type from URL param if available
-  const initialKanaType: KanaType = useMemo(() => {
-    const t = (type || '').toLowerCase();
-    if (t === 'katakana') return 'katakana';
-    if (t === 'both') return 'both';
-    return 'hiragana';
-  }, [type]);
-
   // Mode: 'setup' | 'quiz'
   const [appMode, setAppMode] = useState<'setup' | 'quiz'>('setup');
-  // Kana Type: 'hiragana' | 'katakana' | 'both'
-  const [kanaType, setKanaType] = useState<KanaType>(initialKanaType);
+  // Fallback manual state when URL :type param is not present
+  const [manualKanaType, setManualKanaType] = useState<KanaType>('hiragana');
+
+  // Derive active Kana Type directly from URL parameter :type or manual selection
+  const kanaType: KanaType = useMemo(() => {
+    const t = (type || '').toLowerCase();
+    if (t === 'katakana' || t === 'hiragana' || t === 'both') {
+      return t as KanaType;
+    }
+    return manualKanaType;
+  }, [type, manualKanaType]);
+
   // Selected Font
   const [selectedFontId, setSelectedFontId] = useState<string>('noto-sans-jp');
   // Selected Row IDs (Default to all 10 Main Kana rows)
@@ -42,19 +44,9 @@ export default function KanaQuizPage() {
   // Sound
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
 
-  // Synchronize state when URL parameter :type changes
-  useEffect(() => {
-    if (type) {
-      const t = type.toLowerCase();
-      if (t === 'katakana' || t === 'hiragana' || t === 'both') {
-        setKanaType(t as KanaType);
-      }
-    }
-  }, [type]);
-
   // Handle Kana Type change and synchronize URL route
   const handleKanaTypeChange = (newType: KanaType) => {
-    setKanaType(newType);
+    setManualKanaType(newType);
     const basePath = courseCode ? `/courses/${courseCode.toLowerCase()}/kana` : '/courses/kana';
     navigate(`${basePath}/${newType}`, { replace: true });
   };
@@ -234,7 +226,7 @@ export default function KanaQuizPage() {
       <Seo
         title={`Luyện Gõ Bảng Chữ Cái Tiếng Nhật ${
           kanaType === 'katakana' ? 'Katakana' : kanaType === 'both' ? 'Hira & Kata' : 'Hiragana'
-        } Kana Quiz | Mindora AI`}
+        } Kana Quiz | KeyT Hub`}
         description="Ứng dụng luyện nhớ bảng chữ cái Hiragana và Katakana theo phong cách Tofugu Kana Quiz. Gõ Romaji, hỗ trợ đổi font chữ Noto Sans, Mincho, Maru, nghe phát âm giọng bản xứ."
         canonicalPath={canonicalPath}
       />

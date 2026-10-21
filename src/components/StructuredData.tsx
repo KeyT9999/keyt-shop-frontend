@@ -26,6 +26,24 @@ export default function StructuredData() {
             },
         ];
 
+        if (location.pathname === '/courses') {
+            baseBreadcrumb.push({
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Học Viện Ngoại Ngữ (Nhật • Trung • Anh)',
+                item: `${SITE_URL}/courses`,
+            });
+        }
+
+        if (location.pathname === '/photo-frame') {
+            baseBreadcrumb.push({
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Tạo Khung Ảnh EXIF',
+                item: `${SITE_URL}/photo-frame`,
+            });
+        }
+
         if (location.pathname === '/products') {
             baseBreadcrumb.push({
                 '@type': 'ListItem',
@@ -119,7 +137,7 @@ export default function StructuredData() {
         const compressAppSchema = location.pathname === '/compress' ? {
             '@context': 'https://schema.org',
             '@type': 'WebApplication',
-            name: 'Mindora AI Compress - Nén Ảnh Online',
+            name: 'KeyT Hub Compress - Nén Ảnh Online',
             url: `${SITE_URL}/compress`,
             applicationCategory: 'MultimediaApplication',
             operatingSystem: 'Web Browser',
@@ -178,7 +196,7 @@ export default function StructuredData() {
         const organizationSchema = {
             '@context': 'https://schema.org',
             '@type': 'Organization',
-            name: 'Mindora AI',
+            name: 'KeyT Hub',
             url: SITE_URL,
             logo: LOGO_URL,
             contactPoint: [

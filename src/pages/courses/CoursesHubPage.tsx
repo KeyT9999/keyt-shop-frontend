@@ -5,7 +5,9 @@ import {
   CheckCircle2,
   Sparkles,
   Languages,
-  BookOpen
+  BookOpen,
+  Headphones,
+  Award
 } from 'lucide-react';
 import Seo from '../../components/Seo';
 
@@ -70,10 +72,11 @@ export default function CoursesHubPage() {
   const chineseCourses = [
     {
       code: 'HSK1',
-      title: 'Từ vựng tiếng Trung sơ cấp',
+      title: 'Từ vựng tiếng Trung sơ cấp 1',
       topics: 11,
       vocabulary: 150,
-      description: 'Học chữ Hán giản thể và Pinyin qua flashcard, luyện gõ, trắc nghiệm, ghép cặp và các chế độ ôn tập.',
+      description:
+        'Học chữ Hán giản thể và Pinyin qua flashcard 3D, luyện gõ, trắc nghiệm, ghép cặp và chế độ Nghe thụ động (Passive Listening).',
       href: '/courses/hsk1/vocabulary'
     },
     {
@@ -81,36 +84,44 @@ export default function CoursesHubPage() {
       title: 'Từ vựng tiếng Trung sơ cấp 2',
       topics: 11,
       vocabulary: 140,
-      description: 'Ôn từ vựng theo 11 chủ đề HSK2 với chữ Hán giản thể, Pinyin và nghĩa tiếng Việt.',
+      description:
+        'Ôn từ vựng theo 11 chủ đề HSK2 với chữ Hán giản thể, Pinyin, nghĩa tiếng Việt và hệ thống bài tập phản xạ toàn diện.',
       href: '/courses/hsk2/vocabulary'
     }
   ];
+
   const englishCourses = [
     {
-      code: 'TOEIC_HACKERS',
-      title: 'Hackers TOEIC Vocabulary (Day 1 – 30)',
+      code: 'TOEIC HACKERS',
+      badge: 'HOT • 30 DAY',
+      title: 'Hackers TOEIC Vocabulary',
       topics: 30,
-      topicUnit: 'ngày / chủ đề',
+      topicUnit: 'ngày luyện thi',
       vocabulary: 4768,
-      description: '30 chủ đề từ vựng Hackers TOEIC kinh điển với 4.768 từ & cụm từ, kèm nghĩa tiếng Việt, phát âm IPA và đa dạng chế độ học Flashcard, Quiz.',
+      description:
+        '30 chủ đề từ vựng Hackers TOEIC kinh điển với 4.768 từ & cụm từ, kèm nghĩa tiếng Việt, phát âm IPA và đa dạng chế độ Flashcard, Quiz.',
       href: '/courses/toeichackers/vocabulary'
     },
     {
-      code: 'TOEIC120',
-      title: '120 thành ngữ & cụm từ TOEIC',
+      code: 'TOEIC 120',
+      badge: '6 BÀI QUIZ',
+      title: '120 Thành Ngữ & Cụm Từ TOEIC',
       topics: 6,
-      topicUnit: 'phần / Quiz',
+      topicUnit: 'phần thực hành',
       vocabulary: 120,
-      description: 'Nắm vững 120 thành ngữ & cụm từ TOEIC then chốt (Trang 516 - 521), kèm 6 bài Quiz và Flashcard.',
+      description:
+        'Nắm vững 120 thành ngữ & cụm từ TOEIC then chốt (Trang 516 - 521), tích hợp sẵn 6 bài Quiz kiểm tra phản xạ và Flashcard.',
       href: '/courses/toeic120/vocabulary'
     },
     {
-      code: 'ENG1000',
-      title: '1.000 từ tiếng Anh thông dụng',
+      code: 'ENG 1000',
+      badge: '50 CHỦ ĐỀ',
+      title: '1.000 Từ Tiếng Anh Thông Dụng',
       topics: 50,
-      topicUnit: 'chủ đề',
+      topicUnit: 'chủ đề giao tiếp',
       vocabulary: 1044,
-      description: 'Học theo 50 chủ đề từ gia đình, quần áo đến công sở; có IPA và nghĩa tiếng Việt.',
+      description:
+        'Học theo 50 chủ đề thông dụng từ gia đình, đời sống đến công sở; đầy đủ phiên âm IPA, âm thanh bản xứ và nghĩa tiếng Việt.',
       href: '/courses/eng1000/vocabulary'
     }
   ];
@@ -118,26 +129,26 @@ export default function CoursesHubPage() {
   return (
     <>
       <Seo
-        title="Cổng Học Ngoại Ngữ - Tiếng Nhật, Trung và Anh | Mindora AI"
-        description="Học tiếng Nhật, từ vựng tiếng Trung HSK1–2, Hackers TOEIC Vocabulary 30 Day và 1.000 từ tiếng Anh theo chủ đề."
+        title="Cổng Học Ngoại Ngữ – Tiếng Nhật FPT, Tiếng Trung HSK & Tiếng Anh TOEIC | KeyT Hub"
+        description="Học tiếng Nhật JPD113/JPD123 & Kana Quiz, từ vựng tiếng Trung HSK1–2 có nghe thụ động, Hackers TOEIC Vocabulary 30 Day, 120 thành ngữ TOEIC và 1.000 từ tiếng Anh theo chủ đề."
         canonicalPath="/courses"
       />
 
-      <div className="min-h-screen bg-slate-50/60 pb-24">
+      <div className="min-h-screen bg-[#F8FAFC] pb-24">
         {/* Top Header Banner */}
         <div className="bg-white border-b border-slate-200/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-50 border border-orange-200/80 text-[#F05A28] text-xs font-bold uppercase tracking-wider mb-4">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-50 border border-orange-200/80 text-[#F05A28] text-xs font-extrabold uppercase tracking-wider mb-4">
               <GraduationCap size={16} />
-              <span>Khóa Học Tiếng Nhật, Trung &amp; Anh</span>
+              <span>Học Viện Ngoại Ngữ Đa Quốc Gia • Nhật • Trung • Anh</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">
-              Cổng Học Ngoại Ngữ
+              Cổng Học Ngoại Ngữ Tương Tác AI
             </h1>
 
             <p className="mt-4 text-base sm:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              Chọn học phần tiếng Nhật, từ vựng tiếng Trung HSK1–2 hoặc 1.000 từ tiếng Anh theo 50 chủ đề.
+              Chinh phục Tiếng Nhật FPT (<strong className="text-slate-800">JPD113 • JPD123 • Kana</strong>), Tiếng Trung Sơ Cấp (<strong className="text-slate-800">HSK 1 &amp; HSK 2</strong>) và Tiếng Anh Thực Chiến (<strong className="text-slate-800">Hackers TOEIC • 120 Idioms • 1.000 Từ</strong>) trên cùng một nền tảng.
             </p>
           </div>
         </div>
@@ -155,7 +166,7 @@ export default function CoursesHubPage() {
                 <span>Nhập Môn Miễn Phí • Tofugu Kana Quiz Style</span>
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-white mb-2">
-                Học Thuộc Bảng Chữ Cái Hiragana & Katakana
+                Học Thuộc Bảng Chữ Cái Hiragana &amp; Katakana
               </h2>
               <p className="text-xs sm:text-sm text-blue-100/90 max-w-2xl leading-relaxed">
                 Phương pháp gõ Romaji và phản xạ trực quan theo chuẩn Tofugu. Tự do lựa chọn hàng chữ, đổi font chữ Nhật Bản và kiểm tra ngay độ nhớ mặt chữ trước khi bước vào giáo trình chính thức.
@@ -172,8 +183,19 @@ export default function CoursesHubPage() {
           </div>
         </div>
 
-        {/* Japanese course cards */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-10">
+        {/* 1. Japanese course cards */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <span className="text-xs font-extrabold uppercase tracking-wider text-[#F05A28]">
+                Phân Khu 01 • Giáo Trình Đại Học FPT
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-0.5">
+                Tiếng Nhật Sơ Cấp &amp; Giám Thị AI 1-1
+              </h2>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {courses.map((c) => (
               <div
@@ -195,9 +217,9 @@ export default function CoursesHubPage() {
                     </span>
                   </div>
 
-                  <h2 className="text-2xl sm:text-3xl font-black mb-2 flex items-center gap-2.5">
+                  <h3 className="text-2xl sm:text-3xl font-black mb-2 flex items-center gap-2.5">
                     <span>{c.code}: {c.title}</span>
-                  </h2>
+                  </h3>
 
                   <p className="text-xs sm:text-sm text-slate-200/90 leading-relaxed max-w-xl">
                     {c.description}
@@ -258,7 +280,7 @@ export default function CoursesHubPage() {
                         className="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 text-center transition-colors cursor-pointer group/link"
                       >
                         <div className="text-xs font-black text-slate-800 group-hover/link:text-[#F05A28]">Từ Vựng</div>
-                        <div className="text-[11px] text-slate-500 mt-0.5">Gõ & Trắc nghiệm</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">Gõ &amp; Trắc nghiệm</div>
                       </Link>
 
                       <Link
@@ -292,60 +314,112 @@ export default function CoursesHubPage() {
             ))}
           </div>
 
-          <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
-            {chineseCourses.map((course) => (
-              <Link
-                key={course.code}
-                to={course.href}
-                className="group flex flex-col justify-between gap-5 rounded-3xl border border-orange-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-xl cursor-pointer sm:flex-row sm:items-center sm:p-8"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-[#F05A28] border border-orange-100">
-                    <Languages size={26} />
-                  </div>
-                  <div>
-                    <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#F05A28]">Tiếng Trung</span>
-                      <span className="text-xs font-semibold text-slate-500">{course.topics} chủ đề • {course.vocabulary} từ</span>
-                    </div>
-                    <h2 className="text-xl font-black text-slate-900">{course.code}: {course.title}</h2>
-                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{course.description}</p>
-                  </div>
-                </div>
-                <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#1E293B] px-5 py-3.5 text-sm font-black text-white transition-colors group-hover:bg-[#F05A28]">
-                  <span>Vào học {course.code}</span>
-                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+          {/* 2. Chinese Courses Section (HSK 1 & HSK 2) */}
+          <div className="mt-14 pt-10 border-t border-slate-200/80">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
+              <div>
+                <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-600">
+                  Phân Khu 02 • Chữ Hán Giản Thể &amp; Pinyin
                 </span>
-              </Link>
-            ))}
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-0.5">
+                  Tiếng Trung Sơ Cấp (HSK 1 &amp; HSK 2)
+                </h2>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold self-start sm:self-auto">
+                <Headphones size={14} /> Hỗ trợ Nghe thụ động (Passive Listening)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {chineseCourses.map((course) => (
+                <Link
+                  key={course.code}
+                  to={course.href}
+                  className="group flex flex-col justify-between gap-5 rounded-3xl border border-emerald-200/90 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-xl cursor-pointer sm:flex-row sm:items-center sm:p-8"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200">
+                      <Languages size={26} />
+                    </div>
+                    <div>
+                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wide text-emerald-700">
+                          Tiếng Trung • {course.code}
+                        </span>
+                        <span className="text-xs font-bold text-slate-500">
+                          {course.topics} chủ đề • {course.vocabulary} từ vựng
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-black text-slate-900 group-hover:text-emerald-700 transition-colors">
+                        {course.code}: {course.title}
+                      </h3>
+                      <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-slate-600">
+                        {course.description}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#1E293B] px-5 py-3.5 text-sm font-black text-white transition-colors group-hover:bg-emerald-600 whitespace-nowrap">
+                    <span>Vào học {course.code}</span>
+                    <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
-            {englishCourses.map((course) => (
-              <Link
-                key={course.code}
-                to={course.href}
-                className="group flex flex-col justify-between gap-5 rounded-3xl border border-orange-200 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-xl cursor-pointer sm:flex-row sm:items-center sm:p-8"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-orange-100 bg-orange-50 text-[#F05A28]">
-                    <BookOpen size={26} />
-                  </div>
-                  <div>
-                    <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-[#F05A28]">Tiếng Anh</span>
-                      <span className="text-xs font-semibold text-slate-500">{course.topics} {course.topicUnit} • {course.vocabulary.toLocaleString('vi-VN')} mục</span>
-                    </div>
-                    <h2 className="text-xl font-black text-slate-900">{course.code}: {course.title}</h2>
-                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{course.description}</p>
-                  </div>
-                </div>
-                <span className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#1E293B] px-5 py-3.5 text-sm font-black text-white transition-colors group-hover:bg-[#F05A28]">
-                  <span>Vào học {course.code}</span>
-                  <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+          {/* 3. English Courses Section (3 Balanced Columns) */}
+          <div className="mt-14 pt-10 border-t border-slate-200/80">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
+              <div>
+                <span className="text-xs font-extrabold uppercase tracking-wider text-blue-600">
+                  Phân Khu 03 • Luyện Thi TOEIC &amp; Từ Vựng Thông Dụng
                 </span>
-              </Link>
-            ))}
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-0.5">
+                  Tiếng Anh Thực Chiến (5.932 Từ &amp; Cụm Từ)
+                </h2>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold self-start sm:self-auto">
+                <Award size={14} /> Chuẩn giáo trình Hackers TOEIC &amp; IPA bản xứ
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              {englishCourses.map((course) => (
+                <Link
+                  key={course.code}
+                  to={course.href}
+                  className="group flex flex-col justify-between rounded-3xl border border-blue-200/80 bg-white p-6 sm:p-7 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-blue-400 hover:shadow-xl cursor-pointer"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 text-blue-600">
+                        <BookOpen size={22} />
+                      </div>
+                      <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-blue-700">
+                        {course.badge}
+                      </span>
+                    </div>
+
+                    <div className="text-xs font-bold text-slate-500 mb-1">
+                      {course.topics} {course.topicUnit} • {course.vocabulary.toLocaleString('vi-VN')} mục từ
+                    </div>
+
+                    <h3 className="text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors mb-2">
+                      {course.title}
+                    </h3>
+
+                    <p className="text-xs sm:text-sm leading-relaxed text-slate-600 mb-6">
+                      {course.description}
+                    </p>
+                  </div>
+
+                  <span className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1E293B] px-5 py-3.5 text-xs sm:text-sm font-black text-white transition-colors group-hover:bg-blue-600 whitespace-nowrap">
+                    <span>Vào học {course.code}</span>
+                    <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>

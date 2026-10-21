@@ -328,6 +328,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     location.pathname === '/2falive';
   const isJapaneseActive =
     location.pathname.startsWith('/courses/jpd') ||
+    location.pathname.startsWith('/courses/kana') ||
     kanaTools.some((item) => location.pathname === item.href);
   const isChineseActive = /^\/courses\/hsk[12](?:\/|$)/i.test(location.pathname);
   const isEnglishActive = /^\/courses\/(eng1000|toeic120|toeichackers)(?:\/|$)/i.test(location.pathname);
@@ -752,7 +753,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 >
                   <BookOpen size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Tiếng Anh</span>
-                  <span className="nav-count-badge">2 Khóa</span>
+                  <span className="nav-count-badge">3 Khóa</span>
                   <ChevronDown
                     size={13}
                     className={`dropdown-chevron ${activeDropdown === 'english' ? 'open' : ''}`}

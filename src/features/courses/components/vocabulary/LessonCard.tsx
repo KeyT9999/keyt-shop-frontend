@@ -20,7 +20,7 @@ export default function LessonCard({ lesson, courseCode }: LessonCardProps) {
   const upperCode = courseCode.toUpperCase();
   const isToeic = upperCode === 'TOEIC120';
   const isHackers = upperCode === 'TOEIC_HACKERS' || upperCode === 'TOEICHACKERS';
-  const isBaKhi = upperCode === 'ENGBK' || upperCode === 'ENGBAKHI';
+  const isBaKhi = upperCode === 'ENGBK' || upperCode === 'ENGBAKHI' || upperCode === 'ENGBK2' || upperCode === 'ENGBAKHI2';
 
   return (
     <div

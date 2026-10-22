@@ -322,6 +322,7 @@ export default function App() {
                         <Route path="/courses/toeichackers" element={<Navigate to="/courses/toeichackers/vocabulary" replace />} />
                         <Route path="/courses/toeic120" element={<Navigate to="/courses/toeic120/vocabulary" replace />} />
                         <Route path="/courses/engbk" element={<Navigate to="/courses/engbk/vocabulary" replace />} />
+                        <Route path="/courses/engbk2" element={<Navigate to="/courses/engbk2/vocabulary" replace />} />
                         <Route path="/courses/eng1000" element={<Navigate to="/courses/eng1000/vocabulary" replace />} />
                         <Route path="/courses/kana" element={<KanaQuizPage />} />
                         <Route path="/courses/kana/:type" element={<KanaQuizPage />} />

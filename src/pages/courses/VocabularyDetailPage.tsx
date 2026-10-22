@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { BookOpen, Sparkles, CheckCircle2, Headphones } from 'lucide-react';
 import { useAuthContext } from '../../context/useAuthContext';
 import { courseApi } from '../../features/courses/api/courseApi';
@@ -24,12 +24,16 @@ import Seo from '../../components/Seo';
 
 export default function VocabularyDetailPage() {
   const { courseCode = 'jpd123', lessonSlug = '' } = useParams();
+  const [searchParams] = useSearchParams();
+  const requestedMode = searchParams.get('mode') as LearningMode | null;
+  const validModes: LearningMode[] = ['flashcard', 'mastery-loop', 'typing', 'multichoice', 'table', 'speed-match', 'smart-quiz', 'time-attack', 'mistake-buster', 'passive-listening'];
+  const initialMode: LearningMode = requestedMode && validModes.includes(requestedMode) ? requestedMode : 'flashcard';
   const language = getCourseLanguage(courseCode);
   const { token, user } = useAuthContext();
 
   const [lesson, setLesson] = useState<CourseLesson | null>(null);
   const [items, setItems] = useState<VocabularyItem[]>([]);
-  const [activeMode, setActiveMode] = useState<LearningMode>('flashcard');
+  const [activeMode, setActiveMode] = useState<LearningMode>(initialMode);
   const [loading, setLoading] = useState(true);
   const [passiveAudioLoading, setPassiveAudioLoading] = useState(false);
   const [passiveAudioError, setPassiveAudioError] = useState(false);
@@ -190,7 +194,8 @@ export default function VocabularyDetailPage() {
 
   const isToeic = upperCode === 'TOEIC120';
   const isHackers = upperCode === 'TOEIC_HACKERS' || upperCode === 'TOEICHACKERS';
-  const isBaKhi = upperCode === 'ENGBK' || upperCode === 'ENGBAKHI';
+  const isBaKhi2 = upperCode === 'ENGBK2' || upperCode === 'ENGBAKHI2';
+  const isBaKhi = upperCode === 'ENGBK' || upperCode === 'ENGBAKHI' || isBaKhi2;
   const cleanTitle = isToeic || isHackers || isBaKhi ? lesson.title : lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '');
 
   return (
@@ -204,7 +209,7 @@ export default function VocabularyDetailPage() {
       <div className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
         <CourseBreadcrumb
           items={[
-            { label: isToeic ? 'TOEIC 120' : isHackers ? 'Hackers TOEIC' : isBaKhi ? 'Tiếng Anh Bá Khí' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
+            { label: isToeic ? 'TOEIC 120' : isHackers ? 'Hackers TOEIC' : isBaKhi2 ? 'Từ Vựng Bá Khí 2' : isBaKhi ? 'Tiếng Anh Bá Khí' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
             { label: `${isToeic ? 'Thành Ngữ & Cụm Từ' : 'Từ Vựng'} (${language.kind === 'chinese' ? '词汇' : language.kind === 'english' ? 'Vocabulary' : '単語'})`, href: `/courses/${courseCode.toLowerCase()}/vocabulary` },
             { label: isToeic || isBaKhi ? `Quiz ${lesson.order}` : isHackers ? `Day ${lesson.order}` : `Bài ${lesson.lessonCode}` }
           ]}

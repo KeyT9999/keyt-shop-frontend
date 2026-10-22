@@ -226,31 +226,31 @@ export default function HomePage() {
       id: 'japanese',
       title: 'Tiếng Nhật FPT & Kana',
       subtitle: 'JPD113 • JPD123 • Giám thị AI',
-      badge: 'AI 1-1',
+      badge: '24 QUIZ',
       badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
       iconBg: 'from-rose-500 to-[#F05A28] shadow-rose-500/25',
       icon: GraduationCap,
-      href: '/courses',
+      href: '/courses?lang=jp',
     },
     {
       id: 'chinese',
       title: 'Tiếng Trung HSK 1–2',
       subtitle: '290 Từ • Pinyin • Nghe thụ động',
-      badge: '22 BÀI',
+      badge: '22 QUIZ',
       badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
       iconBg: 'from-amber-500 to-orange-600 shadow-amber-500/25',
       icon: Languages,
-      href: '/courses/hsk1/vocabulary',
+      href: '/courses?lang=cn',
     },
     {
       id: 'english',
-      title: 'Tiếng Anh TOEIC & 1000 Từ',
-      subtitle: 'Hackers 30 Day • 120 Idioms',
-      badge: '5.900+ TỪ',
+      title: 'Tiếng Anh Bá Khí & TOEIC',
+      subtitle: 'Hackers 30 Day • 12 Quiz Bá Khí',
+      badge: '6.949 TỪ',
       badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
       iconBg: 'from-blue-600 to-indigo-600 shadow-blue-500/25',
       icon: BookOpen,
-      href: '/courses/toeichackers/vocabulary',
+      href: '/courses?lang=en',
     },
     {
       id: 'ai-tools',
@@ -526,47 +526,65 @@ export default function HomePage() {
                     <div>
                       <div className="flex items-center justify-between mb-3">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-100 text-[#F05A28] text-[11px] font-bold">
-                          <GraduationCap size={12} /> 3 Ngôn Ngữ
+                          <GraduationCap size={12} /> 3 Ngôn Ngữ • 9 Bộ Quiz
                         </span>
-                        <span className="text-[11px] font-bold text-slate-500">6.800+ Từ vựng</span>
+                        <span className="text-[11px] font-bold text-slate-500">144 Bài Quiz</span>
                       </div>
                       <h3 className="text-base font-extrabold text-slate-900 mb-2 group-hover:text-[#F05A28] transition-colors">
-                        Học Viện Nhật • Trung • Anh
+                        Học Viện &amp; Chọn Quiz Nhật • Trung • Anh
                       </h3>
 
                       <div className="space-y-2 my-3">
-                        <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/70 text-xs">
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate('/courses?lang=jp');
+                          }}
+                          className="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-orange-50/60 border border-slate-200/70 text-xs transition-colors"
+                        >
                           <span className="font-bold text-slate-800 flex items-center gap-1.5">
                             <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-black text-[10px]">
                               JP
                             </span>
                             JPD113 • JPD123 • Kana
                           </span>
-                          <span className="text-[#F05A28] font-bold">Thi nói AI 1-1</span>
+                          <span className="text-[#F05A28] font-bold">24 Quiz &amp; AI 1-1</span>
                         </div>
-                        <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/70 text-xs">
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate('/courses?lang=cn');
+                          }}
+                          className="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-emerald-50/60 border border-slate-200/70 text-xs transition-colors"
+                        >
                           <span className="font-bold text-slate-800 flex items-center gap-1.5">
                             <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-black text-[10px]">
                               CN
                             </span>
                             Tiếng Trung HSK 1 &amp; 2
                           </span>
-                          <span className="text-emerald-700 font-bold">290 Từ • 22 Bài</span>
+                          <span className="text-emerald-700 font-bold">22 Quiz • 290 Từ</span>
                         </div>
-                        <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200/70 text-xs">
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate('/courses?lang=en');
+                          }}
+                          className="flex items-center justify-between p-2 rounded-xl bg-white hover:bg-blue-50/60 border border-slate-200/70 text-xs transition-colors"
+                        >
                           <span className="font-bold text-slate-800 flex items-center gap-1.5">
                             <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-black text-[10px]">
                               EN
                             </span>
-                            Hackers TOEIC &amp; 1000 Từ
+                            Hackers, Bá Khí &amp; TOEIC
                           </span>
-                          <span className="text-blue-700 font-bold">5.932 Mục từ</span>
+                          <span className="text-blue-700 font-bold">98 Quiz • 6.949 Từ</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between text-xs font-bold text-[#F05A28]">
-                      <span>Vào cổng học tập miễn phí</span>
+                      <span>Chọn bài Quiz Nhật • Trung • Anh</span>
                       <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
@@ -708,7 +726,7 @@ export default function HomePage() {
               {heroTab === 'languages' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left animate-fadeIn">
                   <div
-                    onClick={() => navigate('/courses/jpd123')}
+                    onClick={() => navigate('/courses?lang=jp')}
                     className="p-5 rounded-2xl bg-rose-50/60 border border-rose-200/80 hover:shadow-md transition-all cursor-pointer"
                   >
                     <span className="px-2.5 py-1 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase">
@@ -721,12 +739,12 @@ export default function HomePage() {
                       77 Hán tự 3D, 630 từ vựng, 44 ngữ pháp, Thi nói 1-1 Giám thị AI &amp; Kana Quiz kiểu Tofugu.
                     </p>
                     <span className="text-xs font-bold text-rose-600 inline-flex items-center gap-1">
-                      Học Tiếng Nhật ngay <ArrowRight size={13} />
+                      Chọn Quiz Tiếng Nhật <ArrowRight size={13} />
                     </span>
                   </div>
 
                   <div
-                    onClick={() => navigate('/courses/hsk1/vocabulary')}
+                    onClick={() => navigate('/courses?lang=cn')}
                     className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 hover:shadow-md transition-all cursor-pointer"
                   >
                     <span className="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase">
@@ -736,28 +754,28 @@ export default function HomePage() {
                       Từ Vựng HSK 1 &amp; HSK 2
                     </h4>
                     <p className="text-xs text-slate-600 mb-3">
-                      290 từ vựng theo 22 chủ đề, chữ Hán giản thể, Pinyin, luyện gõ, ghép cặp &amp; Nghe thụ động.
+                      290 từ vựng theo 22 chủ đề Quiz, chữ Hán giản thể, Pinyin, luyện gõ, ghép cặp &amp; Nghe thụ động.
                     </p>
                     <span className="text-xs font-bold text-emerald-700 inline-flex items-center gap-1">
-                      Học Tiếng Trung ngay <ArrowRight size={13} />
+                      Chọn Quiz Tiếng Trung <ArrowRight size={13} />
                     </span>
                   </div>
 
                   <div
-                    onClick={() => navigate('/courses/toeichackers/vocabulary')}
+                    onClick={() => navigate('/courses?lang=en')}
                     className="p-5 rounded-2xl bg-blue-50/60 border border-blue-200/80 hover:shadow-md transition-all cursor-pointer"
                   >
                     <span className="px-2.5 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase">
-                      TIẾNG ANH TOEIC
+                      TIẾNG ANH BÁ KHÍ &amp; TOEIC
                     </span>
                     <h4 className="text-base font-extrabold text-slate-900 mt-3 mb-1">
-                      Hackers TOEIC, 120 Idioms &amp; 1000 Từ
+                      Hackers TOEIC, Bá Khí &amp; 1000 Từ
                     </h4>
                     <p className="text-xs text-slate-600 mb-3">
-                      4.768 từ Hackers TOEIC (Day 1–30), 120 Thành ngữ kèm 6 Quiz &amp; 1.044 từ thông dụng 50 chủ đề.
+                      4.768 từ Hackers TOEIC, 1.017 từ Bá Khí (12 Quiz), 120 Thành ngữ &amp; 1.044 từ thông dụng.
                     </p>
                     <span className="text-xs font-bold text-blue-700 inline-flex items-center gap-1">
-                      Học Tiếng Anh ngay <ArrowRight size={13} />
+                      Chọn Quiz Tiếng Anh <ArrowRight size={13} />
                     </span>
                   </div>
                 </div>
@@ -1282,10 +1300,10 @@ export default function HomePage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="px-2 py-0.5 rounded bg-purple-600 text-white text-[10px] font-black shrink-0 whitespace-nowrap">
-                            BÁ KHÍ • 12 QUIZ
+                            BÁ KHÍ 1
                           </span>
                           <span className="font-bold text-sm text-slate-900 group-hover:text-purple-700 truncate">
-                            Từ Vựng Tiếng Anh Bá Khí
+                            Từ Vựng Tiếng Anh Bá Khí 1 (12 Quiz)
                           </span>
                         </div>
                         <p className="text-xs text-slate-500 mt-1">
@@ -1293,6 +1311,26 @@ export default function HomePage() {
                         </p>
                       </div>
                       <ChevronRight size={18} className="text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </div>
+
+                    <div
+                      onClick={() => navigate('/courses/engbk2/vocabulary')}
+                      className="group p-3.5 rounded-2xl bg-slate-50 hover:bg-fuchsia-50/60 border border-slate-200/80 hover:border-fuchsia-300 transition-all cursor-pointer flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded bg-fuchsia-600 text-white text-[10px] font-black shrink-0 whitespace-nowrap">
+                            BÁ KHÍ 2 • IPA
+                          </span>
+                          <span className="font-bold text-sm text-slate-900 group-hover:text-fuchsia-700 truncate">
+                            Từ Vựng Bá Khí 2 (12 Quiz • Có IPA)
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          1.457 từ mới đã lọc trùng • Đầy đủ phiên âm IPA &amp; loại từ
+                        </p>
+                      </div>
+                      <ChevronRight size={18} className="text-slate-400 group-hover:text-fuchsia-600 group-hover:translate-x-0.5 transition-all shrink-0" />
                     </div>
 
                     <div

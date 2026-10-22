@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
+import GoogleAuthHamsterLoader from '../components/GoogleAuthHamsterLoader';
 import { useAuthContext } from '../context/useAuthContext';
 import { executeRecaptcha } from '../utils/recaptcha';
 
 export default function RegisterPage() {
-  const { loginWithGoogle } = useAuthContext();
+  const { loginWithGoogle, loading } = useAuthContext();
   const [formError, setFormError] = useState<string | null>(null);
+  const [isGoogleAuthenticating, setIsGoogleAuthenticating] = useState(false);
   const [cardVisible, setCardVisible] = useState(false);
   const navigate = useNavigate();
 
@@ -22,21 +24,31 @@ export default function RegisterPage() {
     }
 
     setFormError(null);
+    setIsGoogleAuthenticating(true);
 
     try {
+      const minDisplayDelay = new Promise((resolve) => setTimeout(resolve, 1100));
       const recaptchaToken = await executeRecaptcha('google_login');
-      await loginWithGoogle(response.credential, recaptchaToken);
+      await Promise.all([
+        loginWithGoogle(response.credential, recaptchaToken),
+        minDisplayDelay,
+      ]);
       navigate('/');
     } catch (err: any) {
       if (!err?.response) {
         setFormError(err?.message || 'Không thể xác minh reCAPTCHA. Vui lòng thử lại.');
       }
+    } finally {
+      setIsGoogleAuthenticating(false);
     }
   };
 
   const handleGoogleError = () => {
+    setIsGoogleAuthenticating(false);
     setFormError('Không thể đăng nhập bằng Google.');
   };
+
+  const showHamsterLoader = isGoogleAuthenticating || loading;
 
   return (
     <div className="auth-page">
@@ -49,56 +61,62 @@ export default function RegisterPage() {
 
         <div className="auth-form-wrapper auth-form-wrapper--open">
           <div className="auth-form" style={{ gap: '1rem' }}>
-            {/* Nút Google */}
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                theme="outline"
-                shape="rectangular"
-                text="signin_with"
-                width="100%"
-                locale="vi"
-              />
-            </div>
+            {showHamsterLoader ? (
+              <GoogleAuthHamsterLoader />
+            ) : (
+              <>
+                {/* Nút Google */}
+                <div style={{ display: 'flex', justifyContent: 'center' }} className="cursor-pointer">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    theme="outline"
+                    shape="rectangular"
+                    text="signin_with"
+                    width="100%"
+                    locale="vi"
+                  />
+                </div>
 
-            {/* Dòng lưu ý */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '0.5rem',
-                background: '#fff7ed',
-                border: '1px solid #fed7aa',
-                borderRadius: '0.75rem',
-                padding: '0.75rem 1rem',
-                fontSize: '0.875rem',
-                color: '#c2410c',
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ flexShrink: 0, marginTop: '2px', color: '#F05A28' }}
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              <p>
-                <span style={{ fontWeight: 600 }}>Lưu ý:</span> Hãy đăng nhập bằng Google cá nhân của ní
-              </p>
-            </div>
+                {/* Dòng lưu ý */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '0.5rem',
+                    background: '#fff7ed',
+                    border: '1px solid #fed7aa',
+                    borderRadius: '0.75rem',
+                    padding: '0.75rem 1rem',
+                    fontSize: '0.875rem',
+                    color: '#c2410c',
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ flexShrink: 0, marginTop: '2px', color: '#F05A28' }}
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <p>
+                    <span style={{ fontWeight: 600 }}>Lưu ý:</span> Hãy đăng nhập bằng Google cá nhân của ní
+                  </p>
+                </div>
+              </>
+            )}
 
             {/* Error message */}
-            {formError && <p className="auth-error">{formError}</p>}
+            {!showHamsterLoader && formError && <p className="auth-error">{formError}</p>}
           </div>
         </div>
 

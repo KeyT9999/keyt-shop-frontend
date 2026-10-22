@@ -3,13 +3,15 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
 import RecaptchaNotice from '../components/RecaptchaNotice';
+import GoogleAuthHamsterLoader from '../components/GoogleAuthHamsterLoader';
 import { useAuthContext } from '../context/useAuthContext';
 import { profileService } from '../services/profileService';
 import { executeRecaptcha } from '../utils/recaptcha';
 
 export default function LoginPage() {
-  const { user, loginWithGoogle, error, errorCode } = useAuthContext();
+  const { user, loginWithGoogle, loading, error, errorCode } = useAuthContext();
   const [formError, setFormError] = useState<string | null>(null);
+  const [isGoogleAuthenticating, setIsGoogleAuthenticating] = useState(false);
   const [resendEmail, setResendEmail] = useState('');
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
@@ -20,15 +22,14 @@ export default function LoginPage() {
   const from = (location.state as { from?: string })?.from || '/';
 
   useEffect(() => {
-    if (user) {
+    if (user && !isGoogleAuthenticating) {
       navigate(from, { replace: true });
     }
-  }, [user, navigate, from]);
+  }, [user, isGoogleAuthenticating, navigate, from]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
 
   const handleGoogleSuccess = async (response: CredentialResponse) => {
     if (!response?.credential) {
@@ -37,19 +38,27 @@ export default function LoginPage() {
     }
 
     setFormError(null);
+    setIsGoogleAuthenticating(true);
 
     try {
+      const minDisplayDelay = new Promise((resolve) => setTimeout(resolve, 1100));
       const recaptchaToken = await executeRecaptcha('google_login');
-      await loginWithGoogle(response.credential, recaptchaToken);
+      await Promise.all([
+        loginWithGoogle(response.credential, recaptchaToken),
+        minDisplayDelay,
+      ]);
       navigate(from, { replace: true });
     } catch (err: any) {
       if (!err?.response) {
         setFormError(err?.message || 'Không thể xác minh reCAPTCHA. Vui lòng thử lại.');
       }
+    } finally {
+      setIsGoogleAuthenticating(false);
     }
   };
 
   const handleGoogleError = () => {
+    setIsGoogleAuthenticating(false);
     setFormError('Không thể đăng nhập bằng Google.');
   };
 
@@ -75,6 +84,8 @@ export default function LoginPage() {
     }
   };
 
+  const showHamsterLoader = isGoogleAuthenticating || loading;
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
@@ -90,28 +101,38 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <p className="text-[#F05A28] font-bold tracking-wider text-xs uppercase mb-2">Chào mừng trở lại</p>
           <h2 className="text-3xl font-bold text-[#1E293B]">Mindora AI</h2>
-          <p className="text-gray-500 text-sm mt-2">Đăng nhập tài khoản của bạn</p>
+          <p className="text-gray-500 text-sm mt-2">
+            {showHamsterLoader ? 'Hệ thống đang xác thực tài khoản...' : 'Đăng nhập tài khoản của bạn'}
+          </p>
         </div>
 
         <div className="flex flex-col items-center gap-4">
-          <div className="w-full flex justify-center transform hover:-translate-y-0.5 transition-transform duration-200">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              theme="outline"
-              shape="rectangular"
-              text="signin_with"
-              width="100%"
-              locale="vi"
-            />
-          </div>
+          {showHamsterLoader ? (
+            <GoogleAuthHamsterLoader />
+          ) : (
+            <>
+              <div className="w-full flex justify-center transform hover:-translate-y-0.5 transition-transform duration-200 cursor-pointer">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="outline"
+                  shape="rectangular"
+                  text="signin_with"
+                  width="100%"
+                  locale="vi"
+                />
+              </div>
 
-          <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 text-sm text-orange-700 w-full">
-            <AlertCircle size={16} className="shrink-0 mt-0.5 text-[#F05A28]" />
-            <p><span className="font-semibold">Lưu ý:</span> Hãy đăng nhập bằng Google cá nhân của ní</p>
-          </div>
+              <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 text-sm text-orange-700 w-full">
+                <AlertCircle size={16} className="shrink-0 mt-0.5 text-[#F05A28]" />
+                <p>
+                  <span className="font-semibold">Lưu ý:</span> Hãy đăng nhập bằng Google cá nhân của ní
+                </p>
+              </div>
+            </>
+          )}
 
-          {(formError || error) && (
+          {!showHamsterLoader && (formError || error) && (
             <div className="flex items-center gap-3 bg-red-50 text-red-600 p-3 rounded-lg text-sm border border-red-100 animate-pulse w-full">
               <AlertCircle size={18} className="shrink-0" />
               <p>{formError || error}</p>
@@ -119,7 +140,7 @@ export default function LoginPage() {
           )}
         </div>
 
-        {errorCode === 'EMAIL_NOT_VERIFIED' && (
+        {!showHamsterLoader && errorCode === 'EMAIL_NOT_VERIFIED' && (
           <div className="mt-8 pt-6 border-t border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <form onSubmit={handleResendVerification} className="space-y-4">
               <div className="flex items-start gap-3 bg-orange-50 text-[#E04815] p-4 rounded-xl text-sm border border-orange-100">
@@ -163,7 +184,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={resendLoading}
-                className="w-full py-3 px-4 bg-orange-100 text-[#E04815] font-semibold rounded-xl hover:bg-orange-200 active:scale-[0.98] transition-all disabled:opacity-60"
+                className="w-full py-3 px-4 bg-orange-100 text-[#E04815] font-semibold rounded-xl hover:bg-orange-200 active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
               >
                 {resendLoading ? 'Đang gửi...' : 'Gửi lại link xác minh'}
               </button>
@@ -174,7 +195,7 @@ export default function LoginPage() {
         <div className="mt-8 text-center">
           <p className="text-gray-500 text-sm">
             Chưa có tài khoản?{' '}
-            <Link to="/register" className="text-[#F05A28] font-semibold hover:text-[#E04815] transition-colors">
+            <Link to="/register" className="text-[#F05A28] font-semibold hover:text-[#E04815] transition-colors cursor-pointer">
               Đăng ký ngay
             </Link>
           </p>

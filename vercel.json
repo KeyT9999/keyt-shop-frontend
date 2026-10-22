@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "https://api.taphoakeyt.com/api/sitemap"
+      "destination": "https://103-183-120-150.sslip.io/api/sitemap"
     },
     {
       "source": "/(.*)",
@@ -15,4 +15,3 @@
     }
   ]
 }
-

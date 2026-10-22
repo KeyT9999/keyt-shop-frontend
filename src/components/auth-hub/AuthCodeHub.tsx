@@ -18,6 +18,7 @@ import {
 import { useAuthContext } from '../../context/useAuthContext';
 import chatgptIcon from '../../assets/icon-chatgpt.png';
 import API_BASE_URL from '../../config/api';
+import CuteRobotLoader from '../CuteRobotLoader';
 
 export type AuthHubTab = 'chatgpt' | 'gemini' | '2fa';
 
@@ -151,11 +152,15 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
       setError('');
 
       try {
-        const response = await axios.post(
-          `${API_BASE_URL}/chatgpt/get-otp`,
-          { chatgptEmail: targetEmail },
-          { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-        );
+        const minRobotDelay = !isAutoRefresh ? new Promise((r) => setTimeout(r, 950)) : Promise.resolve();
+        const [response] = await Promise.all([
+          axios.post(
+            `${API_BASE_URL}/chatgpt/get-otp`,
+            { chatgptEmail: targetEmail },
+            { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+          ),
+          minRobotDelay,
+        ]);
 
         setCode(response.data.otp);
         saveRecentEmail(targetEmail);
@@ -190,11 +195,15 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
       setError('');
 
       try {
-        const response = await axios.post(
-          `${API_BASE_URL}/gemini/get-otp`,
-          { geminiEmail: targetEmail },
-          { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-        );
+        const minRobotDelay = !isAutoRefresh ? new Promise((r) => setTimeout(r, 950)) : Promise.resolve();
+        const [response] = await Promise.all([
+          axios.post(
+            `${API_BASE_URL}/gemini/get-otp`,
+            { geminiEmail: targetEmail },
+            { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+          ),
+          minRobotDelay,
+        ]);
 
         setCode(response.data.otp);
         saveRecentEmail(targetEmail);
@@ -558,8 +567,16 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
             </button>
           </form>
 
+          {/* Cute AI Robot Radar Loader while fetching OTP */}
+          {loading && (
+            <CuteRobotLoader
+              variant="otp"
+              serviceName={activeTab === 'chatgpt' ? 'ChatGPT OTP' : activeTab === 'gemini' ? 'Gemini OTP' : '2FA Live'}
+            />
+          )}
+
           {/* Active Code Display Card (Light Modern Design System) */}
-          {code && (
+          {!loading && code && (
             <div className="auth-code-hero-card">
               {/* Status Header */}
               <div className="flex items-center justify-between mb-3">

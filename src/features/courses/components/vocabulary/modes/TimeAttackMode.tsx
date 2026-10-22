@@ -11,6 +11,7 @@ import {
 import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
+import ConfettiCelebration from '../../../../../components/ConfettiCelebration';
 
 interface TimeAttackModeProps {
   items: VocabularyItem[];
@@ -294,6 +295,7 @@ export default function TimeAttackMode({
   if (isFinished) {
     return (
       <div className="mx-auto w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-2xl animate-scaleUp sm:p-8 lg:p-12">
+        <ConfettiCelebration active={true} />
         <div className={`w-20 h-20 rounded-3xl mx-auto mb-4 border-2 flex items-center justify-center font-black text-4xl shadow-md ${rankInfo.color}`}>
           {rankInfo.rank}
         </div>

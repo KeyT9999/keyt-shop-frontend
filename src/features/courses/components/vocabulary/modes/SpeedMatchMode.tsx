@@ -12,6 +12,7 @@ import {
 import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
+import ConfettiCelebration from '../../../../../components/ConfettiCelebration';
 
 interface SpeedMatchModeProps {
   items: VocabularyItem[];
@@ -458,6 +459,7 @@ export default function SpeedMatchMode({
       {/* ── Victory Modal ── */}
       {isVictory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <ConfettiCelebration active={true} />
           <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 text-center animate-scaleUp">
             {/* Rank Avatar */}
             <div className={`w-20 h-20 rounded-3xl bg-linear-to-tr ${getRank(finalTimeSec, wrongCount).color} text-white flex flex-col items-center justify-center mx-auto mb-4 shadow-xl shadow-orange-500/20`}>

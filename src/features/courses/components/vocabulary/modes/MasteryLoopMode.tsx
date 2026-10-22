@@ -17,6 +17,7 @@ import {
 import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
+import ConfettiCelebration from '../../../../../components/ConfettiCelebration';
 
 interface MasteryLoopModeProps {
   items: VocabularyItem[];
@@ -455,6 +456,7 @@ export default function MasteryLoopMode({
   if (isSessionFinished) {
     return (
       <div className="mx-auto flex w-full max-w-xl flex-col items-center px-2 py-4 animate-fadeIn">
+        <ConfettiCelebration active={true} />
         <div className="w-full rounded-3xl border-2 border-emerald-300 bg-gradient-to-b from-emerald-50/80 via-white to-orange-50/40 p-6 text-center shadow-xl sm:p-10">
           {/* Trophy Header */}
           <div className="relative mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-400 text-white shadow-lg shadow-amber-400/30">

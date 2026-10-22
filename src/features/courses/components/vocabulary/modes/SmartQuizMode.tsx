@@ -14,6 +14,7 @@ import {
 import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
+import ConfettiCelebration from '../../../../../components/ConfettiCelebration';
 
 interface SmartQuizModeProps {
   items: VocabularyItem[];
@@ -411,6 +412,7 @@ export default function SmartQuizMode({
 
     return (
       <div className="mx-auto w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-4 text-center shadow-xl animate-scaleUp sm:p-8">
+        <ConfettiCelebration active={true} />
         {/* Rank Avatar */}
         <div
           className={`w-20 h-20 rounded-3xl bg-linear-to-tr ${rankInfo.color} text-white flex flex-col items-center justify-center mx-auto mb-4 shadow-xl shadow-orange-500/20`}

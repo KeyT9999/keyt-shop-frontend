@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import API_BASE_URL from '../config/api';
+import CuteRobotLoader from '../components/CuteRobotLoader';
 
 // Types
 type OutputFormat = 'webp' | 'avif' | 'jpeg' | 'png';
@@ -192,7 +193,10 @@ export default function CompressPage() {
       );
 
       try {
-        const result = await compressFile(files[i]);
+        const [result] = await Promise.all([
+          compressFile(files[i]),
+          new Promise((resolve) => setTimeout(resolve, 850)),
+        ]);
         setFiles((prev) =>
           prev.map((f, idx) =>
             idx === i ? { ...f, status: 'done' as FileStatus, result: result! } : f
@@ -425,6 +429,9 @@ export default function CompressPage() {
                 Xóa tất cả
               </button>
             </div>
+
+            {/* Cute AI Robot Loader while compressing */}
+            {isProcessing && <CuteRobotLoader variant="compress" />}
 
             {/* File cards */}
             <div className="space-y-3">

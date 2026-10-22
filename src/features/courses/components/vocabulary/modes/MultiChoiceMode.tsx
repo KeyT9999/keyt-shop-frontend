@@ -3,6 +3,7 @@ import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Volume2, Trophy, Sparkles
 import type { QuizQuestion } from '../../../types';
 import { courseApi } from '../../../api/courseApi';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
+import ConfettiCelebration from '../../../../../components/ConfettiCelebration';
 
 interface MultiChoiceModeProps {
   courseCode: string;
@@ -105,6 +106,7 @@ export default function MultiChoiceMode({
     const percent = Math.round((score / questions.length) * 100);
     return (
       <div className="mx-auto w-full max-w-md rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-xl sm:p-8">
+        <ConfettiCelebration active={true} />
         <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4">
           <Trophy size={32} />
         </div>

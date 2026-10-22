@@ -25,6 +25,7 @@ import {
   ArrowRight,
   Search,
   Flame,
+  Video,
   type LucideIcon
 } from 'lucide-react';
 import { useAuthContext } from '../context/useAuthContext';
@@ -110,6 +111,15 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
   // Dropdown data definitions
   const aiTools: SubMenuItem[] = [
+    {
+      title: 'AI Dịch & Lồng Tiếng Video',
+      desc: 'Tự động tải, dịch ngữ cảnh, lồng tiếng & đóng sub 24/7',
+      href: '/video-translate',
+      icon: Video,
+      iconBg: 'bg-purple-50 text-purple-600',
+      iconColor: '#7C3AED',
+      badge: 'NEW'
+    },
     {
       title: 'YouTube Summarizer',
       desc: 'Tóm tắt nội dung video YouTube bằng AI siêu tốc',

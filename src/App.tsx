@@ -61,6 +61,7 @@ const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
 const PhotoFramePage = lazy(() => import('./pages/PhotoFramePage'));
 const CompressPage = lazy(() => import('./pages/CompressPage'));
 const AiImagePage = lazy(() => import('./pages/AiImagePage'));
+const VideoTranslatePage = lazy(() => import('./pages/VideoTranslatePage'));
 const AdminChatPage = lazy(() => import('./pages/admin/AdminChatPage'));
 
 // Multi-Language Course Pages
@@ -223,6 +224,16 @@ export default function App() {
             };
         }
 
+        if (path === '/video-translate') {
+            return {
+                ...base,
+                title: 'AI Dịch & Lồng Tiếng Video Tự Động (YouTube • TikTok • Douyin) | KeyT Hub',
+                description:
+                    'Hệ thống tự động tải video, nhận diện giọng nói Groq Whisper V3, dịch ngữ cảnh bằng AI, lồng tiếng Việt tự nhiên & đóng phụ đề chạy 24/7 trên VPS KeyT.',
+                canonicalPath: '/video-translate',
+            };
+        }
+
         if (path === '/compress') {
             return {
                 ...base,
@@ -314,6 +325,7 @@ export default function App() {
                         <Route path="/photo-frame" element={<PhotoFramePage />} />
                         <Route path="/compress" element={<CompressPage />} />
                         <Route path="/ai-image" element={<AiImagePage />} />
+                        <Route path="/video-translate" element={<VideoTranslatePage />} />
 
                         {/* Multi-Language Course Routes */}
                         <Route path="/courses" element={<CoursesHubPage />} />
@@ -359,6 +371,7 @@ export default function App() {
                             <Route path="reviews" element={<ReviewsPage />} />
                             <Route path="announcement" element={<AnnouncementPage />} />
                             <Route path="chat" element={<AdminChatPage />} />
+                            <Route path="video-translate" element={<VideoTranslatePage />} />
                         </Route>
                     </Routes>
                 </Suspense>

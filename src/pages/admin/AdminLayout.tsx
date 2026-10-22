@@ -19,7 +19,8 @@ import {
   TrendingUp,
   ExternalLink,
   Image as ImageIcon,
-  MessageSquare
+  MessageSquare,
+  Video
 } from 'lucide-react';
 import './AdminStyles.css';
 
@@ -77,6 +78,7 @@ export default function AdminLayout() {
     if (path.startsWith('/admin/reviews')) return 'Quản lý Đánh giá';
     if (path.startsWith('/admin/announcement')) return 'Quản lý Thông báo';
     if (path.startsWith('/admin/chat')) return 'Tin nhắn Hỗ trợ';
+    if (path.startsWith('/admin/video-translate')) return 'AI Dịch & Lồng Tiếng Video';
     return 'Admin';
   };
 
@@ -203,6 +205,14 @@ export default function AdminLayout() {
           >
             <Key size={18} />
             <span>OTP Requests</span>
+          </button>
+
+          <button
+            className={`admin-nav-item ${isNavActive('/admin/video-translate') ? 'active' : ''}`}
+            onClick={() => handleNavClick('/admin/video-translate')}
+          >
+            <Video size={18} />
+            <span>Dịch & Lồng Tiếng Video</span>
           </button>
 
           {/* Group 4: HỆ THỐNG & NỘI DUNG */}

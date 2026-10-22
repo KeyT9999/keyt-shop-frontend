@@ -15,6 +15,7 @@ import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
 import ConfettiCelebration from '../../../../../components/ConfettiCelebration';
+import { speakNeural } from '../../../../../utils/ttsAudio';
 
 interface SmartQuizModeProps {
   items: VocabularyItem[];
@@ -82,15 +83,9 @@ export default function SmartQuizMode({
     itemsPoolRef.current = items;
   }, [items]);
 
-  // Speech Helper
+  // Neural Speech Helper
   const speak = useCallback((text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = language.speechLocale;
-      u.rate = 0.95;
-      window.speechSynthesis.speak(u);
-    }
+    void speakNeural(text, language.speechLocale, 0.95);
   }, [language.speechLocale]);
 
   // Generate quiz questions

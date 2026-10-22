@@ -4,6 +4,7 @@ import type { QuizQuestion } from '../../../types';
 import { courseApi } from '../../../api/courseApi';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
 import ConfettiCelebration from '../../../../../components/ConfettiCelebration';
+import { speakNeural } from '../../../../../utils/ttsAudio';
 
 interface MultiChoiceModeProps {
   courseCode: string;
@@ -50,13 +51,7 @@ export default function MultiChoiceMode({
   const currentQ = questions[currentIndex];
 
   const speak = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = language.speechLocale;
-      u.rate = 0.9;
-      window.speechSynthesis.speak(u);
-    }
+    void speakNeural(text, language.speechLocale, 0.95);
   };
 
   const handleSelectOption = (optId: string) => {

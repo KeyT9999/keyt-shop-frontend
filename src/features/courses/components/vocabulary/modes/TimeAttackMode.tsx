@@ -12,6 +12,7 @@ import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
 import ConfettiCelebration from '../../../../../components/ConfettiCelebration';
+import { speakNeural } from '../../../../../utils/ttsAudio';
 
 interface TimeAttackModeProps {
   items: VocabularyItem[];
@@ -65,15 +66,9 @@ export default function TimeAttackMode({
     }
   });
 
-  // Speech Helper
+  // Neural Speech Helper
   const speak = useCallback((text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = language.speechLocale;
-      u.rate = 1.05;
-      window.speechSynthesis.speak(u);
-    }
+    void speakNeural(text, language.speechLocale, 1.05);
   }, [language.speechLocale]);
 
   // Generate a random 4-choice question

@@ -23,6 +23,7 @@ import {
 import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
+import { speakNeural } from '../../../../../utils/ttsAudio';
 
 interface FlashcardModeProps {
   items: VocabularyItem[];
@@ -67,18 +68,10 @@ export default function FlashcardMode({
 
   const currentCard = cardList[currentIndex];
 
-  // SpeechSynthesis helper
+  // Neural TTS helper
   const speak = useCallback((text: string, rate = 1.0) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = language.speechLocale;
-      u.rate = rate;
-      setPlayingSpeed(rate);
-      u.onend = () => setPlayingSpeed(null);
-      u.onerror = () => setPlayingSpeed(null);
-      window.speechSynthesis.speak(u);
-    }
+    setPlayingSpeed(rate);
+    void speakNeural(text, language.speechLocale, rate, () => setPlayingSpeed(null));
   }, [language.speechLocale]);
 
   const handleFlip = useCallback(() => {

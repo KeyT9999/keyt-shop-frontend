@@ -3,6 +3,7 @@ import { Send, CheckCircle2, XCircle, ArrowRight, RotateCcw, Volume2, Sparkles }
 import type { VocabularyItem } from '../../../types';
 import { courseApi } from '../../../api/courseApi';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
+import { speakNeural } from '../../../../../utils/ttsAudio';
 
 interface TypingModeProps {
   items: VocabularyItem[];
@@ -36,13 +37,7 @@ export default function TypingMode({ items, courseCode = 'jpd123', onRecordResul
   }, [currentIndex, direction]);
 
   const speak = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = language.speechLocale;
-      u.rate = 0.9;
-      window.speechSynthesis.speak(u);
-    }
+    void speakNeural(text, language.speechLocale, 0.95);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

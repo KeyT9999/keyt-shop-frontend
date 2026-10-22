@@ -13,6 +13,7 @@ import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
 import ConfettiCelebration from '../../../../../components/ConfettiCelebration';
+import { speakNeural } from '../../../../../utils/ttsAudio';
 
 interface SpeedMatchModeProps {
   items: VocabularyItem[];
@@ -78,15 +79,9 @@ export default function SpeedMatchMode({
     }
   });
 
-  // Speech helper
+  // Neural Speech helper
   const speak = useCallback((text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = language.speechLocale;
-      u.rate = 1.0;
-      window.speechSynthesis.speak(u);
-    }
+    void speakNeural(text, language.speechLocale, 1.0);
   }, [language.speechLocale]);
 
   // Stop Stopwatch

@@ -12,6 +12,7 @@ import {
 import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
+import { speakNeural } from '../../../../../utils/ttsAudio';
 
 interface MistakeBusterModeProps {
   items: VocabularyItem[];
@@ -56,13 +57,7 @@ export default function MistakeBusterMode({
 
   // Speech Helper
   const speak = useCallback((text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = language.speechLocale;
-      u.rate = 0.95;
-      window.speechSynthesis.speak(u);
-    }
+    speakNeural(text, language.speechLocale, 0.95);
   }, [language.speechLocale]);
 
   // Handle Response

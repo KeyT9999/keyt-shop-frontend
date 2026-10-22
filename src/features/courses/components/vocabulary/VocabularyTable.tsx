@@ -3,6 +3,7 @@ import { Star, Volume2, CheckCircle2, CircleDashed, Clock, Sparkles } from 'luci
 import type { VocabularyItem, MemoryStatus } from '../../types';
 import JapaneseRuby from '../common/JapaneseRuby';
 import { getCourseLanguage } from '../../utils/courseLanguage';
+import { speakNeural } from '../../../../utils/ttsAudio';
 
 interface VocabularyTableProps {
   items: VocabularyItem[];
@@ -21,16 +22,8 @@ export default function VocabularyTable({
   const [playingId, setPlayingId] = useState<string | null>(null);
 
   const speakWord = (text: string, id: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = language.speechLocale;
-      utterance.rate = 0.9;
-      setPlayingId(id);
-      utterance.onend = () => setPlayingId(null);
-      utterance.onerror = () => setPlayingId(null);
-      window.speechSynthesis.speak(utterance);
-    }
+    setPlayingId(id);
+    speakNeural(text, language.speechLocale, 0.95, () => setPlayingId(null));
   };
 
   const getStatusBadge = (status?: MemoryStatus) => {

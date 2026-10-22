@@ -18,6 +18,7 @@ import type { VocabularyItem } from '../../../types';
 import { weakWordsStorage } from '../../../utils/weakWordsStorage';
 import { getCourseLanguage } from '../../../utils/courseLanguage';
 import ConfettiCelebration from '../../../../../components/ConfettiCelebration';
+import { speakNeural } from '../../../../../utils/ttsAudio';
 
 interface MasteryLoopModeProps {
   items: VocabularyItem[];
@@ -100,16 +101,10 @@ export default function MasteryLoopMode({
   // Track by item IDs (stable identity) instead of array reference (changes on every parent re-render)
   const prevItemsKeyRef = useRef('');
 
-  // Helper SpeechSynthesis
+  // Helper Neural TTS with fallback
   const speak = useCallback(
     (text: string, rate = 0.95) => {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = language.speechLocale;
-        u.rate = rate;
-        window.speechSynthesis.speak(u);
-      }
+      speakNeural(text, language.speechLocale, rate);
     },
     [language.speechLocale]
   );

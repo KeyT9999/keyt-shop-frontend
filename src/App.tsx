@@ -14,6 +14,8 @@ import StructuredData from './components/StructuredData';
 import VisitTracker from './components/VisitTracker';
 import AnnouncementModal from './components/AnnouncementModal';
 import AffiliateReferralTracker from './components/affiliate/AffiliateReferralTracker';
+import DraggableRobotWidget from './components/robot/DraggableRobotWidget';
+import { IS_ROBOT_3D_ENABLED } from './config/features';
 import { announcementService } from './services/announcementService';
 
 // Lazy loading pages
@@ -268,6 +270,7 @@ export default function App() {
             <Seo {...seoConfig} />
             <StructuredData />
             {!isAdminPage && <FloatingContact />}
+            {!isAdminPage && IS_ROBOT_3D_ENABLED && <DraggableRobotWidget />}
             {showChatWidget && <ChatWidget />}
             {isAdmin && <AdminChatBubble />}
             <AnnouncementModal

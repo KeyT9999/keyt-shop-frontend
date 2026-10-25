@@ -8,6 +8,10 @@ import MessageReactions from './MessageReactions';
 import MessageActions from './MessageActions';
 import EditMessageModal from './EditMessageModal';
 import MessageSearch from './MessageSearch';
+import {
+  emitRobotStatusEvent,
+  OPEN_SUPPORT_CHAT_EVENT_NAME,
+} from '../robot/robotMotionUtils';
 
 const ACCEPTED_FILE_TYPES = 'image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip';
 const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -412,10 +416,18 @@ export default function ChatWidget() {
    *   - Tab đang bị ẩn (người dùng đang ở tab khác)
    */
   const handleNewAdminMessage = useCallback(() => {
+    emitRobotStatusEvent('speaking', 'Admin KeyT vừa gửi phản hồi cho ní!', 2500);
     if (!isOpen || document.hidden) {
       playChatNotificationSound();
     }
   }, [isOpen]);
+
+  // Lắng nghe sự kiện mở khung chat từ Robot 3D Companion
+  useEffect(() => {
+    const handleOpenFromRobot = () => setIsOpen(true);
+    window.addEventListener(OPEN_SUPPORT_CHAT_EVENT_NAME, handleOpenFromRobot);
+    return () => window.removeEventListener(OPEN_SUPPORT_CHAT_EVENT_NAME, handleOpenFromRobot);
+  }, []);
 
   const {
     messages,
@@ -554,6 +566,7 @@ export default function ChatWidget() {
 
     // Không có pending image → gửi text
     if (content.trim()) {
+      emitRobotStatusEvent('thinking', 'Đang chuyển tin nhắn của ní tới Admin...', 1600);
       sendMessage(content);
     }
   };

@@ -30,6 +30,13 @@ import {
   Compass,
   Play
 } from 'lucide-react';
+import Robot3DCanvas from '../components/robot/Robot3DCanvas';
+import {
+  emitRobotStatusEvent,
+  PRIMARY_ROBOT_STATES,
+  ROBOT_STATUS_META,
+  type RobotStatus,
+} from '../components/robot/robotMotionUtils';
 
 // ─────────────────────────────────────────────
 // 3D Tilt Card Container Component
@@ -151,6 +158,9 @@ export default function HomePage() {
   const [cardLang, setCardLang] = useState<FlashcardLangType>('jp');
   const [isCardFlipped, setIsCardFlipped] = useState(false);
 
+  // Interactive 3D Robot Hero Mascot State
+  const [heroRobotStatus, setHeroRobotStatus] = useState<RobotStatus>('idle');
+
   // 1. Automated Before/After scanner for Photo Frame Box
   const [scannerPos, setScannerPos] = useState(58);
   useEffect(() => {
@@ -197,7 +207,12 @@ export default function HomePage() {
     e.stopPropagation();
     navigator.clipboard.writeText(otpCode);
     setOtpCopied(true);
-    setTimeout(() => setOtpCopied(false), 2000);
+    setHeroRobotStatus('happy');
+    emitRobotStatusEvent('happy', `Đã sao chép mã OTP thử nghiệm ${otpCode}!`, 1800);
+    setTimeout(() => {
+      setOtpCopied(false);
+      setHeroRobotStatus('idle');
+    }, 2000);
   };
 
   // Quick-launch dock items (6 core pillars)
@@ -369,6 +384,55 @@ export default function HomePage() {
               <Frame size={17} className="text-[#F05A28]" />
               <span>Tạo Khung Ảnh EXIF</span>
             </button>
+          </div>
+
+          {/* ── 3D FLYING ROBOT AI COMPANION HERO SHOWCASE ────────────── */}
+          <div className="max-w-3xl mx-auto mb-8 rounded-3xl bg-white/90 backdrop-blur-xl border border-slate-200/90 shadow-sm px-4 py-3 sm:px-6 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
+            <div className="flex items-center gap-4">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-b from-slate-900 to-[#1E293B] border border-slate-800 shrink-0 relative overflow-hidden shadow-md">
+                <Robot3DCanvas status={heroRobotStatus} trackMouse={true} />
+              </div>
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-orange-50 text-[#F05A28] border border-orange-200 text-[11px] font-extrabold mb-1">
+                  <Sparkles size={11} />
+                  <span>AI Companion 3D • {ROBOT_STATUS_META[heroRobotStatus].label}</span>
+                </div>
+                <h2 className="text-sm sm:text-base font-black text-slate-900">
+                  Xin chào! Mình có thể giúp gì cho bạn?
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                  {ROBOT_STATUS_META[heroRobotStatus].description} — Bạn cũng có thể nắm chuột kéo Robot ở góc màn hình đi mọi nơi!
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              {PRIMARY_ROBOT_STATES.map((st) => {
+                const stMeta = ROBOT_STATUS_META[st];
+                const isAct = heroRobotStatus === st;
+                return (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => {
+                      setHeroRobotStatus(st);
+                      emitRobotStatusEvent(st, `Đang thử trạng thái ${stMeta.shortLabel}: ${stMeta.description}`, 2200);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center gap-1 ${
+                      isAct
+                        ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-[#F05A28]/50 hover:bg-white'
+                    }`}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: stMeta.accentHex }}
+                    />
+                    <span>{stMeta.shortLabel}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* ── ARGON QUICK-LAUNCH DOCK (6 PILLARS) ─────────────────── */}
@@ -1502,7 +1566,16 @@ export default function HomePage() {
 
                 {/* Clickable Flip Card */}
                 <div
-                  onClick={() => setIsCardFlipped(!isCardFlipped)}
+                  onClick={() => {
+                    const nextFlipped = !isCardFlipped;
+                    setIsCardFlipped(nextFlipped);
+                    setHeroRobotStatus(nextFlipped ? 'speaking' : 'happy');
+                    emitRobotStatusEvent(
+                      nextFlipped ? 'speaking' : 'happy',
+                      `${currentFlashcard.word} (${currentFlashcard.reading}): ${currentFlashcard.meaning}`,
+                      2000
+                    );
+                  }}
                   className="group rounded-2xl border border-slate-200/90 bg-gradient-to-br from-slate-50 via-white to-slate-50 p-6 min-h-[210px] flex flex-col justify-between cursor-pointer hover:border-[#F05A28]/50 hover:shadow-md transition-all relative overflow-hidden"
                 >
                   <div className="flex items-center justify-between">

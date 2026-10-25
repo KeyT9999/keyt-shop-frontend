@@ -34,6 +34,7 @@ import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis';
 import { useAudioRecorder } from '../../hooks/useAudioRecorder';
 import { CanDoReadingPracticeView } from './qa/CanDoReadingPracticeView';
 import { VisualScenarioCard } from './qa/VisualScenarioCard';
+import SpeakingExaminerRobot from '../../../../components/robot/SpeakingExaminerRobot';
 
 export interface QAPracticeTabProps {
   questions?: SpeakingQuestion[];
@@ -506,6 +507,25 @@ export function QAPracticeTab({
          ========================================================================= */}
       {activeMode !== 'reading' && (
         <div className="space-y-6">
+          <SpeakingExaminerRobot
+            isSpeaking={isPlaying}
+            isRecording={isRecording}
+            isEvaluating={isEvaluating}
+            isCompleted={Boolean(qaResult && qaResult.score >= 10)}
+            volumeLevel={volumeLevel}
+            examinerName={`Sensei Robot 3D • Vấn Đáp Bài ${currentOverview.lesson}`}
+            dialogueText={
+              currentQuestion
+                ? `「 ${currentQuestion.questionJapanese} 」`
+                : '「 質問を選んで練習しましょう！ 」'
+            }
+            subText={
+              currentQuestion
+                ? `Dịch nghĩa: ${currentQuestion.questionVietnamese}`
+                : 'Chọn câu hỏi bên dưới để luyện phản xạ nói 1-1 cùng Robot 3D.'
+            }
+          />
+
           {/* Part sub-tabs (When in reflex mode) */}
           {activeMode === 'reflex' && currentOverview.parts && (
             <div className="space-y-2">

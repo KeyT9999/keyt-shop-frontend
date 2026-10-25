@@ -1,7 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, Loader2, User, Bot } from 'lucide-react';
+import { Send, Loader2, User, Bot } from 'lucide-react';
 import type { ChatMessage } from '../types';
 import { chatWithVideoContext, GeminiApiError } from '../services/geminiService';
+import Robot3DCanvas from '../../../components/robot/Robot3DCanvas';
+import {
+  emitRobotStatusEvent,
+  PRIMARY_ROBOT_STATES,
+  ROBOT_STATUS_META,
+  type RobotStatus,
+} from '../../../components/robot/robotMotionUtils';
 
 interface Props {
   videoContext: string;
@@ -19,7 +26,20 @@ export const ChatInterface: React.FC<Props> = ({ videoContext, apiKey, onApiKeyE
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [robotStatus, setRobotStatus] = useState<RobotStatus>('idle');
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (robotStatus !== 'speaking') return;
+    const timer = window.setTimeout(() => setRobotStatus('happy'), 1500);
+    return () => window.clearTimeout(timer);
+  }, [robotStatus]);
+
+  useEffect(() => {
+    if (robotStatus !== 'happy') return;
+    const timer = window.setTimeout(() => setRobotStatus('idle'), 1200);
+    return () => window.clearTimeout(timer);
+  }, [robotStatus]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -43,6 +63,8 @@ export const ChatInterface: React.FC<Props> = ({ videoContext, apiKey, onApiKeyE
       setInput('');
     }
     setLoading(true);
+    setRobotStatus('thinking');
+    emitRobotStatusEvent('thinking', 'Robot AI đang phân tích nội dung video YouTube...', 2200);
 
     const history = [...messages, userMsg];
 
@@ -66,7 +88,10 @@ export const ChatInterface: React.FC<Props> = ({ videoContext, apiKey, onApiKeyE
       };
 
       setMessages((prev) => [...prev, botMsg]);
+      setRobotStatus('speaking');
+      emitRobotStatusEvent('speaking', 'Robot AI đã có câu trả lời về video cho ní!', 1800);
     } catch (error: any) {
+      setRobotStatus('idle');
       let errorMessage = 'Xin lỗi, tôi đang gặp sự cố khi trả lời câu hỏi này.';
 
       if (error instanceof GeminiApiError) {
@@ -103,20 +128,47 @@ export const ChatInterface: React.FC<Props> = ({ videoContext, apiKey, onApiKeyE
       overflow: 'hidden',
       marginTop: '24px'
     }}>
-      {/* Header */}
-      <div style={{
-        padding: '20px 24px',
-        borderBottom: '1px solid #F1F5F9',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px'
-      }}>
-        <div style={{ padding: '8px', background: '#F0F9FF', borderRadius: '8px', color: '#0EA5E9' }}>
-          <MessageCircle size={20} />
+      {/* Header with 3D Robot Companion */}
+      <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-900 via-slate-800 to-[#1E293B] text-white flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-16 h-16 rounded-2xl bg-slate-950/80 border border-white/15 shrink-0 overflow-hidden">
+            <Robot3DCanvas status={robotStatus} trackMouse={true} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="m-0 text-base font-extrabold text-white">
+                Hỏi thêm về video này (Robot 3D AI)
+              </h3>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F05A28] text-white">
+                {ROBOT_STATUS_META[robotStatus].label}
+              </span>
+            </div>
+            <p className="m-0 text-xs text-slate-300 mt-0.5">
+              Xin chào! Mình có thể giúp gì cho bạn?
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#1E293B' }}>Hỏi thêm về video này</h3>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: '#64748B' }}>AI Assistant</p>
+
+        {/* 4-State Switcher (Chờ • Nghĩ • Nói • Vui) */}
+        <div className="flex items-center gap-1.5">
+          {PRIMARY_ROBOT_STATES.map((st) => {
+            const stMeta = ROBOT_STATUS_META[st];
+            const isAct = robotStatus === st;
+            return (
+              <button
+                key={st}
+                type="button"
+                onClick={() => setRobotStatus(st)}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                  isAct
+                    ? 'bg-white text-slate-900 border-white'
+                    : 'bg-white/10 text-slate-200 border-white/15 hover:bg-white/20'
+                }`}
+              >
+                {stMeta.shortLabel}
+              </button>
+            );
+          })}
         </div>
       </div>
 

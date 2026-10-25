@@ -24,6 +24,7 @@ import { speakingApi } from '../../api/speakingApi';
 import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis';
 import { useAudioRecorder } from '../../hooks/useAudioRecorder';
 import { SpeakingScorecardModal } from './SpeakingScorecardModal';
+import SpeakingExaminerRobot from '../../../../components/robot/SpeakingExaminerRobot';
 
 type ExamState =
   | 'idle'
@@ -480,6 +481,37 @@ export const MockExamSimulator: React.FC<MockExamSimulatorProps> = ({
           </span>
         </div>
       </div>
+
+      {/* 3D AI Examiner Robot Stage */}
+      <SpeakingExaminerRobot
+        isSpeaking={isSpeaking}
+        isRecording={isRecording}
+        isEvaluating={isAiEvaluating}
+        isCompleted={examState === 'farewell' || examState === 'scorecard'}
+        volumeLevel={volumeLevel}
+        dialogueText={
+          examState === 'idle'
+            ? '「 こんにちは！準備ができたら、試験を始めましょう。 」'
+            : examState === 'greeting'
+            ? '「 どうぞ、入ってください。 」'
+            : examState === 'reading_prep'
+            ? '「 まず、20秒で文章を黙読してください。 」'
+            : examState === 'reading_read'
+            ? '「 では、大きな声で読んでください。 」'
+            : examState === 'qa_question'
+            ? `「 ${examPack.qaQuestions[currentQIndex]?.questionJapanese || ''} 」`
+            : '「 はい、以上で終わります。お疲れ様でした！ 」'
+        }
+        subText={
+          isAiEvaluating
+            ? 'Giám thị AI 3D đang phân tích ngữ âm và chấm điểm bài nói của bạn...'
+            : isRecording
+            ? 'Giám thị 3D đang lắng nghe qua Micro — sóng năng lượng đồng bộ theo giọng đọc của bạn!'
+            : isSpeaking
+            ? 'Giám thị 3D đang phát âm câu hỏi tiếng Nhật (nhép miệng thời gian thực)...'
+            : 'Giám thị AI 3D trực tiếp điều hành phòng thi vấn đáp chuẩn FPT University.'
+        }
+      />
 
       {/* STAGE 1: IDLE / BRIEFING ROOM */}
       {examState === 'idle' && (

@@ -19,6 +19,7 @@ import { useAuthContext } from '../../context/useAuthContext';
 import chatgptIcon from '../../assets/icon-chatgpt.png';
 import API_BASE_URL from '../../config/api';
 import CuteRobotLoader from '../CuteRobotLoader';
+import { emitRobotStatusEvent } from '../robot/robotMotionUtils';
 
 export type AuthHubTab = 'chatgpt' | 'gemini' | '2fa';
 
@@ -123,6 +124,17 @@ export default function AuthCodeHub({ defaultTab = 'chatgpt' }: AuthCodeHubProps
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
+
+  // Celebrate with 3D Robot when OTP/2FA code arrives
+  useEffect(() => {
+    if (!loading && code) {
+      emitRobotStatusEvent(
+        'happy',
+        `Đã bắt được mã ${code} thành công! Bấm sao chép ngay nhé ní!`,
+        2200
+      );
+    }
+  }, [loading, code]);
 
   // Handle Tab Switch
   const switchTab = (tab: AuthHubTab) => {

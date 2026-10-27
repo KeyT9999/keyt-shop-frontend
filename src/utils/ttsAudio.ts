@@ -51,7 +51,10 @@ export async function speakNeural(
   rate = 1.0,
   onEnd?: () => void
 ): Promise<void> {
-  const text = String(rawText || '').trim();
+  let text = String(rawText || '').trim();
+  if (lang.toLowerCase().startsWith('ja')) {
+    text = text.replace(/\(な\)|（な）/g, '').replace(/[～~]/g, '').trim();
+  }
   if (!text) {
     onEnd?.();
     return;

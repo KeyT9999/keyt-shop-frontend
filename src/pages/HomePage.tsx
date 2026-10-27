@@ -1151,7 +1151,7 @@ export default function HomePage() {
                           </span>
                         </div>
                         <p className="text-xs text-slate-500 mt-1">
-                          42 Hán tự • 251 Từ vựng • 23 Ngữ pháp • 73 câu FE &amp; Thi nói tranh
+                          42 Hán tự • 303 Từ vựng (có 07_ST1 &amp; 07_ST2) • 23 Ngữ pháp • 73 câu FE &amp; Thi nói tranh
                         </p>
                       </div>
                       <ChevronRight size={18} className="text-slate-400 group-hover:text-[#F05A28] group-hover:translate-x-0.5 transition-all shrink-0" />

@@ -196,7 +196,9 @@ export default function VocabularyDetailPage() {
   const isHackers = upperCode === 'TOEIC_HACKERS' || upperCode === 'TOEICHACKERS';
   const isBaKhi2 = upperCode === 'ENGBK2' || upperCode === 'ENGBAKHI2';
   const isBaKhi = upperCode === 'ENGBK' || upperCode === 'ENGBAKHI' || isBaKhi2;
-  const cleanTitle = isToeic || isHackers || isBaKhi ? lesson.title : lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '');
+  const hasCodeInTitle = lesson.title.toLowerCase().includes(lesson.lessonCode.toLowerCase());
+  const isStQuiz = lesson.lessonCode.toUpperCase().includes('_ST');
+  const cleanTitle = isToeic || isHackers || isBaKhi || hasCodeInTitle ? lesson.title : lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '');
 
   return (
     <>
@@ -221,14 +223,14 @@ export default function VocabularyDetailPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="px-3 py-1 rounded-full text-xs font-black bg-orange-50 text-[#F05A28] border border-orange-200">
-                  {isToeic || isBaKhi ? `QUIZ ${lesson.order}` : isHackers ? `DAY ${lesson.order}` : `LESSON ${lesson.lessonCode}`}
+                  {isToeic || isBaKhi ? `QUIZ ${lesson.order}` : isHackers ? `DAY ${lesson.order}` : isStQuiz ? `QUIZ ${lesson.lessonCode}` : `LESSON ${lesson.lessonCode}`}
                 </span>
                 <span className="text-xs font-semibold text-slate-500">
                   {items.length} {isToeic ? 'cụm từ' : 'từ vựng'}
                 </span>
               </div>
               <h1 className="text-xl font-extrabold leading-tight text-slate-900 sm:text-2xl lg:text-3xl">
-                {isToeic || isBaKhi ? cleanTitle : `${lesson.lessonCode}: ${cleanTitle}`}
+                {isToeic || isBaKhi || hasCodeInTitle ? cleanTitle : `${lesson.lessonCode}: ${cleanTitle}`}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
                 {lesson.description}

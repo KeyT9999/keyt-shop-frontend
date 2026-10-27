@@ -21,6 +21,8 @@ export default function LessonCard({ lesson, courseCode }: LessonCardProps) {
   const isToeic = upperCode === 'TOEIC120';
   const isHackers = upperCode === 'TOEIC_HACKERS' || upperCode === 'TOEICHACKERS';
   const isBaKhi = upperCode === 'ENGBK' || upperCode === 'ENGBAKHI' || upperCode === 'ENGBK2' || upperCode === 'ENGBAKHI2';
+  const hasCodeInTitle = lesson.title.toLowerCase().includes(lesson.lessonCode.toLowerCase());
+  const isStQuiz = lesson.lessonCode.toUpperCase().includes('_ST');
 
   return (
     <div
@@ -35,7 +37,7 @@ export default function LessonCard({ lesson, courseCode }: LessonCardProps) {
               <BookMarked size={18} />
             </div>
             <span className="text-xs font-black uppercase tracking-wider text-[#F05A28] bg-orange-50/80 px-2.5 py-1 rounded-full border border-orange-200/50">
-              {isToeic || isBaKhi ? `QUIZ ${lesson.order}` : isHackers ? `DAY ${lesson.order}` : `LESSON ${lesson.lessonCode}`}
+              {isToeic || isBaKhi ? `QUIZ ${lesson.order}` : isHackers ? `DAY ${lesson.order}` : isStQuiz ? `QUIZ ${lesson.lessonCode}` : `LESSON ${lesson.lessonCode}`}
             </span>
           </div>
 
@@ -46,7 +48,7 @@ export default function LessonCard({ lesson, courseCode }: LessonCardProps) {
 
         {/* Title & Description */}
         <h4 className="text-lg font-bold text-slate-900 group-hover:text-[#F05A28] transition-colors mb-2 line-clamp-1">
-          {isToeic || isHackers || isBaKhi ? lesson.title : `${lesson.lessonCode}: ${lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '')}`}
+          {isToeic || isHackers || isBaKhi || hasCodeInTitle ? lesson.title : `${lesson.lessonCode}: ${lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '')}`}
         </h4>
         <p className="text-xs sm:text-sm text-slate-500 line-clamp-2 leading-relaxed mb-6">
           {lesson.description}

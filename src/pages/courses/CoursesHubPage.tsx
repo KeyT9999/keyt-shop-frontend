@@ -184,11 +184,11 @@ const QUIZ_DECKS: QuizDeckConfig[] = [
     accentText: 'text-rose-700',
     accentBg: 'bg-rose-600',
     accentBorder: 'border-rose-200 hover:border-rose-400',
-    lessonCount: 12,
-    wordCount: 251,
+    lessonCount: 14,
+    wordCount: 303,
     unitLabel: 'BÀI',
     description:
-      '12 phần từ vựng & Quiz (251 từ), 42 Hán tự N5, 23 mẫu ngữ pháp quá khứ/tính từ, Thi nói tranh AI 1-1 và 73 câu đề FE.',
+      '14 phần từ vựng & Quiz (303 từ, có Từ vựng 07_ST1 & 07_ST2), 42 Hán tự N5, 23 mẫu ngữ pháp quá khứ/tính từ, Thi nói tranh AI 1-1 và 73 câu đề FE.',
     href: '/courses/jpd123/vocabulary',
     extraLinks: [
       { label: '42 Hán Tự JPD123', sub: 'Flashcard & Quiz N5', href: '/courses/jpd123/kanji' },
@@ -387,7 +387,7 @@ export default function CoursesHubPage() {
 
   const displayedLessons = useMemo(() => {
     if (showAllLessons || searchQuery.trim()) return activeLessons;
-    return activeLessons.slice(0, 12);
+    return activeLessons.slice(0, 18);
   }, [activeLessons, showAllLessons, searchQuery]);
 
   const handleLanguageChange = (lang: HubLangFilter) => {
@@ -443,10 +443,10 @@ export default function CoursesHubPage() {
       term: 'Kỳ 2 • Nâng Cao N5',
       heroGradient: 'from-[#F05A28] via-amber-600 to-[#1E293B]',
       description:
-        'Học phần tiếp nối tại Đại học FPT (Minna no Nihongo Bài 4 – 7). Gồm 12 bài Quiz từ vựng, 42 chữ Hán, động từ/tính từ, 73 câu trắc nghiệm FE và thi nói tranh AI 1-1.',
+        'Học phần tiếp nối tại Đại học FPT (Minna no Nihongo Bài 4 – 7). Gồm 14 bài Quiz từ vựng (có 07_ST1 & 07_ST2), 42 chữ Hán, động từ/tính từ, 73 câu trắc nghiệm FE và thi nói tranh AI 1-1.',
       stats: {
         kanji: '42 Hán tự',
-        vocab: '251 Từ vựng',
+        vocab: '303 Từ vựng',
         grammar: '23 Mẫu câu',
         speaking: '4 Bài đọc & 18 Q&A',
         exams: '2 Đề thi FE (73 câu)'
@@ -595,7 +595,7 @@ export default function CoursesHubPage() {
               </span>
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-orange-50 text-[#F05A28] border border-orange-200 text-xs font-bold">
                 <span className="px-1.5 py-0.2 rounded bg-[#F05A28] text-white text-[10px] font-black">JP</span>
-                Tiếng Nhật: 24 Quiz + Thi Nói AI + FE
+                Tiếng Nhật: 26 Quiz + Thi Nói AI + FE
               </span>
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
                 <span className="px-1.5 py-0.2 rounded bg-emerald-600 text-white text-[10px] font-black">CN</span>
@@ -612,7 +612,7 @@ export default function CoursesHubPage() {
               {[
                 { id: 'all', label: 'Tất Cả (Nhật • Trung • Anh)', count: '10 Bộ Quiz' },
                 { id: 'en', label: 'Tiếng Anh (Bá Khí 1–2 • TOEIC)', count: '5 Bộ • 110 Quiz' },
-                { id: 'jp', label: 'Tiếng Nhật (JPD113 • 123 • Kana)', count: '3 Bộ • 24 Bài' },
+                { id: 'jp', label: 'Tiếng Nhật (JPD113 • 123 • Kana)', count: '3 Bộ • 26 Bài' },
                 { id: 'cn', label: 'Tiếng Trung (HSK 1 & HSK 2)', count: '2 Bộ • 22 Bài' }
               ].map((tab) => {
                 const active = langFilter === tab.id;
@@ -851,7 +851,9 @@ export default function CoursesHubPage() {
                             <span
                               className={`px-2.5 py-1 rounded-full text-[11px] font-black uppercase border ${activeDeck.badgeClass}`}
                             >
-                              {activeDeck.unitLabel} {lesson.order}
+                              {activeDeck.lang === 'jp' && activeDeck.id !== 'kana'
+                                ? `${lesson.lessonCode.toUpperCase().includes('_ST') ? 'QUIZ' : activeDeck.unitLabel} ${lesson.lessonCode}`
+                                : `${activeDeck.unitLabel} ${lesson.order}`}
                             </span>
                             <span className="text-xs font-bold text-slate-500">
                               {lesson.itemCount}{' '}
@@ -959,8 +961,8 @@ export default function CoursesHubPage() {
                   })}
                 </div>
 
-                {/* Show All / Collapse Toggle if > 12 lessons */}
-                {activeLessons.length > 12 && !searchQuery.trim() && (
+                {/* Show All / Collapse Toggle if > 18 lessons */}
+                {activeLessons.length > 18 && !searchQuery.trim() && (
                   <div className="mt-6 text-center">
                     <button
                       type="button"

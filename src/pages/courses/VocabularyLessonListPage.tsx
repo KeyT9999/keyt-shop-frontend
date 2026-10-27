@@ -52,7 +52,7 @@ export default function VocabularyLessonListPage() {
   const isBaKhi2 = upperCode === 'ENGBK2' || upperCode === 'ENGBAKHI2';
   const isBaKhi = isBaKhi1 || isBaKhi2;
   const fallbackLessonCount = upperCode === 'JPD113' ? 9 : upperCode.startsWith('HSK') ? 11 : upperCode === 'ENG1000' ? 50 : isToeic ? 6 : isHackers ? 30 : isBaKhi ? 12 : 14;
-  const fallbackItemCount = upperCode === 'JPD113' ? 264 : upperCode === 'HSK1' ? 150 : upperCode === 'HSK2' ? 140 : upperCode === 'ENG1000' ? 1044 : isToeic ? 120 : isHackers ? 4768 : isBaKhi2 ? 1457 : isBaKhi1 ? 1017 : 303;
+  const fallbackItemCount = upperCode === 'JPD113' ? 264 : upperCode === 'HSK1' ? 150 : upperCode === 'HSK2' ? 140 : upperCode === 'ENG1000' ? 1044 : isToeic ? 120 : isHackers ? 4768 : isBaKhi2 ? 1457 : isBaKhi1 ? 1017 : 310;
 
   const pageHeading = isToeic
     ? '120 Thành Ngữ & Cụm Từ TOEIC (6 Phần Quiz)'

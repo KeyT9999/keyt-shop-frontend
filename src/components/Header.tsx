@@ -295,7 +295,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     },
     {
       title: 'Từ Vựng JPD123',
-      desc: '303 từ vựng chuyên sâu (14 bài • Có 07_ST1 & 07_ST2)',
+      desc: '310 từ vựng chuyên sâu (14 bài • Có 07_ST1 & 07_ST2)',
       href: '/courses/jpd123/vocabulary',
       icon: BookMarked,
       iconBg: 'bg-orange-50 text-[#F05A28]',

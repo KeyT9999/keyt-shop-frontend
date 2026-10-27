@@ -185,10 +185,10 @@ const QUIZ_DECKS: QuizDeckConfig[] = [
     accentBg: 'bg-rose-600',
     accentBorder: 'border-rose-200 hover:border-rose-400',
     lessonCount: 14,
-    wordCount: 303,
+    wordCount: 310,
     unitLabel: 'BÀI',
     description:
-      '14 phần từ vựng & Quiz (303 từ, có Từ vựng 07_ST1 & 07_ST2), 42 Hán tự N5, 23 mẫu ngữ pháp quá khứ/tính từ, Thi nói tranh AI 1-1 và 73 câu đề FE.',
+      '14 phần từ vựng & Quiz (310 từ, có Từ vựng 07_ST1 & 07_ST2), 42 Hán tự N5, 23 mẫu ngữ pháp quá khứ/tính từ, Thi nói tranh AI 1-1 và 73 câu đề FE.',
     href: '/courses/jpd123/vocabulary',
     extraLinks: [
       { label: '42 Hán Tự JPD123', sub: 'Flashcard & Quiz N5', href: '/courses/jpd123/kanji' },
@@ -446,7 +446,7 @@ export default function CoursesHubPage() {
         'Học phần tiếp nối tại Đại học FPT (Minna no Nihongo Bài 4 – 7). Gồm 14 bài Quiz từ vựng (có 07_ST1 & 07_ST2), 42 chữ Hán, động từ/tính từ, 73 câu trắc nghiệm FE và thi nói tranh AI 1-1.',
       stats: {
         kanji: '42 Hán tự',
-        vocab: '303 Từ vựng',
+        vocab: '310 Từ vựng',
         grammar: '23 Mẫu câu',
         speaking: '4 Bài đọc & 18 Q&A',
         exams: '2 Đề thi FE (73 câu)'

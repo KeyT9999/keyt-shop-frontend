@@ -345,7 +345,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
   ];
 
 
-  const isAiActive = aiTools.some((t) => location.pathname === t.href);
+  const isAiActive = aiTools.some((t) => location.pathname === t.href && t.href !== '/gym');
   const isPhotoActive = photoTools.some((t) => location.pathname === t.href);
   const isOtpActive =
     location.pathname === '/get-otp' ||
@@ -520,6 +520,20 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   </span>
                 </Link>
               </li>
+
+              {/* 4b. Direct Gym 3D Coach Top-Level Link */}
+              {IS_GYM_COACH_ENABLED && (
+                <li className="header-nav-item">
+                  <Link
+                    to="/gym"
+                    className={`header-nav-link cursor-pointer ${location.pathname === '/gym' ? 'active' : ''}`}
+                    title="Lộ trình tập Gym 5 ngày & Mô phỏng tư thế 3D"
+                  >
+                    <Dumbbell size={14} className="nav-icon-highlight nav-icon-animate" />
+                    <span>Gym 3D</span>
+                  </Link>
+                </li>
+              )}
 
               {/* 5. Tiếng Nhật Dropdown (Mega Menu Centered) */}
               <li
@@ -895,6 +909,16 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
           {/* Right: User Profile & Actions */}
           <div className="header-right">
+            {IS_GYM_COACH_ENABLED && (
+              <Link
+                to="/gym"
+                className={`mobile-gym-quick-pill cursor-pointer ${location.pathname === '/gym' ? 'active' : ''}`}
+                title="Mở nhanh KeyT Gym 3D Coach"
+              >
+                <Dumbbell size={14} />
+                <span className="mobile-gym-quick-text">Gym 3D</span>
+              </Link>
+            )}
             {user ? (
               <div className="header-user-menu-wrapper">
                 <button
@@ -1034,6 +1058,17 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
           >
             Trang chủ
           </Link>
+
+          {IS_GYM_COACH_ENABLED && (
+            <Link
+              to="/gym"
+              className={`mobile-otp-btn cursor-pointer ${location.pathname === '/gym' ? 'active' : ''}`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <Dumbbell size={16} />
+              <span>Gym 3D Coach (Lịch 5 Ngày)</span>
+            </Link>
+          )}
 
           {/* Group: Công cụ AI */}
           <div className="mobile-group-title">Công cụ AI</div>

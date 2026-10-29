@@ -271,8 +271,9 @@ export default function App() {
     }, [location.pathname]);
 
     const isAdminPage = location.pathname.startsWith('/admin');
+    const isGymPage = location.pathname === '/gym';
     const isAdmin = user?.admin === true;
-    const showChatWidget = !isAdmin && !isAdminPage;
+    const showChatWidget = !isAdmin && !isAdminPage && !isGymPage;
 
     return (
         <div className="app">
@@ -280,10 +281,10 @@ export default function App() {
             <AffiliateReferralTracker />
             <Seo {...seoConfig} />
             <StructuredData />
-            {!isAdminPage && <FloatingContact />}
-            {!isAdminPage && IS_ROBOT_3D_ENABLED && <DraggableRobotWidget />}
+            {!isAdminPage && !isGymPage && <FloatingContact />}
+            {!isAdminPage && !isGymPage && IS_ROBOT_3D_ENABLED && <DraggableRobotWidget />}
             {showChatWidget && <ChatWidget />}
-            {isAdmin && <AdminChatBubble />}
+            {isAdmin && !isGymPage && <AdminChatBubble />}
             <AnnouncementModal
                 open={announcementOpen}
                 title={announcementTitle}

@@ -13,13 +13,13 @@ export const REGISTERED_BLENDER_GLB_EXERCISES = new Set<string>([]);
 
 const glbBufferCache = new Map<string, Promise<ArrayBuffer>>();
 
-const COLOR_NEUTRAL = new THREE.Color(0x334155);
-const COLOR_JOINT = new THREE.Color(0x1e293b);
+const COLOR_NEUTRAL = new THREE.Color(0xcbd5e1);
+const COLOR_JOINT = new THREE.Color(0x475569);
 const COLOR_PRIMARY = new THREE.Color(0xf05a28);
-const COLOR_SECONDARY = new THREE.Color(0xf59e0b);
-const COLOR_EQUIP_METAL = new THREE.Color(0x94a3b8);
-const COLOR_EQUIP_PLATE = new THREE.Color(0x0f172a);
-const COLOR_BENCH_PAD = new THREE.Color(0x1e293b);
+const COLOR_SECONDARY = new THREE.Color(0xfbbf24);
+const COLOR_EQUIP_METAL = new THREE.Color(0xe2e8f0);
+const COLOR_EQUIP_PLATE = new THREE.Color(0x1e293b);
+const COLOR_BENCH_PAD = new THREE.Color(0x334155);
 
 const UP_AXIS = new THREE.Vector3(0, 1, 0);
 
@@ -45,8 +45,8 @@ export interface GymProceduralSceneRig {
 function makeRegionMaterial(baseColor = COLOR_NEUTRAL): THREE.MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({
     color: baseColor.clone(),
-    roughness: 0.42,
-    metalness: 0.15,
+    roughness: 0.34,
+    metalness: 0.22,
   });
 }
 
@@ -77,15 +77,15 @@ function styleMuscleMaterial(
   if (region && primary.includes(region)) {
     mat.color.copy(COLOR_PRIMARY);
     mat.emissive.copy(COLOR_PRIMARY);
-    mat.emissiveIntensity = 0.32 + contractionFactor * 0.55;
+    mat.emissiveIntensity = 0.42 + contractionFactor * 0.58;
   } else if (region && secondary.includes(region)) {
     mat.color.copy(COLOR_SECONDARY);
     mat.emissive.copy(COLOR_SECONDARY);
-    mat.emissiveIntensity = 0.16 + contractionFactor * 0.25;
+    mat.emissiveIntensity = 0.22 + contractionFactor * 0.3;
   } else {
     mat.color.copy(COLOR_NEUTRAL);
-    mat.emissive.setHex(0x000000);
-    mat.emissiveIntensity = 0;
+    mat.emissive.setHex(0x0f172a);
+    mat.emissiveIntensity = 0.08;
   }
 }
 

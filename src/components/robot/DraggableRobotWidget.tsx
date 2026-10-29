@@ -84,6 +84,15 @@ function generateSmartCompanionReply(query: string): {
     };
   }
 
+  if (q.includes('gym') || q.includes('tập') || q.includes('ngực') || q.includes('lưng') || q.includes('chân') || q.includes('vai')) {
+    return {
+      reply:
+        'KeyT Gym 3D Coach tự động nhắc lịch 5 ngày (Ngực • Tay sau-Lưng • Tay trước-Vai • Chân), xoay 3D 360° chuẩn form và lưu mức tạ buổi trước!',
+      suggestedHref: '/gym',
+      suggestedLabel: 'Mở KeyT Gym 3D Coach',
+    };
+  }
+
   return {
     reply:
       'Mình đã ghi nhận câu hỏi của ní! Ní có thể mở khung Chat Trực Tiếp để Admin hỗ trợ ngay hoặc khám phá các tiện ích AI bên dưới nhé!',

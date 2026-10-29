@@ -15,7 +15,7 @@ import VisitTracker from './components/VisitTracker';
 import AnnouncementModal from './components/AnnouncementModal';
 import AffiliateReferralTracker from './components/affiliate/AffiliateReferralTracker';
 import DraggableRobotWidget from './components/robot/DraggableRobotWidget';
-import { IS_ROBOT_3D_ENABLED } from './config/features';
+import { IS_GYM_COACH_ENABLED, IS_ROBOT_3D_ENABLED } from './config/features';
 import { announcementService } from './services/announcementService';
 
 // Lazy loading pages
@@ -64,6 +64,7 @@ const PhotoFramePage = lazy(() => import('./pages/PhotoFramePage'));
 const CompressPage = lazy(() => import('./pages/CompressPage'));
 const AiImagePage = lazy(() => import('./pages/AiImagePage'));
 const VideoTranslatePage = lazy(() => import('./pages/VideoTranslatePage'));
+const GymCoachPage = lazy(() => import('./pages/GymCoachPage'));
 const AdminChatPage = lazy(() => import('./pages/admin/AdminChatPage'));
 
 // Multi-Language Course Pages
@@ -246,6 +247,16 @@ export default function App() {
             };
         }
 
+        if (path === '/gym') {
+            return {
+                ...base,
+                title: 'KeyT Gym 3D Coach – Lộ Trình Tập Gym 5 Ngày, Máy Tập & Mô Phỏng Tư Thế 3D',
+                description:
+                    'Trợ lý nhắc lịch tập Gym 5 ngày (Ngực • Tay sau-Lưng • Tay trước-Vai • Chân), mô hình Mannequin 3D xoay 360° chuẩn form, nhận diện máy tập và lưu mức tạ thông minh.',
+                canonicalPath: '/gym',
+            };
+        }
+
         if (path === '/courses/kana' || path.endsWith('/kana')) {
             return {
                 ...base,
@@ -329,6 +340,7 @@ export default function App() {
                         <Route path="/compress" element={<CompressPage />} />
                         <Route path="/ai-image" element={<AiImagePage />} />
                         <Route path="/video-translate" element={<VideoTranslatePage />} />
+                        {IS_GYM_COACH_ENABLED && <Route path="/gym" element={<GymCoachPage />} />}
 
                         {/* Multi-Language Course Routes */}
                         <Route path="/courses" element={<CoursesHubPage />} />

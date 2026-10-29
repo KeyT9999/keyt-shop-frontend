@@ -26,8 +26,10 @@ import {
   Search,
   Flame,
   Video,
+  Dumbbell,
   type LucideIcon
 } from 'lucide-react';
+import { IS_GYM_COACH_ENABLED } from '../config/features';
 import { useAuthContext } from '../context/useAuthContext';
 import logo from '../assets/logo.png';
 import './Header.css';
@@ -111,6 +113,19 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
   // Dropdown data definitions
   const aiTools: SubMenuItem[] = [
+    ...(IS_GYM_COACH_ENABLED
+      ? [
+          {
+            title: 'KeyT Gym 3D Coach',
+            desc: 'Nhắc lịch 5 ngày, nhận diện máy tập & xoay 3D 360° chuẩn form',
+            href: '/gym',
+            icon: Dumbbell,
+            iconBg: 'bg-orange-50 text-[#F05A28]',
+            iconColor: '#F05A28',
+            badge: '3D'
+          }
+        ]
+      : []),
     {
       title: 'AI Dịch & Lồng Tiếng Video',
       desc: 'Tự động tải, dịch ngữ cảnh, lồng tiếng & đóng sub 24/7',

@@ -18,23 +18,37 @@ export type GymMuscleRegion =
 
 export type Gym3DAnimType =
   | 'incline_press'
+  | 'leverage_incline_press'
+  | 'laydown_chest_press'
   | 'bench_press'
   | 'pec_fly'
   | 'cable_crossover'
   | 'lat_pulldown'
+  | 'iso_high_pulldown'
+  | 'chest_supported_row'
   | 'cable_row'
+  | 'assisted_pullup'
   | 'tricep_pushdown'
+  | 'assisted_dip'
   | 'overhead_tricep'
   | 'hammer_curl'
   | 'barbell_curl'
+  | 'preacher_curl'
   | 'shoulder_press'
   | 'lateral_raise'
+  | 'machine_lateral_raise'
+  | 'reverse_pec_fly'
   | 'face_pull'
   | 'squat'
+  | 'super_squat'
   | 'leg_press'
+  | 'leg_extension'
   | 'rdl'
   | 'leg_curl'
+  | 'hip_thrust'
+  | 'hip_abduction'
   | 'calf_raise'
+  | 'back_extension'
   | 'recovery';
 
 export type GymPoseMode = 'loop' | 'start' | 'peak';
@@ -60,6 +74,8 @@ export interface GymExerciseDefinition {
   animType: Gym3DAnimType;
   /** Optional custom Blender .glb path under public/models/gym/<id>.glb */
   customGlbPath?: string;
+  /** Optional optimized photo of the exact real machine inside user's gym */
+  realGymPhoto?: string;
   /** Real 2-pose reference photos (Start & Peak contraction) from Free Exercise DB (Public Domain) */
   referenceImages: [string, string];
   benefit: string;

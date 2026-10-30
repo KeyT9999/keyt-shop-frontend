@@ -1,0 +1,517 @@
+import type { GymExerciseDefinition } from '../types/gym';
+
+const FREE_EX_DB_BASE =
+  'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises';
+
+function exImg(folder: string): [string, string] {
+  return [`${FREE_EX_DB_BASE}/${folder}/0.jpg`, `${FREE_EX_DB_BASE}/${folder}/1.jpg`];
+}
+
+/**
+ * Dedicated 3D exercises matched 1:1 to the real BRTW & Impulse machines
+ * photographed in the user's gym (`D:\TiemTapHoaKeyT\GYM`).
+ */
+export const REAL_GYM_MACHINE_EXERCISES: GymExerciseDefinition[] = [
+  // ======================== NGỰC (BRTW CHEST MACHINES) ========================
+  {
+    id: 'brtw_incline_chest_press',
+    name: 'BRTW Incline Chest Press',
+    vietnameseName: 'Đẩy ngực trên máy BRTW (Có bàn đạp trợ lực)',
+    categoryLabel: 'Ngực',
+    muscleTag: 'Ngực trên (Clavicular Pec) • Vai trước • Tay sau',
+    primaryMuscles: ['chest'],
+    secondaryMuscles: ['shoulders', 'triceps'],
+    machineName: 'Máy lắp tạ bánh BRTW Incline Chest Press (Yên nâu, càng xanh rêu)',
+    machineSetupTip:
+      'Đạp mạnh bàn đạp chân ở dưới để đưa 2 tay cầm nhô lên trước khi nắm vào, giúp bảo vệ khớp vai 100% lúc xuất phát.',
+    defaultWeightKg: 15,
+    weightUnitLabel: 'kg / bên sừng tạ',
+    sets: '3–4',
+    reps: '8–12',
+    restSeconds: 90,
+    restLabel: '90 giây',
+    animType: 'leverage_incline_press',
+    realGymPhoto: '/images/gym-machines/brtw-incline-chest-press.webp',
+    referenceImages: exImg('Leverage_Incline_Chest_Press'),
+    benefit:
+      'Quỹ đạo hội tụ chuẩn xác của máy BRTW giúp bơm căng đầy thớ cơ ngực trên cực kỳ an toàn ngay cả khi đẩy mức tạ nặng một mình.',
+    steps: [
+      'Chỉnh độ cao yên ghế nâu sao cho hai tay cầm ngang đúng vùng ngực trên (ngay dưới xương đòn).',
+      'Dùng chân đạp bàn đạp trợ lực bên dưới để đẩy hai càng máy ra trước, hai tay nắm chắc tay cầm rồi nhả chân.',
+      'Thu sát hai xương bả vai ép vào đệm lưng, thở ra đẩy mạnh hai tay cầm hội tụ lên cao.',
+      'Hít vào, kìm lực hạ càng máy chậm 2–3 giây cho tới khi ngực trên căng giãn rồi đạp bàn đạp khi kết thúc hiệp.',
+    ],
+    mistakes:
+      'Không dùng bàn đạp trợ lực khiến vai bị vặn lúc nhấc tạ ở điểm đáy, hoặc nhấc mông rời khỏi yên ghế.',
+  },
+  {
+    id: 'brtw_laydown_chest_press',
+    name: 'BRTW Laydown Chest Press',
+    vietnameseName: 'Nằm đẩy ngực phẳng trên máy BRTW Laydown Press',
+    categoryLabel: 'Ngực',
+    muscleTag: 'Ngực giữa dày (Sternal Pec) • Tay sau',
+    primaryMuscles: ['chest'],
+    secondaryMuscles: ['triceps', 'shoulders'],
+    machineName: 'Máy nằm đẩy ngực ngang lắp tạ bánh BRTW Laydown Chest Press',
+    machineSetupTip:
+      'Nằm dịch lên/xuống trên băng ghế nâu sao cho hai vai tỳ gọn dưới gối đệm chặn vai và tay cầm ngang giữa ngực.',
+    defaultWeightKg: 20,
+    weightUnitLabel: 'kg / bên máy',
+    sets: '3–4',
+    reps: '8–10',
+    restSeconds: 90,
+    restLabel: '90 giây',
+    animType: 'laydown_chest_press',
+    realGymPhoto: '/images/gym-machines/brtw-laydown-chest-press.webp',
+    referenceImages: exImg('Machine_Bench_Press'),
+    isEccentricFirst: true,
+    benefit:
+      'Tái hiện cảm giác Bench Press thanh đòn tự do nhưng hai cánh tay hội tụ vào trong giúp ngực giữa co rút tối đa mà không lo tạ đè.',
+    steps: [
+      'Lắp đều bánh tạ hai bên, nằm ngửa trên ghế nâu, hai bàn chân đặt vững dưới sàn.',
+      'Ép hai bả vai xuống mặt ghế, nắm hai tay cầm ngang ngực với cổ tay thẳng trục cẳng tay.',
+      'Thở ra, phát lực từ ngực đẩy thẳng hai càng máy hội tụ lên trần và siết ngực 1 giây.',
+      'Hít vào, hạ tạ có kiểm soát xuống sát tầm ngực mà không thả bánh tạ đập mạnh vào chốt.',
+    ],
+    mistakes:
+      'Bẻ ngửa cổ tay hoặc đẩy lệch một bên tay nhanh hơn bên còn lại.',
+  },
+
+  // ======================== LƯNG & TAY SAU (IMPULSE & BRTW) ========================
+  {
+    id: 'iso_high_pulldown',
+    name: 'BRTW Iso-Lateral High Pulldown',
+    vietnameseName: 'Kéo xô cao từng bên máy lắp tạ BRTW',
+    categoryLabel: 'Lưng',
+    muscleTag: 'Cơ xô rộng (Lats) • Cân bằng lực trái – phải',
+    primaryMuscles: ['back'],
+    secondaryMuscles: ['biceps', 'forearms'],
+    machineName: 'Máy kéo xô lắp tạ bánh BRTW High Pulldown (Càng độc lập trên cao)',
+    machineSetupTip:
+      'Gài chặt hai đùi dưới con lăn đệm nâu; có thể kéo cùng lúc 2 tay hoặc từng tay một để sửa lệch cơ xô.',
+    defaultWeightKg: 20,
+    weightUnitLabel: 'kg / bên máy',
+    sets: '3–4',
+    reps: '10–12',
+    restSeconds: 90,
+    restLabel: '90 giây',
+    animType: 'iso_high_pulldown',
+    realGymPhoto: '/images/gym-machines/brtw-iso-high-pulldown.webp',
+    referenceImages: exImg('Wide-Grip_Lat_Pulldown'),
+    benefit:
+      'Hai tay đòn hoạt động độc lập theo vòng cung tự nhiên giúp kích hoạt sâu phần xô dưới và khắc phục lệch lực hai bên lưng.',
+    steps: [
+      'Đứng nắm hai tay cầm trên cao rồi ngồi xuống gài đùi chặt dưới đệm khóa, mở cao lồng ngực.',
+      'Thở ra, hạ bả vai trước rồi thúc mạnh hai khuỷu tay xuống sát hai bên mạn sườn.',
+      'Giữ và siết chặt cơ xô ở điểm thấp nhất 1 giây.',
+      'Hít vào, từ từ nhả hai càng máy vươn cao hết cỡ để kéo giãn toàn bộ dải cơ xô.',
+    ],
+    mistakes:
+      'Dùng lực bắp tay trước giật mạnh hoặc rướn cong cổ về phía trước khi kéo xuống.',
+  },
+  {
+    id: 'chest_supported_row',
+    name: 'Impulse Chest-Supported T-Bar Row',
+    vietnameseName: 'Kéo lưng giữa tựa ngực trên máy Impulse',
+    categoryLabel: 'Lưng',
+    muscleTag: 'Lưng giữa dày (Mid-Back, Rhomboids) • Vai sau',
+    primaryMuscles: ['back'],
+    secondaryMuscles: ['biceps', 'shoulders'],
+    machineName: 'Máy kéo lưng tựa ngực Impulse Chest-Supported Row (Đệm đen, 2 kiểu tay cầm)',
+    machineSetupTip:
+      'Nắm tay cầm ngang rộng để ăn vào Lưng trên & Vai sau; nắm tay cầm chéo hẹp để ăn sâu vào Cơ xô.',
+    defaultWeightKg: 20,
+    weightUnitLabel: 'kg (bánh tạ lắp trước)',
+    sets: '3–4',
+    reps: '10–12',
+    restSeconds: 90,
+    restLabel: '90 giây',
+    animType: 'chest_supported_row',
+    realGymPhoto: '/images/gym-machines/impulse-chest-supported-row.webp',
+    referenceImages: exImg('Lying_T-Bar_Row'),
+    benefit:
+      'Đệm tựa ngực loại bỏ 100% áp lực lên thắt lưng dưới, giúp bạn dồn toàn bộ sức mạnh ép dày khối cơ lưng giữa.',
+    steps: [
+      'Chỉnh yên ghế sao cho phần xương ức/ngực trên tỳ vừa vặn lên đỉnh tấm đệm trước ngực.',
+      'Vươn tay nắm cặp tay cầm (rộng hoặc hẹp), thả hai bả vai giãn nhẹ về phía trước.',
+      'Thở ra, kéo khuỷu tay sâu ra sau và kẹp chặt hai xương bả vai lại với nhau 1 giây.',
+      'Hít vào, hạ tạ chậm rãi về trước mà vẫn giữ ngực áp sát vào đệm (không nhổm ngực bật lên).',
+    ],
+    mistakes:
+      'Bật ưỡn ngực rời khỏi tấm đệm để giật tạ nặng hoặc nhún vai cao về phía cổ.',
+  },
+  {
+    id: 'brtw_iso_low_row',
+    name: 'BRTW Iso-Lateral Low Row',
+    vietnameseName: 'Kéo xô dưới lắp tạ bánh BRTW Low Row',
+    categoryLabel: 'Lưng',
+    muscleTag: 'Cơ xô dưới dày (Lower Lats) • Lưng giữa',
+    primaryMuscles: ['back'],
+    secondaryMuscles: ['biceps', 'forearms'],
+    machineName: 'Máy kéo lưng thấp lắp tạ bánh BRTW Low Row (Yên & tựa ngực nâu)',
+    machineSetupTip:
+      'Ngồi hơi thấp một chút để quỹ đạo kéo đi từ dưới chếch nhẹ lên vùng eo giúp ăn trọn vào chân cơ xô dưới.',
+    defaultWeightKg: 20,
+    weightUnitLabel: 'kg / bên máy',
+    sets: '3',
+    reps: '10–12',
+    restSeconds: 75,
+    restLabel: '75 giây',
+    animType: 'chest_supported_row',
+    realGymPhoto: '/images/gym-machines/brtw-iso-low-row.webp',
+    referenceImages: exImg('Leverage_Iso_Row'),
+    benefit:
+      'Tạo độ dày chân cơ xô nối liền xuống eo (Christmas Tree Back) với quỹ đạo kéo móc từ dưới lên cực êm.',
+    steps: [
+      'Áp sát bụng trên/ngực dưới vào đệm tựa nâu, đặt hai chân vững trên bệ để chân.',
+      'Thở ra, kéo hai tay cầm xám lướt sát hông về phía sau, khuỷu tay khép sát thân.',
+      'Siết chặt vùng xô dưới 1 giây rồi hít vào duỗi tay trả tạ có kiểm soát.',
+    ],
+    mistakes:
+      'Khuỳnh rộng khuỷu tay ra ngoài làm mất lực cơ xô dưới.',
+  },
+  {
+    id: 'assisted_pullup',
+    name: 'BRTW Assisted Pull-Up',
+    vietnameseName: 'Hít xà đơn có đệm quỳ trợ lực BRTW',
+    categoryLabel: 'Lưng',
+    muscleTag: 'Toàn bộ cơ xô chữ V • Lưng trên • Tay trước',
+    primaryMuscles: ['back'],
+    secondaryMuscles: ['biceps', 'core'],
+    machineName: 'Trạm hít xà & nhún xà kép trợ lực BRTW Assisted Chin/Dip',
+    machineSetupTip:
+      'LƯU Ý QUAN TRỌNG: Trên máy trợ lực, cắm chốt tạ CÀNG NẶNG thì đệm nâng người lên CÀNG NHIỀU (tập càng nhẹ)!',
+    defaultWeightKg: 25,
+    weightUnitLabel: 'kg đối trọng trợ lực',
+    sets: '3–4',
+    reps: '8–12',
+    restSeconds: 90,
+    restLabel: '90 giây',
+    animType: 'assisted_pullup',
+    realGymPhoto: '/images/gym-machines/brtw-assisted-dip-pullup.webp',
+    referenceImages: exImg('Band_Assisted_Pull-Up'),
+    benefit:
+      'Giúp bạn thực hiện chuẩn form bài Hít xà đơn (Pull-Up) hết biên độ để mở rộng xô nhanh chóng dù chưa tự kéo nổi trọng lượng cơ thể.',
+    steps: [
+      'Cắm chốt mức tạ đối trọng phù hợp, bước lên bậc chân rồi đặt hai đầu gối quỳ ngay ngắn lên đệm nâu.',
+      'Hai tay nắm sừng xà rộng trên đầu, thả người hạ xuống cho cơ xô giãn căng.',
+      'Thở ra, ưỡn ngực kéo cơ thể đi lên cho tới khi cằm vượt qua tay nắm xà.',
+      'Hít vào, từ từ hạ người xuống 2–3 giây; khi xong hiệp, giữ 1 chân trên đệm đưa xuống hết rồi mới bước ra.',
+    ],
+    mistakes:
+      'Bước cả hai gối ra khỏi đệm đột ngột khi đệm đang ở trên cao làm đệm bật mạnh va vào máy!',
+  },
+  {
+    id: 'assisted_tricep_dip',
+    name: 'BRTW Assisted Parallel Bar Dip',
+    vietnameseName: 'Nhún xà kép tập tay sau trên máy trợ lực BRTW',
+    categoryLabel: 'Tay sau',
+    muscleTag: 'Cơ tay sau toàn khối (Triceps) • Ngực dưới',
+    primaryMuscles: ['triceps'],
+    secondaryMuscles: ['chest', 'shoulders'],
+    machineName: 'Trạm xà kép trợ lực BRTW Assisted Dip (Xoay càng tay nắm vào trong hoặc rộng vừa)',
+    machineSetupTip:
+      'Giữ thân người THẲNG ĐỨNG sẽ dồn lực tối đa vào Tay sau; nếu nghiêng người về trước sẽ ăn nhiều sang Ngực dưới.',
+    defaultWeightKg: 20,
+    weightUnitLabel: 'kg đối trọng trợ lực',
+    sets: '3',
+    reps: '10–12',
+    restSeconds: 75,
+    restLabel: '75 giây',
+    animType: 'assisted_dip',
+    realGymPhoto: '/images/gym-machines/brtw-assisted-dip-pullup.webp',
+    referenceImages: exImg('Dips_-_Triceps_Version'),
+    isEccentricFirst: true,
+    benefit:
+      'Được mệnh danh là "Squat của thân trên", giúp phát triển khối lượng và sức mạnh cơ tay sau vượt trội.',
+    steps: [
+      'Nắm chắc hai thanh xà kép song song, quỳ hai đầu gối lên đệm trợ lực và chống thẳng tay nâng người.',
+      'Hít vào, khép hai khuỷu tay hướng ra sau, hạ thân người thẳng xuống tới khi bắp tay song song mặt sàn (góc 90°).',
+      'Thở ra, ấn mạnh lòng bàn tay xuống thanh xà đẩy thẳng cánh tay lên và siết cứng tay sau.',
+    ],
+    mistakes:
+      'Hạ vai sập quá sâu dưới 90° gây căng khớp vai trước hoặc choãi rộng hai khuỷu tay sang ngang.',
+  },
+
+  // ======================== TAY TRƯỚC & VAI (BRTW ARM & DELT MACHINES) ========================
+  {
+    id: 'machine_bicep_curl',
+    name: 'BRTW Plate-Loaded Biceps Curl',
+    vietnameseName: 'Cuốn tay trước trên máy tỳ nách BRTW Biceps Curl',
+    categoryLabel: 'Tay trước',
+    muscleTag: 'Đỉnh cơ nhị đầu (Biceps Peak) • Cô lập 100% tay trước',
+    primaryMuscles: ['biceps'],
+    secondaryMuscles: ['forearms'],
+    machineName: 'Máy cuốn tay trước lắp tạ bánh BRTW Biceps Curl (Đệm tỳ nách nâu)',
+    machineSetupTip:
+      'Chỉnh độ cao yên ghế sao cho nách và toàn bộ mặt sau bắp tay áp khít hoàn toàn lên tấm đệm nghiêng.',
+    defaultWeightKg: 10,
+    weightUnitLabel: 'kg (bánh tạ lắp máy)',
+    sets: '3–4',
+    reps: '10–12',
+    restSeconds: 60,
+    restLabel: '60–75 giây',
+    animType: 'preacher_curl',
+    realGymPhoto: '/images/gym-machines/brtw-biceps-curl.webp',
+    referenceImages: exImg('Machine_Preacher_Curls'),
+    benefit:
+      'Trục cam của máy BRTW giữ lực căng đều từ đầu đến cuối biên độ, khóa chặt khuỷu tay không thể đung đưa ăn gian.',
+    steps: [
+      'Ngồi vào yên ghế, đặt hai bắp tay trải dài trên đệm nghiêng và nắm hai tay cầm xoay của máy.',
+      'Thở ra, cuốn mạnh hai tay cầm lên phía cằm và gồng cứng con chuột tay trước 1 giây.',
+      'Hít vào, kìm lực nhả tay cầm xuống chậm 3 giây tới khi tay duỗi khoảng 95% rồi cuốn tiếp.',
+    ],
+    mistakes:
+      'Nhổm mông khỏi ghế hoặc nhấc khuỷu tay rời khỏi mặt đệm nghiêng khi cuốn lên.',
+  },
+  {
+    id: 'machine_shoulder_press',
+    name: 'BRTW Smith / Leverage Shoulder Press',
+    vietnameseName: 'Ngồi đẩy vai trên máy BRTW / Khung trượt Multi-function',
+    categoryLabel: 'Vai',
+    muscleTag: 'Vai trước & Vai giữa • Đẩy nặng an toàn',
+    primaryMuscles: ['shoulders'],
+    secondaryMuscles: ['triceps'],
+    machineName: 'Khung trượt xéo BRTW Multi-function Press + Ghế nâu dựng đứng 75–80° (hoặc Máy BRTW Shoulder Press)',
+    machineSetupTip:
+      'Đặt ghế tựa nâu dưới khung trượt sao cho khi hạ thanh đòn xuống, thanh đòn đi sát ngay trước cằm/mũi mà không vướng đầu.',
+    defaultWeightKg: 15,
+    weightUnitLabel: 'kg / bên đòn',
+    sets: '3–4',
+    reps: '8–12',
+    restSeconds: 90,
+    restLabel: '90 giây',
+    animType: 'shoulder_press',
+    realGymPhoto: '/images/gym-machines/brtw-multi-smith-press.webp',
+    referenceImages: exImg('Leverage_Shoulder_Press'),
+    benefit:
+      'Thanh trượt dẫn hướng cố định giúp bạn tập trung 100% lực đẩy cho cơ cầu vai mà không mất sức giữ thăng bằng tạ lẻ.',
+    steps: [
+      'Ngồi tựa chặt lưng vào ghế 75–80°, nắm thanh đòn rộng hơn vai một chút rồi xoay cổ tay mở móc an toàn.',
+      'Hít vào, hạ thanh đòn chậm rãi xuống ngang tầm cằm/tai.',
+      'Thở ra, đẩy mạnh thanh đòn thẳng lên cao (giữ khớp khuỷu hơi mềm ở đỉnh) rồi lặp lại.',
+    ],
+    mistakes:
+      'Hạ thanh đòn ra phía sau gáy (dễ chấn thương khớp vai) hoặc trượt mông ra trước làm cong thắt lưng.',
+  },
+  {
+    id: 'machine_lateral_raise',
+    name: 'BRTW Seated Lateral Raise Machine',
+    vietnameseName: 'Bay vai giữa trên máy BRTW Lateral Raise',
+    categoryLabel: 'Vai',
+    muscleTag: 'Cô lập cơ vai giữa (Medial Deltoid) • Tạo bờ vai rộng 3D',
+    primaryMuscles: ['shoulders'],
+    secondaryMuscles: [],
+    machineName: 'Máy bay vai khối tạ ghim BRTW Lateral Raise (Có đệm tỳ khuỷu tay)',
+    machineSetupTip:
+      'Chỉnh yên ghế để khớp vai của bạn nằm ngang đúng tâm trục xoay tròn phía trên của hai càng máy!',
+    defaultWeightKg: 20,
+    weightUnitLabel: 'kg (tạ khối ghim chốt)',
+    sets: '3–4',
+    reps: '12–15',
+    restSeconds: 60,
+    restLabel: '60 giây',
+    animType: 'machine_lateral_raise',
+    realGymPhoto: '/images/gym-machines/brtw-lateral-raise.webp',
+    referenceImages: exImg('Seated_Side_Lateral_Raise'),
+    benefit:
+      'Vũ khí "ăn tiền" nhất ở phòng gym cho bờ vai rộng: lực đẩy đặt thẳng vào KHUỶU TAY thay vì cổ tay, cô lập vai giữa gấp đôi tạ đơn!',
+    steps: [
+      'Ngồi tựa ngực hoặc lưng vào đệm ghế, đặt mặt ngoài khuỷu tay/cẳng tay áp vào hai con lăn đệm nâu, tay nắm hờ chốt cầm.',
+      'Hạ thấp cầu vai xuống (không rụt cổ), thở ra dùng hai khuỷu tay thúc hai đệm máy mở rộng lên ngang vai (90°).',
+      'Dừng nhẹ 1 giây ở ngang vai cảm nhận hai đầu vai nóng rát.',
+      'Hít vào, kìm tạ hạ xuống chậm nhưng không để tạ chạm nghỉ hoàn toàn giữa các lần lặp.',
+    ],
+    mistakes:
+      'Nhún cầu vai lên sát tai để rướn đẩy tạ nặng hoặc nâng khuỷu tay cao vọt quá vai.',
+  },
+  {
+    id: 'reverse_pec_deck',
+    name: 'BRTW Rear Deltoid Reverse Fly',
+    vietnameseName: 'Ngồi úp ngực ép vai sau trên máy BRTW Rear Deltoid',
+    categoryLabel: 'Vai',
+    muscleTag: 'Cơ vai sau (Rear Deltoid) • Lưng trên chống gù',
+    primaryMuscles: ['shoulders', 'back'],
+    secondaryMuscles: [],
+    machineName: 'Máy BRTW Pec Fly / Rear Deltoid (Chốt càng máy xoay hết cỡ về phía trước)',
+    machineSetupTip:
+      'Bóp chốt trên đỉnh càng máy đưa cả 2 tay đòn về sát nhau phía trước tấm đệm, sau đó ngồi ÚP NGỰC vào đệm ghế.',
+    defaultWeightKg: 25,
+    weightUnitLabel: 'kg (tạ khối ghim chốt)',
+    sets: '3',
+    reps: '12–15',
+    restSeconds: 60,
+    restLabel: '60 giây',
+    animType: 'reverse_pec_fly',
+    realGymPhoto: '/images/gym-machines/brtw-iso-high-pulldown.webp',
+    referenceImages: exImg('Reverse_Machine_Flyes'),
+    benefit:
+      'Bù đắp phần cơ vai sau thường bị lép giúp đầu vai tròn đều 3D khi nhìn nghiêng và kéo mở vai thẳng đẹp.',
+    steps: [
+      'Ngồi quay mặt vào ghế, áp ngực vào đệm tựa, chỉnh yên ghế sao cho tay cầm nằm ngang đúng tầm vai.',
+      'Nắm tay cầm ngang (lòng bàn tay úp hoặc hướng vào nhau), giữ khuỷu tay hơi cong nhẹ cố định.',
+      'Thở ra, mở rộng hai cánh tay quét ngang ra sau bằng lực của mặt sau vai (hạn chế kẹp bả vai quá sớm).',
+      'Hít vào, đưa hai tay từ từ khép lại phía trước có kiểm soát.',
+    ],
+    mistakes:
+      'Ngửa cổ giật lưng rời khỏi đệm ngực hoặc hạ thấp khuỷu tay xuống biến thành bài kéo xô.',
+  },
+
+  // ======================== CHÂN & MÔNG (BRTW LOWER BODY ARSENAL) ========================
+  {
+    id: 'super_squat_machine',
+    name: 'BRTW Super Squat (V-Squat / Hack)',
+    vietnameseName: 'Gánh đùi an toàn trên máy BRTW Super Squat',
+    categoryLabel: 'Chân',
+    muscleTag: 'Đùi trước (Quads) • Cơ mông căng tròn • Bảo vệ cột sống',
+    primaryMuscles: ['quads', 'glutes'],
+    secondaryMuscles: ['hamstrings', 'core'],
+    machineName: 'Máy gánh đùi lắp tạ bánh BRTW Super Squat (Đệm vai dày màu nâu)',
+    machineSetupTip:
+      'Đặt hai chân tiến về phía trước mặt bàn đạp một chút để đầu gối không bị dồn áp lực và lưng tựa êm hoàn toàn vào đệm.',
+    defaultWeightKg: 25,
+    weightUnitLabel: 'kg / bên máy',
+    sets: '4',
+    reps: '8–12',
+    restSeconds: 90,
+    restLabel: '90–120 giây',
+    animType: 'super_squat',
+    realGymPhoto: '/images/gym-machines/brtw-super-squat.webp',
+    referenceImages: exImg('Hack_Squat'),
+    isEccentricFirst: true,
+    benefit:
+      'Thay thế hoàn hảo cho Squat thanh đòn tự do: lưng được đỡ chắc chắn trên đệm trượt giúp bạn xuống sâu hết biên độ cực kỳ an toàn!',
+    steps: [
+      'Chui vai vào dưới hai gối đệm vai nâu, áp sát lưng và mông vào tấm đệm tựa, chân mở rộng bằng vai trên bàn đạp nghiêng.',
+      'Đứng thẳng nhấc máy lên và kéo cần gạt mở chốt khóa an toàn bên hông.',
+      'Hít sâu gồng bụng, từ từ gập hông và gối ngồi sâu xuống cho đến khi đùi song song bàn đạp.',
+      'Thở ra, đạp mạnh cả bàn chân đẩy máy đứng lên (giữ khớp gối hơi chùng nhẹ ở đỉnh), cuối hiệp đóng chốt khóa rồi mới hạ người.',
+    ],
+    mistakes:
+      'Khóa cứng sập khớp gối ở điểm cao nhất hoặc nhấc gót chân bập bênh trên mặt bàn đạp.',
+  },
+  {
+    id: 'leg_extension',
+    name: 'BRTW Seated Leg Extension',
+    vietnameseName: 'Ngồi đá đùi trước trên máy BRTW Leg Curl/Extension',
+    categoryLabel: 'Chân',
+    muscleTag: 'Cô lập 4 đầu cơ đùi trước (Quadriceps • Giọt lệ đùi)',
+    primaryMuscles: ['quads'],
+    secondaryMuscles: [],
+    machineName: 'Máy đa năng 2 trong 1 BRTW Leg Curl/Extension (Chế độ đá đùi lên)',
+    machineSetupTip:
+      'Chỉnh đệm lưng sao cho khoeo chân sát mép ghế (trùng trục xoay máy), đặt con lăn đệm dưới nằm ngay cổ chân trước.',
+    defaultWeightKg: 35,
+    weightUnitLabel: 'kg (tạ khối ghim chốt)',
+    sets: '3–4',
+    reps: '12–15',
+    restSeconds: 60,
+    restLabel: '60 giây',
+    animType: 'leg_extension',
+    realGymPhoto: '/images/gym-machines/brtw-leg-curl-extension.webp',
+    referenceImages: exImg('Leg_Extensions'),
+    benefit:
+      'Bài tập duy nhất cô lập trực tiếp 100% cơ tứ đầu đùi (đặc biệt là cơ giọt lệ VMO sát trên đầu gối) giúp khớp gối khỏe vững.',
+    steps: [
+      'Ngồi sát lưng vào ghế nâu, móc mu cổ chân vào sau con lăn dưới, hai tay nắm chặt hai tay vịn bên hông mông.',
+      'Thở ra, đá thẳng hai cẳng chân lên ngang tầm đùi và dừng siết cứng đùi trước 1 giây đầy đủ trên đỉnh.',
+      'Hít vào, kìm lực hạ con lăn chậm 2–3 giây về góc gập gối 90° mà không thả rơi tạ.',
+    ],
+    mistakes:
+      'Đá vung chân lấy đà giật mạnh hoặc nhổm mông khỏi yên ghế khi đá lên.',
+  },
+  {
+    id: 'machine_hip_thrust',
+    name: 'BRTW Plate-Loaded Hip Thrust',
+    vietnameseName: 'Đẩy hông tập cơ mông trên máy chuyên dụng BRTW Hip Thrust',
+    categoryLabel: 'Chân',
+    muscleTag: 'Cơ mông lớn (Gluteus Maximus) • Đùi sau • Sức mạnh hông',
+    primaryMuscles: ['glutes'],
+    secondaryMuscles: ['hamstrings', 'core'],
+    machineName: 'Máy đẩy hông lắp tạ bánh BRTW Hip Thrust (Thanh đệm hông trượt sẵn)',
+    machineSetupTip:
+      'Không cần kê tạ đòn lỉnh kỉnh! Đặt bả vai dưới lên đệm tựa ngang và cài đai/đệm máy nằm ngay nếp gấp hông.',
+    defaultWeightKg: 20,
+    weightUnitLabel: 'kg / bên máy',
+    sets: '3–4',
+    reps: '10–12',
+    restSeconds: 75,
+    restLabel: '75–90 giây',
+    animType: 'hip_thrust',
+    realGymPhoto: '/images/gym-machines/brtw-hip-thrust.webp',
+    referenceImages: exImg('Barbell_Hip_Thrust'),
+    benefit:
+      'Phòng gym của bạn có sẵn máy BRTW Hip Thrust cực xịn giúp tập cơ mông khỏe, săn cao và hỗ trợ lưng dưới vững chắc.',
+    steps: [
+      'Tựa phần lưng trên (ngay dưới xương bả vai) lên đệm ghế sau, hai bàn chân đặt vững trên bàn đạp nghiêng sao cho khi đẩy lên cẳng chân vuông góc 90°.',
+      'Gạt chốt mở khóa, giữ cằm hơi thu nhẹ nhìn về trước.',
+      'Thở ra, đạp mạnh qua gót chân đẩy hông thẳng lên trần cho tới khi vai – hông – đầu gối tạo thành mặt phẳng ngang, siết chặt cơ mông 1–2 giây.',
+      'Hít vào, hạ hông sâu xuống có kiểm soát rồi đẩy nhịp tiếp theo.',
+    ],
+    mistakes:
+      'Ngửa cổ nhìn thẳng lên trần làm ưỡn võng thắt lưng dưới thay vì dùng cơ mông đẩy hông.',
+  },
+  {
+    id: 'hip_abductor_adductor',
+    name: 'BRTW Hip Abductor / Adductor (2-in-1)',
+    vietnameseName: 'Ngồi mở mông ngoài & ép đùi trong trên máy BRTW',
+    categoryLabel: 'Chân',
+    muscleTag: 'Mông nhỡ hai bên (Glute Medius) • Cơ khép đùi trong (Adductors)',
+    primaryMuscles: ['glutes', 'quads'],
+    secondaryMuscles: ['hamstrings'],
+    machineName: 'Máy 2 chiều BRTW Hip Abductor / Adductor (Xoay 2 đệm đùi trong/ngoài)',
+    machineSetupTip:
+      'Xoay mặt đệm hướng vào trong + khép chân để mở rộng ra ngoài (tập Mông ngoài); xoay đệm ra ngoài + mở rộng chân để ép vào (tập Đùi trong).',
+    defaultWeightKg: 35,
+    weightUnitLabel: 'kg (tạ khối ghim chốt)',
+    sets: '3',
+    reps: '15',
+    restSeconds: 60,
+    restLabel: '60 giây',
+    animType: 'hip_abduction',
+    realGymPhoto: '/images/gym-machines/brtw-hip-abductor-adductor.webp',
+    referenceImages: exImg('Thigh_Abductor'),
+    benefit:
+      'Gia cố nhóm cơ mông nhỡ ổn định khớp háng (chống chụm gối khi Squat/chạy bộ) và làm săn chắc vùng đùi trong.',
+    steps: [
+      'Rút chốt dưới ghế đưa hai càng máy khép lại (khi tập mở mông ngoài), ngồi đặt mặt ngoài đầu gối áp vào hai tấm đệm.',
+      'Thở ra, đẩy mở rộng hai đầu gối sang hai bên hết biên độ và giữ siết hai bên hông mông 1 giây.',
+      'Hít vào, từ từ khép đùi trở lại có kiểm soát. Có thể tập 2 hiệp Mở mông ngoài + 2 hiệp Ép đùi trong!',
+    ],
+    mistakes:
+      'Thả hai chân bật khép sập vào nhau quá nhanh theo quán tính dây cáp.',
+  },
+
+  // ======================== CORE & LƯNG DƯỚI (45° ROMAN CHAIR) ========================
+  {
+    id: 'back_extension_45',
+    name: '45° Roman Chair Back Extension',
+    vietnameseName: 'Gập duỗi lưng dưới & mông đùi sau trên ghế nghiêng 45°',
+    categoryLabel: 'Core & Phục hồi',
+    muscleTag: 'Cơ dựng sống lưng dưới (Erector Spinae) • Mông & Đùi sau',
+    primaryMuscles: ['back', 'glutes', 'hamstrings'],
+    secondaryMuscles: ['core'],
+    machineName: 'Ghế tập lưng bụng nghiêng 45° (Roman Chair đệm nâu đôi + bánh tạ 5–10kg)',
+    machineSetupTip:
+      'Chỉnh chiều cao đệm sao cho mép trên của đệm nằm ngay NẾP GẤP HÔNG (dưới xương chậu), không để đệm tỳ cao lên bụng!',
+    defaultWeightKg: 5,
+    weightUnitLabel: 'kg (ôm bánh tạ trước ngực)',
+    sets: '3',
+    reps: '12–15',
+    restSeconds: 60,
+    restLabel: '60 giây',
+    animType: 'back_extension',
+    realGymPhoto: '/images/gym-machines/roman-chair-45.webp',
+    referenceImages: exImg('Hyperextensions_Back_Extensions'),
+    isEccentricFirst: true,
+    benefit:
+      'Tăng cường sức bền dải cơ lưng dưới, cơ mông và đùi sau, giúp hết mỏi thắt lưng khi ngồi làm việc lâu và giữ cột sống khỏe.',
+    steps: [
+      'Gài cổ chân sau dưới con lăn đệm dưới, áp đùi trên vào hai đệm hông nâu, hai tay khoanh trước ngực (hoặc ôm 1 bánh tạ 5–10kg).',
+      'Hít vào, giữ lưng thẳng tự nhiên và gập khớp hông hạ thân trên xuống góc khoảng 70–80° cảm nhận đùi sau căng.',
+      'Thở ra, siết chặt cơ mông và cơ lưng dưới nâng thân người lên tới khi đầu – lưng – chân tạo thành MỘT ĐƯỜNG THẲNG 45° (dừng đúng trục thẳng!).',
+    ],
+    mistakes:
+      'Ngửa ưỡn quặt lưng quá cao lên trên trục thẳng (Hyperextension quá mức gây chèn ép đĩa đệm lưng dưới).',
+  },
+];

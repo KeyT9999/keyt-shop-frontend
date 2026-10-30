@@ -1,4 +1,8 @@
 import type { Gym3DAnimType } from '../types/gym';
+import {
+  computeGym3DMachinePose,
+  type GymMachinePropSpec,
+} from './gym3DMachinePoses';
 
 export type Vec3Tuple = [number, number, number];
 
@@ -37,7 +41,8 @@ export type GymEquipmentPropSpec =
   | { kind: 'cable_high_rope'; lPos: Vec3Tuple; rPos: Vec3Tuple; anchor: Vec3Tuple }
   | { kind: 'cable_dual_crossover'; lPos: Vec3Tuple; rPos: Vec3Tuple }
   | { kind: 'cable_low_row'; lPos: Vec3Tuple; rPos: Vec3Tuple }
-  | { kind: 'leg_press_sled'; lFoot: Vec3Tuple; rFoot: Vec3Tuple };
+  | { kind: 'leg_press_sled'; lFoot: Vec3Tuple; rFoot: Vec3Tuple }
+  | GymMachinePropSpec;
 
 export interface ComputedGymPoseFrame {
   joints: GymJointMap;
@@ -98,6 +103,11 @@ export function computeGym3DPoseKeyframes(
   p: number
 ): ComputedGymPoseFrame {
   const j = createStandingBase();
+  const machineProps = computeGym3DMachinePose(animType, j, p);
+  if (machineProps) {
+    return { joints: j, props: machineProps };
+  }
+
   const props: GymEquipmentPropSpec[] = [];
 
   switch (animType) {
@@ -421,8 +431,9 @@ export function computeGym3DPoseKeyframes(
       j.rHip[1] += lift;
       j.lKnee[1] += lift;
       j.rKnee[1] += lift;
-      j.lAnkle[1] = 0.06 + lift;
-      j.rAnkle[1] = 0.06 + lift;
+      j.lAnkle[1] = 0.11 + lift;
+      j.rAnkle[1] = 0.11 + lift;
+      props.push({ kind: 'step_calf_block' });
       props.push({ kind: 'dumbbell_hammer', pos: j.lWrist });
       props.push({ kind: 'dumbbell_hammer', pos: j.rWrist });
       break;

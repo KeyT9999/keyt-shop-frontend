@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { GymMuscleRegion } from '../types/gym';
+import { buildGymMachinePropMesh } from './gym3DMachineProps';
+import type { GymMachinePropSpec } from './gym3DMachinePoses';
 import type { ComputedGymPoseFrame, Vec3Tuple } from './gym3DPoseData';
 
 /**
@@ -126,6 +128,16 @@ export function createGymProceduralSceneRig(): GymProceduralSceneRig {
     roughness: 0.65,
     metalness: 0.1,
   });
+  const brtwLeatherMat = new THREE.MeshStandardMaterial({
+    color: 0x7c4a2d,
+    roughness: 0.58,
+    metalness: 0.12,
+  });
+  const brtwLeverMat = new THREE.MeshStandardMaterial({
+    color: 0x648b78,
+    roughness: 0.35,
+    metalness: 0.65,
+  });
 
   const handles: Record<string, LimbSegmentHandle> = {};
 
@@ -201,6 +213,30 @@ export function createGymProceduralSceneRig(): GymProceduralSceneRig {
       const dir = new THREE.Vector3(axisDir[0], axisDir[1], axisDir[2]).normalize();
       m.quaternion.setFromUnitVectors(UP_AXIS, dir);
       propsGroup.add(m);
+    };
+
+    const addBox = (
+      pos: Vec3Tuple,
+      scale: Vec3Tuple,
+      mat: THREE.Material,
+      rotX = 0,
+      rotY = 0
+    ) => {
+      const m = new THREE.Mesh(unitBoxGeo, mat);
+      m.position.set(pos[0], pos[1], pos[2]);
+      m.scale.set(scale[0], scale[1], scale[2]);
+      m.rotation.set(rotX, rotY, 0);
+      propsGroup.add(m);
+    };
+
+    const machinePropHelpers = {
+      addBar,
+      addBox,
+      addDisc,
+      frameMat: equipPlateMat,
+      chromeMat: equipMetalMat,
+      leatherMat: brtwLeatherMat,
+      leverMat: brtwLeverMat,
     };
 
     for (const pr of frame.props) {
@@ -287,6 +323,8 @@ export function createGymProceduralSceneRig(): GymProceduralSceneRig {
         sledPlate.scale.set(0.56, 0.36, 0.05);
         sledPlate.rotation.x = -0.65;
         propsGroup.add(sledPlate);
+      } else {
+        buildGymMachinePropMesh(pr as GymMachinePropSpec, machinePropHelpers);
       }
     }
   }
@@ -395,6 +433,8 @@ export function createGymProceduralSceneRig(): GymProceduralSceneRig {
     equipMetalMat.dispose();
     equipPlateMat.dispose();
     benchPadMat.dispose();
+    brtwLeatherMat.dispose();
+    brtwLeverMat.dispose();
     Object.values(handles).forEach((h) => h.material.dispose());
   }
 

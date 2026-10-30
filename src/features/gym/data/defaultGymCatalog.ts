@@ -4,6 +4,7 @@ import type {
   GymSplitDayConfig,
   GymSplitPresetTemplate,
 } from '../types/gym';
+import { REAL_GYM_MACHINE_EXERCISES } from './realGymMachineExercises';
 
 const FREE_EX_DB_BASE =
   'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises';
@@ -27,6 +28,7 @@ export const GYM_MUSCLE_LABELS_VI: Record<GymMuscleRegion, string> = {
 };
 
 export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
+  ...REAL_GYM_MACHINE_EXERCISES,
   // ======================== NGỰC (CHEST) ========================
   {
     id: 'incline_dumbbell_press',
@@ -36,9 +38,9 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     muscleTag: 'Ngực trên (Clavicular Pec) • Vai trước',
     primaryMuscles: ['chest'],
     secondaryMuscles: ['shoulders', 'triceps'],
-    machineName: 'Ghế dốc lên 30° (nấc nghiêng số 2–3) + Cặp tạ đơn (Dumbbell)',
+    machineName: 'Ghế dốc lên 30° khu gương + Cặp tạ đơn lục giác Hammer Strength',
     machineSetupTip:
-      'Chỉ chỉnh ghế nghiêng khoảng 30°. Nếu dựng cao quá 45° lực sẽ dồn hết sang cơ vai trước thay vì ngực trên.',
+      'Chỉ chỉnh ghế nghiêng khoảng 30° (nấc 2–3). Nếu dựng cao quá 45° lực sẽ dồn hết sang cơ vai trước thay vì ngực trên.',
     defaultWeightKg: 16,
     weightUnitLabel: 'kg / quả',
     sets: '3–4',
@@ -47,6 +49,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '90 giây',
     animType: 'incline_press',
     customGlbPath: '/models/gym/incline_dumbbell_press.glb',
+    realGymPhoto: '/images/gym-machines/dumbbell-bench-zone.webp',
     referenceImages: exImg('Incline_Dumbbell_Press'),
     benefit:
       'Làm đầy thớ cơ ngực trên ngay dưới xương đòn, giúp khuôn ngực cao, dày và cân đối tổng thể.',
@@ -62,15 +65,15 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
   },
   {
     id: 'barbell_bench_press',
-    name: 'Barbell / Machine Chest Press',
-    vietnameseName: 'Đẩy ngực ngang (Thanh đòn / Máy ngồi)',
+    name: 'BRTW Smith / Bench Chest Press',
+    vietnameseName: 'Đẩy ngực trên khung trượt BRTW Multi-function Press',
     categoryLabel: 'Ngực',
     muscleTag: 'Ngực giữa (Sternal Pec) • Tay sau',
     primaryMuscles: ['chest'],
     secondaryMuscles: ['triceps', 'shoulders'],
-    machineName: 'Ghế nằm đẩy ngực phẳng (Flat Bench) hoặc Máy ngồi Chest Press Machine',
+    machineName: 'Khung trượt xéo BRTW Multi-function Press + Ghế nâu nằm phẳng/dốc nhẹ',
     machineSetupTip:
-      'Nếu ngồi máy Chest Press: chỉnh độ cao yên ghế sao cho hai tay cầm nằm ngang đúng đường giữa ngực.',
+      'Căn giữa ghế nâu dưới thanh đòn trượt sao cho khi hạ xuống thanh đòn chạm nhẹ ngay vùng ngực dưới.',
     defaultWeightKg: 20,
     weightUnitLabel: 'kg / bên',
     sets: '3–4',
@@ -79,7 +82,8 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '90 giây',
     animType: 'bench_press',
     customGlbPath: '/models/gym/barbell_bench_press.glb',
-    referenceImages: exImg('Barbell_Bench_Press_-_Medium_Grip'),
+    realGymPhoto: '/images/gym-machines/brtw-multi-smith-press.webp',
+    referenceImages: exImg('Smith_Machine_Bench_Press'),
     isEccentricFirst: true,
     benefit:
       'Bài tập sức mạnh cốt lõi phát triển độ dày toàn diện của cơ ngực giữa, hỗ trợ vai trước và tay sau.',
@@ -100,9 +104,9 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     muscleTag: 'Rãnh ngực trong • Cô lập cơ ngực',
     primaryMuscles: ['chest'],
     secondaryMuscles: ['shoulders'],
-    machineName: 'Máy ép ngực Pec Deck / Butterfly Machine',
+    machineName: 'Máy ép ngực cánh bướm BRTW Pec Fly / Rear Deltoid',
     machineSetupTip:
-      'Chỉnh chốt mở của hai càng máy vừa tầm vai, tránh để càng máy kéo quặt tay quá sâu ra sau lưng.',
+      'Chỉnh chốt mở trên đỉnh hai càng máy vừa tầm vai, tránh để càng máy kéo quặt tay quá sâu ra sau lưng.',
     defaultWeightKg: 35,
     weightUnitLabel: 'kg (tổng tạ máy)',
     sets: '3',
@@ -111,6 +115,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '60 giây',
     animType: 'pec_fly',
     customGlbPath: '/models/gym/pec_deck_fly.glb',
+    realGymPhoto: '/images/gym-machines/brtw-iso-high-pulldown.webp',
     referenceImages: exImg('Butterfly'),
     benefit:
       'Cô lập hoàn toàn cơ ngực mà không cần dùng nhiều lực tay sau, tạo cảm giác bơm căng rãnh ngực rõ rệt.',
@@ -131,7 +136,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     muscleTag: 'Ngực dưới (Costal Pec) • Ngực trong',
     primaryMuscles: ['chest'],
     secondaryMuscles: ['shoulders', 'core'],
-    machineName: 'Trạm ròng rọc cáp đôi (Cable Crossover) gắn 2 tay cầm đơn ở vị trí cao',
+    machineName: 'Trạm khung cáp đôi BRTW Cable Crossover gắn 2 tay cầm đơn ở nấc cao',
     machineSetupTip:
       'Bước một chân lên trước tạo thế đứng vững (Staggered Stance) để không bị cáp kéo ngửa người ra sau.',
     defaultWeightKg: 12.5,
@@ -142,6 +147,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '60 giây',
     animType: 'cable_crossover',
     customGlbPath: '/models/gym/cable_crossover.glb',
+    realGymPhoto: '/images/gym-machines/brtw-cable-crossover-tricep.webp',
     referenceImages: exImg('Cable_Crossover'),
     benefit:
       'Định hình đường cắt sắc nét của bầu ngực dưới và giữ sức căng liên tục suốt toàn bộ quỹ đạo.',
@@ -171,7 +177,8 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     reps: '8–12',
     restSeconds: 90,
     restLabel: '90 giây',
-    animType: 'incline_press',
+    animType: 'leverage_incline_press',
+    realGymPhoto: '/images/gym-machines/brtw-incline-chest-press.webp',
     referenceImages: exImg('Leverage_Chest_Press'),
     benefit:
       'Quỹ đạo máy cố định cực kỳ an toàn giúp bạn tự tin đẩy sát ngưỡng mỏi cơ (Failure) không cần người đỡ.',
@@ -193,7 +200,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     muscleTag: 'Cơ xô (Latissimus Dorsi) • Lưng trên',
     primaryMuscles: ['back'],
     secondaryMuscles: ['biceps', 'forearms'],
-    machineName: 'Máy kéo xô cáp cao (Lat Pulldown) + Thanh đòn ngang dài',
+    machineName: 'Trạm kéo xô cáp cao BRTW Lat Pulldown (Yên & con lăn khóa đùi nâu)',
     machineSetupTip:
       'Hạ con lăn đệm đùi khóa chặt sát đùi trên để cơ thể không bị khối tạ kéo nhấc lên khỏi yên ghế.',
     defaultWeightKg: 40,
@@ -204,6 +211,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '90 giây',
     animType: 'lat_pulldown',
     customGlbPath: '/models/gym/wide_lat_pulldown.glb',
+    realGymPhoto: '/images/gym-machines/brtw-cable-lat-pulldown.webp',
     referenceImages: exImg('Wide-Grip_Lat_Pulldown'),
     benefit:
       'Mở rộng bề ngang tấm lưng hình chữ V (V-Taper), giúp vòng eo trông thon gọn và dáng đứng thẳng đẹp.',
@@ -225,7 +233,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     muscleTag: 'Lưng giữa (Rhomboids, Mid Traps) • Cơ xô dưới',
     primaryMuscles: ['back'],
     secondaryMuscles: ['biceps', 'forearms'],
-    machineName: 'Máy ngồi kéo cáp thấp (Seated Row Machine) + Tay cầm chữ V hẹp',
+    machineName: 'Trạm ngồi kéo cáp thấp BRTW Seated Row (Ghế dài nâu + Bàn đạp chân)',
     machineSetupTip:
       'Đặt hai bàn chân vững trên bàn đạp trước mặt, đầu gối luôn giữ hơi gập nhẹ khoảng 15–20°.',
     defaultWeightKg: 45,
@@ -236,6 +244,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '90 giây',
     animType: 'cable_row',
     customGlbPath: '/models/gym/seated_cable_row.glb',
+    realGymPhoto: '/images/gym-machines/brtw-seated-cable-row.webp',
     referenceImages: exImg('Seated_Cable_Rows'),
     benefit:
       'Bồi đắp độ dày khối cơ lưng giữa, khắc phục hiệu quả tật gù lưng – vai cuộn về trước khi ngồi bàn làm việc.',
@@ -256,7 +265,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     muscleTag: 'Cơ tay sau (Triceps Lateral & Medial Head)',
     primaryMuscles: ['triceps'],
     secondaryMuscles: ['forearms'],
-    machineName: 'Trạm cáp ròng rọc cao + Phụ kiện Dây thừng đôi (Tricep Rope)',
+    machineName: 'Trạm cáp cao BRTW Jungle Gym + Dây thừng đôi / Thanh V-Bar tập tay sau',
     machineSetupTip:
       'Chốt ròng rọc ở nấc cao nhất, đứng lùi nửa bước chân và hơi gập hông nghiêng nhẹ thân trên 15°.',
     defaultWeightKg: 17.5,
@@ -267,6 +276,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '60 giây',
     animType: 'tricep_pushdown',
     customGlbPath: '/models/gym/tricep_rope_pushdown.glb',
+    realGymPhoto: '/images/gym-machines/brtw-cable-crossover-tricep.webp',
     referenceImages: exImg('Triceps_Pushdown_-_Rope_Attachment'),
     benefit:
       'Khắc nét hình móng ngựa cho bắp tay sau – nhóm cơ quyết định tới 2/3 chu vi cánh tay.',
@@ -298,6 +308,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '60 giây',
     animType: 'overhead_tricep',
     customGlbPath: '/models/gym/overhead_db_tricep_ext.glb',
+    realGymPhoto: '/images/gym-machines/dumbbell-bench-zone.webp',
     referenceImages: exImg('Standing_Dumbbell_Triceps_Extension'),
     isEccentricFirst: true,
     benefit:
@@ -328,7 +339,8 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     reps: '12–15',
     restSeconds: 60,
     restLabel: '60 giây',
-    animType: 'tricep_pushdown',
+    animType: 'assisted_dip',
+    realGymPhoto: '/images/gym-machines/brtw-assisted-dip-pullup.webp',
     referenceImages: exImg('Bench_Dips'),
     isEccentricFirst: true,
     benefit: 'Bài khóa sổ giúp bơm máu căng phồng toàn bộ cơ tay sau ở cuối buổi tập.',
@@ -349,7 +361,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     muscleTag: 'Cơ cánh tay sâu (Brachialis) • Tay trước • Cẳng tay',
     primaryMuscles: ['biceps', 'forearms'],
     secondaryMuscles: ['shoulders'],
-    machineName: 'Cặp tạ đơn (Dumbbell) đứng tự do trước gương',
+    machineName: 'Cặp tạ đơn lục giác Hammer Strength đứng trước gương',
     machineSetupTip:
       'Chọn cặp tạ vừa sức để cuốn chuẩn bằng khớp khuỷu mà không cần đung đưa hông lấy đà.',
     defaultWeightKg: 10,
@@ -360,6 +372,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '60–90 giây',
     animType: 'hammer_curl',
     customGlbPath: '/models/gym/hammer_curl.glb',
+    realGymPhoto: '/images/gym-machines/dumbbell-bench-zone.webp',
     referenceImages: exImg('Hammer_Curls'),
     benefit:
       'Phát triển cơ cánh tay nằm sâu dưới cơ tay trước (Brachialis) và cơ cẳng tay, giúp bắp tay trông dày hơn từ mọi góc nhìn.',
@@ -381,9 +394,9 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     muscleTag: 'Hai đầu cơ nhị đầu (Biceps Brachii Short & Long Head)',
     primaryMuscles: ['biceps'],
     secondaryMuscles: ['forearms'],
-    machineName: 'Thanh đòn cong chữ Z (EZ-Curl Bar) hoặc Thanh đòn thẳng ngắn',
+    machineName: 'Thanh đòn cong chữ Z (EZ-Bar) hoặc Thanh thẳng gắn cáp thấp BRTW',
     machineSetupTip:
-      'Nắm vào đoạn uốn cong của thanh đòn EZ giúp cổ tay xoay tự nhiên, giảm hoàn toàn áp lực đau cổ tay.',
+      'Nắm vào đoạn uốn cong của thanh đòn EZ (hoặc gắn thanh đòn vào ròng rọc thấp nhất của trạm cáp) giảm áp lực đau cổ tay.',
     defaultWeightKg: 7.5,
     weightUnitLabel: 'kg / bên đòn',
     sets: '3',
@@ -392,6 +405,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '60–90 giây',
     animType: 'barbell_curl',
     customGlbPath: '/models/gym/barbell_ez_curl.glb',
+    realGymPhoto: '/images/gym-machines/brtw-cable-crossover-tricep.webp',
     referenceImages: exImg('Barbell_Curl'),
     benefit:
       'Xây dựng khối lượng và đỉnh cao (Peak) của con chuột bắp tay trước nhanh và đồng đều cả hai tay.',
@@ -420,7 +434,8 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     reps: '10–12',
     restSeconds: 60,
     restLabel: '60 giây',
-    animType: 'barbell_curl',
+    animType: 'preacher_curl',
+    realGymPhoto: '/images/gym-machines/brtw-biceps-curl.webp',
     referenceImages: exImg('Preacher_Curl'),
     benefit:
       'Cố định hoàn toàn bắp tay trên đệm nghiêng, bắt buộc 100% lực cuốn phải xuất phát từ cơ tay trước.',
@@ -450,6 +465,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '90 giây',
     animType: 'shoulder_press',
     customGlbPath: '/models/gym/dumbbell_shoulder_press.glb',
+    realGymPhoto: '/images/gym-machines/dumbbell-bench-zone.webp',
     referenceImages: exImg('Dumbbell_Shoulder_Press'),
     benefit:
       'Phát triển toàn diện khối cơ cầu vai dày khỏe, tăng sức mạnh đẩy cho mọi bài tập thân trên.',
@@ -481,6 +497,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '60 giây',
     animType: 'lateral_raise',
     customGlbPath: '/models/gym/side_lateral_raise.glb',
+    realGymPhoto: '/images/gym-machines/dumbbell-bench-zone.webp',
     referenceImages: exImg('Side_Lateral_Raise'),
     benefit:
       'Mở rộng độ tròn 3D của hai bên đầu vai, tạo tỷ lệ thân trên rộng bờ vai – gọn vòng eo.',
@@ -511,6 +528,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restSeconds: 60,
     restLabel: '60 giây',
     animType: 'face_pull',
+    realGymPhoto: '/images/gym-machines/brtw-cable-crossover-tricep.webp',
     referenceImages: exImg('Face_Pull'),
     benefit:
       'Làm tròn mặt sau của vai và tăng cường sức khỏe nhóm cơ chóp xoay, phòng tránh đau vai khi đẩy ngực.',
@@ -526,16 +544,16 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
   // ======================== CHÂN (LEGS) ========================
   {
     id: 'barbell_squat',
-    name: 'Barbell / Smith Machine Squat',
-    vietnameseName: 'Gánh đùi với thanh đòn / Khung trượt Smith',
+    name: 'BRTW Smith Machine Squat',
+    vietnameseName: 'Gánh đùi trên khung trượt thẳng BRTW Smith Machine',
     categoryLabel: 'Chân',
     muscleTag: 'Đùi trước (Quads) • Cơ mông (Glutes) • Core',
     primaryMuscles: ['quads', 'glutes'],
     secondaryMuscles: ['hamstrings', 'core'],
-    machineName: 'Khung gánh đùi Squat Rack hoặc Máy khung trượt cố định Smith Machine',
+    machineName: 'Khung trượt thẳng đứng BRTW Smith Machine (Bỏ bục đen sang bên cạnh khi Squat)',
     machineSetupTip:
-      'Chỉnh chốt thanh đòn thấp hơn mỏm vai khoảng 5cm để nhấc đòn ra/đặt đòn vào không cần nhón gót chân.',
-    defaultWeightKg: 30,
+      'Bước hai chân nhô nhẹ về phía trước thanh đòn khoảng 10–15cm để giữ lưng thẳng và dồn lực chuẩn vào Đùi & Mông.',
+    defaultWeightKg: 25,
     weightUnitLabel: 'kg / bên đòn',
     sets: '4',
     reps: '8–10',
@@ -543,7 +561,8 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '90–120 giây',
     animType: 'squat',
     customGlbPath: '/models/gym/barbell_squat.glb',
-    referenceImages: exImg('Barbell_Squat'),
+    realGymPhoto: '/images/gym-machines/brtw-vertical-smith-squat.webp',
+    referenceImages: exImg('Smith_Machine_Squat'),
     isEccentricFirst: true,
     benefit:
       'Bài tập toàn năng số 1 cho thân dưới: xây dựng cặp đùi khỏe, mông săn chắc và cột sống vững chãi.',
@@ -565,7 +584,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     muscleTag: 'Đùi trước (Quadriceps) • Cơ mông',
     primaryMuscles: ['quads', 'glutes'],
     secondaryMuscles: ['hamstrings'],
-    machineName: 'Máy đạp đùi nghiêng 45° (Leg Press Machine)',
+    machineName: 'Máy đạp đùi lắp tạ bánh BRTW Leg Press (Đệm lưng nâu, bàn đạp lớn)',
     machineSetupTip:
       'Đặt chân thấp trên bàn đạp ăn nhiều vào Đùi trước; đặt chân cao hơn ăn nhiều vào Mông & Đùi sau.',
     defaultWeightKg: 60,
@@ -576,6 +595,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '90 giây',
     animType: 'leg_press',
     customGlbPath: '/models/gym/leg_press_45.glb',
+    realGymPhoto: '/images/gym-machines/brtw-leg-press.webp',
     referenceImages: exImg('Leg_Press'),
     isEccentricFirst: true,
     benefit:
@@ -597,7 +617,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     muscleTag: 'Đùi sau (Hamstrings) • Cơ mông (Glutes) • Lưng dưới',
     primaryMuscles: ['hamstrings', 'glutes'],
     secondaryMuscles: ['back', 'forearms'],
-    machineName: 'Thanh đòn (Barbell) hoặc Cặp tạ đơn nặng (Dumbbells)',
+    machineName: 'Khung trượt BRTW Smith Machine hoặc Cặp tạ đơn nặng Hammer Strength',
     machineSetupTip:
       'Luôn giữ thanh đòn/tạ đơn trượt sát rạt vào đùi và ống đồng giống như đang cạo lông chân!',
     defaultWeightKg: 20,
@@ -608,6 +628,7 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     restLabel: '90 giây',
     animType: 'rdl',
     customGlbPath: '/models/gym/romanian_deadlift.glb',
+    realGymPhoto: '/images/gym-machines/dumbbell-bench-zone.webp',
     referenceImages: exImg('Romanian_Deadlift'),
     isEccentricFirst: true,
     benefit:
@@ -629,16 +650,17 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     muscleTag: 'Cô lập cơ đùi sau (Hamstrings)',
     primaryMuscles: ['hamstrings'],
     secondaryMuscles: ['calves'],
-    machineName: 'Máy nằm sấp cuốn đùi sau (Lying Leg Curl) hoặc Máy ngồi Seated Leg Curl',
+    machineName: 'Máy nằm sấp cuốn đùi sau BRTW Leg Curl (Đệm nâu gấp khúc bảo vệ lưng)',
     machineSetupTip:
       'Chỉnh con lăn đệm nằm ngay trên gót chân/cổ chân sau (dưới bắp chân) và đầu gối trùng trục xoay của máy.',
     defaultWeightKg: 30,
-    weightUnitLabel: 'kg (tạ máy)',
+    weightUnitLabel: 'kg (tạ khối ghim chốt)',
     sets: '3',
     reps: '12–15',
     restSeconds: 60,
     restLabel: '60 giây',
     animType: 'leg_curl',
+    realGymPhoto: '/images/gym-machines/brtw-lying-leg-curl.webp',
     referenceImages: exImg('Lying_Leg_Curls'),
     benefit:
       'Tác động chức năng gập gối của cơ đùi sau, giúp đùi săn chắc toàn diện mà không gây mỏi lưng.',
@@ -657,17 +679,18 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     muscleTag: 'Cơ bắp chuối chân (Gastrocnemius & Soleus)',
     primaryMuscles: ['calves'],
     secondaryMuscles: [],
-    machineName: 'Máy nhón bắp chân (Standing Calf Machine) hoặc Đứng cầm tạ đơn trên bục kê',
+    machineName: 'Khung trượt BRTW Smith Machine + Bục kê chân đen ở dưới (hoặc cầm tạ đơn)',
     machineSetupTip:
-      'Đặt 1/3 mũi bàn chân trước lên mép bục để gót chân có khoảng không hạ sâu kéo giãn gân Achilles.',
-    defaultWeightKg: 40,
+      'Đặt 1/3 mũi bàn chân trước lên mép bục đen dưới khung Smith để gót chân hạ sâu kéo giãn gân Achilles.',
+    defaultWeightKg: 30,
     weightUnitLabel: 'kg (tổng tạ)',
     sets: '3–4',
     reps: '15–20',
     restSeconds: 45,
     restLabel: '45–60 giây',
     animType: 'calf_raise',
-    referenceImages: exImg('Standing_Calf_Raises'),
+    realGymPhoto: '/images/gym-machines/brtw-vertical-smith-squat.webp',
+    referenceImages: exImg('Smith_Machine_Calf_Raise'),
     benefit: 'Tăng kích thước bắp chân săn chắc và gia cố cổ chân vững vàng.',
     steps: [
       'Đặt phần ức bàn chân lên bục máy, giữ đầu gối thẳng tự nhiên (không cong nhún gối).',
@@ -741,7 +764,20 @@ export const GYM_EXERCISE_MAP: Record<string, GymExerciseDefinition> = Object.fr
 );
 
 /**
- * Default 5-Day Split tailored 1:1 to User's Daily Gym Routine:
+ * Legacy v1 4-exercise default IDs used solely to auto-upgrade untouched days
+ * in returning users' saved profiles to the full real-gym machine list.
+ */
+export const LEGACY_V1_DEFAULT_SPLIT_IDS: Record<string, string[]> = {
+  day1: ['incline_dumbbell_press', 'barbell_bench_press', 'pec_deck_fly', 'cable_crossover'],
+  day2: ['wide_lat_pulldown', 'seated_cable_row', 'tricep_rope_pushdown', 'overhead_db_tricep_ext'],
+  day3: ['hammer_curl', 'barbell_ez_curl', 'dumbbell_shoulder_press', 'side_lateral_raise'],
+  day4: ['barbell_squat', 'leg_press_45', 'romanian_deadlift', 'lying_leg_curl'],
+  day5: ['active_mobility_recovery', 'core_plank'],
+};
+
+/**
+ * Default 5-Day Split tailored 1:1 to User's Daily Gym Routine AND 100% of real BRTW / Impulse
+ * machines photographed inside User's Gym (`D:\TiemTapHoaKeyT\GYM`):
  * Day 1: Ngực | Day 2: Tay sau - Lưng | Day 3: Tay trước - Vai | Day 4: Chân | Day 5: Nghỉ / Quay lại Ngực
  */
 export const DEFAULT_USER_5DAY_SPLIT: GymSplitDayConfig[] = [
@@ -749,8 +785,10 @@ export const DEFAULT_USER_5DAY_SPLIT: GymSplitDayConfig[] = [
     id: 'day1',
     dayLabel: 'Ngày 1',
     title: 'Ngực',
-    subtitle: 'Ngực trên • Ngực giữa • Ép ngực',
+    subtitle: 'Máy BRTW Incline & Laydown • Tạ đơn • Pec Fly • Cáp đôi',
     exerciseIds: [
+      'brtw_incline_chest_press',
+      'brtw_laydown_chest_press',
       'incline_dumbbell_press',
       'barbell_bench_press',
       'pec_deck_fly',
@@ -761,11 +799,16 @@ export const DEFAULT_USER_5DAY_SPLIT: GymSplitDayConfig[] = [
     id: 'day2',
     dayLabel: 'Ngày 2',
     title: 'Tay Sau – Lưng',
-    subtitle: 'Kéo xô • Lưng giữa • Tay sau cáp',
+    subtitle: 'Kéo xô BRTW • Máy Impulse Row • Hít xà & Dip trợ lực • Cáp tay sau',
     exerciseIds: [
       'wide_lat_pulldown',
+      'iso_high_pulldown',
+      'chest_supported_row',
+      'brtw_iso_low_row',
       'seated_cable_row',
+      'assisted_pullup',
       'tricep_rope_pushdown',
+      'assisted_tricep_dip',
       'overhead_db_tricep_ext',
     ],
   },
@@ -773,82 +816,98 @@ export const DEFAULT_USER_5DAY_SPLIT: GymSplitDayConfig[] = [
     id: 'day3',
     dayLabel: 'Ngày 3',
     title: 'Tay Trước – Vai',
-    subtitle: 'Hammer Curl • Đẩy vai • Bay vai',
+    subtitle: 'Máy BRTW Biceps Curl • Hammer Curl • Máy Lateral Raise & Vai sau',
     exerciseIds: [
+      'machine_bicep_curl',
       'hammer_curl',
       'barbell_ez_curl',
+      'machine_shoulder_press',
       'dumbbell_shoulder_press',
+      'machine_lateral_raise',
       'side_lateral_raise',
+      'reverse_pec_deck',
     ],
   },
   {
     id: 'day4',
     dayLabel: 'Ngày 4',
     title: 'Chân',
-    subtitle: 'Squat • Đạp đùi 45° • Đùi sau',
+    subtitle: 'Super Squat • Leg Press • Đá đùi • Cuốn đùi • Hip Thrust • Ép mở đùi',
     exerciseIds: [
+      'super_squat_machine',
       'barbell_squat',
       'leg_press_45',
-      'romanian_deadlift',
+      'leg_extension',
       'lying_leg_curl',
+      'machine_hip_thrust',
+      'hip_abductor_adductor',
+      'romanian_deadlift',
+      'standing_calf_raise',
     ],
   },
   {
     id: 'day5',
     dayLabel: 'Ngày 5',
     title: 'Nghỉ / Quay Lại Ngực',
-    subtitle: 'Giãn cơ phục hồi • Sẵn sàng chu kỳ mới',
+    subtitle: 'Giãn cơ phục hồi • Ghế lưng dưới 45° • Core Plank',
     isRestDay: true,
-    exerciseIds: ['active_mobility_recovery', 'core_plank'],
+    exerciseIds: ['active_mobility_recovery', 'back_extension_45', 'core_plank'],
   },
 ];
 
 export const GYM_SPLIT_PRESETS: GymSplitPresetTemplate[] = [
   {
     id: 'user_original_5day',
-    name: 'Lịch 5 Ngày Gốc Của Tôi (Mặc định)',
-    description: 'Ngày 1 Ngực • Ngày 2 Tay sau-Lưng • Ngày 3 Tay trước-Vai • Ngày 4 Chân • Ngày 5 Nghỉ/Lặp lại.',
+    name: 'Lịch 5 Ngày Full Máy Phòng Gym Của Tôi (Mặc định)',
+    description:
+      'Đầy đủ 100% máy BRTW & Impulse ở phòng tập: Ngày 1 Ngực • Ngày 2 Tay sau-Lưng • Ngày 3 Tay trước-Vai • Ngày 4 Chân • Ngày 5 Nghỉ.',
     days: DEFAULT_USER_5DAY_SPLIT,
   },
   {
     id: 'synergy_pro_5day',
-    name: 'Lịch Tối Ưu Phục Hồi Cơ Phụ (5 Ngày)',
-    description: 'Ghép nhóm cơ cùng đẩy/kéo: Ngày 1 Ngực-Tay sau • Ngày 2 Lưng-Tay trước • Ngày 3 Vai & Core • Ngày 4 Chân • Ngày 5 Nghỉ.',
+    name: 'Lịch Tối Ưu Phục Hồi Cơ Phụ (5 Ngày Push / Pull)',
+    description:
+      'Ghép nhóm cơ cùng đẩy/kéo trên dàn máy BRTW: Ngày 1 Ngực-Tay sau • Ngày 2 Lưng-Tay trước • Ngày 3 Vai & Core • Ngày 4 Chân • Ngày 5 Nghỉ.',
     days: [
       {
         id: 'day1',
         dayLabel: 'Ngày 1',
         title: 'Ngực – Tay Sau',
-        subtitle: 'Nhóm cơ đẩy (Push) cùng hồi phục',
+        subtitle: 'Nhóm cơ đẩy (Push) trên máy BRTW',
         exerciseIds: [
-          'incline_dumbbell_press',
-          'barbell_bench_press',
+          'brtw_incline_chest_press',
+          'brtw_laydown_chest_press',
           'pec_deck_fly',
+          'cable_crossover',
           'tricep_rope_pushdown',
-          'overhead_db_tricep_ext',
+          'assisted_tricep_dip',
         ],
       },
       {
         id: 'day2',
         dayLabel: 'Ngày 2',
         title: 'Lưng – Tay Trước',
-        subtitle: 'Nhóm cơ kéo (Pull) tối ưu lực nắm',
+        subtitle: 'Nhóm cơ kéo (Pull) máy Impulse & BRTW',
         exerciseIds: [
           'wide_lat_pulldown',
+          'chest_supported_row',
           'seated_cable_row',
+          'assisted_pullup',
+          'machine_bicep_curl',
           'hammer_curl',
-          'barbell_ez_curl',
         ],
       },
       {
         id: 'day3',
         dayLabel: 'Ngày 3',
         title: 'Vai 3D – Core',
-        subtitle: 'Vai trước • Vai giữa • Vai sau • Bụng',
+        subtitle: 'Đẩy vai • Máy Lateral Raise • Vai sau • Ghế lưng 45°',
         exerciseIds: [
+          'machine_shoulder_press',
           'dumbbell_shoulder_press',
-          'side_lateral_raise',
-          'cable_face_pull',
+          'machine_lateral_raise',
+          'reverse_pec_deck',
+          'back_extension_45',
           'core_plank',
         ],
       },
@@ -856,11 +915,14 @@ export const GYM_SPLIT_PRESETS: GymSplitPresetTemplate[] = [
         id: 'day4',
         dayLabel: 'Ngày 4',
         title: 'Chân Toàn Diện',
-        subtitle: 'Đùi trước • Đùi sau • Bắp chân',
+        subtitle: 'Super Squat • Leg Press • Đá/Cuốn đùi • Hip Thrust • Bắp chân',
         exerciseIds: [
-          'barbell_squat',
+          'super_squat_machine',
           'leg_press_45',
-          'romanian_deadlift',
+          'leg_extension',
+          'lying_leg_curl',
+          'machine_hip_thrust',
+          'hip_abductor_adductor',
           'standing_calf_raise',
         ],
       },

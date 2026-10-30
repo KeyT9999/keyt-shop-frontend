@@ -1,4 +1,8 @@
-import { DEFAULT_USER_5DAY_SPLIT, GYM_EXERCISE_MAP } from '../data/defaultGymCatalog';
+import {
+  DEFAULT_USER_5DAY_SPLIT,
+  GYM_EXERCISE_MAP,
+  LEGACY_V1_DEFAULT_SPLIT_IDS,
+} from '../data/defaultGymCatalog';
 import type {
   GymClientPersistedState,
   GymExerciseDefinition,
@@ -40,27 +44,60 @@ export function resolveExercisesForDay(day: GymSplitDayConfig): GymExerciseDefin
     .filter((item): item is GymExerciseDefinition => Boolean(item));
 }
 
+function isSameIdList(a: string[], b: string[]): boolean {
+  return a.length === b.length && a.every((val, idx) => val === b[idx]);
+}
+
+/**
+ * Seamlessly upgrades untouched v1 4-exercise default days to the full BRTW/Impulse
+ * real-gym machine split while preserving any user-customized days and weight logs.
+ */
+export function upgradeLegacyDefaultSplitDays(days: GymSplitDayConfig[]): {
+  days: GymSplitDayConfig[];
+  upgraded: boolean;
+} {
+  if (!Array.isArray(days) || days.length === 0) {
+    return { days: cloneDefaultSplitDays(), upgraded: true };
+  }
+
+  let upgraded = false;
+  const nextDays = days.map((day) => {
+    const legacyIds = LEGACY_V1_DEFAULT_SPLIT_IDS[day.id];
+    const v2Default = DEFAULT_USER_5DAY_SPLIT.find((d) => d.id === day.id);
+    if (legacyIds && v2Default && isSameIdList(day.exerciseIds || [], legacyIds)) {
+      upgraded = true;
+      return {
+        ...day,
+        subtitle: v2Default.subtitle,
+        exerciseIds: [...v2Default.exerciseIds],
+      };
+    }
+    return day;
+  });
+
+  return { days: nextDays, upgraded };
+}
+
 export function normalizeDailySessionRollover(
   state: GymClientPersistedState,
   todayKey = getTodayLocalDateKey()
 ): GymClientPersistedState {
+  const { days, upgraded } = upgradeLegacyDefaultSplitDays(state.customDays);
+  const nextClientTs = upgraded
+    ? Math.max((state.clientUpdatedAt || 0) + 1, Date.now())
+    : state.clientUpdatedAt;
+
   if (!state.sessionDateKey || state.sessionDateKey === todayKey) {
     return {
       ...state,
       sessionDateKey: todayKey,
-      customDays:
-        Array.isArray(state.customDays) && state.customDays.length > 0
-          ? state.customDays
-          : cloneDefaultSplitDays(),
+      customDays: days,
+      clientUpdatedAt: nextClientTs,
     };
   }
 
   // If user already checked off at least 1 exercise on a previous calendar day, auto-advance to next day!
   const hadProgressYesterday = state.completedExerciseIdsToday.length > 0;
-  const days =
-    Array.isArray(state.customDays) && state.customDays.length > 0
-      ? state.customDays
-      : cloneDefaultSplitDays();
 
   const currentIdx = Math.max(
     0,
@@ -74,6 +111,7 @@ export function normalizeDailySessionRollover(
     completedExerciseIdsToday: [],
     sessionDateKey: todayKey,
     customDays: days,
+    clientUpdatedAt: nextClientTs,
   };
 }
 

@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  GYM_EXERCISE_CATALOG,
+  LEGACY_V1_DEFAULT_SPLIT_IDS,
+} from '../data/defaultGymCatalog';
+import { computeGym3DPoseKeyframes } from '../three/gym3DPoseData';
+import {
   advanceToNextGymSplitDay,
   createInitialGymState,
   mergeGymClientAndServerState,
   normalizeDailySessionRollover,
   resolveExercisesForDay,
+  upgradeLegacyDefaultSplitDays,
 } from './gymStateUtils';
 
 describe('gymStateUtils', () => {
@@ -102,5 +108,45 @@ describe('gymStateUtils', () => {
     expect(merged.exerciseLogs.hammer_curl.weightKg).toBe(12);
     expect(merged.exerciseLogs.barbell_squat.weightKg).toBe(35);
     expect(merged.exerciseLogs.barbell_squat.personalTip).toBe('Đeo đai lưng');
+  });
+
+  it('auto-upgrades untouched v1 4-exercise days to full BRTW/Impulse gym machines while preserving custom days', () => {
+    const legacyDays = [
+      {
+        id: 'day1',
+        dayLabel: 'Ngày 1',
+        title: 'Ngực',
+        subtitle: 'Old',
+        exerciseIds: [...LEGACY_V1_DEFAULT_SPLIT_IDS.day1],
+      },
+      {
+        id: 'day3',
+        dayLabel: 'Ngày 3',
+        title: 'Tay Trước Của Tôi',
+        subtitle: 'Custom',
+        exerciseIds: ['hammer_curl'],
+      },
+    ];
+
+    const { days, upgraded } = upgradeLegacyDefaultSplitDays(legacyDays);
+    expect(upgraded).toBe(true);
+    expect(days[0].exerciseIds).toContain('brtw_incline_chest_press');
+    expect(days[0].exerciseIds).toContain('brtw_laydown_chest_press');
+    // User's customized day3 stays untouched
+    expect(days[1].exerciseIds).toEqual(['hammer_curl']);
+  });
+
+  it('computes finite 3D joint keyframes and machine props for all 35 catalog exercises', () => {
+    expect(GYM_EXERCISE_CATALOG.length).toBeGreaterThanOrEqual(35);
+
+    for (const ex of GYM_EXERCISE_CATALOG) {
+      for (const phase of [0, 0.5, 1]) {
+        const frame = computeGym3DPoseKeyframes(ex.animType, phase);
+        for (const coords of Object.values(frame.joints)) {
+          expect(coords).toHaveLength(3);
+          expect(coords.every((n: number) => Number.isFinite(n))).toBe(true);
+        }
+      }
+    }
   });
 });

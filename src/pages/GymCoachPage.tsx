@@ -5,6 +5,7 @@ import {
   Check,
   CheckCircle2,
   Columns2,
+  MapPin,
   Rotate3d,
   Sparkles,
   Wrench,
@@ -15,6 +16,7 @@ import GymInlineMetricsTools from '../features/gym/components/GymInlineMetricsTo
 import GymMannequin3DViewer from '../features/gym/components/GymMannequin3DViewer';
 import GymRestTimerBar from '../features/gym/components/GymRestTimerBar';
 import GymSelectorCockpit from '../features/gym/components/GymSelectorCockpit';
+import RealGymMachineView from '../features/gym/components/RealGymMachineView';
 import SplitCustomizerModal from '../features/gym/components/SplitCustomizerModal';
 import { GYM_EXERCISE_CATALOG } from '../features/gym/data/defaultGymCatalog';
 import { useGymCoachState } from '../features/gym/hooks/useGymCoachState';
@@ -25,7 +27,7 @@ import { resolveExercisesForDay } from '../features/gym/utils/gymStateUtils';
  * fixed at 224px (h-56) and "Máy tập + Cách thực hiện" appear right above the fold
  * without scrolling. Users can flip to 'photo' in 1 tap, or 'split' on wider screens.
  */
-type StageVisualTab = '3d' | 'photo' | 'split';
+type StageVisualTab = '3d' | 'gym_photo' | 'photo' | 'split';
 
 export default function GymCoachPage() {
   const { token } = useAuthContext();
@@ -70,6 +72,9 @@ export default function GymCoachPage() {
   const completedInCurrentDay = dayExercises.filter((e) =>
     state.completedExerciseIdsToday.includes(e.id)
   ).length;
+
+  const effectiveVisualTab: StageVisualTab =
+    visualTab === 'gym_photo' && !currentExercise.realGymPhoto ? '3d' : visualTab;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] py-2.5 sm:py-5 px-2.5 sm:px-6">
@@ -228,8 +233,8 @@ export default function GymCoachPage() {
                 <button
                   type="button"
                   onClick={() => setVisualTab('3d')}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 transition-colors cursor-pointer ${
-                    visualTab === '3d'
+                  className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 transition-colors cursor-pointer ${
+                    effectiveVisualTab === '3d'
                       ? 'bg-[#1E293B] text-white shadow-2xs'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
@@ -238,11 +243,26 @@ export default function GymCoachPage() {
                   <span>3D</span>
                 </button>
 
+                {currentExercise.realGymPhoto && (
+                  <button
+                    type="button"
+                    onClick={() => setVisualTab('gym_photo')}
+                    className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 transition-colors cursor-pointer ${
+                      effectiveVisualTab === 'gym_photo'
+                        ? 'bg-[#1E293B] text-white shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <MapPin size={13} className="text-[#F05A28]" />
+                    <span>Máy thật</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setVisualTab('photo')}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 transition-colors cursor-pointer ${
-                    visualTab === 'photo'
+                  className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 transition-colors cursor-pointer ${
+                    effectiveVisualTab === 'photo'
                       ? 'bg-[#1E293B] text-white shadow-2xs'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
@@ -255,7 +275,7 @@ export default function GymCoachPage() {
                   type="button"
                   onClick={() => setVisualTab('split')}
                   className={`hidden md:inline-flex px-2.5 py-1 rounded-lg text-xs font-extrabold items-center gap-1 transition-colors cursor-pointer ${
-                    visualTab === 'split'
+                    effectiveVisualTab === 'split'
                       ? 'bg-[#1E293B] text-white shadow-2xs'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
@@ -268,16 +288,26 @@ export default function GymCoachPage() {
 
             {/* Unified Visual Stage (Fixed compact height on mobile so Steps stay visible right below!) */}
             <div className="p-2.5 sm:p-4 bg-slate-50/60">
-              {visualTab === '3d' && (
+              {effectiveVisualTab === '3d' && (
                 <GymMannequin3DViewer exercise={currentExercise} />
               )}
-              {visualTab === 'photo' && (
+              {effectiveVisualTab === 'gym_photo' && (
+                <RealGymMachineView
+                  exercise={currentExercise}
+                  onSwitchTo3D={() => setVisualTab('3d')}
+                />
+              )}
+              {effectiveVisualTab === 'photo' && (
                 <ExerciseReferenceDualView exercise={currentExercise} />
               )}
-              {visualTab === 'split' && (
+              {effectiveVisualTab === 'split' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <GymMannequin3DViewer exercise={currentExercise} />
-                  <ExerciseReferenceDualView exercise={currentExercise} />
+                  {currentExercise.realGymPhoto ? (
+                    <RealGymMachineView exercise={currentExercise} />
+                  ) : (
+                    <ExerciseReferenceDualView exercise={currentExercise} />
+                  )}
                 </div>
               )}
             </div>
@@ -295,22 +325,44 @@ export default function GymCoachPage() {
             {/* Above-the-Fold Execution Guide: Machine Setup + Step-by-Step + Mistakes */}
             <div className="p-3 sm:p-5 space-y-3 sm:space-y-4 bg-white">
               {/* Compact Machine & Seat Setup Banner */}
-              <div className="rounded-xl border border-orange-200/90 bg-orange-50/55 px-3 py-2.5 flex items-start gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-[#F05A28]/15 text-[#F05A28] flex items-center justify-center shrink-0 mt-0.5">
-                  <Wrench size={15} />
-                </div>
-                <div className="min-w-0 text-xs sm:text-sm leading-snug">
-                  <div className="font-extrabold text-slate-900">
-                    Máy / Dụng cụ: {currentExercise.machineName}
+              <div className="rounded-xl border border-orange-200/90 bg-orange-50/55 px-3 py-2.5 flex items-start justify-between gap-2.5">
+                <div className="flex items-start gap-2.5 min-w-0">
+                  <div className="w-7 h-7 rounded-lg bg-[#F05A28]/15 text-[#F05A28] flex items-center justify-center shrink-0 mt-0.5">
+                    <Wrench size={15} />
                   </div>
-                  <div className="text-xs text-slate-600 mt-0.5 flex items-start gap-1">
-                    <CheckCircle2
-                      size={13}
-                      className="text-emerald-600 shrink-0 mt-0.5"
+                  <div className="min-w-0 text-xs sm:text-sm leading-snug">
+                    <div className="font-extrabold text-slate-900">
+                      Máy / Dụng cụ: {currentExercise.machineName}
+                    </div>
+                    <div className="text-xs text-slate-600 mt-0.5 flex items-start gap-1">
+                      <CheckCircle2
+                        size={13}
+                        className="text-emerald-600 shrink-0 mt-0.5"
+                      />
+                      <span>{currentExercise.machineSetupTip}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {currentExercise.realGymPhoto && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisualTab(
+                        effectiveVisualTab === 'gym_photo' ? '3d' : 'gym_photo'
+                      )
+                    }
+                    title="Xem ảnh máy thực tế ở phòng Gym"
+                    className="shrink-0 w-11 h-11 rounded-lg overflow-hidden border border-orange-300 shadow-2xs relative group cursor-pointer"
+                  >
+                    <img
+                      src={currentExercise.realGymPhoto}
+                      alt={currentExercise.machineName}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                     />
-                    <span>{currentExercise.machineSetupTip}</span>
-                  </div>
-                </div>
+                  </button>
+                )}
               </div>
 
               {/* Step-by-Step Execution (Immediately visible without scrolling!) */}

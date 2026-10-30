@@ -775,6 +775,38 @@ export const LEGACY_V1_DEFAULT_SPLIT_IDS: Record<string, string[]> = {
   day5: ['active_mobility_recovery', 'core_plank'],
 };
 
+export const LEGACY_V2_INTERIM_SPLIT_IDS: Record<string, string[]> = {
+  day1: [
+    'brtw_incline_chest_press',
+    'brtw_laydown_chest_press',
+    'incline_dumbbell_press',
+    'barbell_bench_press',
+    'pec_deck_fly',
+    'cable_crossover',
+  ],
+  day3: [
+    'machine_bicep_curl',
+    'hammer_curl',
+    'barbell_ez_curl',
+    'machine_shoulder_press',
+    'dumbbell_shoulder_press',
+    'machine_lateral_raise',
+    'side_lateral_raise',
+    'reverse_pec_deck',
+  ],
+  day4: [
+    'super_squat_machine',
+    'barbell_squat',
+    'leg_press_45',
+    'leg_extension',
+    'lying_leg_curl',
+    'machine_hip_thrust',
+    'hip_abductor_adductor',
+    'romanian_deadlift',
+    'standing_calf_raise',
+  ],
+};
+
 /**
  * Default 5-Day Split tailored 1:1 to User's Daily Gym Routine AND 100% of real BRTW / Impulse
  * machines photographed inside User's Gym (`D:\TiemTapHoaKeyT\GYM`):
@@ -785,7 +817,7 @@ export const DEFAULT_USER_5DAY_SPLIT: GymSplitDayConfig[] = [
     id: 'day1',
     dayLabel: 'Ngày 1',
     title: 'Ngực',
-    subtitle: 'Máy BRTW Incline & Laydown • Tạ đơn • Pec Fly • Cáp đôi',
+    subtitle: 'Máy BRTW Incline & Laydown • Tạ đơn • Pec Fly • Cáp đôi • Xà kép ngực dưới',
     exerciseIds: [
       'brtw_incline_chest_press',
       'brtw_laydown_chest_press',
@@ -793,6 +825,7 @@ export const DEFAULT_USER_5DAY_SPLIT: GymSplitDayConfig[] = [
       'barbell_bench_press',
       'pec_deck_fly',
       'cable_crossover',
+      'assisted_chest_dip',
     ],
   },
   {
@@ -816,12 +849,13 @@ export const DEFAULT_USER_5DAY_SPLIT: GymSplitDayConfig[] = [
     id: 'day3',
     dayLabel: 'Ngày 3',
     title: 'Tay Trước – Vai',
-    subtitle: 'Máy BRTW Biceps Curl • Hammer Curl • Máy Lateral Raise & Vai sau',
+    subtitle: 'Máy BRTW Biceps Curl • Hammer Curl • Máy Shoulder Press & Lateral Raise • Vai sau',
     exerciseIds: [
       'machine_bicep_curl',
       'hammer_curl',
       'barbell_ez_curl',
       'machine_shoulder_press',
+      'smith_shoulder_press',
       'dumbbell_shoulder_press',
       'machine_lateral_raise',
       'side_lateral_raise',
@@ -832,15 +866,17 @@ export const DEFAULT_USER_5DAY_SPLIT: GymSplitDayConfig[] = [
     id: 'day4',
     dayLabel: 'Ngày 4',
     title: 'Chân',
-    subtitle: 'Super Squat • Leg Press • Đá đùi • Cuốn đùi • Hip Thrust • Ép mở đùi',
+    subtitle: 'Super Squat • Leg Press • Đá/Cuốn đùi • Hip Thrust • Mở mông & Ép đùi • Bắp chân',
     exerciseIds: [
       'super_squat_machine',
       'barbell_squat',
       'leg_press_45',
       'leg_extension',
+      'seated_leg_curl',
       'lying_leg_curl',
       'machine_hip_thrust',
       'hip_abductor_adductor',
+      'hip_adductor_inner',
       'romanian_deadlift',
       'standing_calf_raise',
     ],

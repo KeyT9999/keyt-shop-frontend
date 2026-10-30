@@ -8,9 +8,11 @@ export type GymMachinePropSpec =
   | { kind: 'machine_iso_pulldown'; lGrip: Vec3Tuple; rGrip: Vec3Tuple }
   | { kind: 'machine_assisted_station'; kneePadY: number }
   | { kind: 'machine_preacher_curl'; lGrip: Vec3Tuple; rGrip: Vec3Tuple }
+  | { kind: 'machine_shoulder_press'; lGrip: Vec3Tuple; rGrip: Vec3Tuple }
   | { kind: 'machine_lateral_raise'; lElbow: Vec3Tuple; rElbow: Vec3Tuple }
   | { kind: 'machine_reverse_fly'; lGrip: Vec3Tuple; rGrip: Vec3Tuple }
   | { kind: 'machine_leg_extension'; lAnkle: Vec3Tuple; rAnkle: Vec3Tuple }
+  | { kind: 'machine_seated_leg_curl'; lAnkle: Vec3Tuple; rAnkle: Vec3Tuple }
   | { kind: 'machine_super_squat'; lShoulder: Vec3Tuple; rShoulder: Vec3Tuple }
   | { kind: 'machine_hip_thrust'; pelvis: Vec3Tuple }
   | { kind: 'machine_hip_abductor'; lKnee: Vec3Tuple; rKnee: Vec3Tuple }
@@ -171,6 +173,30 @@ function poseUpperBodyMachines(
       return [{ kind: 'machine_assisted_station', kneePadY: j.lKnee[1] - 0.05 }];
     }
 
+    case 'assisted_chest_dip': {
+      const drop = p * 0.29;
+      const basePelvisY = 0.98 - drop;
+      j.pelvis = [0, basePelvisY, -0.08];
+      j.waist = [0, basePelvisY + 0.17, 0.0];
+      j.chest = [0, basePelvisY + 0.38, 0.11];
+      j.neck = [0, basePelvisY + 0.53, 0.18];
+      j.head = [0, basePelvisY + 0.68, 0.24];
+      j.facingDir = [0, -0.38, 0.92];
+      j.lShoulder = [-0.24, basePelvisY + 0.48, 0.10];
+      j.rShoulder = [0.24, basePelvisY + 0.48, 0.10];
+      j.lWrist = [-0.28, 1.10, 0.08];
+      j.rWrist = [0.28, 1.10, 0.08];
+      j.lElbow = lerp3([-0.29, 1.28, -0.02], [-0.36, 1.24, -0.18], p);
+      j.rElbow = lerp3([0.29, 1.28, -0.02], [0.36, 1.24, -0.18], p);
+      j.lHip = [-0.13, basePelvisY - 0.02, -0.08];
+      j.rHip = [0.13, basePelvisY - 0.02, -0.08];
+      j.lKnee = [-0.14, basePelvisY - 0.38, -0.02];
+      j.rKnee = [0.14, basePelvisY - 0.38, -0.02];
+      j.lAnkle = [-0.14, basePelvisY - 0.36, -0.34];
+      j.rAnkle = [0.14, basePelvisY - 0.36, -0.34];
+      return [{ kind: 'machine_assisted_station', kneePadY: j.lKnee[1] - 0.05 }];
+    }
+
     default:
       return null;
   }
@@ -197,6 +223,16 @@ function poseArmShoulderAndLowerMachines(
       j.lWrist = [-0.18, 0.88 + Math.sin(ang) * 0.27, 0.14 + Math.cos(ang) * 0.27];
       j.rWrist = [0.18, 0.88 + Math.sin(ang) * 0.27, 0.14 + Math.cos(ang) * 0.27];
       return [{ kind: 'machine_preacher_curl', lGrip: j.lWrist, rGrip: j.rWrist }];
+    }
+
+    case 'leverage_shoulder_press': {
+      setSeatedMachineBase(j);
+      j.lElbow = lerp3([-0.40, 0.94, -0.04], [-0.26, 1.38, -0.06], p);
+      j.rElbow = lerp3([0.40, 0.94, -0.04], [0.26, 1.38, -0.06], p);
+      j.lWrist = lerp3([-0.36, 1.18, 0.02], [-0.16, 1.66, -0.02], p);
+      j.rWrist = [0.36, 1.18, 0.02];
+      j.rWrist = lerp3([0.36, 1.18, 0.02], [0.16, 1.66, -0.02], p);
+      return [{ kind: 'machine_shoulder_press', lGrip: j.lWrist, rGrip: j.rWrist }];
     }
 
     case 'machine_lateral_raise': {
@@ -236,6 +272,20 @@ function poseArmShoulderAndLowerMachines(
       j.lAnkle = [-0.16, 0.54 - Math.cos(extAng) * 0.41, 0.34 + Math.sin(extAng) * 0.41];
       j.rAnkle = [0.16, 0.54 - Math.cos(extAng) * 0.41, 0.34 + Math.sin(extAng) * 0.41];
       return [{ kind: 'machine_leg_extension', lAnkle: j.lAnkle, rAnkle: j.rAnkle }];
+    }
+
+    case 'seated_leg_curl': {
+      setSeatedMachineBase(j);
+      j.lElbow = [-0.26, 0.80, -0.04];
+      j.rElbow = [0.26, 0.80, -0.04];
+      j.lWrist = [-0.20, 0.66, 0.22];
+      j.rWrist = [0.20, 0.66, 0.22];
+      j.lKnee = [-0.16, 0.54, 0.34];
+      j.rKnee = [0.16, 0.54, 0.34];
+      const curlAng = lerp(1.44, 0.04, p);
+      j.lAnkle = [-0.16, 0.54 - Math.cos(curlAng) * 0.41, 0.34 + Math.sin(curlAng) * 0.41];
+      j.rAnkle = [0.16, 0.54 - Math.cos(curlAng) * 0.41, 0.34 + Math.sin(curlAng) * 0.41];
+      return [{ kind: 'machine_seated_leg_curl', lAnkle: j.lAnkle, rAnkle: j.rAnkle }];
     }
 
     case 'super_squat': {
@@ -295,6 +345,21 @@ function poseArmShoulderAndLowerMachines(
       j.rKnee = [wide, 0.52, zKnee];
       j.lAnkle = [-wide * 0.95, 0.14, zKnee];
       j.rAnkle = [wide * 0.95, 0.14, zKnee];
+      return [{ kind: 'machine_hip_abductor', lKnee: j.lKnee, rKnee: j.rKnee }];
+    }
+
+    case 'hip_adduction': {
+      setSeatedMachineBase(j);
+      j.lElbow = [-0.26, 0.80, -0.08];
+      j.rElbow = [0.26, 0.80, -0.08];
+      j.lWrist = [-0.26, 0.56, 0.04];
+      j.rWrist = [0.26, 0.56, 0.04];
+      const squeeze = lerp(0.38, 0.10, p);
+      const zKnee = lerp(0.25, 0.36, p);
+      j.lKnee = [-squeeze, 0.52, zKnee];
+      j.rKnee = [squeeze, 0.52, zKnee];
+      j.lAnkle = [-squeeze * 0.95, 0.14, zKnee];
+      j.rAnkle = [squeeze * 0.95, 0.14, zKnee];
       return [{ kind: 'machine_hip_abductor', lKnee: j.lKnee, rKnee: j.rKnee }];
     }
 

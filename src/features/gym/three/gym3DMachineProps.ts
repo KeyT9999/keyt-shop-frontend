@@ -116,6 +116,20 @@ function buildArmAndShoulderMachineProps(
       return true;
     }
 
+    case 'machine_shoulder_press': {
+      // BRTW Plate-Loaded Shoulder Press: upright brown pad + rear frame + green converging arms
+      h.addBar([0, 0.47, -0.16], [0, 0.47, 0.18], 0.12, h.leatherMat);
+      h.addBar([0, 0.48, -0.18], [0, 1.24, -0.26], 0.12, h.leatherMat);
+      h.addBar([-0.46, 0.02, -0.36], [-0.46, 1.38, -0.32], 0.036, h.frameMat);
+      h.addBar([0.46, 0.02, -0.36], [0.46, 1.38, -0.32], 0.036, h.frameMat);
+      h.addBar([-0.46, 1.36, -0.32], [0.46, 1.36, -0.32], 0.032, h.frameMat);
+      h.addBar([-0.42, 0.96, -0.30], pr.lGrip, 0.022, h.leverMat);
+      h.addBar([0.42, 0.96, -0.30], pr.rGrip, 0.022, h.leverMat);
+      h.addDisc([-0.54, 0.98, -0.28], [1, 0, 0], 0.15, 0.036);
+      h.addDisc([0.54, 0.98, -0.28], [1, 0, 0], 0.15, 0.036);
+      return true;
+    }
+
     case 'machine_lateral_raise': {
       // BRTW Seated Lateral Raise: seat + backrest + overhead pivot + forearm roller pads
       h.addBar([0, 0.47, -0.18], [0, 0.47, 0.16], 0.12, h.leatherMat);
@@ -173,6 +187,27 @@ function buildLegAndCoreMachineProps(
       h.addBar(
         [-0.24, midAnkle[1], midAnkle[2]],
         [0.24, midAnkle[1], midAnkle[2]],
+        0.048,
+        h.leatherMat
+      );
+      return true;
+    }
+
+    case 'machine_seated_leg_curl': {
+      // BRTW Leg Curl/Extension (Seated Curl mode): seat + thigh lock pad + rear heel roller
+      h.addBar([0, 0.47, -0.16], [0, 0.47, 0.28], 0.13, h.leatherMat);
+      h.addBar([0, 0.48, -0.18], [0, 1.18, -0.26], 0.12, h.leatherMat);
+      h.addBar([-0.24, 0.62, 0.22], [0.24, 0.62, 0.22], 0.046, h.leatherMat);
+      h.addBox([-0.48, 0.68, 0.06], [0.16, 1.28, 0.30], h.frameMat);
+      const heelPos: Vec3Tuple = [
+        0,
+        (pr.lAnkle[1] + pr.rAnkle[1]) * 0.5 - 0.04,
+        (pr.lAnkle[2] + pr.rAnkle[2]) * 0.5 - 0.05,
+      ];
+      h.addBar([0.24, 0.54, 0.34], [0.24, heelPos[1], heelPos[2]], 0.022, h.leverMat);
+      h.addBar(
+        [-0.24, heelPos[1], heelPos[2]],
+        [0.24, heelPos[1], heelPos[2]],
         0.048,
         h.leatherMat
       );

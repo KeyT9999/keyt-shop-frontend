@@ -2,6 +2,7 @@ import {
   DEFAULT_USER_5DAY_SPLIT,
   GYM_EXERCISE_MAP,
   LEGACY_V1_DEFAULT_SPLIT_IDS,
+  LEGACY_V2_INTERIM_SPLIT_IDS,
 } from '../data/defaultGymCatalog';
 import type {
   GymClientPersistedState,
@@ -62,9 +63,15 @@ export function upgradeLegacyDefaultSplitDays(days: GymSplitDayConfig[]): {
 
   let upgraded = false;
   const nextDays = days.map((day) => {
-    const legacyIds = LEGACY_V1_DEFAULT_SPLIT_IDS[day.id];
+    const legacyV1 = LEGACY_V1_DEFAULT_SPLIT_IDS[day.id];
+    const legacyV2 = LEGACY_V2_INTERIM_SPLIT_IDS[day.id];
     const v2Default = DEFAULT_USER_5DAY_SPLIT.find((d) => d.id === day.id);
-    if (legacyIds && v2Default && isSameIdList(day.exerciseIds || [], legacyIds)) {
+    const cur = day.exerciseIds || [];
+    const matchesOldDefault =
+      (legacyV1 && isSameIdList(cur, legacyV1)) ||
+      (legacyV2 && isSameIdList(cur, legacyV2));
+
+    if (v2Default && matchesOldDefault) {
       upgraded = true;
       return {
         ...day,

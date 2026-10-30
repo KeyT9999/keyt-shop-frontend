@@ -552,7 +552,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 >
                   <GraduationCap size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Tiếng Nhật</span>
-                  <span className="nav-count-badge">2 Môn</span>
                   <ChevronDown
                     size={13}
                     className={`dropdown-chevron ${activeDropdown === 'japanese' ? 'open' : ''}`}
@@ -707,7 +706,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 >
                   <Languages size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Tiếng Trung</span>
-                  <span className="nav-count-badge">2 Khóa</span>
                   <ChevronDown
                     size={13}
                     className={`dropdown-chevron ${activeDropdown === 'chinese' ? 'open' : ''}`}
@@ -792,7 +790,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 >
                   <BookOpen size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Tiếng Anh</span>
-                  <span className="nav-count-badge">5 Khóa</span>
                   <ChevronDown
                     size={13}
                     className={`dropdown-chevron ${activeDropdown === 'english' ? 'open' : ''}`}
@@ -1319,14 +1316,14 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             <div className="flex flex-col gap-2.5 mt-2">
               <Link
                 to="/login"
-                className="w-full py-2.5 text-center text-sm font-semibold rounded-xl bg-slate-100 text-slate-800"
+                className="w-full py-2.5 text-center text-sm font-semibold rounded-xl bg-slate-100 text-slate-800 cursor-pointer"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Đăng nhập
               </Link>
               <Link
                 to="/register"
-                className="w-full py-2.5 text-center text-sm font-semibold rounded-xl bg-[#F05A28] text-white"
+                className="w-full py-2.5 text-center text-sm font-semibold rounded-xl bg-[#F05A28] text-white cursor-pointer"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Đăng ký tài khoản

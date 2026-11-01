@@ -906,9 +906,9 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                           <span className="chinese-dropdown-cta-label">
                             <span className="flex items-center gap-1.5">
                               <strong>Từ Vựng ENW</strong>
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase">1 Quiz</span>
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase">10 Chủ đề • 11 Quiz</span>
                             </span>
-                            <span>199 từ &amp; cụm từ học thuật viết luận</span>
+                            <span>199 từ &amp; cụm từ học thuật chia theo 10 chủ đề</span>
                           </span>
                         </span>
                         <ArrowRight size={17} className="chinese-dropdown-cta-arrow" />
@@ -1295,8 +1295,8 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <Sparkles size={16} className="text-[#F05A28]" />
-            <span>Từ Vựng ENW</span>
-            <span className="mobile-badge bg-emerald-100 text-emerald-700 font-bold">199 từ</span>
+            <span>Từ Vựng ENW (10 Chủ đề)</span>
+            <span className="mobile-badge bg-emerald-100 text-emerald-700 font-bold">11 Quiz</span>
           </Link>
 
           {/* Divider */}

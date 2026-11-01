@@ -152,18 +152,18 @@ const QUIZ_DECKS: QuizDeckConfig[] = [
     courseCode: 'ENW',
     lang: 'en',
     langLabel: 'Tiếng Anh',
-    shortTitle: 'Từ Vựng ENW (199 Từ)',
-    title: 'Từ Vựng Tiếng Anh ENW — 199 Từ & Cụm Từ Học Thuật Viết Luận',
-    badge: '1 QUIZ • 199 TỪ',
+    shortTitle: 'Từ Vựng ENW (10 Chủ Đề • 11 Quiz)',
+    title: 'Từ Vựng Tiếng Anh ENW — 199 Từ Chia Theo 10 Chủ Đề Học Thuật',
+    badge: '10 CHỦ ĐỀ • 11 QUIZ',
     badgeClass: 'bg-emerald-100 text-emerald-700 border-emerald-200',
     accentText: 'text-emerald-700',
     accentBg: 'bg-emerald-600',
     accentBorder: 'border-emerald-200 hover:border-emerald-400',
-    lessonCount: 1,
+    lessonCount: 11,
     wordCount: 199,
     unitLabel: 'QUIZ',
     description:
-      'Trọn bộ 199 từ vựng & cụm từ học thuật tiếng Anh viết luận (Academic & Essay Writing) theo 10 chủ đề then chốt: Giáo dục, Môi trường, Công nghệ, Y tế, Pháp luật...',
+      '199 từ vựng và cụm từ học thuật viết luận chia nhỏ thành 10 bài Quiz theo từng chủ đề (Giáo dục, Môi trường, Công nghệ, Y tế, Pháp luật...) kèm 1 bài Quiz tổng hợp toàn bộ.',
     href: '/courses/enw/vocabulary'
   },
   {
@@ -567,13 +567,13 @@ export default function CoursesHubPage() {
     {
       code: 'ENW',
       deckId: 'enw',
-      badge: '1 QUIZ • 199 TỪ',
+      badge: '10 CHỦ ĐỀ • 11 QUIZ',
       title: 'Từ Vựng Tiếng Anh ENW',
-      topics: 1,
-      topicUnit: 'Quiz hoàn chỉnh',
+      topics: 11,
+      topicUnit: 'bài Quiz',
       vocabulary: 199,
       description:
-        '199 từ vựng và cụm từ học thuật tiếng Anh viết luận chia theo 10 chủ đề then chốt (Giáo dục, Môi trường, Công nghệ, Y tế, Pháp luật, Xã hội...).',
+        'Chia nhỏ thành 10 chủ đề học thuật chuyên sâu (mỗi chủ đề ~20 từ) và 1 bài Quiz tổng hợp trọn bộ 199 từ giúp học nhanh, nhớ sâu.',
       href: '/courses/enw/vocabulary'
     }
   ];

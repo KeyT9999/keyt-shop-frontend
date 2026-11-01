@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { BookOpen, Sparkles, CheckCircle2, Headphones } from 'lucide-react';
 import { useAuthContext } from '../../context/useAuthContext';
 import { courseApi } from '../../features/courses/api/courseApi';
@@ -22,7 +22,22 @@ import { getCourseLanguage } from '../../features/courses/utils/courseLanguage';
 import { IS_PASSIVE_LISTENING_ENABLED } from '../../config/features';
 import Seo from '../../components/Seo';
 
+const ENW_TOPICS = [
+  { slug: '1-1-giao-duc-dao-tao', label: '1. Giáo dục', count: 20 },
+  { slug: '1-2-moi-truong-nang-luong', label: '2. Môi trường', count: 20 },
+  { slug: '1-3-cong-nghe-ky-thuat-so', label: '3. Công nghệ', count: 19 },
+  { slug: '1-4-suc-khoe-y-te', label: '4. Y tế', count: 20 },
+  { slug: '1-5-phap-luat-tu-phap', label: '5. Pháp luật', count: 20 },
+  { slug: '1-6-viec-lam-nghe-nghiep', label: '6. Việc làm', count: 20 },
+  { slug: '1-7-truyen-thong-bao-chi', label: '7. Truyền thông', count: 20 },
+  { slug: '1-8-toan-cau-hoa-kinh-te', label: '8. Toàn cầu hóa', count: 20 },
+  { slug: '1-9-xa-hoi-doi-song', label: '9. Xã hội', count: 20 },
+  { slug: '1-10-chinh-phu-chinh-sach', label: '10. Chính sách', count: 20 },
+  { slug: '1-11-tong-hop-tron-bo-enw', label: 'Tổng hợp (Full)', count: 199 }
+];
+
 export default function VocabularyDetailPage() {
+  const navigate = useNavigate();
   const { courseCode = 'jpd123', lessonSlug = '' } = useParams();
   const [searchParams] = useSearchParams();
   const requestedMode = searchParams.get('mode') as LearningMode | null;
@@ -260,6 +275,38 @@ export default function VocabularyDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Quick Topic Switcher Bar for ENW */}
+        {isEnw && (
+          <div className="mb-5 rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-xs">
+            <div className="flex items-center justify-between mb-2 px-1">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Sparkles size={14} className="text-[#F05A28]" />
+                Chọn nhanh chủ đề ENW:
+              </span>
+              <span className="text-[11px] font-semibold text-slate-500">10 Chủ đề • 199 Từ</span>
+            </div>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+              {ENW_TOPICS.map((topic) => {
+                const isActive = lesson.slug === topic.slug || lesson.slug.includes(topic.slug);
+                return (
+                  <button
+                    key={topic.slug}
+                    type="button"
+                    onClick={() => navigate(`/courses/${courseCode.toLowerCase()}/vocabulary/${topic.slug}`)}
+                    className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                      isActive
+                        ? 'bg-[#F05A28] text-white shadow-xs'
+                        : 'bg-slate-100/90 text-slate-700 hover:bg-orange-50 hover:text-[#F05A28] border border-transparent hover:border-orange-200'
+                    }`}
+                  >
+                    {topic.label} <span className="opacity-75 text-[10px]">({topic.count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Learning Mode Tabs */}
         <LearningModeSelector

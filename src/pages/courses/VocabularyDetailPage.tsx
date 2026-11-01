@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { BookOpen, Sparkles, CheckCircle2, Headphones } from 'lucide-react';
+import { BookOpen, Sparkles, CheckCircle2, Headphones, Layers } from 'lucide-react';
 import { useAuthContext } from '../../context/useAuthContext';
 import { courseApi } from '../../features/courses/api/courseApi';
 import type { CourseLesson, VocabularyItem, LearningMode } from '../../features/courses/types';
@@ -48,10 +48,27 @@ export default function VocabularyDetailPage() {
 
   const [lesson, setLesson] = useState<CourseLesson | null>(null);
   const [items, setItems] = useState<VocabularyItem[]>([]);
+  const [selectedTopic, setSelectedTopic] = useState<string>('all');
   const [activeMode, setActiveMode] = useState<LearningMode>(initialMode);
   const [loading, setLoading] = useState(true);
   const [passiveAudioLoading, setPassiveAudioLoading] = useState(false);
   const [passiveAudioError, setPassiveAudioError] = useState(false);
+
+  // Extract available topics from items (if marked with 'Chủ đề: ...')
+  const availableTopics = Array.from(
+    new Set(
+      items
+        .map((it) => {
+          const vn = it.examples?.[0]?.vietnamese || '';
+          return vn.startsWith('Chủ đề:') ? vn.replace('Chủ đề:', '').trim() : '';
+        })
+        .filter(Boolean)
+    )
+  );
+
+  const activeItems = selectedTopic === 'all'
+    ? items
+    : items.filter((it) => (it.examples?.[0]?.vietnamese || '').includes(selectedTopic));
 
   useEffect(() => {
     let isCancelled = false;
@@ -316,11 +333,63 @@ export default function VocabularyDetailPage() {
           passiveListeningEnabled={IS_PASSIVE_LISTENING_ENABLED}
         />
 
+        {/* Practice Topic Group Filter Bar */}
+        {availableTopics.length > 1 && (
+          <div className="mb-5 rounded-2xl border border-orange-200/80 bg-orange-50/40 p-3.5 shadow-xs">
+            <div className="flex items-center justify-between mb-2 px-1">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <Layers size={14} className="text-[#F05A28]" />
+                Lọc nhóm từ muốn luyện ({activeItems.length}/{items.length} từ):
+              </span>
+              {selectedTopic !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedTopic('all')}
+                  className="text-[11px] font-bold text-[#F05A28] hover:underline cursor-pointer"
+                >
+                  Xóa lọc (Xem tất cả)
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+              <button
+                type="button"
+                onClick={() => setSelectedTopic('all')}
+                className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                  selectedTopic === 'all'
+                    ? 'bg-[#F05A28] text-white shadow-xs'
+                    : 'bg-white text-slate-700 hover:bg-orange-100/60 hover:text-[#F05A28] border border-slate-200'
+                }`}
+              >
+                Tất cả ({items.length})
+              </button>
+              {availableTopics.map((top) => {
+                const count = items.filter((it) => (it.examples?.[0]?.vietnamese || '').includes(top)).length;
+                const isCurrent = selectedTopic === top;
+                return (
+                  <button
+                    key={top}
+                    type="button"
+                    onClick={() => setSelectedTopic(top)}
+                    className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                      isCurrent
+                        ? 'bg-[#F05A28] text-white shadow-xs'
+                        : 'bg-white text-slate-700 hover:bg-orange-100/60 hover:text-[#F05A28] border border-slate-200'
+                    }`}
+                  >
+                    {top} <span className="opacity-75 text-[10px]">({count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Interactive Mode Content */}
         <div className="mb-12">
           {activeMode === 'flashcard' && (
             <FlashcardMode
-              items={items}
+              items={activeItems}
               courseCode={courseCode}
               lessonSlug={lesson.slug}
               onRecordResult={handleRecordResult}
@@ -329,7 +398,7 @@ export default function VocabularyDetailPage() {
 
           {activeMode === 'mastery-loop' && (
             <MasteryLoopMode
-              items={items}
+              items={activeItems}
               courseCode={courseCode}
               lessonSlug={lesson.slug}
               onRecordResult={handleRecordResult}
@@ -338,7 +407,7 @@ export default function VocabularyDetailPage() {
 
           {activeMode === 'typing' && (
             <TypingMode
-              items={items}
+              items={activeItems}
               courseCode={courseCode}
               onRecordResult={handleRecordResult}
             />
@@ -354,7 +423,7 @@ export default function VocabularyDetailPage() {
 
           {activeMode === 'smart-quiz' && (
             <SmartQuizMode
-              items={items}
+              items={activeItems}
               courseCode={courseCode}
               lessonSlug={lesson.slug}
               onRecordResult={handleRecordResult}
@@ -363,7 +432,7 @@ export default function VocabularyDetailPage() {
 
           {activeMode === 'speed-match' && (
             <SpeedMatchMode
-              items={items}
+              items={activeItems}
               courseCode={courseCode}
               lessonSlug={lesson.slug}
               onRecordResult={handleRecordResult}
@@ -372,7 +441,7 @@ export default function VocabularyDetailPage() {
 
           {activeMode === 'time-attack' && (
             <TimeAttackMode
-              items={items}
+              items={activeItems}
               courseCode={courseCode}
               lessonSlug={lesson.slug}
               onRecordResult={handleRecordResult}
@@ -381,7 +450,7 @@ export default function VocabularyDetailPage() {
 
           {activeMode === 'mistake-buster' && (
             <MistakeBusterMode
-              items={items}
+              items={activeItems}
               courseCode={courseCode}
               lessonSlug={lesson.slug}
               onRecordResult={handleRecordResult}
@@ -394,11 +463,11 @@ export default function VocabularyDetailPage() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                   <BookOpen size={18} className="text-[#F05A28]" />
-                  Danh Sách Từ Vựng Chi Tiết ({items.length} từ)
+                  Danh Sách Từ Vựng Chi Tiết ({activeItems.length} từ)
                 </h3>
               </div>
               <VocabularyTable
-                items={items}
+                items={activeItems}
                 courseCode={courseCode}
                 onToggleBookmark={handleToggleBookmark}
               />
@@ -420,7 +489,7 @@ export default function VocabularyDetailPage() {
                 )}
                 <PassiveListeningMode
                   key={`${courseCode}:${lessonSlug}`}
-                  items={items}
+                  items={activeItems}
                   courseCode={courseCode}
                 />
               </>
@@ -434,11 +503,11 @@ export default function VocabularyDetailPage() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <BookOpen size={18} className="text-[#F05A28]" />
-                Bảng Tra Cứu Từ Vựng Bài {lesson.lessonCode}
+                Bảng Tra Cứu Từ Vựng Bài {lesson.lessonCode} ({activeItems.length} từ)
               </h3>
             </div>
             <VocabularyTable
-              items={items}
+              items={activeItems}
               courseCode={courseCode}
               onToggleBookmark={handleToggleBookmark}
             />

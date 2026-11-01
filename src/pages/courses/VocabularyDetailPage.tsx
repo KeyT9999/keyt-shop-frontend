@@ -196,24 +196,25 @@ export default function VocabularyDetailPage() {
   const isHackers = upperCode === 'TOEIC_HACKERS' || upperCode === 'TOEICHACKERS';
   const isBaKhi2 = upperCode === 'ENGBK2' || upperCode === 'ENGBAKHI2';
   const isBaKhi = upperCode === 'ENGBK' || upperCode === 'ENGBAKHI' || isBaKhi2;
+  const isEnw = upperCode === 'ENW' || upperCode === 'ENGW';
   const hasCodeInTitle = lesson.title.toLowerCase().includes(lesson.lessonCode.toLowerCase());
   const isStQuiz = lesson.lessonCode.toUpperCase().includes('_ST');
-  const cleanTitle = isToeic || isHackers || isBaKhi || hasCodeInTitle ? lesson.title : lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '');
+  const cleanTitle = isToeic || isHackers || isBaKhi || isEnw || hasCodeInTitle ? lesson.title : lesson.title.replace(new RegExp(`^${lesson.lessonCode}[:\\s-]*`, 'i'), '');
 
   return (
     <>
       <Seo
-        title={`${isToeic ? `Quiz ${lesson.order}: ${cleanTitle}` : isHackers ? `${cleanTitle}` : `Bài ${lesson.lessonCode}: ${cleanTitle}`} - ${isToeic ? '120 Thành Ngữ TOEIC' : isHackers ? 'Hackers TOEIC Vocabulary' : `Từ Vựng ${upperCode}`} | Mindora AI`}
-        description={isToeic ? `Luyện tập Quiz ${lesson.order}: ${cleanTitle} (${items.length} cụm từ) với Flashcard 3D, luyện gõ và trắc nghiệm phản xạ.` : isHackers ? `Học từ vựng Hackers TOEIC ${cleanTitle} (${items.length} từ vựng) với Flashcard 3D, luyện gõ, làm Quiz trắc nghiệm và nghe phát âm chuẩn.` : `Học từ vựng ${language.languageName.toLowerCase()} bài ${lesson.lessonCode}: ${cleanTitle} (${items.length} từ). Luyện Flashcard, gõ từ và làm bài tập trắc nghiệm.`}
+        title={`${isToeic || isBaKhi || isEnw ? `Quiz ${lesson.order}: ${cleanTitle}` : isHackers ? `${cleanTitle}` : `Bài ${lesson.lessonCode}: ${cleanTitle}`} - ${isToeic ? '120 Thành Ngữ TOEIC' : isHackers ? 'Hackers TOEIC Vocabulary' : isEnw ? 'Từ Vựng ENW' : `Từ Vựng ${upperCode}`} | Mindora AI`}
+        description={isToeic ? `Luyện tập Quiz ${lesson.order}: ${cleanTitle} (${items.length} cụm từ) với Flashcard 3D, luyện gõ và trắc nghiệm phản xạ.` : isHackers ? `Học từ vựng Hackers TOEIC ${cleanTitle} (${items.length} từ vựng) với Flashcard 3D, luyện gõ, làm Quiz trắc nghiệm và nghe phát âm chuẩn.` : isEnw ? `Luyện tập Quiz ${cleanTitle} (${items.length} từ vựng) với Flashcard 3D, luyện gõ và trắc nghiệm phản xạ.` : `Học từ vựng ${language.languageName.toLowerCase()} bài ${lesson.lessonCode}: ${cleanTitle} (${items.length} từ). Luyện Flashcard, gõ từ và làm bài tập trắc nghiệm.`}
         canonicalPath={`/courses/${courseCode.toLowerCase()}/vocabulary/${lesson.slug}`}
       />
 
       <div className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
         <CourseBreadcrumb
           items={[
-            { label: isToeic ? 'TOEIC 120' : isHackers ? 'Hackers TOEIC' : isBaKhi2 ? 'Từ Vựng Bá Khí 2' : isBaKhi ? 'Tiếng Anh Bá Khí' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
+            { label: isToeic ? 'TOEIC 120' : isHackers ? 'Hackers TOEIC' : isBaKhi2 ? 'Từ Vựng Bá Khí 2' : isBaKhi ? 'Tiếng Anh Bá Khí' : isEnw ? 'Từ Vựng ENW' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
             { label: `${isToeic ? 'Thành Ngữ & Cụm Từ' : 'Từ Vựng'} (${language.kind === 'chinese' ? '词汇' : language.kind === 'english' ? 'Vocabulary' : '単語'})`, href: `/courses/${courseCode.toLowerCase()}/vocabulary` },
-            { label: isToeic || isBaKhi ? `Quiz ${lesson.order}` : isHackers ? `Day ${lesson.order}` : `Bài ${lesson.lessonCode}` }
+            { label: isToeic || isBaKhi || isEnw ? `Quiz ${lesson.order}` : isHackers ? `Day ${lesson.order}` : `Bài ${lesson.lessonCode}` }
           ]}
         />
 
@@ -223,14 +224,14 @@ export default function VocabularyDetailPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="px-3 py-1 rounded-full text-xs font-black bg-orange-50 text-[#F05A28] border border-orange-200">
-                  {isToeic || isBaKhi ? `QUIZ ${lesson.order}` : isHackers ? `DAY ${lesson.order}` : isStQuiz ? `QUIZ ${lesson.lessonCode}` : `LESSON ${lesson.lessonCode}`}
+                  {isToeic || isBaKhi || isEnw ? `QUIZ ${lesson.order}` : isHackers ? `DAY ${lesson.order}` : isStQuiz ? `QUIZ ${lesson.lessonCode}` : `LESSON ${lesson.lessonCode}`}
                 </span>
                 <span className="text-xs font-semibold text-slate-500">
-                  {items.length} {isToeic ? 'cụm từ' : 'từ vựng'}
+                  {items.length} {isToeic ? 'cụm từ' : isBaKhi || isEnw ? 'mục từ' : 'từ vựng'}
                 </span>
               </div>
               <h1 className="text-xl font-extrabold leading-tight text-slate-900 sm:text-2xl lg:text-3xl">
-                {isToeic || isBaKhi || hasCodeInTitle ? cleanTitle : `${lesson.lessonCode}: ${cleanTitle}`}
+                {isToeic || isBaKhi || isEnw || hasCodeInTitle ? cleanTitle : `${lesson.lessonCode}: ${cleanTitle}`}
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
                 {lesson.description}

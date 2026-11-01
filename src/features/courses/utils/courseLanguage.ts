@@ -20,7 +20,7 @@ export function getCourseLanguage(courseCode?: string): CourseLanguageConfig {
     };
   }
 
-  if (normalizedCode.startsWith('ENG') || normalizedCode.startsWith('TOEIC') || normalizedCode.includes('HACKERS')) {
+  if (normalizedCode.startsWith('ENG') || normalizedCode.startsWith('TOEIC') || normalizedCode.includes('HACKERS') || normalizedCode.startsWith('ENW')) {
     return {
       kind: 'english',
       speechLocale: (normalizedCode.startsWith('TOEIC') || normalizedCode.includes('HACKERS')) ? 'en-US' : 'en-GB',

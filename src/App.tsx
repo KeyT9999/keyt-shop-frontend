@@ -352,6 +352,7 @@ export default function App() {
                         <Route path="/courses/engbk" element={<Navigate to="/courses/engbk/vocabulary" replace />} />
                         <Route path="/courses/engbk2" element={<Navigate to="/courses/engbk2/vocabulary" replace />} />
                         <Route path="/courses/eng1000" element={<Navigate to="/courses/eng1000/vocabulary" replace />} />
+                        <Route path="/courses/enw" element={<Navigate to="/courses/enw/vocabulary" replace />} />
                         <Route path="/courses/kana" element={<KanaQuizPage />} />
                         <Route path="/courses/kana/:type" element={<KanaQuizPage />} />
                         <Route path="/courses/:courseCode" element={<CourseLandingPage />} />

@@ -148,6 +148,25 @@ const QUIZ_DECKS: QuizDeckConfig[] = [
     href: '/courses/eng1000/vocabulary'
   },
   {
+    id: 'enw',
+    courseCode: 'ENW',
+    lang: 'en',
+    langLabel: 'Tiếng Anh',
+    shortTitle: 'Từ Vựng ENW (199 Từ)',
+    title: 'Từ Vựng Tiếng Anh ENW — 199 Từ & Cụm Từ Học Thuật Viết Luận',
+    badge: '1 QUIZ • 199 TỪ',
+    badgeClass: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    accentText: 'text-emerald-700',
+    accentBg: 'bg-emerald-600',
+    accentBorder: 'border-emerald-200 hover:border-emerald-400',
+    lessonCount: 1,
+    wordCount: 199,
+    unitLabel: 'QUIZ',
+    description:
+      'Trọn bộ 199 từ vựng & cụm từ học thuật tiếng Anh viết luận (Academic & Essay Writing) theo 10 chủ đề then chốt: Giáo dục, Môi trường, Công nghệ, Y tế, Pháp luật...',
+    href: '/courses/enw/vocabulary'
+  },
+  {
     id: 'jpd113',
     courseCode: 'JPD113',
     lang: 'jp',
@@ -544,6 +563,18 @@ export default function CoursesHubPage() {
       description:
         'Học theo 50 chủ đề thông dụng từ gia đình, đời sống đến công sở; đầy đủ phiên âm IPA, âm thanh bản xứ và nghĩa tiếng Việt.',
       href: '/courses/eng1000/vocabulary'
+    },
+    {
+      code: 'ENW',
+      deckId: 'enw',
+      badge: '1 QUIZ • 199 TỪ',
+      title: 'Từ Vựng Tiếng Anh ENW',
+      topics: 1,
+      topicUnit: 'Quiz hoàn chỉnh',
+      vocabulary: 199,
+      description:
+        '199 từ vựng và cụm từ học thuật tiếng Anh viết luận chia theo 10 chủ đề then chốt (Giáo dục, Môi trường, Công nghệ, Y tế, Pháp luật, Xã hội...).',
+      href: '/courses/enw/vocabulary'
     }
   ];
 

@@ -51,8 +51,9 @@ export default function VocabularyLessonListPage() {
   const isBaKhi1 = upperCode === 'ENGBK' || upperCode === 'ENGBAKHI';
   const isBaKhi2 = upperCode === 'ENGBK2' || upperCode === 'ENGBAKHI2';
   const isBaKhi = isBaKhi1 || isBaKhi2;
-  const fallbackLessonCount = upperCode === 'JPD113' ? 9 : upperCode.startsWith('HSK') ? 11 : upperCode === 'ENG1000' ? 50 : isToeic ? 6 : isHackers ? 30 : isBaKhi ? 12 : 14;
-  const fallbackItemCount = upperCode === 'JPD113' ? 264 : upperCode === 'HSK1' ? 150 : upperCode === 'HSK2' ? 140 : upperCode === 'ENG1000' ? 1044 : isToeic ? 120 : isHackers ? 4768 : isBaKhi2 ? 1457 : isBaKhi1 ? 1017 : 310;
+  const isEnw = upperCode === 'ENW' || upperCode === 'ENGW';
+  const fallbackLessonCount = upperCode === 'JPD113' ? 9 : upperCode.startsWith('HSK') ? 11 : upperCode === 'ENG1000' ? 50 : isToeic ? 6 : isHackers ? 30 : isBaKhi ? 12 : isEnw ? 1 : 14;
+  const fallbackItemCount = upperCode === 'JPD113' ? 264 : upperCode === 'HSK1' ? 150 : upperCode === 'HSK2' ? 140 : upperCode === 'ENG1000' ? 1044 : isToeic ? 120 : isHackers ? 4768 : isBaKhi2 ? 1457 : isBaKhi1 ? 1017 : isEnw ? 199 : 310;
 
   const pageHeading = isToeic
     ? '120 Thành Ngữ & Cụm Từ TOEIC (6 Phần Quiz)'
@@ -62,23 +63,25 @@ export default function VocabularyLessonListPage() {
     ? 'Từ Vựng Bá Khí 2 (12 Phần Quiz Theo Bài Đọc • Có IPA)'
     : isBaKhi1
     ? 'Từ Vựng Tiếng Anh Bá Khí (12 Phần Quiz Theo Bài Đọc)'
+    : isEnw
+    ? 'Từ Vựng Tiếng Anh ENW (199 Từ & Cụm Từ Học Thuật)'
     : `Danh Sách Bài Học Từ Vựng ${upperCode}`;
-  const unitName = isToeic || isBaKhi ? 'phần / Quiz' : isHackers ? 'ngày / chủ đề' : 'chủ đề từ vựng';
-  const termTypeName = isToeic ? 'Cụm từ' : isBaKhi ? 'Từ & Cụm từ' : 'Từ vựng';
+  const unitName = isToeic || isBaKhi || isEnw ? 'phần / Quiz' : isHackers ? 'ngày / chủ đề' : 'chủ đề từ vựng';
+  const termTypeName = isToeic ? 'Cụm từ' : isBaKhi || isEnw ? 'Từ & Cụm từ' : 'Từ vựng';
 
   return (
     <>
       <Seo
-        title={`${isToeic ? '120 Thành Ngữ và Cụm Từ TOEIC (6 Quiz)' : isHackers ? 'Hackers TOEIC Vocabulary 30 Day (4.768 Từ Vựng)' : isBaKhi2 ? 'Từ Vựng Bá Khí 2 (1.457 Từ Có IPA & 12 Quiz)' : isBaKhi1 ? 'Từ Vựng Tiếng Anh Bá Khí (1.017 Từ & 12 Quiz)' : `Từ Vựng ${language.languageName} ${upperCode}`} - Danh Sách ${lessons.length || fallbackLessonCount} Bài Học | Mindora AI`}
-        description={isToeic ? 'Luyện tập 120 thành ngữ và cụm từ TOEIC qua 6 bài Quiz, Flashcard 3D, luyện gõ và phản xạ nhanh.' : isHackers ? 'Trọn bộ 30 ngày từ vựng Hackers TOEIC với 4.768 từ và cụm từ theo ngữ cảnh bài thi, luyện Flashcard 3D, làm Quiz trắc nghiệm và gõ từ.' : isBaKhi2 ? 'Chinh phục 1.457 từ vựng và cụm từ học thuật Từ Vựng Bá Khí 2 kèm phiên âm IPA chia thành 12 phần Quiz theo bài đọc.' : isBaKhi1 ? 'Chinh phục 1.017 từ vựng và cụm từ học thuật Tiếng Anh Bá Khí chia thành 12 phần Quiz theo ngữ cảnh bài đọc (Test 1 – Test 4).' : `Học từ vựng ${language.languageName.toLowerCase()} ${upperCode} qua các bài học với Flashcard 3D, luyện gõ và trắc nghiệm.`}
+        title={`${isToeic ? '120 Thành Ngữ và Cụm Từ TOEIC (6 Quiz)' : isHackers ? 'Hackers TOEIC Vocabulary 30 Day (4.768 Từ Vựng)' : isBaKhi2 ? 'Từ Vựng Bá Khí 2 (1.457 Từ Có IPA & 12 Quiz)' : isBaKhi1 ? 'Từ Vựng Tiếng Anh Bá Khí (1.017 Từ & 12 Quiz)' : isEnw ? 'Từ Vựng Tiếng Anh ENW (199 Từ & 1 Quiz)' : `Từ Vựng ${language.languageName} ${upperCode}`} - Danh Sách ${lessons.length || fallbackLessonCount} Bài Học | Mindora AI`}
+        description={isToeic ? 'Luyện tập 120 thành ngữ và cụm từ TOEIC qua 6 bài Quiz, Flashcard 3D, luyện gõ và phản xạ nhanh.' : isHackers ? 'Trọn bộ 30 ngày từ vựng Hackers TOEIC với 4.768 từ và cụm từ theo ngữ cảnh bài thi, luyện Flashcard 3D, làm Quiz trắc nghiệm và gõ từ.' : isBaKhi2 ? 'Chinh phục 1.457 từ vựng và cụm từ học thuật Từ Vựng Bá Khí 2 kèm phiên âm IPA chia thành 12 phần Quiz theo bài đọc.' : isBaKhi1 ? 'Chinh phục 1.017 từ vựng và cụm từ học thuật Tiếng Anh Bá Khí chia thành 12 phần Quiz theo ngữ cảnh bài đọc (Test 1 – Test 4).' : isEnw ? 'Chinh phục 199 từ vựng và cụm từ học thuật tiếng Anh viết luận ENW với Flashcard 3D, làm Quiz trắc nghiệm và gõ từ.' : `Học từ vựng ${language.languageName.toLowerCase()} ${upperCode} qua các bài học với Flashcard 3D, luyện gõ và trắc nghiệm.`}
         canonicalPath={`/courses/${courseCode.toLowerCase()}/vocabulary`}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <CourseBreadcrumb
           items={[
-            { label: isToeic ? 'TOEIC 120' : isHackers ? 'Hackers TOEIC' : isBaKhi2 ? 'Từ Vựng Bá Khí 2' : isBaKhi1 ? 'Tiếng Anh Bá Khí' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
-            { label: `${isToeic ? 'Thành Ngữ & Cụm Từ' : isBaKhi ? 'Từ Vựng & Quiz' : 'Từ Vựng'} (${language.kind === 'chinese' ? '词汇' : language.kind === 'english' ? 'Vocabulary' : '単語'})` }
+            { label: isToeic ? 'TOEIC 120' : isHackers ? 'Hackers TOEIC' : isBaKhi2 ? 'Từ Vựng Bá Khí 2' : isBaKhi1 ? 'Tiếng Anh Bá Khí' : isEnw ? 'Từ Vựng ENW' : upperCode, href: `/courses/${courseCode.toLowerCase()}` },
+            { label: `${isToeic ? 'Thành Ngữ & Cụm Từ' : isBaKhi || isEnw ? 'Từ Vựng & Quiz' : 'Từ Vựng'} (${language.kind === 'chinese' ? '词汇' : language.kind === 'english' ? 'Vocabulary' : '単語'})` }
           ]}
         />
 
@@ -87,18 +90,18 @@ export default function VocabularyLessonListPage() {
           <div>
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#F05A28] mb-1">
               <BookMarked size={15} />
-              <span>Chương Trình {isToeic ? 'Thành Ngữ & Cụm Từ TOEIC' : isBaKhi2 ? 'Từ Vựng Bá Khí 2 (Có Phiên Âm IPA)' : isBaKhi1 ? 'Từ Vựng Tiếng Anh Bá Khí' : `Từ Vựng ${language.languageName}`}</span>
+              <span>Chương Trình {isToeic ? 'Thành Ngữ & Cụm Từ TOEIC' : isBaKhi2 ? 'Từ Vựng Bá Khí 2 (Có Phiên Âm IPA)' : isBaKhi1 ? 'Từ Vựng Tiếng Anh Bá Khí' : isEnw ? 'Từ Vựng Tiếng Anh ENW' : `Từ Vựng ${language.languageName}`}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
               {pageHeading}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Bao gồm {lessons.length || fallbackLessonCount} {unitName}, {isToeic ? 'chia từ Trang 516 đến Trang 521 kèm 6 bài Quiz trắc nghiệm và phản xạ nhanh.' : isBaKhi ? 'trích xuất theo ngữ cảnh 12 bài đọc học thuật (Test 1 – Test 4) kèm trường hợp sử dụng và Quiz phản xạ.' : 'kết hợp luyện nhớ và phản xạ nhanh.'}
+              Bao gồm {lessons.length || fallbackLessonCount} {unitName}, {isToeic ? 'chia từ Trang 516 đến Trang 521 kèm 6 bài Quiz trắc nghiệm và phản xạ nhanh.' : isBaKhi ? 'trích xuất theo ngữ cảnh 12 bài đọc học thuật (Test 1 – Test 4) kèm trường hợp sử dụng và Quiz phản xạ.' : isEnw ? 'trọn bộ 199 từ & cụm từ học thuật viết luận theo 10 chủ đề then chốt.' : 'kết hợp luyện nhớ và phản xạ nhanh.'}
             </p>
           </div>
 
           <div className="px-4 py-2 rounded-2xl bg-orange-50 text-[#F05A28] border border-orange-200/60 text-xs font-bold self-start sm:self-auto">
-            {lessons.length || fallbackLessonCount} {isToeic || isBaKhi ? 'Phần Quiz' : 'Bài học'} • {(totalItems || fallbackItemCount).toLocaleString('vi-VN')} {termTypeName}
+            {lessons.length || fallbackLessonCount} {isToeic || isBaKhi || isEnw ? 'Phần Quiz' : 'Bài học'} • {(totalItems || fallbackItemCount).toLocaleString('vi-VN')} {termTypeName}
           </div>
         </div>
 

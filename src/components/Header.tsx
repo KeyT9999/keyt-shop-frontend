@@ -356,7 +356,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     location.pathname.startsWith('/courses/kana') ||
     kanaTools.some((item) => location.pathname === item.href);
   const isChineseActive = /^\/courses\/hsk[12](?:\/|$)/i.test(location.pathname);
-  const isEnglishActive = /^\/courses\/(eng1000|engbk|engbk2|toeic120|toeichackers)(?:\/|$)/i.test(location.pathname);
+  const isEnglishActive = /^\/courses\/(eng1000|engbk|engbk2|toeic120|toeichackers|enw)(?:\/|$)/i.test(location.pathname);
 
   return (
     <div className="header-wrapper">
@@ -896,6 +896,23 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                         </span>
                         <ArrowRight size={17} className="chinese-dropdown-cta-arrow" />
                       </Link>
+                      <Link
+                        to="/courses/enw/vocabulary"
+                        className="chinese-dropdown-cta cursor-pointer"
+                        onClick={() => setActiveDropdown(null)}
+                      >
+                        <span className="chinese-dropdown-cta-main">
+                          <span className="chinese-dropdown-cta-icon"><Sparkles size={17} /></span>
+                          <span className="chinese-dropdown-cta-label">
+                            <span className="flex items-center gap-1.5">
+                              <strong>Từ Vựng ENW</strong>
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase">1 Quiz</span>
+                            </span>
+                            <span>199 từ &amp; cụm từ học thuật viết luận</span>
+                          </span>
+                        </span>
+                        <ArrowRight size={17} className="chinese-dropdown-cta-arrow" />
+                      </Link>
                     </nav>
                     <p className="chinese-dropdown-note">Flashcard 3D, luyện gõ, trắc nghiệm phản xạ và nghe phát âm bản xứ</p>
                   </div>
@@ -1271,6 +1288,15 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             <BookOpen size={16} className="text-[#F05A28]" />
             <span>1.000 từ tiếng Anh</span>
             <span className="mobile-badge">1.044 từ</span>
+          </Link>
+          <Link
+            to="/courses/enw/vocabulary"
+            className={`mobile-sub-link ${location.pathname.startsWith('/courses/enw') ? 'active' : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <Sparkles size={16} className="text-[#F05A28]" />
+            <span>Từ Vựng ENW</span>
+            <span className="mobile-badge bg-emerald-100 text-emerald-700 font-bold">199 từ</span>
           </Link>
 
           {/* Divider */}

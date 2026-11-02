@@ -6,8 +6,9 @@ import type { FocusAmbientId } from '../types/focusTypes';
 
 /**
  * Decision: Keep audio instances outside React component render cycles so
- * switching routes (e.g., from /focus to /courses/jpd113/vocabulary) never
- * interrupts Lofi music or ambient rain loops.
+ * switching routes to Mini-Player mode never glitches playback, while
+ * guarding async play() promises with playGeneration so leaving /focus
+ * stops all Lofi + ambient rain loops immediately with zero race conditions.
  */
 class FocusAudioManager {
   private trackAudio: HTMLAudioElement | null = null;
@@ -15,6 +16,7 @@ class FocusAudioManager {
   private ambientMap = new Map<FocusAmbientId, HTMLAudioElement>();
   private bellAudio: HTMLAudioElement | null = null;
   private onTrackEndedCallback: (() => void) | null = null;
+  private playGeneration = 0;
 
   public setOnTrackEnded(cb: (() => void) | null): void {
     this.onTrackEndedCallback = cb;
@@ -23,7 +25,7 @@ class FocusAudioManager {
   private ensureTrackAudio(): HTMLAudioElement {
     if (!this.trackAudio) {
       const audio = new Audio();
-      audio.preload = 'auto';
+      audio.preload = 'none';
       audio.addEventListener('ended', () => {
         if (this.onTrackEndedCallback) {
           this.onTrackEndedCallback();
@@ -36,6 +38,7 @@ class FocusAudioManager {
 
   public async playTrack(url: string, volume: number): Promise<boolean> {
     if (typeof window === 'undefined') return false;
+    const gen = ++this.playGeneration;
     const audio = this.ensureTrackAudio();
     if (this.currentTrackUrl !== url) {
       this.currentTrackUrl = url;
@@ -44,6 +47,10 @@ class FocusAudioManager {
     audio.volume = Math.max(0, Math.min(1, volume));
     try {
       await audio.play();
+      if (gen !== this.playGeneration) {
+        audio.pause();
+        return false;
+      }
       return true;
     } catch (err) {
       console.warn('⚠️ Autoplay Lofi track blocked until user interaction:', err);
@@ -52,6 +59,7 @@ class FocusAudioManager {
   }
 
   public pauseTrack(): void {
+    this.playGeneration++;
     if (this.trackAudio && !this.trackAudio.paused) {
       this.trackAudio.pause();
     }
@@ -68,6 +76,7 @@ class FocusAudioManager {
     shouldPlay: boolean
   ): void {
     if (typeof window === 'undefined') return;
+    const snapshotGen = this.playGeneration;
 
     for (const item of FOCUS_AMBIENT_SOUNDS) {
       const vol = Math.max(0, Math.min(1, volumes[item.id] ?? 0));
@@ -89,19 +98,31 @@ class FocusAudioManager {
 
       audio.volume = vol;
       if (audio.paused) {
-        audio.play().catch((err) => {
-          console.warn(`⚠️ Ambient [${item.id}] waiting for user gesture:`, err);
-        });
+        const targetAudio = audio;
+        targetAudio
+          .play()
+          .then(() => {
+            if (snapshotGen !== this.playGeneration || !shouldPlay) {
+              targetAudio.pause();
+            }
+          })
+          .catch((err) => {
+            console.warn(`⚠️ Ambient [${item.id}] waiting for user gesture:`, err);
+          });
       }
     }
   }
 
   public stopAll(): void {
-    this.pauseTrack();
+    this.playGeneration++;
+    if (this.trackAudio && !this.trackAudio.paused) {
+      this.trackAudio.pause();
+    }
     for (const audio of this.ambientMap.values()) {
       if (!audio.paused) {
         audio.pause();
       }
+      audio.currentTime = 0;
     }
   }
 

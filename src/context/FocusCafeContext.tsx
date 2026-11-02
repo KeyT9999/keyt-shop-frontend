@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   DEFAULT_AMBIENT_VOLUMES,
   FOCUS_SCENES,
@@ -22,6 +23,7 @@ import type {
 } from '../features/focus/types/focusTypes';
 import { focusAudioManager } from '../features/focus/utils/focusAudioManager';
 import {
+  exitPageFullscreen,
   isPageFullscreen,
   requestPageFullscreen,
   togglePageFullscreen,
@@ -32,6 +34,7 @@ import {
   getYesterdayDateKey,
   loadFocusPersistedState,
   saveFocusPersistedState,
+  shouldPlayFocusAmbients,
 } from '../features/focus/utils/focusStorage';
 import {
   FocusCafeContext,
@@ -39,12 +42,18 @@ import {
 } from './focus-cafe-context';
 
 export function FocusCafeProvider({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  const isOnFocusRoute = location.pathname === '/focus';
+
   const [persisted, setPersisted] = useState<FocusPersistedState>(() =>
     loadFocusPersistedState()
   );
   const [trackIndex, setTrackIndex] = useState<number>(0);
   const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(false);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
+  const [isFocusAmbientEnabled, setIsFocusAmbientEnabled] = useState<boolean>(false);
+  const [isMiniPlayerPinned, setIsMiniPlayerPinned] = useState<boolean>(false);
+  const [prevPathname, setPrevPathname] = useState<string>(location.pathname);
   const [remainingSeconds, setRemainingSeconds] = useState<number>(
     () => loadFocusPersistedState().pomodoroMinutes * 60
   );
@@ -53,7 +62,22 @@ export function FocusCafeProvider({ children }: { children: ReactNode }) {
     isPageFullscreen()
   );
 
+  // Adjust session state synchronously on route transitions (React 19 idiomatic pattern)
+  if (prevPathname !== location.pathname) {
+    setPrevPathname(location.pathname);
+    if (location.pathname === '/focus') {
+      if (isMiniPlayerPinned) {
+        setIsMiniPlayerPinned(false);
+      }
+    } else if (prevPathname === '/focus' && !isMiniPlayerPinned) {
+      if (isMusicPlaying) setIsMusicPlaying(false);
+      if (isTimerRunning) setIsTimerRunning(false);
+      if (isFocusAmbientEnabled) setIsFocusAmbientEnabled(false);
+    }
+  }
+
   const musicVolumeRef = useRef<number>(persisted.musicVolume);
+  const prevEffectPathRef = useRef<string>(location.pathname);
 
   useEffect(() => {
     musicVolumeRef.current = persisted.musicVolume;
@@ -74,6 +98,16 @@ export function FocusCafeProvider({ children }: { children: ReactNode }) {
       document.removeEventListener('webkitfullscreenchange', handleFsChange);
     };
   }, []);
+
+  // Stop external HTMLAudioElements immediately when leaving /focus without pinning Mini-Player
+  useEffect(() => {
+    const wasOnFocus = prevEffectPathRef.current === '/focus';
+    prevEffectPathRef.current = location.pathname;
+
+    if (wasOnFocus && !isOnFocusRoute && !isMiniPlayerPinned) {
+      focusAudioManager.stopAll();
+    }
+  }, [location.pathname, isOnFocusRoute, isMiniPlayerPinned]);
 
   const currentTrack = useMemo(
     () => FOCUS_TRACKS[trackIndex] || FOCUS_TRACKS[0],
@@ -114,16 +148,25 @@ export function FocusCafeProvider({ children }: { children: ReactNode }) {
     return () => focusAudioManager.setOnTrackEnded(null);
   }, []);
 
-  // Keep ambient audio synced whenever volumes or music playback state changes
+  // Strictly gate ambient audio: NEVER play outside /focus unless Mini-Player is pinned & actively playing
   useEffect(() => {
-    const anyAmbientActive = Object.values(persisted.ambientVolumes).some(
-      (v) => v > 0.01
-    );
-    focusAudioManager.syncAmbients(
-      persisted.ambientVolumes,
-      isMusicPlaying || isTimerRunning || anyAmbientActive
-    );
-  }, [persisted.ambientVolumes, isMusicPlaying, isTimerRunning]);
+    const shouldPlay = shouldPlayFocusAmbients({
+      isOnFocusRoute,
+      isMiniPlayerPinned,
+      isMusicPlaying,
+      isTimerRunning,
+      isFocusAmbientEnabled,
+    });
+
+    focusAudioManager.syncAmbients(persisted.ambientVolumes, shouldPlay);
+  }, [
+    isOnFocusRoute,
+    isMiniPlayerPinned,
+    persisted.ambientVolumes,
+    isMusicPlaying,
+    isTimerRunning,
+    isFocusAmbientEnabled,
+  ]);
 
   // Timer 1-second tick & daily streak recording
   useEffect(() => {
@@ -230,11 +273,15 @@ export function FocusCafeProvider({ children }: { children: ReactNode }) {
       const clamped = Math.max(0, Math.min(1, volume));
       setPersisted((prev) => {
         const nextAmbients = { ...prev.ambientVolumes, [ambientId]: clamped };
-        focusAudioManager.syncAmbients(nextAmbients, true);
+        const hasAny = Object.values(nextAmbients).some((v) => v > 0.01);
+        setIsFocusAmbientEnabled(hasAny);
+        if (isOnFocusRoute) {
+          focusAudioManager.syncAmbients(nextAmbients, hasAny);
+        }
         return { ...prev, ambientVolumes: nextAmbients };
       });
     },
-    []
+    [isOnFocusRoute]
   );
 
   const resetAmbients = useCallback(() => {
@@ -242,6 +289,7 @@ export function FocusCafeProvider({ children }: { children: ReactNode }) {
       ...DEFAULT_AMBIENT_VOLUMES,
       rain: 0,
     };
+    setIsFocusAmbientEnabled(false);
     focusAudioManager.syncAmbients(zeroed, false);
     setPersisted((prev) => ({ ...prev, ambientVolumes: zeroed }));
   }, []);
@@ -325,6 +373,8 @@ export function FocusCafeProvider({ children }: { children: ReactNode }) {
       const shouldFullscreen = options?.autoFullscreen ?? true;
       const shouldPlayMusic = options?.autoStartMusic ?? true;
 
+      setIsMiniPlayerPinned(false);
+
       if (shouldFullscreen) {
         void requestPageFullscreen().then((ok) => setIsFullscreen(ok));
       }
@@ -346,7 +396,15 @@ export function FocusCafeProvider({ children }: { children: ReactNode }) {
     ]
   );
 
+  const minimizeToMiniPlayer = useCallback(async () => {
+    setIsMiniPlayerPinned(true);
+    await exitPageFullscreen();
+    setIsFullscreen(false);
+  }, []);
+
   const stopAllFocusSession = useCallback(() => {
+    setIsMiniPlayerPinned(false);
+    setIsFocusAmbientEnabled(false);
     setIsTimerRunning(false);
     setIsMusicPlaying(false);
     focusAudioManager.stopAll();
@@ -393,8 +451,10 @@ export function FocusCafeProvider({ children }: { children: ReactNode }) {
       clearCompletedTasks,
 
       isFullscreen,
+      isMiniPlayerPinned,
       toggleFullscreen,
       enterFocusSession,
+      minimizeToMiniPlayer,
       stopAllFocusSession,
     }),
     [
@@ -425,8 +485,10 @@ export function FocusCafeProvider({ children }: { children: ReactNode }) {
       removeTask,
       clearCompletedTasks,
       isFullscreen,
+      isMiniPlayerPinned,
       toggleFullscreen,
       enterFocusSession,
+      minimizeToMiniPlayer,
       stopAllFocusSession,
     ]
   );

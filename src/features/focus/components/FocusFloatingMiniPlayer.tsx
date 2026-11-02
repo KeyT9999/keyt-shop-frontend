@@ -5,8 +5,8 @@ import { useFocusCafeContext } from '../../../context/useFocusCafeContext';
 import { formatSecondsToClock } from '../utils/focusStorage';
 
 /**
- * Floating mini-pill displayed on study pages (e.g., /courses/*) when the user
- * keeps their Lofi music or Pomodoro timer active while reviewing flashcards.
+ * Floating mini-pill displayed ONLY when the user explicitly pins Mini-Player
+ * ("Thu nhỏ học bài") to study on /courses/* while keeping Lofi + Pomodoro active.
  */
 export default function FocusFloatingMiniPlayer() {
   const location = useLocation();
@@ -15,7 +15,7 @@ export default function FocusFloatingMiniPlayer() {
     timerMode,
     remainingSeconds,
     stopwatchSeconds,
-    isTimerRunning,
+    isMiniPlayerPinned,
     isMusicPlaying,
     toggleMusic,
     enterFocusSession,
@@ -26,7 +26,7 @@ export default function FocusFloatingMiniPlayer() {
   if (location.pathname === '/focus' || location.pathname.startsWith('/admin')) {
     return null;
   }
-  if (!isTimerRunning && !isMusicPlaying) {
+  if (!isMiniPlayerPinned) {
     return null;
   }
 
@@ -50,8 +50,8 @@ export default function FocusFloatingMiniPlayer() {
       <button
         type="button"
         onClick={toggleMusic}
-        aria-label={isMusicPlaying ? 'Tạm dừng nhạc Lofi' : 'Phát nhạc Lofi'}
-        title={isMusicPlaying ? 'Tạm dừng nhạc Lofi' : 'Phát nhạc Lofi'}
+        aria-label={isMusicPlaying ? 'Tạm dừng nhạc Lofi & tiếng mưa' : 'Phát nhạc Lofi & tiếng mưa'}
+        title={isMusicPlaying ? 'Tạm dừng nhạc Lofi & tiếng mưa' : 'Phát nhạc Lofi & tiếng mưa'}
         className="w-7 h-7 rounded-full bg-[#F05A28] hover:bg-[#df4e1d] text-white flex items-center justify-center transition-colors duration-200 cursor-pointer"
       >
         {isMusicPlaying ? (
@@ -75,7 +75,7 @@ export default function FocusFloatingMiniPlayer() {
         type="button"
         onClick={stopAllFocusSession}
         aria-label="Tắt phiên Focus Café"
-        title="Đóng và tắt nhạc"
+        title="Đóng và tắt toàn bộ âm thanh"
         className="w-6 h-6 rounded-full hover:bg-white/15 text-slate-400 hover:text-white flex items-center justify-center transition-colors duration-200 cursor-pointer"
       >
         <X size={12} />

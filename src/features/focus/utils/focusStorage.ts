@@ -87,6 +87,23 @@ export function loadFocusPersistedState(): FocusPersistedState {
   }
 }
 
+export function shouldPlayFocusAmbients(params: {
+  isOnFocusRoute: boolean;
+  isMiniPlayerPinned: boolean;
+  isMusicPlaying: boolean;
+  isTimerRunning: boolean;
+  isFocusAmbientEnabled: boolean;
+}): boolean {
+  if (params.isOnFocusRoute) {
+    return (
+      params.isMusicPlaying ||
+      params.isTimerRunning ||
+      params.isFocusAmbientEnabled
+    );
+  }
+  return params.isMiniPlayerPinned && params.isMusicPlaying;
+}
+
 export function saveFocusPersistedState(state: FocusPersistedState): void {
   if (typeof window === 'undefined') return;
   try {

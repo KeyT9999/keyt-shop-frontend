@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Flame, Headphones, Maximize } from 'lucide-react';
+import { ArrowLeft, Flame, Headphones, Maximize, Minimize2 } from 'lucide-react';
 import { useFocusCafeContext } from '../context/useFocusCafeContext';
 import FocusBottomDock from '../features/focus/components/FocusBottomDock';
 import FocusMiniClockCard from '../features/focus/components/FocusMiniClockCard';
@@ -18,6 +18,8 @@ export default function FocusCafePage() {
     isMusicPlaying,
     toggleFullscreen,
     enterFocusSession,
+    minimizeToMiniPlayer,
+    stopAllFocusSession,
   } = useFocusCafeContext();
 
   const [isIdle, setIsIdle] = useState<boolean>(false);
@@ -70,8 +72,14 @@ export default function FocusCafePage() {
   }, []);
 
   const handleLeaveFocusRoom = async () => {
+    stopAllFocusSession();
     await exitPageFullscreen();
     navigate('/');
+  };
+
+  const handleMinimizeToStudy = async () => {
+    await minimizeToMiniPlayer();
+    navigate('/courses');
   };
 
   const handleOneTapImmersion = () => {
@@ -109,7 +117,7 @@ export default function FocusCafePage() {
       {/* Subtle cinematic vignette so clock & controls always remain readable */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-slate-950/35 via-transparent to-slate-950/45" />
 
-      {/* Top Bar: Left Back/Streak Pill + Right Cute Mini Study Clock */}
+      {/* Top Bar: Left Exit / Mini-Player / Streak Pills + Right Cute Mini Study Clock */}
       <div className="relative z-20 flex items-start justify-between gap-3 p-4 sm:p-6">
         <div
           className={`flex flex-wrap items-center gap-2 transition-opacity duration-300 ${
@@ -119,13 +127,24 @@ export default function FocusCafePage() {
           <button
             type="button"
             onClick={() => void handleLeaveFocusRoom()}
+            title="Thoát phòng học và tắt toàn bộ âm thanh"
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-950/65 hover:bg-slate-950/85 backdrop-blur-xl border border-white/15 text-xs font-semibold text-white transition-colors duration-200 cursor-pointer"
           >
             <ArrowLeft size={14} />
             <span>Trang chủ KeyT</span>
           </button>
 
-          <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-950/60 backdrop-blur-xl border border-white/15 text-xs text-slate-200">
+          <button
+            type="button"
+            onClick={() => void handleMinimizeToStudy()}
+            title="Thu nhỏ thành Mini-Player để vừa nghe nhạc vừa học từ vựng"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#F05A28]/85 hover:bg-[#F05A28] backdrop-blur-xl border border-white/20 text-xs font-semibold text-white transition-colors duration-200 cursor-pointer"
+          >
+            <Minimize2 size={13} />
+            <span>Thu nhỏ học bài</span>
+          </button>
+
+          <div className="hidden md:inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-950/60 backdrop-blur-xl border border-white/15 text-xs text-slate-200">
             <Headphones size={13} className="text-[#F05A28]" />
             <span className="font-semibold text-white">{activeScene.title}</span>
             <span className="text-white/30">•</span>
@@ -172,7 +191,6 @@ export default function FocusCafePage() {
           onPopoverChange={(isOpen) => {
             setHasOpenPopover(isOpen);
             if (!isOpen && !isFullscreen) {
-              // Keep toggleFullscreen easily reachable from dock
               void toggleFullscreen;
             }
           }}

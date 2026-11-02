@@ -52,10 +52,12 @@ export interface FocusCafeContextType {
   removeTask: (taskId: string) => void;
   clearCompletedTasks: () => void;
 
-  // Fullscreen & Launch action
+  // Fullscreen, Mini-Player & Launch actions
   isFullscreen: boolean;
+  isMiniPlayerPinned: boolean;
   toggleFullscreen: () => Promise<void>;
   enterFocusSession: (options?: { autoStartMusic?: boolean; autoFullscreen?: boolean }) => void;
+  minimizeToMiniPlayer: () => Promise<void>;
   stopAllFocusSession: () => void;
 }
 

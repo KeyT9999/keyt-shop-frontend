@@ -11,6 +11,7 @@ import {
 import {
   computeUpdatedStreak,
   formatSecondsToClock,
+  shouldPlayFocusAmbients,
 } from './focusStorage';
 
 describe('focusStorage pure utilities', () => {
@@ -51,6 +52,62 @@ describe('focusStorage pure utilities', () => {
       streakCount: 1,
       lastStudyDate: '2026-11-02',
     });
+  });
+
+  it('never allows ambient rain to play outside /focus unless Mini-Player is pinned and playing', () => {
+    // Visiting homepage / courses without entering /focus -> strictly silent
+    expect(
+      shouldPlayFocusAmbients({
+        isOnFocusRoute: false,
+        isMiniPlayerPinned: false,
+        isMusicPlaying: false,
+        isTimerRunning: false,
+        isFocusAmbientEnabled: true,
+      })
+    ).toBe(false);
+
+    // Pinned Mini-Player on /courses: plays ambients only while music is playing
+    expect(
+      shouldPlayFocusAmbients({
+        isOnFocusRoute: false,
+        isMiniPlayerPinned: true,
+        isMusicPlaying: true,
+        isTimerRunning: true,
+        isFocusAmbientEnabled: false,
+      })
+    ).toBe(true);
+
+    // Pausing Mini-Player outside /focus immediately pauses rain too
+    expect(
+      shouldPlayFocusAmbients({
+        isOnFocusRoute: false,
+        isMiniPlayerPinned: true,
+        isMusicPlaying: false,
+        isTimerRunning: true,
+        isFocusAmbientEnabled: true,
+      })
+    ).toBe(false);
+
+    // Inside /focus: plays when user activates music, timer, or ambient slider
+    expect(
+      shouldPlayFocusAmbients({
+        isOnFocusRoute: true,
+        isMiniPlayerPinned: false,
+        isMusicPlaying: false,
+        isTimerRunning: false,
+        isFocusAmbientEnabled: false,
+      })
+    ).toBe(false);
+
+    expect(
+      shouldPlayFocusAmbients({
+        isOnFocusRoute: true,
+        isMiniPlayerPinned: false,
+        isMusicPlaying: false,
+        isTimerRunning: false,
+        isFocusAmbientEnabled: true,
+      })
+    ).toBe(true);
   });
 });
 

@@ -12,6 +12,7 @@ import { NotificationProvider } from './context/NotificationContext';
 import NotificationContainer from './components/NotificationContainer';
 
 import { AddToCartAnimationProvider } from './context/AddToCartAnimationContext';
+import { FocusCafeProvider } from './context/FocusCafeContext';
 
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -35,7 +36,9 @@ function AppProviders({ children }: { children: ReactNode }) {
                 <CartProvider>
                     <AddToCartAnimationProvider>
                         <WishlistProvider>
-                            {children}
+                            <FocusCafeProvider>
+                                {children}
+                            </FocusCafeProvider>
                         </WishlistProvider>
                     </AddToCartAnimationProvider>
                 </CartProvider>

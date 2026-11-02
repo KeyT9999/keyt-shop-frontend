@@ -25,12 +25,17 @@ import {
   ArrowRight,
   Search,
   Flame,
+  Headphones,
   Video,
   Dumbbell,
   type LucideIcon
 } from 'lucide-react';
-import { IS_GYM_COACH_ENABLED } from '../config/features';
+import {
+  IS_FOCUS_CAFE_ENABLED,
+  IS_GYM_COACH_ENABLED,
+} from '../config/features';
 import { useAuthContext } from '../context/useAuthContext';
+import { useFocusCafeContext } from '../context/useFocusCafeContext';
 import logo from '../assets/logo.png';
 import './Header.css';
 
@@ -51,6 +56,7 @@ interface SubMenuItem {
 
 export default function Header({ onSearch, searchValue }: HeaderProps) {
   const { user, logout } = useAuthContext();
+  const { enterFocusSession } = useFocusCafeContext();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -113,6 +119,19 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
   // Dropdown data definitions
   const aiTools: SubMenuItem[] = [
+    ...(IS_FOCUS_CAFE_ENABLED
+      ? [
+          {
+            title: 'KeyT Focus Café',
+            desc: 'Góc tự học Lofi toàn màn hình, mưa rơi & đồng hồ đếm giờ học',
+            href: '/focus',
+            icon: Headphones,
+            iconBg: 'bg-orange-50 text-[#F05A28]',
+            iconColor: '#F05A28',
+            badge: 'LOFI'
+          }
+        ]
+      : []),
     ...(IS_GYM_COACH_ENABLED
       ? [
           {
@@ -345,7 +364,9 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
   ];
 
 
-  const isAiActive = aiTools.some((t) => location.pathname === t.href && t.href !== '/gym');
+  const isAiActive = aiTools.some(
+    (t) => location.pathname === t.href && t.href !== '/gym' && t.href !== '/focus'
+  );
   const isPhotoActive = photoTools.some((t) => location.pathname === t.href);
   const isOtpActive =
     location.pathname === '/get-otp' ||
@@ -412,7 +433,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   aria-expanded={activeDropdown === 'ai'}
                   onClick={() => setActiveDropdown(activeDropdown === 'ai' ? null : 'ai')}
                 >
-                  <Sparkles size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Công cụ AI</span>
                   <ChevronDown
                     size={13}
@@ -434,7 +454,12 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                             key={item.href}
                             to={item.href}
                             className={`dropdown-card-item cursor-pointer ${location.pathname === item.href ? 'item-active' : ''}`}
-                            onClick={() => setActiveDropdown(null)}
+                            onClick={() => {
+                              setActiveDropdown(null);
+                              if (item.href === '/focus') {
+                                enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
+                              }
+                            }}
                           >
                             <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
                               <Icon size={18} />
@@ -506,13 +531,27 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 )}
               </li>
 
-              {/* 4. Unified Get OTP & 2FA Button */}
+              {/* 4. Direct Gym 3D Coach Top-Level Link (Left of Center Pill for 4-1-4 Symmetry) */}
+              {IS_GYM_COACH_ENABLED && (
+                <li className="header-nav-item">
+                  <Link
+                    to="/gym"
+                    className={`header-nav-link cursor-pointer ${location.pathname === '/gym' ? 'active' : ''}`}
+                    title="Lộ trình tập Gym 5 ngày & Mô phỏng tư thế 3D"
+                  >
+                    <Dumbbell size={13} className="nav-icon-highlight nav-icon-animate" />
+                    <span>Gym 3D</span>
+                  </Link>
+                </li>
+              )}
+
+              {/* 5. Center Focal Pill: Unified Get OTP & 2FA Button (Slot #5 of 9) */}
               <li className="header-nav-item">
                 <Link
                   to="/get-otp"
                   className={`otp-nav-pill cursor-pointer ${isOtpActive ? 'active' : ''}`}
                 >
-                  <KeyRound size={14} className="otp-key-icon" />
+                  <KeyRound size={13} className="otp-key-icon" />
                   <span>Get OTP &amp; 2FA</span>
                   <span className="otp-live-badge">
                     <span className="otp-live-dot" />
@@ -521,21 +560,24 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 </Link>
               </li>
 
-              {/* 4b. Direct Gym 3D Coach Top-Level Link */}
-              {IS_GYM_COACH_ENABLED && (
+              {/* 6. Direct KeyT Focus Café Fullscreen Launch Link (Right of Center Pill, paired with Study Courses) */}
+              {IS_FOCUS_CAFE_ENABLED && (
                 <li className="header-nav-item">
                   <Link
-                    to="/gym"
-                    className={`header-nav-link cursor-pointer ${location.pathname === '/gym' ? 'active' : ''}`}
-                    title="Lộ trình tập Gym 5 ngày & Mô phỏng tư thế 3D"
+                    to="/focus"
+                    onClick={() =>
+                      enterFocusSession({ autoFullscreen: true, autoStartMusic: true })
+                    }
+                    className={`header-nav-link focus-cafe-nav-link cursor-pointer ${location.pathname === '/focus' ? 'active' : ''}`}
+                    title="Mở Góc Tự Học Lofi Toàn Màn Hình & Đồng Hồ Pomodoro"
                   >
-                    <Dumbbell size={14} className="nav-icon-highlight nav-icon-animate" />
-                    <span>Gym 3D</span>
+                    <Headphones size={13} className="nav-icon-highlight nav-icon-animate" />
+                    <span>Focus Café</span>
                   </Link>
                 </li>
               )}
 
-              {/* 5. Tiếng Nhật Dropdown (Mega Menu Centered) */}
+              {/* 7. Tiếng Nhật Dropdown (Mega Menu Centered) */}
               <li
                 className="header-nav-item dropdown-trigger mega-dropdown-item"
                 onMouseEnter={() => handleMouseEnter('japanese')}
@@ -550,7 +592,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   aria-controls="japanese-course-menu"
                   onClick={() => setActiveDropdown(activeDropdown === 'japanese' ? null : 'japanese')}
                 >
-                  <GraduationCap size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Tiếng Nhật</span>
                   <ChevronDown
                     size={13}
@@ -689,7 +730,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 )}
               </li>
 
-              {/* 6. Tiếng Trung Dropdown */}
+              {/* 8. Tiếng Trung Dropdown */}
               <li
                 className="header-nav-item dropdown-trigger"
                 onMouseEnter={() => handleMouseEnter('chinese')}
@@ -704,7 +745,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   aria-controls="chinese-course-menu"
                   onClick={() => setActiveDropdown(activeDropdown === 'chinese' ? null : 'chinese')}
                 >
-                  <Languages size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Tiếng Trung</span>
                   <ChevronDown
                     size={13}
@@ -775,7 +815,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 )}
               </li>
 
-              {/* 7. Tiếng Anh Dropdown */}
+              {/* 9. Tiếng Anh Dropdown */}
               <li
                 className="header-nav-item dropdown-trigger"
                 onMouseEnter={() => handleMouseEnter('english')}
@@ -788,7 +828,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   aria-controls="english-course-menu"
                   onClick={() => setActiveDropdown(activeDropdown === 'english' ? null : 'english')}
                 >
-                  <BookOpen size={14} className="nav-icon-highlight nav-icon-animate" />
                   <span>Tiếng Anh</span>
                   <ChevronDown
                     size={13}
@@ -923,11 +962,26 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
           {/* Right: User Profile & Actions */}
           <div className="header-right">
+            {IS_FOCUS_CAFE_ENABLED && (
+              <Link
+                to="/focus"
+                onClick={() =>
+                  enterFocusSession({ autoFullscreen: true, autoStartMusic: true })
+                }
+                className={`mobile-gym-quick-pill mobile-focus-quick-pill cursor-pointer ${location.pathname === '/focus' ? 'active' : ''}`}
+                title="Mở nhanh Góc Tự Học Lofi Toàn Màn Hình"
+                aria-label="Mở Góc Tự Học Focus Café"
+              >
+                <Headphones size={14} />
+                <span className="mobile-gym-quick-text">Focus Café</span>
+              </Link>
+            )}
             {IS_GYM_COACH_ENABLED && (
               <Link
                 to="/gym"
                 className={`mobile-gym-quick-pill cursor-pointer ${location.pathname === '/gym' ? 'active' : ''}`}
                 title="Mở nhanh KeyT Gym 3D Coach"
+                aria-label="Mở KeyT Gym 3D Coach"
               >
                 <Dumbbell size={14} />
                 <span className="mobile-gym-quick-text">Gym 3D</span>
@@ -1084,6 +1138,20 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             </Link>
           )}
 
+          {IS_FOCUS_CAFE_ENABLED && (
+            <Link
+              to="/focus"
+              className={`mobile-otp-btn cursor-pointer ${location.pathname === '/focus' ? 'active' : ''}`}
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
+              }}
+            >
+              <Headphones size={16} />
+              <span>KeyT Focus Café (Góc Học Lofi)</span>
+            </Link>
+          )}
+
           {/* Group: Công cụ AI */}
           <div className="mobile-group-title">Công cụ AI</div>
           {aiTools.map((tool) => {
@@ -1093,7 +1161,12 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 key={tool.href}
                 to={tool.href}
                 className={`mobile-sub-link ${location.pathname === tool.href ? 'active' : ''}`}
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  if (tool.href === '/focus') {
+                    enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
+                  }
+                }}
               >
                 <Icon size={16} style={{ color: tool.iconColor }} />
                 <span>{tool.title}</span>
@@ -1111,7 +1184,12 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 key={tool.href}
                 to={tool.href}
                 className={`mobile-sub-link ${location.pathname === tool.href ? 'active' : ''}`}
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  if (tool.href === '/focus') {
+                    enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
+                  }
+                }}
               >
                 <Icon size={16} style={{ color: tool.iconColor }} />
                 <span>{tool.title}</span>
@@ -1154,7 +1232,12 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 key={tool.href}
                 to={tool.href}
                 className={`mobile-sub-link ${location.pathname === tool.href ? 'active' : ''}`}
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  if (tool.href === '/focus') {
+                    enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
+                  }
+                }}
               >
                 <Icon size={16} style={{ color: tool.iconColor }} />
                 <span>{tool.title}</span>
@@ -1196,7 +1279,12 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 key={tool.href}
                 to={tool.href}
                 className={`mobile-sub-link ${location.pathname === tool.href ? 'active' : ''}`}
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  if (tool.href === '/focus') {
+                    enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
+                  }
+                }}
               >
                 <Icon size={16} style={{ color: tool.iconColor }} />
                 <span>{tool.title}</span>

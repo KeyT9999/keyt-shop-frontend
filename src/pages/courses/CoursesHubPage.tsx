@@ -19,7 +19,9 @@ import {
   Compass
 } from 'lucide-react';
 import Seo from '../../components/Seo';
+import { IS_FOCUS_CAFE_ENABLED } from '../../config/features';
 import { useAuthContext } from '../../context/useAuthContext';
+import { useFocusCafeContext } from '../../context/useFocusCafeContext';
 import { courseApi } from '../../features/courses/api/courseApi';
 import type { CourseLesson } from '../../features/courses/types';
 import CourseProgressBar from '../../features/courses/components/common/CourseProgressBar';
@@ -318,6 +320,7 @@ export default function CoursesHubPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { token } = useAuthContext();
+  const { enterFocusSession } = useFocusCafeContext();
   const quizExplorerRef = useRef<HTMLDivElement>(null);
 
   const initialLangParam = (searchParams.get('lang') || 'all').toLowerCase();
@@ -636,6 +639,19 @@ export default function CoursesHubPage() {
                 <span className="px-1.5 py-0.2 rounded bg-blue-600 text-white text-[10px] font-black">EN</span>
                 Tiếng Anh: 110 Bài Quiz (8.406 Từ &amp; Cụm Từ)
               </span>
+              {IS_FOCUS_CAFE_ENABLED && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
+                    navigate('/focus');
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#1E293B] hover:bg-[#F05A28] text-white text-xs font-bold shadow-xs transition-colors duration-200 cursor-pointer"
+                >
+                  <Headphones size={13} className="text-amber-300" />
+                  <span>Góc Tự Học Lofi (Fullscreen)</span>
+                </button>
+              )}
             </div>
 
             {/* 4 Main Language Filter Pills */}

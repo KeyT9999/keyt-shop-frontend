@@ -6,3 +6,6 @@ export const IS_ROBOT_3D_ENABLED =
 
 export const IS_GYM_COACH_ENABLED =
   import.meta.env.VITE_ENABLE_GYM_COACH !== 'false';
+
+export const IS_FOCUS_CAFE_ENABLED =
+  import.meta.env.VITE_ENABLE_FOCUS_CAFE !== 'false';

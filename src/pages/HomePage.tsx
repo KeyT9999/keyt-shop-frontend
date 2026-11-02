@@ -31,6 +31,8 @@ import {
   Play
 } from 'lucide-react';
 import Robot3DCanvas from '../components/robot/Robot3DCanvas';
+import { IS_FOCUS_CAFE_ENABLED } from '../config/features';
+import { useFocusCafeContext } from '../context/useFocusCafeContext';
 import {
   emitRobotStatusEvent,
   PRIMARY_ROBOT_STATES,
@@ -147,6 +149,7 @@ type FlashcardLangType = 'jp' | 'cn' | 'en';
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { enterFocusSession } = useFocusCafeContext();
 
   // Hero Command Preview Tab
   const [heroTab, setHeroTab] = useState<HeroTabType>('overview');
@@ -384,6 +387,19 @@ export default function HomePage() {
               <Frame size={17} className="text-[#F05A28]" />
               <span>Tạo Khung Ảnh EXIF</span>
             </button>
+
+            {IS_FOCUS_CAFE_ENABLED && (
+              <button
+                onClick={() => {
+                  enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
+                  navigate('/focus');
+                }}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white text-slate-800 font-bold text-sm sm:text-base border border-slate-200/90 shadow-xs hover:bg-orange-50 hover:border-[#F05A28]/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+              >
+                <Headphones size={17} className="text-[#F05A28]" />
+                <span>Góc Tự Học Lofi</span>
+              </button>
+            )}
           </div>
 
           {/* ── 3D FLYING ROBOT AI COMPANION HERO SHOWCASE ────────────── */}

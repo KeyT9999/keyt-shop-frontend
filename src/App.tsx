@@ -15,7 +15,12 @@ import VisitTracker from './components/VisitTracker';
 import AnnouncementModal from './components/AnnouncementModal';
 import AffiliateReferralTracker from './components/affiliate/AffiliateReferralTracker';
 import DraggableRobotWidget from './components/robot/DraggableRobotWidget';
-import { IS_GYM_COACH_ENABLED, IS_ROBOT_3D_ENABLED } from './config/features';
+import FocusFloatingMiniPlayer from './features/focus/components/FocusFloatingMiniPlayer';
+import {
+    IS_FOCUS_CAFE_ENABLED,
+    IS_GYM_COACH_ENABLED,
+    IS_ROBOT_3D_ENABLED,
+} from './config/features';
 import { announcementService } from './services/announcementService';
 
 // Lazy loading pages
@@ -65,6 +70,7 @@ const CompressPage = lazy(() => import('./pages/CompressPage'));
 const AiImagePage = lazy(() => import('./pages/AiImagePage'));
 const VideoTranslatePage = lazy(() => import('./pages/VideoTranslatePage'));
 const GymCoachPage = lazy(() => import('./pages/GymCoachPage'));
+const FocusCafePage = lazy(() => import('./pages/FocusCafePage'));
 const AdminChatPage = lazy(() => import('./pages/admin/AdminChatPage'));
 
 // Multi-Language Course Pages
@@ -257,6 +263,16 @@ export default function App() {
             };
         }
 
+        if (path === '/focus') {
+            return {
+                ...base,
+                title: 'KeyT Focus Café – Góc Tự Học Lofi Toàn Màn Hình & Đồng Hồ Pomodoro',
+                description:
+                    'Không gian tự học toàn màn hình với 6 khung cảnh Lofi chuyển động, nhạc Lofi không lời, bộ trộn tiếng mưa rơi & lửa trại cùng đồng hồ đếm giờ học nhỏ xinh.',
+                canonicalPath: '/focus',
+            };
+        }
+
         if (path === '/courses/kana' || path.endsWith('/kana')) {
             return {
                 ...base,
@@ -272,8 +288,9 @@ export default function App() {
 
     const isAdminPage = location.pathname.startsWith('/admin');
     const isGymPage = location.pathname === '/gym';
+    const isFocusPage = location.pathname === '/focus';
     const isAdmin = user?.admin === true;
-    const showChatWidget = !isAdmin && !isAdminPage && !isGymPage;
+    const showChatWidget = !isAdmin && !isAdminPage && !isGymPage && !isFocusPage;
 
     return (
         <div className="app">
@@ -281,10 +298,11 @@ export default function App() {
             <AffiliateReferralTracker />
             <Seo {...seoConfig} />
             <StructuredData />
-            {!isAdminPage && !isGymPage && <FloatingContact />}
-            {!isAdminPage && !isGymPage && IS_ROBOT_3D_ENABLED && <DraggableRobotWidget />}
+            {!isAdminPage && !isGymPage && !isFocusPage && <FloatingContact />}
+            {!isAdminPage && !isGymPage && !isFocusPage && IS_ROBOT_3D_ENABLED && <DraggableRobotWidget />}
             {showChatWidget && <ChatWidget />}
-            {isAdmin && !isGymPage && <AdminChatBubble />}
+            {isAdmin && !isGymPage && !isFocusPage && <AdminChatBubble />}
+            <FocusFloatingMiniPlayer />
             <AnnouncementModal
                 open={announcementOpen}
                 title={announcementTitle}
@@ -292,7 +310,7 @@ export default function App() {
                 onClose={() => setAnnouncementOpen(false)}
             />
 
-            {!isAdminPage && <Header onSearch={setSearchQuery} searchValue={searchQuery} />}
+            {!isAdminPage && !isFocusPage && <Header onSearch={setSearchQuery} searchValue={searchQuery} />}
 
             <main className={isAdminPage ? "main-content-admin" : "main-content-full"}>
                 <Suspense
@@ -342,6 +360,7 @@ export default function App() {
                         <Route path="/ai-image" element={<AiImagePage />} />
                         <Route path="/video-translate" element={<VideoTranslatePage />} />
                         {IS_GYM_COACH_ENABLED && <Route path="/gym" element={<GymCoachPage />} />}
+                        {IS_FOCUS_CAFE_ENABLED && <Route path="/focus" element={<FocusCafePage />} />}
 
                         {/* Multi-Language Course Routes */}
                         <Route path="/courses" element={<CoursesHubPage />} />
@@ -394,7 +413,7 @@ export default function App() {
                 </Suspense>
             </main>
 
-            {!isAdminPage && <Footer />}
+            {!isAdminPage && !isFocusPage && <Footer />}
         </div>
     );
 }

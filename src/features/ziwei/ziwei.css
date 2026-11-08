@@ -274,3 +274,143 @@
   .ziwei-chart-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .ziwei-chart-actions button { justify-content: center; padding-inline: .25rem; gap: .24rem; white-space: nowrap; }
 }
+
+.ziwei-chat-dock {
+  position: fixed;
+  z-index: 40;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: calc(max(1rem, env(safe-area-inset-bottom)) + var(--zi-chat-keyboard, 0px));
+}
+
+.ziwei-chat-launcher,
+.ziwei-chat-header button,
+.ziwei-chat-form button,
+.ziwei-chat-suggestions button {
+  cursor: pointer;
+  transition: background-color 180ms ease;
+}
+
+.ziwei-chat-launcher {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  min-height: 48px;
+  padding: .55rem 1rem;
+  border: 1px solid #e0bd82;
+  border-radius: 999px;
+  background: var(--zi-jade-dark);
+  color: #fff7e6;
+  font-weight: 750;
+  box-shadow: 0 6px 20px #17372f33;
+}
+
+.ziwei-chat-launcher:hover { background: var(--zi-jade); }
+
+.ziwei-chat-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(25rem, calc(100vw - 2rem));
+  height: min(33rem, calc(var(--zi-chat-viewport, 100dvh) - 2rem));
+  min-height: 0;
+  overflow: hidden;
+  background: var(--zi-sheet);
+  border: 1px solid var(--zi-line);
+  border-radius: 14px;
+  box-shadow: 0 12px 36px #17372f40;
+}
+
+.ziwei-chat-header {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  flex: none;
+  padding: .45rem .6rem .45rem .9rem;
+  background: var(--zi-jade-dark);
+  color: #fff7e6;
+}
+
+.ziwei-chat-header h2 { flex: 1; font: 700 1.2rem var(--zi-serif); }
+.ziwei-chat-header button,
+.ziwei-chat-form button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-height: 44px;
+  flex: none;
+  border-radius: 8px;
+}
+.ziwei-chat-header button:hover { background: #ffffff24; }
+.ziwei-chat-header button:focus-visible { outline-color: #ffdf9d; }
+
+.ziwei-chat-log {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+  padding: .9rem;
+  font-size: .875rem;
+}
+
+.ziwei-chat-message {
+  flex: none;
+  padding: .65rem .75rem;
+  border-radius: 10px;
+  overflow-wrap: anywhere;
+}
+.ziwei-chat-user {
+  max-width: 90%;
+  align-self: flex-end;
+  background: var(--zi-jade);
+  color: #fff7e6;
+}
+.ziwei-chat-assistant { background: #fffaf0; border: 1px solid var(--zi-soft-line); }
+
+.ziwei-chat-suggestions { display: grid; gap: .55rem; }
+.ziwei-chat-panel > .ziwei-chat-suggestions { padding: 1rem; }
+.ziwei-chat-suggestions button {
+  min-height: 44px;
+  padding: .5rem .7rem;
+  text-align: left;
+  border: 1px solid var(--zi-soft-line);
+  border-radius: 7px;
+  background: #fffaf0;
+  font-size: .875rem;
+}
+.ziwei-chat-suggestions button:hover { background: #eee1c8; }
+
+.ziwei-chat-form {
+  display: flex;
+  flex: none;
+  gap: .45rem;
+  padding: .6rem;
+  border-top: 1px solid var(--zi-soft-line);
+}
+.ziwei-chat-form input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: .5rem .65rem;
+  border: 1px solid var(--zi-soft-line);
+  border-radius: 8px;
+  background: #fffdf8;
+  font-size: 16px;
+}
+.ziwei-chat-form button { background: var(--zi-jade-dark); color: #fff7e6; }
+.ziwei-chat-form button:hover { background: var(--zi-jade); }
+.ziwei-chat-form button:disabled { opacity: .55; cursor: default; }
+.ziwei-chat-error { padding: .4rem .9rem; color: var(--zi-red); font-size: .875rem; }
+
+@media (max-width: 639px) {
+  .ziwei-chat-dock:has(.ziwei-chat-panel) {
+    right: max(.5rem, env(safe-area-inset-right));
+    left: max(.5rem, env(safe-area-inset-left));
+    bottom: calc(max(.5rem, env(safe-area-inset-bottom)) + var(--zi-chat-keyboard, 0px));
+  }
+  .ziwei-chat-panel {
+    width: 100%;
+    height: min(32rem, calc(var(--zi-chat-viewport, 100dvh) - 1.5rem));
+  }
+}

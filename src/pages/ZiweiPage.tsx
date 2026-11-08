@@ -46,6 +46,7 @@ import {
   type SavedZiweiRecord,
 } from '../features/ziwei/services/ziweiApiService';
 import BirthFormCard from '../features/ziwei/components/BirthFormCard';
+import ZiweiChat, { type ZiweiChatRequest } from '../features/ziwei/components/ZiweiChat';
 import ChartBoard, { type ZiweiTimeView } from '../features/ziwei/components/ChartBoard';
 import PatternsPanel from '../features/ziwei/components/PatternsPanel';
 import StarDetailModal from '../features/ziwei/components/StarDetailModal';
@@ -105,10 +106,8 @@ export default function ZiweiPage() {
     palace: Palace;
   } | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState<boolean>(false);
-  const [externalPromptRequest, setExternalPromptRequest] = useState<{
-    id: number;
-    prompt: string;
-  } | null>(null);
+  const [chatRequest, setChatRequest] = useState<ZiweiChatRequest | null>(null);
+  const chatRequestId = useRef(0);
 
   const aiSectionRef = useRef<HTMLDetailsElement>(null);
 
@@ -172,6 +171,7 @@ export default function ZiweiPage() {
   const handleApplyBirthForm = (nextForm: BirthFormState) => {
     setFormState(nextForm);
     setCommittedForm(nextForm);
+    setChatRequest(null);
     setSelectedPalace(null);
     setSavedReadingsMap({});
     setHasSubmittedChart(true);
@@ -183,6 +183,7 @@ export default function ZiweiPage() {
 
   const handleBackToInputStep = () => {
     setHasSubmittedChart(false);
+    setChatRequest(null);
     setHasOpenedReading(false);
     setShowBirthForm(false);
     setSearchParams(new URLSearchParams(), { replace: true });
@@ -191,6 +192,7 @@ export default function ZiweiPage() {
 
   const handleUpdateSchoolConfig = (nextConfig: SchoolConfig) => {
     setSchoolConfig(nextConfig);
+    setChatRequest(null);
     saveSchoolConfig(nextConfig);
     if (hasSubmittedChart) {
       syncUrlParams(committedForm, nextConfig);
@@ -200,6 +202,7 @@ export default function ZiweiPage() {
   const handleResetSchoolConfig = () => {
     resetSchoolConfig();
     setSchoolConfig({ ...SCHOOL_DEFAULT_CONFIG });
+    setChatRequest(null);
     if (hasSubmittedChart) {
       syncUrlParams(committedForm, SCHOOL_DEFAULT_CONFIG);
     }
@@ -259,15 +262,11 @@ export default function ZiweiPage() {
     const viewLabel =
       view === 'daxian' ? 'Đại Hạn' : view === 'liunian' ? 'Lưu Niên' : 'Bản Mệnh';
     const prompt = `Hãy phân tích chuyên sâu hiện tượng 【${viewLabel}: Sao ${starVi} Hóa ${shVi}】 trên lá số của tôi theo học phái Thiên Kỷ của Nghê Hải Hạ (bao gồm ý nghĩa cốt lõi, tác động lên cung tọa thủ, đường chiếu Tam Phương Tứ Chính và lời khuyên ứng xử).`;
-    setExternalPromptRequest({ id: Date.now(), prompt });
-    scrollToAiSection();
+    handleTriggerAiPrompt(prompt);
   };
 
-  const handleTriggerAiPrompt = (prompt: string) => {
-    setActiveTab('chart');
-    setHasSubmittedChart(true);
-    setExternalPromptRequest({ id: Date.now(), prompt });
-    scrollToAiSection();
+  const handleTriggerAiPrompt = (prompt: string, context?: string) => {
+    setChatRequest({ id: ++chatRequestId.current, prompt, context });
   };
 
   return (
@@ -471,7 +470,7 @@ export default function ZiweiPage() {
                         chart={chart}
                         chartSummaryText={chartSummaryText}
                         selectedPalace={selectedPalace}
-                        externalPromptRequest={externalPromptRequest}
+                        onAskQuestion={handleTriggerAiPrompt}
                         savedReadings={savedReadingsMap}
                         onReadingGenerated={(topicKey, content) =>
                           setSavedReadingsMap((prev) => ({ ...prev, [topicKey]: content }))
@@ -571,6 +570,7 @@ export default function ZiweiPage() {
                             };
                             setFormState(restored);
                             setCommittedForm(restored);
+                            setChatRequest(null);
                             setSavedReadingsMap(rec.aiReadings || {});
                             setHasSubmittedChart(true);
                             setActiveTab('chart');
@@ -649,6 +649,16 @@ export default function ZiweiPage() {
           </div>
         )}
       </div>
+
+      <ZiweiChat
+        key={hasSubmittedChart ? shareUrl : 'birth-form'}
+        chartSummary={hasSubmittedChart ? chartSummaryText : null}
+        request={chatRequest}
+        onOpenBirthForm={() => {
+          setActiveTab('chart');
+          window.scrollTo({ top: 0 });
+        }}
+      />
 
       {/* Modal Chi Tiết Sao */}
       <StarDetailModal

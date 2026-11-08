@@ -27,7 +27,7 @@ import {
 } from '../utils/ziweiLocalization';
 import { ziweiApiService } from '../services/ziweiApiService';
 import BirthFormCard from './BirthFormCard';
-import { FormattedAiReading } from './AiInsightPanel';
+import { FormattedAiReading } from './FormattedAiReading';
 
 interface HemingPanelProps {
   initialFormA: BirthFormState;

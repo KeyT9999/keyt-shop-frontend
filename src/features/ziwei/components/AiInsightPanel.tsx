@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Sparkles,
-  Send,
   Compass,
   Heart,
   Briefcase,
@@ -17,7 +16,6 @@ import {
   ShieldCheck,
   RotateCcw,
   AlertCircle,
-  MessageSquarePlus,
   CheckCircle2,
   Copy,
   Check,
@@ -41,13 +39,15 @@ import {
   PALACE_ROLE_VI,
   formatPalaceStarsSummaryVi,
 } from '../utils/ziweiLocalization';
-import { ziweiApiService, type ZiweiChatMessage } from '../services/ziweiApiService';
+import { ziweiApiService } from '../services/ziweiApiService';
+
+import { FormattedAiReading } from './FormattedAiReading';
 
 interface AiInsightPanelProps {
   chart: ZiweiChart;
   chartSummaryText: string;
   selectedPalace: Palace | null;
-  externalPromptRequest?: { id: number; prompt: string } | null;
+  onAskQuestion: (prompt: string, context: string) => void;
   savedReadings?: Record<string, string>;
   onReadingGenerated?: (key: string, content: string) => void;
   autoAnalyzeOverview?: boolean;
@@ -69,60 +69,11 @@ const TOPIC_ICON_MAP: Record<TopicKey, typeof Compass> = {
   parents: ShieldCheck,
 };
 
-const PRESET_QUESTIONS_VI = [
-  'Năm nay lưu niên của tôi có hợp chuyển việc hay khởi nghiệp không?',
-  'Hình mẫu người phối ngẫu và thời điểm kết hôn thuận lợi của tôi?',
-  'Đại hạn 10 năm hiện tại của tôi cần nắm bắt cơ hội gì và tránh rủi ro nào?',
-  'Cung Tài Bạch và Điền Trạch của tôi hợp đầu tư lĩnh vực gì?',
-];
-
-export function FormattedAiReading({ text }: { text: string }) {
-  const lines = text.split('\n');
-  return (
-    <div className="space-y-2.5 text-sm sm:text-[15px] leading-relaxed text-slate-700">
-      {lines.map((rawLine, idx) => {
-        const line = rawLine.trim();
-        if (!line) return <div key={idx} className="h-1" />;
-
-        const headerMatch = line.match(/^(?:\*\*)?【(.+?)】(?:\*\*)?(.*)$/);
-        if (headerMatch) {
-          const title = headerMatch[1];
-          const rest = headerMatch[2]?.trim();
-          return (
-            <div key={idx} className="pt-4 first:pt-0">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/90 text-slate-900 font-extrabold text-xs sm:text-sm mb-1.5 shadow-2xs">
-                <Sparkles size={14} className="text-[#F05A28] shrink-0" />
-                <span>【{title}】</span>
-              </div>
-              {rest && <p className="text-slate-700 mt-1.5 pl-1">{rest}</p>}
-            </div>
-          );
-        }
-
-        const parts = line.split(/\*\*(.+?)\*\*/g);
-        return (
-          <p key={idx} className="text-slate-700 leading-relaxed pl-1">
-            {parts.map((part, pIdx) =>
-              pIdx % 2 === 1 ? (
-                <strong key={pIdx} className="font-bold text-slate-900">
-                  {part}
-                </strong>
-              ) : (
-                part
-              )
-            )}
-          </p>
-        );
-      })}
-    </div>
-  );
-}
-
 export default function AiInsightPanel({
   chart,
   chartSummaryText,
   selectedPalace,
-  externalPromptRequest,
+  onAskQuestion,
   savedReadings = {},
   onReadingGenerated,
   autoAnalyzeOverview = true,
@@ -130,15 +81,10 @@ export default function AiInsightPanel({
   const [activeTopic, setActiveTopic] = useState<TopicKey>('overview');
   const [showAll13Grid, setShowAll13Grid] = useState<boolean>(false);
   const [topicReadings, setTopicReadings] = useState<Record<string, string>>(savedReadings);
-  const [chatMessages, setChatMessages] = useState<ZiweiChatMessage[]>([]);
-  const [questionInput, setQuestionInput] = useState('');
   const [loadingTopic, setLoadingTopic] = useState(false);
-  const [loadingChat, setLoadingChat] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const lastHandledPromptId = useRef<number>(0);
   const autoAnalyzedSignatureRef = useRef<string>('');
-  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setTopicReadings(savedReadings);
@@ -227,55 +173,6 @@ export default function AiInsightPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chart, autoAnalyzeOverview]);
 
-  const handleSendCustomQuestion = async (customText?: string) => {
-    const text = (customText ?? questionInput).trim();
-    if (!text || loadingChat) return;
-
-    setErrorMsg(null);
-    const nextUserMsg: ZiweiChatMessage = { role: 'user', content: text };
-    const updatedHistory = [...chatMessages, nextUserMsg];
-    setChatMessages(updatedHistory);
-    if (!customText) setQuestionInput('');
-    setLoadingChat(true);
-
-    setTimeout(() => {
-      chatScrollRef.current?.scrollTo({
-        top: chatScrollRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
-    }, 50);
-
-    try {
-      const res = await ziweiApiService.interpretChart({
-        chartSummary: `${chartSummaryText}\n\n${deterministicReading.promptContextVi}`,
-        messages: updatedHistory,
-      });
-      setChatMessages((prev) => [...prev, { role: 'assistant', content: res.reply }]);
-      setTimeout(() => {
-        chatScrollRef.current?.scrollTo({
-          top: chatScrollRef.current.scrollHeight,
-          behavior: 'smooth',
-        });
-      }, 80);
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Lỗi khi gửi câu hỏi tới AI.');
-    } finally {
-      setLoadingChat(false);
-    }
-  };
-
-  useEffect(() => {
-    if (
-      externalPromptRequest &&
-      externalPromptRequest.id !== lastHandledPromptId.current &&
-      externalPromptRequest.prompt
-    ) {
-      lastHandledPromptId.current = externalPromptRequest.id;
-      handleSendCustomQuestion(externalPromptRequest.prompt);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [externalPromptRequest]);
-
   const handleAnalyzeSelectedPalace = () => {
     if (!selectedPalace) return;
     const pNameVi = translatePalaceName(selectedPalace.name);
@@ -286,7 +183,7 @@ export default function AiInsightPanel({
     }${
       shaText ? `, Sát tinh: ${shaText}` : ''
     }. Hãy phân tích theo 4 mục: **【Định Tính Cung ${pNameVi}】**, **【Giải Mã Các Sao Theo Thiên Kỷ】**, **【Tam Phương Tứ Chính Chiếu Hợp】** và **【Lời Khuyên Thực Tế】**.`;
-    handleSendCustomQuestion(prompt);
+    onAskQuestion(prompt, deterministicReading.promptContextVi);
   };
 
   const handleCopyCurrentReading = async () => {
@@ -340,7 +237,6 @@ export default function AiInsightPanel({
               <button
                 type="button"
                 onClick={handleAnalyzeSelectedPalace}
-                disabled={loadingChat}
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#F05A28] hover:bg-[#d94b1c] text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer disabled:opacity-50"
               >
                 <Sparkles size={14} />
@@ -573,8 +469,7 @@ export default function AiInsightPanel({
                 <button
                   type="button"
                   onClick={handleAnalyzeSelectedPalace}
-                  disabled={loadingChat}
-                  className="w-full py-2 px-3 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                    className="w-full py-2 px-3 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   <Sparkles size={13} />
                   <span>Hỏi AI Về Cung {translatePalaceName(selectedPalace.name)}</span>
@@ -860,122 +755,6 @@ export default function AiInsightPanel({
         </div>
       </section>
 
-      {/* ─── KHỐI 2: KHUNG CHAT AI HỎI ĐÁP TRỰC TIẾP CÙNG ĐẠI SƯ《THIÊN KỶ》 (LUÔN HIỂN THỊ) ─── */}
-      <section className="bg-white rounded-3xl border-2 border-purple-200/90 shadow-md overflow-hidden">
-        <div className="px-5 py-4 bg-gradient-to-r from-[#1E1B4B] via-slate-900 to-[#0F172A] text-white flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#F05A28] text-white flex items-center justify-center shadow-sm shrink-0">
-              <MessageSquarePlus size={20} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base sm:text-lg font-extrabold">
-                  Chat Trực Tiếp Cùng Đại Sư AI《Thiên Kỷ》
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                  Đã nạp toàn bộ 12 cung &amp; vận hạn của đương số
-                </span>
-              </div>
-              <p className="text-xs text-slate-300 mt-0.5">
-                Đặt bất kỳ câu hỏi riêng nào về sự nghiệp, tài chính, tình duyên, năm hạn hoặc bấm
-                vào các câu hỏi gợi ý bên dưới
-              </p>
-            </div>
-          </div>
-
-          <span className="px-3 py-1 rounded-full bg-white/10 text-amber-300 text-xs font-extrabold">
-            {chatMessages.filter((m) => m.role === 'assistant').length} phản hồi từ Đại Sư AI
-          </span>
-        </div>
-
-        <div className="p-5 sm:p-6 space-y-4">
-          {/* Câu hỏi gợi ý nhanh */}
-          <div className="space-y-2">
-            <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-              Câu Hỏi Gợi Ý Cho Lá Số Này (Bấm Để Hỏi Ngay):
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-              {PRESET_QUESTIONS_VI.map((q) => (
-                <button
-                  key={q}
-                  type="button"
-                  onClick={() => handleSendCustomQuestion(q)}
-                  disabled={loadingChat}
-                  className="text-left p-3 rounded-2xl bg-slate-50 hover:bg-orange-50/70 border border-slate-200 hover:border-[#F05A28] text-xs text-slate-800 font-semibold transition-all cursor-pointer flex items-center justify-between gap-2"
-                >
-                  <span>{q}</span>
-                  <Send size={13} className="text-[#F05A28] shrink-0" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Lịch sử đoạn chat */}
-          {chatMessages.length > 0 && (
-            <div
-              ref={chatScrollRef}
-              className="max-h-[520px] overflow-y-auto space-y-3 p-4 rounded-2xl bg-slate-50 border border-slate-200"
-            >
-              {chatMessages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[92%] rounded-2xl p-4 ${
-                      msg.role === 'user'
-                        ? 'bg-slate-900 text-white text-xs sm:text-sm font-medium'
-                        : 'bg-white border border-slate-200 text-slate-800 shadow-2xs'
-                    }`}
-                  >
-                    {msg.role === 'assistant' ? (
-                      <FormattedAiReading text={msg.content} />
-                    ) : (
-                      <p>{msg.content}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {loadingChat && (
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-orange-50 border border-purple-200 flex items-center gap-3 text-xs sm:text-sm text-purple-950 font-bold animate-pulse">
-                  <Sparkles size={18} className="text-[#F05A28] animate-spin shrink-0" />
-                  <span>
-                    Đại Sư AI đang đối chiếu 12 cung, Tứ Hóa và khẩu quyết《Thiên Kỷ》để trả lời bạn...
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Thanh nhập câu hỏi Chat AI */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
-            <input
-              type="text"
-              value={questionInput}
-              onChange={(e) => setQuestionInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendCustomQuestion();
-                }
-              }}
-              placeholder="Nhập câu hỏi riêng cho Đại Sư AI (VD: Năm 2026 tôi có nên đổi việc, mua nhà hay kết hôn không?)..."
-              disabled={loadingChat}
-              className="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-3.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#F05A28] focus:outline-none shadow-2xs"
-            />
-            <button
-              type="button"
-              onClick={() => handleSendCustomQuestion()}
-              disabled={loadingChat || !questionInput.trim()}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-[#F05A28] hover:bg-[#d94b1c] text-white text-xs sm:text-sm font-extrabold transition-all cursor-pointer disabled:opacity-40 shadow-sm shrink-0"
-            >
-              <Send size={16} />
-              <span>Gửi Câu Hỏi Tới Đại Sư AI</span>
-            </button>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

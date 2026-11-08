@@ -1,7 +1,11 @@
-import type { Palace, SiHua } from '../engine/types';
+import type { Palace, SiHua, Star, ZiweiChart } from '../engine/types';
+import { BRANCHES } from '../engine/constants';
+import { boshiShenName } from '../engine/shier-shen';
+import { STAR_READING_PROFILES } from './starReadingProfiles';
 import type { TopicKey } from '../engine/db-analysis';
 import {
   formatPalaceStarsSummaryVi,
+  translateBranch,
   translateBrightness,
   translatePalaceName,
   translateSiHua,
@@ -12,6 +16,9 @@ type ReadingPoint = {
   label: string;
   takeaway: string;
   explanation: string;
+  kind?: string;
+  notes?: { label: string; text: string }[];
+  about?: { name: string; text: string };
 };
 
 const STAR_TAKEAWAYS: Record<string, string> = {
@@ -29,6 +36,22 @@ const STAR_TAKEAWAYS: Record<string, string> = {
   天梁: 'Coi trọng sự công bằng và hay đứng ra giúp người khác.',
   七杀: 'Quyết đoán và sẵn sàng nhận việc khó.',
   破军: 'Thích thay đổi những cách làm đã kém hiệu quả.',
+  堂符: 'Phong thái chỉn chu, coi trọng cách cư xử và nề nếp.',
+  喜神: 'Có xu hướng tạo bầu không khí vui vẻ và kết nối mọi người.',
+  禄存: 'Thiên về giữ và tích lũy những gì đã có.',
+  文昌: 'Thích sắp xếp ý và trình bày rõ ràng.',
+  文曲: 'Nhạy với sắc thái và cách diễn đạt.',
+  左辅: 'Dễ phát huy hơn khi có người cùng gánh việc.',
+  右弼: 'Có thể tìm được người hỗ trợ đúng lúc.',
+  天魁: 'Dễ học được nhiều từ người có kinh nghiệm.',
+  天钺: 'Biết tận dụng sự chỉ dẫn và lời góp ý.',
+  天马: 'Nổi bật khi di chuyển hoặc đổi môi trường.',
+  擎羊: 'Có xu hướng đối diện vấn đề một cách trực tiếp.',
+  陀罗: 'Một số việc cần thời gian và nhiều lượt chỉnh sửa.',
+  火星: 'Dễ bắt đầu nhanh khi có động lực.',
+  铃星: 'Nhạy với áp lực và những thay đổi đột ngột.',
+  地空: 'Nên đối chiếu kỳ vọng với nguồn lực đang có.',
+  地劫: 'Có ích khi chuẩn bị cho khả năng phải làm lại.',
 };
 
 const WORK_AND_MONEY_EXAMPLES: Record<string, string> = {
@@ -46,6 +69,17 @@ const WORK_AND_MONEY_EXAMPLES: Record<string, string> = {
   天梁: 'Xu hướng này dễ thấy khi làm công việc hướng dẫn, giám sát hoặc đứng ra bảo vệ quyền lợi của người khác.',
   七杀: 'Ví dụ, bạn có thể phát huy trong dự án khó, cần tự quyết và có mục tiêu cụ thể.',
   破军: 'Bạn có thể phát huy khi thử nghiệm hoặc cải tổ. Hãy xác định trước phần cần giữ và phần cần thay đổi.',
+};
+
+const TOPIC_EXAMPLES: Partial<Record<TopicKey, string>> = {
+  love: 'Đối chiếu điều này với cách hai người bày tỏ nhu cầu và xử lý bất đồng.',
+  family: 'Trong quan hệ anh chị em, hãy nhìn cách chia trách nhiệm và hỏi ý nhau khi có việc chung.',
+  children: 'Trong quan hệ với con cái, hãy xem cách hướng dẫn và khoảng tự do mỗi người cần.',
+  parents: 'Trong quan hệ với cha mẹ, hãy đối chiếu cách góp ý, kỳ vọng và hỗ trợ qua lại.',
+  home: 'Với chuyện nhà cửa, hãy nhìn cách bạn muốn tổ chức nơi ở và phân chia việc trong nhà.',
+  friends: 'Khi chọn người hợp tác, hãy đối chiếu cách giữ lời và cách trao đổi lúc có bất đồng.',
+  spirit: 'Có thể dùng ý này để suy ngẫm về những thói quen hoặc giá trị bạn học được từ gia đình.',
+  move: 'Đối chiếu với cách bạn tìm chỗ dựa và thích nghi khi bước vào môi trường mới.',
 };
 
 const TRANSFORMATIONS: Record<SiHua, Pick<ReadingPoint, 'takeaway' | 'explanation'>> = {
@@ -72,6 +106,7 @@ export function buildPlainReadingPoints(
   effectiveStarNames: string[],
   secondaryPalace: Palace | undefined,
   topic: TopicKey,
+  chart?: Pick<ZiweiChart, 'palaces' | 'lunarInfo' | 'birthInfo'>,
 ): ReadingPoint[] {
   const palaceName = translatePalaceName(palace.name);
   const majorStars = palace.stars.filter((star) => star.type === 'major');
@@ -87,16 +122,79 @@ export function buildPlainReadingPoints(
     });
   }
 
-  for (const starName of effectiveStarNames) {
-    const takeaway = STAR_TAKEAWAYS[starName];
-    if (!takeaway) continue;
-    const star = majorStars.find(({ name }) => name === starName);
+  const opposite = chart?.palaces.find(({ branch }) => branch === (palace.branch + 6) % 12);
+  const starEntries = effectiveStarNames.map((name) => {
+    const own = majorStars.find((star) => star.name === name);
+    return {
+      name,
+      star: own ?? opposite?.stars.find((star) => star.name === name && star.type === 'major'),
+      source: own ? palace : opposite,
+      borrowed: !own,
+      major: true,
+    };
+  });
+  const supportingStars: Star[] = palace.stars.filter(({ type }) => type !== 'major');
+  if (chart && boshiShenName(chart.lunarInfo.yearStem, chart.birthInfo.gender, palace.branch) === '喜神'
+      && !supportingStars.some(({ name }) => name === '喜神')) {
+    supportingStars.push({ name: '喜神', type: 'minor' });
+  }
+  starEntries.push(...supportingStars.map((star) => ({
+    name: star.name, star, source: palace, borrowed: false, major: false,
+  })));
+
+  for (const { name, star, source, borrowed, major } of starEntries) {
+    const profile = STAR_READING_PROFILES[name];
+    if (!profile) continue;
+    const nameVi = translateStarName(name);
+    const branch = source ? translateBranch(BRANCHES[source.branch]) : '';
     const brightness = star?.brightnessRaw && translateBrightness(star.brightnessRaw);
-    const context = brightness ? ` · ${brightness}` : star ? '' : ' · mượn từ cung đối diện';
+    const label = borrowed
+      ? `${nameVi} · mượn từ ${source ? `cung ${translatePalaceName(source.name)}` : 'đối cung'}${branch ? ` tại ${branch}` : ''}`
+      : `Cung ${palaceName} có sao ${nameVi} · tại chi ${branch}`;
+    const samePalaceMajors = source?.stars.filter((entry) => entry.type === 'major' && entry.name !== name) ?? [];
+    const notes = [
+      { label: 'Điểm mạnh', text: profile.strength },
+      { label: 'Điều cần lưu ý', text: profile.caution },
+    ];
+    if ((topic === 'wealth' || topic === 'career') && WORK_AND_MONEY_EXAMPLES[name]) {
+      notes.push({ label: 'Ví dụ đời thường', text: WORK_AND_MONEY_EXAMPLES[name] });
+    } else if (major) {
+      const example = TOPIC_EXAMPLES[topic];
+      if (example) notes.push({ label: 'Trong chủ đề đang xem', text: example });
+    }
+    if (name === '天梁' && !borrowed && palaceName === 'Mệnh' && palace.branch === 11) {
+      notes.push({
+        label: 'Khi Thiên Lương ở Hợi',
+        text: samePalaceMajors.some(({ name }) => name === '天同')
+          ? 'Thiên Đồng đi cùng làm nổi bật nhu cầu thư giãn và hưởng thụ. Nếu thấy mình dễ chi quá tay cho những cuộc vui hoặc vì muốn giúp người khác, hãy đặt trước một khoản có thể dùng mà vẫn giữ được tiền dành dụm.'
+          : 'Vị trí Hợi nên được đọc cùng các sao đồng cung và hội chiếu. Bạn có thể đối chiếu xem khi ưu tiên vui vẻ hoặc giúp người khác, mình có đang bỏ qua kế hoạch dài hạn hay khoản tiền cần dành dụm không.',
+      });
+    }
+    if (major && source && samePalaceMajors.length) {
+      notes.push({
+        label: 'Sao chính đi cùng',
+        text: `${samePalaceMajors.map(({ name }) => translateStarName(name)).join(', ')} cùng đứng tại cung ${translatePalaceName(source.name)}. Đọc hai nét tính cách song song để thấy chỗ chúng bổ trợ hoặc kéo theo những ưu tiên khác nhau.`,
+      });
+    }
+    if (name === '紫微' && samePalaceMajors.some((entry) => entry.name === '破军') && topic === 'family') {
+      notes.push({
+        label: 'Đọc cùng Phá Quân ở Huynh Đệ',
+        text: 'Tử Vi muốn có người đứng ra sắp xếp, còn Phá Quân muốn thay cách làm khi thấy bất tiện. Trong việc chung của anh chị em, hai xu hướng này có thể bổ trợ nhau nếu thống nhất trước ai quyết phần nào. Khi chưa thống nhất, một người dễ thấy mình bị kiểm soát, người kia lại thấy kế hoạch thay đổi quá nhanh.',
+      });
+    }
+    if (name === '廉贞' && samePalaceMajors.some((entry) => entry.name === '贪狼')) {
+      notes.push({
+        label: 'Đọc cùng Tham Lang',
+        text: 'Liêm Trinh giúp nhìn ra ranh giới, còn Tham Lang thích thử cái mới và mở rộng quan hệ. Hai nét này phối hợp tốt khi bạn đặt trước giới hạn rồi mới thử. Khi quá hào hứng, hãy kiểm tra xem lựa chọn mới có còn hợp mục tiêu đã đặt ra hay không.',
+      });
+    }
     points.push({
-      label: translateStarName(starName) + context,
-      takeaway,
-      explanation: topic === 'wealth' || topic === 'career' ? WORK_AND_MONEY_EXAMPLES[starName] : '',
+      label: brightness ? `${label} · ${brightness}` : label,
+      kind: borrowed ? 'Mượn đối cung' : major ? 'Chính tinh' : 'Phụ tinh',
+      takeaway: STAR_TAKEAWAYS[name] ?? profile.strength,
+      explanation: '',
+      notes,
+      about: { name: nameVi, text: profile.about },
     });
   }
 

@@ -337,14 +337,28 @@ export default function AiInsightPanel({
                       Mỗi ý bên dưới giải thích một dấu trên lá số theo quy tắc Tử Vi. Hãy đọc như một góc tham khảo về xu hướng.
                     </p>
                     <ul className="space-y-2.5">
-                      {deterministicReading.plainAnalysisVi.map(({ label, takeaway, explanation }) => (
+                      {deterministicReading.plainAnalysisVi.map(({ label, takeaway, explanation, kind, notes, about }) => (
                         <li
                           key={label}
                           className="space-y-1.5 rounded-lg border border-slate-200/90 bg-white p-3 text-sm leading-relaxed text-slate-700 sm:p-4"
                         >
-                          <h4 className="font-bold text-[#25453d]">{label}</h4>
+                          <h4 className="font-bold text-[#25453d]">
+                            {kind && <span className="mr-2 inline-block rounded bg-[#e7dcc5] px-2 py-0.5 text-xs text-[#25453d]">{kind}</span>}
+                            {label}
+                          </h4>
                           <p><strong className="font-bold text-slate-900">{takeaway}</strong></p>
                           {explanation && <p>{explanation}</p>}
+                          {notes && (
+                            <ul className="list-disc space-y-1.5 pl-5">
+                              {notes.map((note) => <li key={note.label}><strong>{note.label}.</strong> {note.text}</li>)}
+                            </ul>
+                          )}
+                          {about && (
+                            <details className="ziwei-disclosure mt-3">
+                              <summary>Về sao {about.name}</summary>
+                              <p>{about.text}</p>
+                            </details>
+                          )}
                         </li>
                       ))}
                     </ul>

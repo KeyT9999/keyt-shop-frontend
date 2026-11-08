@@ -697,6 +697,14 @@ export function generateChart(
   // ── 农历信息（含节气四柱）──
   const lunarInfo = getLunarInfo(year, month, day, hour, leapMode);
 
+  // Đường Phù is a minor star five branches forward from natal Lộc Tồn.
+  // https://phantichtuvi.com/tu-vi/sao/duong-phu
+  const locTonPalace = palaces.find(({ stars }) => stars.some(({ name }) => name === '禄存'));
+  if (locTonPalace && !palaces.some(({ stars }) => stars.some(({ name }) => name === '堂符'))) {
+    const duongPhuPalace = palaces.find(({ branch }) => branch === (locTonPalace.branch + 5) % 12);
+    duongPhuPalace?.stars.push({ name: '堂符', type: 'minor' });
+  }
+
   // ★ 2026-08-14 金标准盘核对：截空/副截阴干对调 + 年支大耗 + 旬空成对副旬
   const jiekongMode = opts?.jiekongSchool ?? 'double';
   if (jiekongMode === 'double') {

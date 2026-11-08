@@ -234,6 +234,7 @@ export const STAR_NAME_VI: Record<string, string> = {
   将军: 'Tướng Quân',
   奏书: 'Tấu Thư',
   喜神: 'Hỷ Thần',
+  堂符: 'Đường Phù',
   病符: 'Bệnh Phù',
   大耗: 'Đại Hao',
   伏兵: 'Phục Binh',

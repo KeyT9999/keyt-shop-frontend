@@ -744,7 +744,7 @@ export function buildDeterministicDimensionReading(
     headlineVi,
     scoreLabelVi,
     coreAnalysisBulletsVi,
-    plainAnalysisVi: buildPlainReadingPoints(mainPalace, effectiveMajorNamesCn, secondaryPalace, topicKey),
+    plainAnalysisVi: buildPlainReadingPoints(mainPalace, effectiveMajorNamesCn, secondaryPalace, topicKey, chart),
     chartEvidenceBulletsVi,
     tcmOrganNoteVi,
     matchedTianjiQuotes,

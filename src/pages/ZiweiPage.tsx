@@ -468,6 +468,7 @@ export default function ZiweiPage() {
                     <Suspense fallback={<p role="status">Đang tải luận giải…</p>}>
                       <AiInsightPanel
                         chart={chart}
+                        unknownTime={committedForm.unknownTime}
                         chartSummaryText={chartSummaryText}
                         selectedPalace={selectedPalace}
                         onAskQuestion={handleTriggerAiPrompt}

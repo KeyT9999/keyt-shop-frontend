@@ -414,3 +414,178 @@
     height: min(32rem, calc(var(--zi-chat-viewport, 100dvh) - 1.5rem));
   }
 }
+
+.ziwei-report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .75rem;
+  padding: 1rem 1.2rem;
+  background: var(--zi-jade-dark);
+  color: #fff7e6;
+}
+.ziwei-report-header h2 { font: 700 1.65rem var(--zi-serif); }
+.ziwei-report-header p { color: #ecdfc3; font-size: .875rem; }
+.ziwei-report-comparison { margin: .85rem; }
+.ziwei-report-comparison ol {
+  display: grid;
+  gap: .2rem .85rem;
+}
+.ziwei-report-comparison button {
+  width: 100%;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: minmax(7rem, 1fr) minmax(3rem, 1.2fr) 2ch;
+  align-items: center;
+  gap: .55rem;
+  padding: .25rem .45rem;
+  text-align: left;
+  font-size: .875rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 180ms ease;
+}
+.ziwei-report-comparison button:hover,
+.ziwei-chapter-list button:hover { background: #eee2ca; }
+.ziwei-report-comparison button[aria-pressed='true'] { background: #ead8b9; }
+.ziwei-report-comparison button > strong { font-variant-numeric: tabular-nums; }
+.ziwei-report-comparison progress {
+  width: 100%;
+  height: .52rem;
+  border: 0;
+  border-radius: 99px;
+  appearance: none;
+  overflow: hidden;
+  background: #e2d4b9;
+  color: var(--zi-jade);
+}
+.ziwei-report-comparison progress::-webkit-progress-bar { background: #e2d4b9; }
+.ziwei-report-comparison progress::-webkit-progress-value { background: var(--zi-jade); }
+.ziwei-report-comparison progress::-moz-progress-bar { background: var(--zi-jade); }
+.ziwei-score-unavailable { font-size: .72rem; }
+.ziwei-report-note { font-size: .85rem; color: #62523e; line-height: 1.45; }
+
+.ziwei-chapter-select { display: grid; gap: .35rem; font-size: .875rem; font-weight: 700; }
+.ziwei-chapter-select select,
+.ziwei-report-controls select {
+  border: 1px solid var(--zi-line);
+  border-radius: 6px;
+  background: #fffaf0;
+  color: var(--zi-ink);
+  min-height: 44px;
+  min-width: 0;
+  max-width: 100%;
+  padding: .45rem .55rem;
+  cursor: pointer;
+}
+.ziwei-chapter-list { display: none; }
+.ziwei-chapter-list button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 2ch minmax(0, 1fr);
+  text-align: left;
+  align-items: start;
+  gap: .6rem;
+  padding: .55rem;
+  min-height: 44px;
+  border-bottom: 1px solid var(--zi-soft-line);
+  cursor: pointer;
+  transition: background-color 180ms ease;
+}
+.ziwei-chapter-list button small { display: block; opacity: .9; }
+.ziwei-chapter-list button[aria-pressed='true'] { background: var(--zi-jade-dark); color: #fff7e6; }
+
+.ziwei-report-main {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: .9rem;
+  padding: clamp(.65rem, 2vw, 1.15rem);
+}
+.ziwei-report-card {
+  display: grid;
+  gap: .7rem;
+  min-width: 0;
+  padding: clamp(.75rem, 2vw, 1rem);
+  border: 1px solid var(--zi-soft-line);
+  border-radius: 9px;
+  background: var(--zi-sheet);
+  font-size: .9rem;
+  line-height: 1.55;
+}
+.ziwei-report-card h4 { color: var(--zi-red); font: 700 1.12rem var(--zi-serif); }
+.ziwei-chapter-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .7rem;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid var(--zi-soft-line);
+}
+.ziwei-chapter-heading h3 {
+  color: var(--zi-red);
+  font: 700 clamp(1.3rem, 3vw, 1.9rem)/1.15 var(--zi-serif);
+  margin: .15rem 0 .28rem;
+}
+.ziwei-chapter-heading p { color: #62523e; font-size: .8rem; }
+.ziwei-score-ring {
+  display: grid;
+  place-items: center;
+  width: clamp(66px, 10vw, 90px);
+  aspect-ratio: 1;
+  position: relative;
+}
+.ziwei-score-ring svg { width: 100%; transform: rotate(-90deg); }
+.ziwei-score-ring circle { fill: none; stroke: #dfd1b5; stroke-width: 7px; }
+.ziwei-score-ring circle + circle { stroke: var(--zi-jade); }
+.ziwei-score-ring > span { position: absolute; display: grid; justify-items: center; line-height: 1; }
+.ziwei-score-ring strong { font: 700 clamp(1.35rem, 4vw, 1.9rem)/1 var(--zi-serif); color: var(--zi-red); }
+.ziwei-score-ring small { font-size: .68rem; }
+.ziwei-score-explanation dl > div,
+.ziwei-transit-list li { display: flex; justify-content: space-between; gap: .7rem; padding: .3rem .1rem; border-bottom: 1px solid var(--zi-soft-line); }
+.ziwei-score-explanation dd { font-weight: 700; }
+.ziwei-score-explanation p { font-size: .82rem; color: #62523e; }
+.ziwei-report-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+.ziwei-report-facts > div { border-top: 1px solid var(--zi-soft-line); padding-top: .35rem; }
+.ziwei-report-facts dt { color: #62523e; font-size: .8rem; }
+.ziwei-report-facts dd { font-weight: 700; }
+.ziwei-report-controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .55rem; }
+.ziwei-report-controls h4 { display: flex; align-items: center; gap: .4rem; }
+.ziwei-report-controls label { display: flex; align-items: center; gap: .45rem; }
+.ziwei-month-chart { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .25rem; }
+.ziwei-month-chart button {
+  display: grid;
+  justify-items: center;
+  gap: .22rem;
+  width: 100%;
+  min-height: 44px;
+  padding: .3rem .12rem;
+  border-radius: 5px;
+  font-size: .8rem;
+  cursor: pointer;
+  transition: background-color 180ms ease;
+}
+.ziwei-month-chart button:hover { background: #eee2ca; }
+.ziwei-month-chart button[aria-pressed='true'] { background: #ead8b9; }
+.ziwei-month-track {
+  position: relative;
+  display: block;
+  width: min(70%, 1.5rem);
+  height: 3rem;
+  background: #e2d4b9;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.ziwei-month-track > span { position: absolute; inset: auto 0 0; background: var(--zi-jade); }
+.ziwei-month-chart button[aria-pressed='true'] .ziwei-month-track > span { background: var(--zi-red); }
+
+@media (min-width: 768px) {
+  .ziwei-report-comparison ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ziwei-month-chart { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .ziwei-report-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .ziwei-chapter-select { display: none; }
+  .ziwei-chapter-list { display: block; }
+}

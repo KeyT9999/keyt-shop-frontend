@@ -1,3 +1,4 @@
+import { buildPlainReadingPoints } from '../utils/plainReading';
 import type { ZiweiChart } from './types';
 import type { TopicKey } from './db-analysis';
 import { STEMS, BRANCHES } from './constants';
@@ -389,6 +390,7 @@ export interface DeterministicDimensionReading {
   headlineVi: string;
   scoreLabelVi: string;
   coreAnalysisBulletsVi: string[];
+  plainAnalysisVi: ReturnType<typeof buildPlainReadingPoints>;
   chartEvidenceBulletsVi: string[];
   tcmOrganNoteVi?: { organVi: string; adviceVi: string };
   matchedTianjiQuotes: {
@@ -742,6 +744,7 @@ export function buildDeterministicDimensionReading(
     headlineVi,
     scoreLabelVi,
     coreAnalysisBulletsVi,
+    plainAnalysisVi: buildPlainReadingPoints(mainPalace, effectiveMajorNamesCn, secondaryPalace, topicKey),
     chartEvidenceBulletsVi,
     tcmOrganNoteVi,
     matchedTianjiQuotes,

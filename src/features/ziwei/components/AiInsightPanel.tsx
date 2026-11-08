@@ -431,9 +431,9 @@ export default function AiInsightPanel({
                         {dim.headlineVi}
                       </p>
 
-                      {dim.coreAnalysisBulletsVi[0] && (
+                      {dim.plainAnalysisVi[0] && (
                         <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-2">
-                          {dim.coreAnalysisBulletsVi[0]}
+                          {dim.plainAnalysisVi[0].takeaway}
                         </p>
                       )}
                     </div>
@@ -649,22 +649,26 @@ export default function AiInsightPanel({
                 </div>
               )}
 
-              {/* Các luận điểm quy tắc cố định */}
-              <div className="space-y-2">
-                <div className="text-xs font-extrabold uppercase tracking-wider text-slate-600">
-                  Luận Đoán Chi Tiết Theo Tinh Hệ &amp; Tứ Hóa Bản Cung
-                </div>
-                <div className="space-y-2">
-                  {deterministicReading.coreAnalysisBulletsVi.map((bullet, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 rounded-xl bg-white border border-slate-200/90 text-xs text-slate-700 leading-relaxed shadow-2xs"
+              <section className="space-y-3" aria-labelledby="ziwei-reading-points">
+                <h3 id="ziwei-reading-points" className="text-base font-bold text-slate-900">
+                  Lá số này nói gì?
+                </h3>
+                <p className="text-sm leading-relaxed text-slate-700">
+                  Mỗi ý bên dưới giải thích một dấu trên lá số theo quy tắc Tử Vi. Hãy đọc như một góc tham khảo về xu hướng.
+                </p>
+                <ul className="space-y-2.5">
+                  {deterministicReading.plainAnalysisVi.map(({ label, takeaway, explanation }) => (
+                    <li
+                      key={label}
+                      className="space-y-1.5 rounded-lg border border-slate-200/90 bg-white p-3 text-sm leading-relaxed text-slate-700 sm:p-4"
                     >
-                      {bullet}
-                    </div>
+                      <h4 className="font-bold text-[#25453d]">{label}</h4>
+                      <p><strong className="font-bold text-slate-900">{takeaway}</strong></p>
+                      {explanation && <p>{explanation}</p>}
+                    </li>
                   ))}
-                </div>
-              </div>
+                </ul>
+              </section>
 
               <details className="ziwei-disclosure">
                 <summary><BookOpen size={17} aria-hidden="true" /> Căn cứ và trích dẫn</summary>

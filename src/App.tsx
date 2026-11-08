@@ -300,9 +300,10 @@ export default function App() {
 
     const isAdminPage = location.pathname.startsWith('/admin');
     const isGymPage = location.pathname === '/gym';
+    const isZiweiPage = location.pathname === '/tu-vi';
     const isFocusPage = location.pathname === '/focus';
     const isAdmin = user?.admin === true;
-    const showChatWidget = !isAdmin && !isAdminPage && !isGymPage && !isFocusPage;
+    const showChatWidget = !isAdmin && !isAdminPage && !isGymPage && !isFocusPage && !isZiweiPage;
 
     return (
         <div className="app">
@@ -310,10 +311,10 @@ export default function App() {
             <AffiliateReferralTracker />
             <Seo {...seoConfig} />
             <StructuredData />
-            {!isAdminPage && !isGymPage && !isFocusPage && <FloatingContact />}
-            {!isAdminPage && !isGymPage && !isFocusPage && IS_ROBOT_3D_ENABLED && <DraggableRobotWidget />}
+            {!isAdminPage && !isGymPage && !isFocusPage && !isZiweiPage && <FloatingContact />}
+            {!isAdminPage && !isGymPage && !isFocusPage && !isZiweiPage && IS_ROBOT_3D_ENABLED && <DraggableRobotWidget />}
             {showChatWidget && <ChatWidget />}
-            {isAdmin && !isGymPage && !isFocusPage && <AdminChatBubble />}
+            {isAdmin && !isGymPage && !isFocusPage && !isZiweiPage && <AdminChatBubble />}
             <FocusFloatingMiniPlayer />
             <AnnouncementModal
                 open={announcementOpen}

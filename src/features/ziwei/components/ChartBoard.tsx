@@ -122,6 +122,7 @@ export default function ChartBoard({
   const [liunianBaseYear, setLiunianBaseYear] = useState<number>(
     () => new Date().getFullYear() - 3
   );
+  const [showFullBoard, setShowFullBoard] = useState(false);
   const [bilingual, setBilingual] = useState<boolean>(false);
 
   const palaceByBranch = useMemo(() => {
@@ -145,6 +146,7 @@ export default function ChartBoard({
   const childhoodYears = useMemo(() => getChildhoodYears(chart), [chart]);
 
   const activeBranch = selectedPalace ? selectedPalace.branch : chart.mingGongBranch;
+  const activePalace = palaceByBranch[activeBranch];
   const oppositeBranch = (activeBranch + 6) % 12;
   const sanHeBranch1 = (activeBranch + 4) % 12;
   const sanHeBranch2 = (activeBranch + 8) % 12;
@@ -269,8 +271,8 @@ export default function ChartBoard({
   return (
     <div className="space-y-3">
       {/* Thanh Điều Hướng Vận Hạn & Tác Vụ */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-3 sm:p-4 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5">
+      <div className="ziwei-chart-toolbar">
+        <div className="ziwei-time-nav">
           <button
             type="button"
             onClick={() => setTimeView('mingpan')}
@@ -280,7 +282,7 @@ export default function ChartBoard({
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            Bản Mệnh (Tiên Thiên)
+            Bản mệnh
           </button>
           <button
             type="button"
@@ -291,7 +293,7 @@ export default function ChartBoard({
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            Đại Hạn (10 Năm &amp; Đồng Hạn)
+            Đại hạn
           </button>
           <button
             type="button"
@@ -302,11 +304,11 @@ export default function ChartBoard({
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            Lưu Niên (Theo Năm)
+            Lưu niên
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="ziwei-chart-actions">
           {onOpenSchoolConfig && (
             <button
               type="button"
@@ -319,7 +321,7 @@ export default function ChartBoard({
             >
               <SlidersHorizontal size={14} />
               <span>
-                Trường Phái An Sao
+                An sao
                 {customSchoolRulesCount > 0 ? ` (${customSchoolRulesCount})` : ''}
               </span>
             </button>
@@ -335,7 +337,7 @@ export default function ChartBoard({
             }`}
           >
             <Languages size={14} />
-            <span>{bilingual ? 'Song ngữ Hán-Việt' : 'Tiếng Việt'}</span>
+            <span>{bilingual ? 'Hán–Việt' : 'Tiếng Việt'}</span>
           </button>
 
           {onSaveChart && (
@@ -346,7 +348,7 @@ export default function ChartBoard({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-50"
             >
               <UserCheck size={14} />
-              <span>{isSavingChart ? 'Đang lưu...' : 'Lưu Lá Số'}</span>
+              <span>{isSavingChart ? 'Đang lưu...' : 'Lưu'}</span>
             </button>
           )}
 
@@ -356,7 +358,11 @@ export default function ChartBoard({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <Download size={14} />
-            <span>Tải Ảnh Lá Số</span>
+            <span>Tải ảnh</span>
+          </button>
+          <button type="button" className="ziwei-outline ziwei-board-toggle" aria-pressed={showFullBoard}
+            onClick={() => setShowFullBoard((value) => !value)}>
+            {showFullBoard ? 'Thu gọn bàn sao' : 'Bàn sao đầy đủ'}
           </button>
         </div>
       </div>
@@ -513,72 +519,9 @@ export default function ChartBoard({
       )}
 
       {/* BẢNG ĐỐI CHIẾU TỨ HÓA 3 TẦNG (BẢN MỆNH — ĐẠI HẠN — LƯU NIÊN) */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-2xs grid grid-cols-1 lg:grid-cols-3 gap-2.5 text-xs">
-        {/* Tầng 1: Bản Mệnh */}
-        <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="font-extrabold text-slate-900">
-              1. Tứ Hóa Năm Sinh (Can {threeLayerSiHua.natal.stemVi})
-            </span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">
-              Tiên Thiên
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-1 text-[11px]">
-            {threeLayerSiHua.natal.items.map((it) => (
-              <div key={it.sh} className="truncate text-slate-700">
-                <strong className="text-slate-900">Hóa {it.shVi}:</strong> {it.starVi} ({it.palaceVi})
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Tầng 2: Đại Hạn */}
-        {threeLayerSiHua.daxian && (
-          <div className="p-2.5 rounded-xl bg-purple-50/60 border border-purple-200/80 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="font-extrabold text-purple-950">
-                2. Tứ Hóa Đại Hạn (Can {threeLayerSiHua.daxian.stemVi})
-              </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-200 text-purple-900">
-                Vận 10 Năm
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-1 text-[11px]">
-              {threeLayerSiHua.daxian.items.map((it) => (
-                <div key={it.sh} className="truncate text-purple-900">
-                  <strong>Hóa {it.shVi}:</strong> {it.starVi} ({it.palaceVi})
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tầng 3: Lưu Niên */}
-        <div className="p-2.5 rounded-xl bg-orange-50/60 border border-orange-200/80 space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="font-extrabold text-orange-950">
-              3. Tứ Hóa Lưu Niên {threeLayerSiHua.liunian.year} ({threeLayerSiHua.liunian.stemVi}{' '}
-              {threeLayerSiHua.liunian.branchVi})
-            </span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-orange-200 text-orange-950">
-              Tiểu Vận Năm
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-1 text-[11px]">
-            {threeLayerSiHua.liunian.items.map((it) => (
-              <div key={it.sh} className="truncate text-orange-950">
-                <strong>Hóa {it.shVi}:</strong> {it.starVi} ({it.palaceVi})
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* BÀN LÁ SỐ 12 CUNG (4x4 GRID) + THIÊN BÀN TRUNG TÂM */}
-      <div className="relative rounded-2xl overflow-hidden border-2 border-slate-300 bg-slate-200 shadow-md">
+      <div className={`ziwei-board ${showFullBoard ? 'ziwei-board-full' : ''}`}>
         <div
-          className="grid gap-[1px] bg-slate-200"
+          className="ziwei-grid"
           style={{
             gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
             gridTemplateRows: 'repeat(4, auto)',
@@ -594,7 +537,14 @@ export default function ChartBoard({
             const isSanFang = sanHeBranch1 === branch || sanHeBranch2 === branch;
 
             return (
-              <div key={branch} style={{ gridRow: row, gridColumn: col }}>
+              <div key={branch} className="ziwei-palace-slot" style={{ gridRow: row, gridColumn: col }}>
+                <button type="button" className="ziwei-palace-preview"
+                  aria-pressed={isSelected} onClick={() => onSelectPalace(palace)}>
+                  <strong>{translatePalaceName(palace.name)}</strong>
+                  <span>{palace.stars.filter((star) => star.type === 'major').map((star) => translateStarName(star.name)).join(' · ') || 'Vô chính diệu'}</span>
+                  {bilingual && <small lang="zh">{palace.name}</small>}
+                </button>
+                <div className="ziwei-palace-full">
                 <PalaceCell
                   palace={palace}
                   isSelected={isSelected}
@@ -611,6 +561,7 @@ export default function ChartBoard({
                     onSelectSiHua?.(starNameCn, siHuaCn, timeView)
                   }
                 />
+                </div>
               </div>
             );
           })}
@@ -618,9 +569,14 @@ export default function ChartBoard({
           {/* THIÊN BÀN TRUNG TÂM (2x2 Ô Giữa) */}
           <div
             style={{ gridRow: '2 / 4', gridColumn: '2 / 4' }}
-            className="bg-gradient-to-br from-slate-900 via-slate-900 to-purple-950 text-white p-3 sm:p-5 flex flex-col justify-between relative z-0"
+            className="ziwei-board-center"
           >
-            <div>
+            <div className="ziwei-center-preview">
+              <span aria-hidden="true">紫微</span>
+              <h3>{birthInfo.name || 'Lá số Tử Vi'}</h3>
+              <p>{translateYinYangGender(chart.yinYangGender)} · {translateWuxingJu(chart.wuxingJuName)}</p>
+            </div>
+            <div className="ziwei-center-full">
               <div className="flex items-center justify-between gap-2 pb-2.5 mb-3 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-lg bg-[#F05A28]/20 border border-[#F05A28]/40 text-[#F05A28] flex items-center justify-center">
@@ -698,7 +654,7 @@ export default function ChartBoard({
             </div>
 
             {/* Chú giải Tam Phương Tứ Chính & Tứ Hóa */}
-            <div className="mt-3 pt-2.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+            <div className="ziwei-center-full mt-3 pt-2.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px]">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1 text-slate-300">
                   <Sparkles size={12} className="text-amber-400" />
@@ -727,7 +683,7 @@ export default function ChartBoard({
         </div>
 
         {/* Lớp SVG vẽ đường chiếu Tam Phương Tứ Chính */}
-        {pMain && pOpp && pSan1 && pSan2 && (
+        {showFullBoard && pMain && pOpp && pSan1 && pSan2 && (
           <svg
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
@@ -758,6 +714,90 @@ export default function ChartBoard({
           </svg>
         )}
       </div>
+      {activePalace && (
+        <section className="ziwei-palace-detail" aria-label="Cung đang chọn">
+          <h3>Cung {translatePalaceName(activePalace.name)}</h3>
+          <PalaceCell
+            palace={activePalace}
+            isSelected={false}
+            isOpposite={false}
+            isSanFang={false}
+            bilingual={bilingual}
+            overlaySiHua={overlaySiHua}
+            overlayPrefix={overlayPrefix}
+            boshiName={boshiShenName(lunarInfo.yearStem, birthInfo.gender, activeBranch)}
+            suiQianName={suiQianShenName(activeAnchorBranch, activeBranch)}
+            onSelectStar={onSelectStar}
+            onSelectSiHua={(starNameCn, siHuaCn) => onSelectSiHua?.(starNameCn, siHuaCn, timeView)}
+          />
+        </section>
+      )}
+      <details className="ziwei-disclosure">
+        <summary><Layers size={17} aria-hidden="true" /> Tứ Hóa</summary>
+      <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-2xs grid grid-cols-1 lg:grid-cols-3 gap-2.5 text-xs">
+        {/* Tầng 1: Bản Mệnh */}
+        <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="font-extrabold text-slate-900">
+              1. Tứ Hóa Năm Sinh (Can {threeLayerSiHua.natal.stemVi})
+            </span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">
+              Tiên Thiên
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-1 text-[11px]">
+            {threeLayerSiHua.natal.items.map((it) => (
+              <div key={it.sh} className="truncate text-slate-700">
+                <strong className="text-slate-900">Hóa {it.shVi}:</strong> {it.starVi} ({it.palaceVi})
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tầng 2: Đại Hạn */}
+        {threeLayerSiHua.daxian && (
+          <div className="p-2.5 rounded-xl bg-purple-50/60 border border-purple-200/80 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-extrabold text-purple-950">
+                2. Tứ Hóa Đại Hạn (Can {threeLayerSiHua.daxian.stemVi})
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-200 text-purple-900">
+                Vận 10 Năm
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-1 text-[11px]">
+              {threeLayerSiHua.daxian.items.map((it) => (
+                <div key={it.sh} className="truncate text-purple-900">
+                  <strong>Hóa {it.shVi}:</strong> {it.starVi} ({it.palaceVi})
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tầng 3: Lưu Niên */}
+        <div className="p-2.5 rounded-xl bg-orange-50/60 border border-orange-200/80 space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="font-extrabold text-orange-950">
+              3. Tứ Hóa Lưu Niên {threeLayerSiHua.liunian.year} ({threeLayerSiHua.liunian.stemVi}{' '}
+              {threeLayerSiHua.liunian.branchVi})
+            </span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-orange-200 text-orange-950">
+              Tiểu Vận Năm
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-1 text-[11px]">
+            {threeLayerSiHua.liunian.items.map((it) => (
+              <div key={it.sh} className="truncate text-orange-950">
+                <strong>Hóa {it.shVi}:</strong> {it.starVi} ({it.palaceVi})
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* BÀN LÁ SỐ 12 CUNG (4x4 GRID) + THIÊN BÀN TRUNG TÂM */}
+      </details>
     </div>
   );
 }

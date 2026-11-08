@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
+import '../features/ziwei/ziwei.css';
 import { useSearchParams } from 'react-router-dom';
 import {
   Compass,
@@ -38,7 +39,6 @@ import {
   translateStarName,
   translateSiHua,
   translateWuxingJu,
-  translateYinYangGender,
 } from '../features/ziwei/utils/ziweiLocalization';
 import { FAMOUS_CHART_PRESETS_VI } from '../features/ziwei/data/famousCharts';
 import {
@@ -48,12 +48,13 @@ import {
 import BirthFormCard from '../features/ziwei/components/BirthFormCard';
 import ChartBoard, { type ZiweiTimeView } from '../features/ziwei/components/ChartBoard';
 import PatternsPanel from '../features/ziwei/components/PatternsPanel';
-import AiInsightPanel from '../features/ziwei/components/AiInsightPanel';
-import HemingPanel from '../features/ziwei/components/HemingPanel';
 import StarDetailModal from '../features/ziwei/components/StarDetailModal';
 import ShareChartModal from '../features/ziwei/components/ShareChartModal';
 import SchoolConfigModal from '../features/ziwei/components/SchoolConfigModal';
-import ClassicsLibraryPanel from '../features/ziwei/components/ClassicsLibraryPanel';
+
+const AiInsightPanel = lazy(() => import('../features/ziwei/components/AiInsightPanel'));
+const HemingPanel = lazy(() => import('../features/ziwei/components/HemingPanel'));
+const ClassicsLibraryPanel = lazy(() => import('../features/ziwei/components/ClassicsLibraryPanel'));
 
 type ZiweiPageTab = 'chart' | 'heming' | 'classics' | 'history';
 
@@ -81,6 +82,7 @@ export default function ZiweiPage() {
     useHistory();
 
   const [activeTab, setActiveTab] = useState<ZiweiPageTab>('chart');
+  const [hasOpenedReading, setHasOpenedReading] = useState(false);
   const [formState, setFormState] = useState<BirthFormState>(() => {
     const parsed = searchParamsToForm(searchParams);
     return parsed ? { ...DEFAULT_FORM, ...parsed } : DEFAULT_FORM;
@@ -108,7 +110,7 @@ export default function ZiweiPage() {
     prompt: string;
   } | null>(null);
 
-  const aiSectionRef = useRef<HTMLDivElement>(null);
+  const aiSectionRef = useRef<HTMLDetailsElement>(null);
 
   // Cloud Saved Records & AI Readings Cache
   const [cloudRecords, setCloudRecords] = useState<SavedZiweiRecord[]>([]);
@@ -181,6 +183,7 @@ export default function ZiweiPage() {
 
   const handleBackToInputStep = () => {
     setHasSubmittedChart(false);
+    setHasOpenedReading(false);
     setShowBirthForm(false);
     setSearchParams(new URLSearchParams(), { replace: true });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -241,8 +244,12 @@ export default function ZiweiPage() {
   };
 
   const scrollToAiSection = () => {
+    setHasOpenedReading(true);
     setTimeout(() => {
-      aiSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const section = aiSectionRef.current;
+      if (!section) return;
+      section.open = true;
+      section.scrollIntoView({ block: 'start' });
     }, 100);
   };
 
@@ -264,84 +271,31 @@ export default function ZiweiPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      {/* Top Hero Banner */}
-      <section className="bg-gradient-to-r from-[#0F172A] via-[#1E1B4B] to-[#0F172A] text-white py-6 px-4 border-b border-indigo-900/50">
-        <div className="max-w-[1380px] mx-auto flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-amber-300 text-xs font-bold">
-              <Compass size={14} className="text-[#F05A28]" />
-              <span>TỬ VI ĐẨU SỐ THIÊN KỶ • NGHÊ HẢI HẠ &amp; CỔ TỊCH TOÀN THƯ</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              La Kinh Tử Vi Đẩu Số &amp; Đại Sư AI Luận Giải
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
-              An sao chính xác theo lịch pháp Âm Dương &amp; Chân Thái Dương Thời 63 tỉnh thành Việt
-              Nam (UTC+7), tự động nhận diện Cách Cục cổ điển, 13 chiều luận giải cuộc đời và Chat
-              hỏi đáp trực tiếp cùng Đại Sư AI.
-            </p>
+    <div className="ziwei-page">
+      <section className="ziwei-masthead">
+        <div className="ziwei-masthead-inner">
+          <div className="ziwei-title">
+            <span className="ziwei-seal" aria-hidden="true">紫微</span>
+            <h1>Tử Vi Mệnh Thư</h1>
           </div>
-
-          {/* Navigation Tabs */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab('chart')}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
-                activeTab === 'chart'
-                  ? 'bg-[#F05A28] text-white shadow-md'
-                  : 'bg-white/10 text-slate-200 hover:bg-white/20'
-              }`}
-            >
-              <Compass size={16} />
-              <span>Bàn Lá Số &amp; AI Đại Sư</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('heming')}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
-                activeTab === 'heming'
-                  ? 'bg-[#F05A28] text-white shadow-md'
-                  : 'bg-white/10 text-slate-200 hover:bg-white/20'
-              }`}
-            >
-              <HeartHandshake size={16} />
-              <span>Xem Hợp Hôn (A &amp; B)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('classics')}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
-                activeTab === 'classics'
-                  ? 'bg-[#F05A28] text-white shadow-md'
-                  : 'bg-white/10 text-slate-200 hover:bg-white/20'
-              }`}
-            >
-              <BookOpen size={16} />
-              <span>Kho Cổ Tịch《Thiên Kỷ》</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('history')}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
-                activeTab === 'history'
-                  ? 'bg-[#F05A28] text-white shadow-md'
-                  : 'bg-white/10 text-slate-200 hover:bg-white/20'
-              }`}
-            >
-              <History size={16} />
-              <span>Lá Số Đã Lưu ({cloudRecords.length || localHistory.length})</span>
-            </button>
-          </div>
+          <nav className="ziwei-nav" aria-label="Tử Vi Mệnh Thư">
+            {([
+              ['chart', Compass, 'Lá số'],
+              ['heming', HeartHandshake, 'Hợp mệnh'],
+              ['classics', BookOpen, 'Tàng thư'],
+              ['history', History, 'Đã lưu'],
+            ] as const).map(([tab, Icon, label]) => (
+              <button key={tab} type="button" aria-current={activeTab === tab ? 'page' : undefined}
+                onClick={() => setActiveTab(tab)}>
+                <Icon size={15} aria-hidden="true" />
+                {label}
+              </button>
+            ))}
+          </nav>
         </div>
       </section>
 
-      {/* Main Content Container */}
-      <main className="max-w-[1380px] mx-auto px-4 sm:px-6 pt-6 space-y-6">
+      <div className="ziwei-content">
         {saveFeedback && (
           <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-2xs">
             <CheckCircle2 size={17} className="text-emerald-600 shrink-0" />
@@ -355,26 +309,12 @@ export default function ZiweiPage() {
             {!hasSubmittedChart ? (
               /* ─── BƯỚC 1: GIAO DIỆN YÊU CẦU ĐIỀN THÔNG TIN LẬP LÁ SỐ TỬ VI KHI MỚI VÀO TRANG ─── */
               <div className="max-w-5xl mx-auto py-4 space-y-6">
-                <div className="text-center space-y-2">
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-50 text-[#F05A28] border border-orange-200 text-xs font-extrabold uppercase tracking-wider">
-                    <Sparkles size={13} />
-                    <span>Bước 1 • Khởi Tạo Lá Số Mệnh Lý Cá Nhân</span>
-                  </span>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                    Vui Lòng Điền Thông Tin Để An Sao &amp; Mở Toàn Bộ Hồ Sơ Tử Vi AI
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
-                    Ngay sau khi bấm <strong>&ldquo;An Sao Lập Lá Số Ngay&rdquo;</strong>, hệ thống sẽ
-                    hiển thị đầy đủ Bàn Lá Số 12 Cung, Cách Cục, 13 Chiều Luận Giải Cuộc Đời và Trạm
-                    Chat Hỏi Đáp Trực Tiếp cùng Đại Sư AI.
-                  </p>
-                </div>
-
-                {/* Khung Thông Tin Lập Lá Số Tử Vi */}
                 <BirthFormCard
                   form={formState}
                   onChange={setFormState}
                   onSubmit={handleApplyBirthForm}
+                  title="Lập lá số"
+                  submitLabel="Lập lá số"
                 />
 
                 {/* Chọn nhanh Lá số Danh nhân mẫu hoặc Lá số đã lưu gần đây */}
@@ -382,7 +322,7 @@ export default function ZiweiPage() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-500">
                       <Award size={15} className="text-[#F05A28]" />
-                      <span>Hoặc Chọn Nhanh Lá Số Danh Nhân Thế Giới Để Xem Thử Ngay:</span>
+                      <span>Lá số mẫu</span>
                     </div>
                     <button
                       type="button"
@@ -390,7 +330,7 @@ export default function ZiweiPage() {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 cursor-pointer"
                     >
                       <SlidersHorizontal size={13} />
-                      <span>Cài đặt Trường Phái An Sao (10 Nhóm)</span>
+                      <span>Cài đặt an sao</span>
                     </button>
                   </div>
 
@@ -450,133 +390,52 @@ export default function ZiweiPage() {
               </div>
             ) : (
               /* ─── BƯỚC 2: HIỂN THỊ TẤT CẢ MỌI THỨ VỀ ĐƯƠNG SỐ + 13 CHIỀU + CHAT AI ─── */
-              <div className="space-y-6">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Thanh Hồ Sơ Đương Số & Điều Khiển Nhanh */}
-                <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-3.5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-white font-extrabold">
-                        <Compass size={14} className="text-[#F05A28]" />
-                        <span>{committedForm.name || 'Lá Số Đương Số'}</span>
-                      </span>
-
-                      <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-900 border border-purple-200 font-bold">
-                        {translateYinYangGender(chart.yinYangGender)} •{' '}
-                        {translateWuxingJu(chart.wuxingJuName)}
-                      </span>
-
-                      <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-950 border border-amber-200 font-bold">
-                        Mệnh: {mingMainStarsVi}
-                      </span>
-
-                      <span className="text-slate-600 font-medium">
-                        Dương lịch:{' '}
-                        <strong className="text-slate-900">
-                          {committedForm.day}/{committedForm.month}/{committedForm.year}
-                        </strong>{' '}
-                        (
-                        {committedForm.unknownTime
-                          ? 'Giờ Tý'
-                          : `${committedForm.clockHour}:${committedForm.clockMinute.padStart(2, '0')}`}
-                        ) • <strong className="text-purple-800">{committedForm.city}</strong>
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSchoolModalOpen(true)}
-                        className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-extrabold transition-colors cursor-pointer ${
-                          customSchoolRulesCount > 0
-                            ? 'bg-orange-50 text-[#F05A28] border-[#F05A28]'
-                            : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
-                        }`}
-                      >
-                        <SlidersHorizontal size={14} />
-                        <span>
-                          Cài Đặt Trường Phái
-                          {customSchoolRulesCount > 0
-                            ? ` (${customSchoolRulesCount}/10)`
-                            : ' (10 Nhóm)'}
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={scrollToAiSection}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 text-xs font-extrabold transition-colors cursor-pointer"
-                      >
-                        <Sparkles size={14} className="text-[#F05A28]" />
-                        <span>Xuống 13 Chiều &amp; Chat AI</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setShowBirthForm((v) => !v)}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F05A28] hover:bg-[#d94b1c] text-white text-xs font-extrabold shadow-xs transition-all cursor-pointer"
-                      >
-                        <SlidersHorizontal size={14} />
-                        <span>
-                          {showBirthForm
-                            ? 'Thu Gọn Khung Nhập'
-                            : 'Sửa Thông Tin / Lập Lá Số Khác'}
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleBackToInputStep}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
-                        title="Quay về màn hình nhập mới"
-                      >
-                        <RotateCcw size={13} />
-                        <span>Nhập Mới</span>
-                      </button>
-                    </div>
+                <div className="ziwei-profile">
+                  <div className="ziwei-profile-info">
+                    <h2>{committedForm.name || 'Lá số Tử Vi'}</h2>
+                    <p>
+                      {committedForm.day}/{committedForm.month}/{committedForm.year}
+                      {' · '}
+                      {committedForm.unknownTime
+                        ? 'Giờ Tý'
+                        : `${committedForm.clockHour}:${committedForm.clockMinute.padStart(2, '0')}`}
+                      {' · '}{committedForm.city}
+                    </p>
                   </div>
+                  <div className="ziwei-profile-actions">
+                    <button
+                      type="button"
+                      onClick={scrollToAiSection}
+                      className="ziwei-outline ziwei-primary"
+                    >
+                      <Sparkles size={14} className="text-[#F05A28]" />
+                      <span>Luận giải</span>
+                    </button>
 
-                  {/* Thanh chọn nhanh Lá Số Danh Nhân Thế Giới */}
-                  <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mr-1">
-                      <Award size={13} className="text-[#F05A28]" />
-                      <span>Lá Số Danh Nhân Mẫu:</span>
-                    </span>
-                    {FAMOUS_CHART_PRESETS_VI.map((preset) => {
-                      const isCurrent = committedForm.name === preset.nameVi;
-                      return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => {
-                            const next: BirthFormState = {
-                              name: preset.nameVi,
-                              year: String(preset.year),
-                              month: String(preset.month),
-                              day: String(preset.day),
-                              clockHour: String(preset.clockHour),
-                              clockMinute: '0',
-                              unknownTime: false,
-                              gender: preset.gender,
-                              province: 'Miền Bắc',
-                              city: 'Hà Nội',
-                              longitude: 105.85,
-                              utcOffsetMinutes: 420,
-                              calendarType: 'solar',
-                              isLeapMonth: false,
-                            };
-                            handleApplyBirthForm(next);
-                          }}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                            isCurrent
-                              ? 'bg-slate-900 text-white border-slate-900'
-                              : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-orange-300 hover:bg-orange-50/60'
-                          }`}
-                          title={preset.highlightVi}
-                        >
-                          {preset.nameVi}
-                        </button>
-                      );
-                    })}
+                    <button
+                      type="button"
+                      onClick={() => setShowBirthForm((v) => !v)}
+                      className="ziwei-outline"
+                    >
+                      <SlidersHorizontal size={14} />
+                      <span>
+                        {showBirthForm
+                          ? 'Đóng'
+                          : 'Sửa lá số'}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleBackToInputStep}
+                      className="ziwei-outline"
+                      title="Quay về màn hình nhập mới"
+                    >
+                      <RotateCcw size={13} />
+                      <span>Lập mới</span>
+                    </button>
                   </div>
                 </div>
 
@@ -603,33 +462,48 @@ export default function ZiweiPage() {
                 />
 
                 {/* 2. NHẬN DIỆN CÁCH CỤC CỔ ĐIỂN CÓ CĂN CỨ & LAI NHÂN TỰ HÓA */}
-                <PatternsPanel chart={chart} onAskAiPattern={handleTriggerAiPrompt} />
+                <details className="ziwei-disclosure">
+                  <summary><Layers size={17} aria-hidden="true" /> Cách cục</summary>
+                  <PatternsPanel chart={chart} onAskAiPattern={handleTriggerAiPrompt} />
+                </details>
 
                 {/* 3. HỒ SƠ TOÀN DIỆN 13 CHIỀU LUẬN GIẢI CUỘC ĐỜI + ĐẠI SƯ AI + KHUNG CHAT AI TRỰC TIẾP */}
-                <div ref={aiSectionRef} className="scroll-mt-20">
-                  <AiInsightPanel
-                    chart={chart}
-                    chartSummaryText={chartSummaryText}
-                    selectedPalace={selectedPalace}
-                    externalPromptRequest={externalPromptRequest}
-                    savedReadings={savedReadingsMap}
-                    onReadingGenerated={(topicKey, content) =>
-                      setSavedReadingsMap((prev) => ({ ...prev, [topicKey]: content }))
-                    }
-                    autoAnalyzeOverview={true}
-                  />
-                </div>
+                <details ref={aiSectionRef} className="ziwei-disclosure scroll-mt-20"
+                  onToggle={(event) => { if (event.currentTarget.open) setHasOpenedReading(true); }}>
+                  <summary><Sparkles size={17} aria-hidden="true" /> Luận giải lá số</summary>
+                  {hasOpenedReading && (
+                    <Suspense fallback={<p role="status">Đang tải luận giải…</p>}>
+                      <AiInsightPanel
+                        chart={chart}
+                        chartSummaryText={chartSummaryText}
+                        selectedPalace={selectedPalace}
+                        externalPromptRequest={externalPromptRequest}
+                        savedReadings={savedReadingsMap}
+                        onReadingGenerated={(topicKey, content) =>
+                          setSavedReadingsMap((prev) => ({ ...prev, [topicKey]: content }))
+                        }
+                        autoAnalyzeOverview={false}
+                      />
+                    </Suspense>
+                  )}
+                </details>
               </div>
             )}
           </>
         )}
 
         {/* TAB 2: XEM HỢP HÔN & HỢP TÁC ĐÔI (HEMING) */}
-        {activeTab === 'heming' && <HemingPanel initialFormA={committedForm} />}
+        {activeTab === 'heming' && (
+          <Suspense fallback={<p role="status">Đang tải hợp mệnh…</p>}>
+            <HemingPanel initialFormA={committedForm} />
+          </Suspense>
+        )}
 
         {/* TAB 3: KHO CỔ TỊCH THIÊN KỶ (1.848 KHẨU QUYẾT CÓ MỐC VIDEO) & TAM ĐẠI CỔ TỊCH */}
         {activeTab === 'classics' && (
-          <ClassicsLibraryPanel onAskAiQuote={handleTriggerAiPrompt} />
+          <Suspense fallback={<p role="status">Đang tải tàng thư…</p>}>
+            <ClassicsLibraryPanel onAskAiQuote={handleTriggerAiPrompt} />
+          </Suspense>
         )}
 
         {/* TAB 4: LÁ SỐ ĐÃ LƯU */}
@@ -774,7 +648,7 @@ export default function ZiweiPage() {
             </div>
           </div>
         )}
-      </main>
+      </div>
 
       {/* Modal Chi Tiết Sao */}
       <StarDetailModal

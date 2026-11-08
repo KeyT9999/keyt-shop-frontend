@@ -132,7 +132,7 @@ export default function BirthFormCard({
           <div>
             <h2 className="text-base md:text-lg font-bold text-slate-900">{title}</h2>
             <p className="text-xs text-slate-500">
-              Hệ thống an sao chuẩn《Thiên Kỷ》Nghê Hải Hạ &amp; hiệu chỉnh Giờ Mặt Trời Thực (UTC+7)
+              An sao theo Thiên Kỷ · Hiệu chỉnh giờ Mặt Trời thực
             </p>
           </div>
         </div>
@@ -370,7 +370,7 @@ export default function BirthFormCard({
         <button
           type="button"
           onClick={() => onSubmit(form)}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#F05A28] hover:bg-[#d94b1c] text-white text-sm font-bold shadow-sm transition-all duration-200 cursor-pointer"
+          className="ziwei-outline ziwei-primary w-full sm:w-auto inline-flex items-center justify-center gap-2"
         >
           <Sparkles size={16} />
           <span>{submitLabel}</span>

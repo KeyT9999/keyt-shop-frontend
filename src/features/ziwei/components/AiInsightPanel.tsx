@@ -32,7 +32,6 @@ import type { TopicKey } from '../engine/db-analysis';
 import {
   THIRTEEN_DIMENSIONS_META,
   buildDeterministicDimensionReading,
-  buildAllThirteenDimensions,
 } from '../engine/thirteen-dimensions';
 import { STEMS, BRANCHES } from '../engine/constants';
 import {
@@ -129,7 +128,7 @@ export default function AiInsightPanel({
   autoAnalyzeOverview = true,
 }: AiInsightPanelProps) {
   const [activeTopic, setActiveTopic] = useState<TopicKey>('overview');
-  const [showAll13Grid, setShowAll13Grid] = useState<boolean>(true);
+  const [showAll13Grid, setShowAll13Grid] = useState<boolean>(false);
   const [topicReadings, setTopicReadings] = useState<Record<string, string>>(savedReadings);
   const [chatMessages, setChatMessages] = useState<ZiweiChatMessage[]>([]);
   const [questionInput, setQuestionInput] = useState('');
@@ -154,8 +153,13 @@ export default function AiInsightPanel({
 
   // Toàn bộ 13 chiều luận giải cố định của đương số
   const all13DeterministicReadings = useMemo(
-    () => buildAllThirteenDimensions(chart),
-    [chart]
+    () => showAll13Grid
+      ? THIRTEEN_DIMENSIONS_META.map((topic) => ({
+          ...topic,
+          ...buildDeterministicDimensionReading(chart, topic.key),
+        }))
+      : [],
+    [chart, showAll13Grid]
   );
 
   // Luận đoán cố định theo quy tắc của chủ đề đang chọn
@@ -310,17 +314,9 @@ export default function AiInsightPanel({
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-base sm:text-lg font-extrabold tracking-tight">
-                  Hồ Sơ Luận Giải Toàn Diện 13 Chiều Cuộc Đời •《Thiên Kỷ》&amp; Đại Sư AI
+                  Luận mệnh
                 </h2>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  13 Chủ Đề + DeepSeek AI
-                </span>
               </div>
-              <p className="text-xs text-slate-300 mt-0.5">
-                Kết hợp Dữ Liệu Luận Đoán Cố Định (Quy tắc thuật toán &amp; 1.848 khẩu quyết Nghê Hải
-                Hạ) và Bài Phân Tích Tự Nhiên Của Đại Sư AI
-              </p>
             </div>
           </div>
 
@@ -336,7 +332,7 @@ export default function AiInsightPanel({
             >
               <LayoutGrid size={14} className="text-[#F05A28]" />
               <span>
-                {showAll13Grid ? 'Đang Mở Tóm Tắt Cả 13 Chiều' : 'Mở Tóm Tắt Tất Cả 13 Chiều'}
+                {showAll13Grid ? 'Thu gọn tổng quan' : 'Xem 13 chủ đề'}
               </span>
             </button>
 
@@ -348,7 +344,7 @@ export default function AiInsightPanel({
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#F05A28] hover:bg-[#d94b1c] text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer disabled:opacity-50"
               >
                 <Sparkles size={14} />
-                <span>Hỏi AI Cung {translatePalaceName(selectedPalace.name)} Đang Chọn</span>
+                <span>Hỏi về cung {translatePalaceName(selectedPalace.name)}</span>
               </button>
             )}
           </div>
@@ -460,14 +456,23 @@ export default function AiInsightPanel({
             <div className="space-y-4">
               <div>
                 <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2.5 flex items-center justify-between">
-                  <span>Chọn Chiều Phân Tích Sâu</span>
+                  <span>Chủ đề</span>
                   <span className="text-[11px] text-purple-700 font-bold">
-                    {Object.keys(topicReadings).length}/13 đã gọi AI
+                    {Object.keys(topicReadings).length}/13 đã luận AI
                   </span>
                 </div>
 
-                {/* 2-Column Grid for 13 Topics */}
-                <div className="grid grid-cols-2 gap-2">
+                <select
+                  aria-label="Chủ đề luận giải"
+                  value={activeTopic}
+                  onChange={(event) => setActiveTopic(event.target.value as TopicKey)}
+                  className="min-h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm lg:hidden"
+                >
+                  {THIRTEEN_DIMENSIONS_META.map((topic) => (
+                    <option key={topic.key} value={topic.key}>{topic.labelVi}</option>
+                  ))}
+                </select>
+                <div className="hidden grid-cols-2 gap-2 lg:grid">
                   {THIRTEEN_DIMENSIONS_META.map((t) => {
                     const Icon = TOPIC_ICON_MAP[t.key] || Compass;
                     const isActive = activeTopic === t.key;
@@ -605,7 +610,7 @@ export default function AiInsightPanel({
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-extrabold">
                     <Cpu size={13} className="text-amber-400" />
-                    <span>Tầng 1: Luận Đoán Cố Định (Quy Tắc Thuật Toán &amp; Cổ Tịch)</span>
+                    <span>Luận theo lá số</span>
                   </span>
                   <span className="text-xs font-bold text-purple-900">
                     {currentTopicMeta.labelVi} — {currentTopicMeta.subVi}
@@ -613,7 +618,7 @@ export default function AiInsightPanel({
                 </div>
 
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">
-                  Phi AI • Xác định 100% theo quy tắc
+                  Theo quy tắc an sao
                 </span>
               </div>
 
@@ -661,104 +666,106 @@ export default function AiInsightPanel({
                 </div>
               </div>
 
-              {/* Lưới 4 Cung Tam Phương Tứ Chính */}
-              <div className="space-y-2">
-                <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Layers size={13} className="text-purple-700" />
-                  <span>Căn Cứ Tinh Hệ Tam Phương Tứ Chính Của {currentTopicMeta.labelVi}</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {topicFocusPalaces.map(({ roleLabel, palace }, idx) => {
-                    const starsInfo = formatPalaceStarsSummaryVi(palace);
-                    const pVi = translatePalaceName(palace.name);
-                    const stemVi = translateStem(STEMS[palace.stem] || '');
-                    const branchVi = translateBranch(BRANCHES[palace.branch] || '');
-                    return (
-                      <div
-                        key={palace.branch}
-                        className={`p-3 rounded-xl border space-y-1 ${
-                          idx === 0
-                            ? 'bg-purple-50/70 border-purple-200'
-                            : 'bg-white border-slate-200/90'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span
-                            className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded ${
-                              idx === 0
-                                ? 'bg-purple-700 text-white'
-                                : 'bg-slate-200 text-slate-700'
-                            }`}
-                          >
-                            {roleLabel}
-                          </span>
-                          <span className="text-[11px] font-bold text-slate-500">
-                            Cung {pVi} ({stemVi} {branchVi})
-                          </span>
-                        </div>
-                        <div className="text-xs text-slate-800">
-                          <strong>Chính tinh:</strong>{' '}
-                          <span className="font-bold text-purple-950">{starsInfo.majorText}</span>
-                        </div>
-                        {starsInfo.luckyText && (
-                          <div className="text-[11px] text-emerald-800">
-                            <strong>Cát tinh:</strong> {starsInfo.luckyText}
-                          </div>
-                        )}
-                        {starsInfo.shaText && (
-                          <div className="text-[11px] text-rose-700">
-                            <strong>Sát/Kỵ:</strong> {starsInfo.shaText}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Khẩu quyết Nghê Hải Hạ (Trích từ 1.848 mục bài giảng Thiên Kỷ có mốc video) */}
-              {deterministicReading.matchedTianjiQuotes.length > 0 && (
-                <div className="space-y-2 pt-1">
-                  <div className="text-xs font-extrabold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
-                    <BookOpen size={13} className="text-[#F05A28]" />
-                    <span>
-                      Trích Dẫn Lời Giảng Nghê Hải Hạ《Thiên Kỷ》Ứng Với Cung Này (Có Mốc Video)
-                    </span>
+              <details className="ziwei-disclosure">
+                <summary><BookOpen size={17} aria-hidden="true" /> Căn cứ và trích dẫn</summary>
+                <div className="space-y-2">
+                  <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Layers size={13} className="text-purple-700" />
+                    <span>Căn Cứ Tinh Hệ Tam Phương Tứ Chính Của {currentTopicMeta.labelVi}</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {deterministicReading.matchedTianjiQuotes.map((q, qIdx) => (
-                      <div
-                        key={qIdx}
-                        className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 flex flex-col justify-between gap-2 text-xs"
-                      >
-                        <div className="space-y-1">
-                          <div className="text-[10px] font-bold text-amber-800">
-                            {q.chapterLabelVi}
+                    {topicFocusPalaces.map(({ roleLabel, palace }, idx) => {
+                      const starsInfo = formatPalaceStarsSummaryVi(palace);
+                      const pVi = translatePalaceName(palace.name);
+                      const stemVi = translateStem(STEMS[palace.stem] || '');
+                      const branchVi = translateBranch(BRANCHES[palace.branch] || '');
+                      return (
+                        <div
+                          key={palace.branch}
+                          className={`p-3 rounded-xl border space-y-1 ${
+                            idx === 0
+                              ? 'bg-purple-50/70 border-purple-200'
+                              : 'bg-white border-slate-200/90'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span
+                              className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded ${
+                                idx === 0
+                                  ? 'bg-purple-700 text-white'
+                                  : 'bg-slate-200 text-slate-700'
+                              }`}
+                            >
+                              {roleLabel}
+                            </span>
+                            <span className="text-[11px] font-bold text-slate-500">
+                              Cung {pVi} ({stemVi} {branchVi})
+                            </span>
                           </div>
-                          <div className="text-slate-900 font-semibold leading-relaxed">
-                            “{q.quoteVi}”
+                          <div className="text-xs text-slate-800">
+                            <strong>Chính tinh:</strong>{' '}
+                            <span className="font-bold text-purple-950">{starsInfo.majorText}</span>
                           </div>
-                          <div className="text-[11px] text-slate-400 font-mono line-clamp-1">
-                            Nguyên văn: {q.quoteCn}
-                          </div>
+                          {starsInfo.luckyText && (
+                            <div className="text-[11px] text-emerald-800">
+                              <strong>Cát tinh:</strong> {starsInfo.luckyText}
+                            </div>
+                          )}
+                          {starsInfo.shaText && (
+                            <div className="text-[11px] text-rose-700">
+                              <strong>Sát/Kỵ:</strong> {starsInfo.shaText}
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center justify-between pt-1.5 border-t border-amber-200/60 text-[10px]">
-                          <span className="text-amber-900 font-bold">Mốc: {q.timeHms}</span>
-                          <a
-                            href={q.bilibiliUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 font-bold text-[#F05A28] hover:underline"
-                          >
-                            <span>Xem video gốc</span>
-                            <ExternalLink size={10} />
-                          </a>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
-              )}
+
+                {/* Khẩu quyết Nghê Hải Hạ (Trích từ 1.848 mục bài giảng Thiên Kỷ có mốc video) */}
+                {deterministicReading.matchedTianjiQuotes.length > 0 && (
+                  <div className="space-y-2 pt-1">
+                    <div className="text-xs font-extrabold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
+                      <BookOpen size={13} className="text-[#F05A28]" />
+                      <span>
+                        Trích Dẫn Lời Giảng Nghê Hải Hạ《Thiên Kỷ》Ứng Với Cung Này (Có Mốc Video)
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {deterministicReading.matchedTianjiQuotes.map((q, qIdx) => (
+                        <div
+                          key={qIdx}
+                          className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 flex flex-col justify-between gap-2 text-xs"
+                        >
+                          <div className="space-y-1">
+                            <div className="text-[10px] font-bold text-amber-800">
+                              {q.chapterLabelVi}
+                            </div>
+                            <div className="text-slate-900 font-semibold leading-relaxed">
+                              “{q.quoteVi}”
+                            </div>
+                            <div className="text-[11px] text-slate-400 font-mono line-clamp-1">
+                              Nguyên văn: {q.quoteCn}
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between pt-1.5 border-t border-amber-200/60 text-[10px]">
+                            <span className="text-amber-900 font-bold">Mốc: {q.timeHms}</span>
+                            <a
+                              href={q.bilibiliUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 font-bold text-[#F05A28] hover:underline"
+                            >
+                              <span>Xem video gốc</span>
+                              <ExternalLink size={10} />
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </details>
             </div>
 
             {/* ─── TẦNG 2: DIỄN GIẢI CHUYÊN SÂU BẰNG ĐẠI SƯ AI DEEPSEEK ─── */}

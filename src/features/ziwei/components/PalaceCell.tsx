@@ -19,7 +19,7 @@ interface PalaceCellProps {
   overlayPrefix?: string; // 'Đ.Hạn' | 'L.Niên'
   boshiName?: string;
   suiQianName?: string;
-  onSelectPalace: () => void;
+  onSelectPalace?: () => void;
   onSelectStar: (star: Star, palace: Palace) => void;
   onSelectSiHua?: (starNameCn: string, siHuaCn: string) => void;
 }
@@ -83,15 +83,15 @@ export default function PalaceCell({
   return (
     <div
       onClick={onSelectPalace}
-      role="button"
-      tabIndex={0}
+      role={onSelectPalace ? 'button' : undefined}
+      tabIndex={onSelectPalace ? 0 : undefined}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (onSelectPalace && e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           onSelectPalace();
         }
       }}
-      className={`relative flex flex-col justify-between p-2 sm:p-2.5 min-h-[145px] sm:min-h-[168px] transition-all duration-150 cursor-pointer select-none ${cellBg} ${borderStyle}`}
+      className={`relative flex flex-col justify-between p-2 sm:p-2.5 min-h-[145px] sm:min-h-[168px] transition-all duration-150 ${onSelectPalace ? 'cursor-pointer' : ''} select-none ${cellBg} ${borderStyle}`}
     >
       {/* Top section: Chính tinh & Phụ tinh */}
       <div className="space-y-1.5">

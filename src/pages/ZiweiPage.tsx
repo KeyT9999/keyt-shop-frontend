@@ -394,7 +394,7 @@ export default function ZiweiPage() {
                 {/* Thanh Hồ Sơ Đương Số & Điều Khiển Nhanh */}
                 <div className="ziwei-profile">
                   <div className="ziwei-profile-info">
-                    <h2>{committedForm.name || 'Lá số Tử Vi'}</h2>
+                    <h2>{birthInfo.name || 'Lá số Tử Vi'}</h2>
                     <p>
                       {committedForm.day}/{committedForm.month}/{committedForm.year}
                       {' · '}

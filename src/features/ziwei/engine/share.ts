@@ -82,7 +82,7 @@ export function formToBirthInfo(form: BirthFormState): BirthInfo {
     day: d,
     hour,
     gender: form.gender,
-    name: form.name?.trim() || undefined,
+    name: form.name?.trim().normalize('NFC') || undefined,
     province: form.province || undefined,
     city: form.city || undefined,
     longitude: form.province ? form.longitude : undefined,

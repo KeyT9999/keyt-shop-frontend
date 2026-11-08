@@ -7,7 +7,7 @@
   --zi-red: #8c3528;
   --zi-line: #b69a69;
   --zi-soft-line: #d9c8a8;
-  --zi-serif: Georgia, 'Times New Roman', serif;
+  --zi-serif: 'Times New Roman', Georgia, serif;
   background: var(--zi-paper);
   color: var(--zi-ink);
   min-height: 100vh;

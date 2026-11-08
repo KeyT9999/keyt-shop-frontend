@@ -461,13 +461,7 @@ export default function ZiweiPage() {
                   isSavingChart={isSavingRecord}
                 />
 
-                {/* 2. NHẬN DIỆN CÁCH CỤC CỔ ĐIỂN CÓ CĂN CỨ & LAI NHÂN TỰ HÓA */}
-                <details className="ziwei-disclosure">
-                  <summary><Layers size={17} aria-hidden="true" /> Cách cục</summary>
-                  <PatternsPanel chart={chart} onAskAiPattern={handleTriggerAiPrompt} />
-                </details>
-
-                {/* 3. HỒ SƠ TOÀN DIỆN 13 CHIỀU LUẬN GIẢI CUỘC ĐỜI + ĐẠI SƯ AI + KHUNG CHAT AI TRỰC TIẾP */}
+                {/* 2. Luận giải lá số */}
                 <details ref={aiSectionRef} className="ziwei-disclosure scroll-mt-20"
                   onToggle={(event) => { if (event.currentTarget.open) setHasOpenedReading(true); }}>
                   <summary><Sparkles size={17} aria-hidden="true" /> Luận giải lá số</summary>
@@ -486,6 +480,12 @@ export default function ZiweiPage() {
                       />
                     </Suspense>
                   )}
+                </details>
+
+                {/* 3. Cách cục */}
+                <details className="ziwei-disclosure">
+                  <summary><Layers size={17} aria-hidden="true" /> Cách cục</summary>
+                  <PatternsPanel chart={chart} onAskAiPattern={handleTriggerAiPrompt} />
                 </details>
               </div>
             )}

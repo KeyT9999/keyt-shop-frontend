@@ -11,6 +11,7 @@ import {
   Layers,
   Award,
   SlidersHorizontal,
+  RotateCcw,
 } from 'lucide-react';
 import { useAuthContext } from '../context/useAuthContext';
 import type { BirthFormState, Palace, Star } from '../features/ziwei/engine/types';
@@ -85,6 +86,10 @@ export default function ZiweiPage() {
     return parsed ? { ...DEFAULT_FORM, ...parsed } : DEFAULT_FORM;
   });
   const [committedForm, setCommittedForm] = useState<BirthFormState>(formState);
+  // Bước 1: Nếu người dùng mới vào /tu-vi chưa có query params thì yêu cầu điền Thông Tin Lập Lá Số Tử Vi trước
+  const [hasSubmittedChart, setHasSubmittedChart] = useState<boolean>(() =>
+    Boolean(searchParamsToForm(searchParams))
+  );
   const [showBirthForm, setShowBirthForm] = useState<boolean>(false);
   const [schoolConfig, setSchoolConfig] = useState<SchoolConfig>(() => {
     const hasSchoolInUrl = SCHOOL_PARAM_KEYS.some((k) => searchParams.has(k));
@@ -167,21 +172,34 @@ export default function ZiweiPage() {
     setCommittedForm(nextForm);
     setSelectedPalace(null);
     setSavedReadingsMap({});
+    setHasSubmittedChart(true);
     setShowBirthForm(false);
     saveToLocalHistory(nextForm);
     syncUrlParams(nextForm, schoolConfig);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleBackToInputStep = () => {
+    setHasSubmittedChart(false);
+    setShowBirthForm(false);
+    setSearchParams(new URLSearchParams(), { replace: true });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleUpdateSchoolConfig = (nextConfig: SchoolConfig) => {
     setSchoolConfig(nextConfig);
     saveSchoolConfig(nextConfig);
-    syncUrlParams(committedForm, nextConfig);
+    if (hasSubmittedChart) {
+      syncUrlParams(committedForm, nextConfig);
+    }
   };
 
   const handleResetSchoolConfig = () => {
     resetSchoolConfig();
     setSchoolConfig({ ...SCHOOL_DEFAULT_CONFIG });
-    syncUrlParams(committedForm, SCHOOL_DEFAULT_CONFIG);
+    if (hasSubmittedChart) {
+      syncUrlParams(committedForm, SCHOOL_DEFAULT_CONFIG);
+    }
   };
 
   const handleSaveChartToAccount = async () => {
@@ -240,6 +258,7 @@ export default function ZiweiPage() {
 
   const handleTriggerAiPrompt = (prompt: string) => {
     setActiveTab('chart');
+    setHasSubmittedChart(true);
     setExternalPromptRequest({ id: Date.now(), prompt });
     scrollToAiSection();
   };
@@ -259,8 +278,8 @@ export default function ZiweiPage() {
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
               An sao chính xác theo lịch pháp Âm Dương &amp; Chân Thái Dương Thời 63 tỉnh thành Việt
-              Nam (UTC+7), tự động nhận diện hơn 40 Cách Cục cổ điển, chấm lá số Hợp Hôn và luận
-              giải chuyên sâu bằng DeepSeek AI.
+              Nam (UTC+7), tự động nhận diện Cách Cục cổ điển, 13 chiều luận giải cuộc đời và Chat
+              hỏi đáp trực tiếp cùng Đại Sư AI.
             </p>
           </div>
 
@@ -322,7 +341,7 @@ export default function ZiweiPage() {
       </section>
 
       {/* Main Content Container */}
-      <main className="max-w-[1380px] mx-auto px-4 sm:px-6 pt-5 space-y-6">
+      <main className="max-w-[1380px] mx-auto px-4 sm:px-6 pt-6 space-y-6">
         {saveFeedback && (
           <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-2xs">
             <CheckCircle2 size={17} className="text-emerald-600 shrink-0" />
@@ -332,160 +351,277 @@ export default function ZiweiPage() {
 
         {/* TAB 1: BÀN LÁ SỐ 12 CUNG & ĐẠI SƯ AI LUẬN GIẢI */}
         {activeTab === 'chart' && (
-          <div className="space-y-6">
-            {/* Thanh Điều Khiển Đương Số & Chọn Nhanh Danh Nhân */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-3.5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-white font-extrabold">
-                    <Compass size={14} className="text-[#F05A28]" />
-                    <span>{committedForm.name || 'Lá Số Đương Số'}</span>
+          <>
+            {!hasSubmittedChart ? (
+              /* ─── BƯỚC 1: GIAO DIỆN YÊU CẦU ĐIỀN THÔNG TIN LẬP LÁ SỐ TỬ VI KHI MỚI VÀO TRANG ─── */
+              <div className="max-w-5xl mx-auto py-4 space-y-6">
+                <div className="text-center space-y-2">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-orange-50 text-[#F05A28] border border-orange-200 text-xs font-extrabold uppercase tracking-wider">
+                    <Sparkles size={13} />
+                    <span>Bước 1 • Khởi Tạo Lá Số Mệnh Lý Cá Nhân</span>
                   </span>
-
-                  <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-900 border border-purple-200 font-bold">
-                    {translateYinYangGender(chart.yinYangGender)} •{' '}
-                    {translateWuxingJu(chart.wuxingJuName)}
-                  </span>
-
-                  <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-950 border border-amber-200 font-bold">
-                    Mệnh: {mingMainStarsVi}
-                  </span>
-
-                  <span className="text-slate-600 font-medium">
-                    Dương lịch:{' '}
-                    <strong className="text-slate-900">
-                      {committedForm.day}/{committedForm.month}/{committedForm.year}
-                    </strong>{' '}
-                    ({committedForm.unknownTime ? 'Giờ Tý' : `${committedForm.clockHour}:${committedForm.clockMinute.padStart(2, '0')}`}) •{' '}
-                    <strong className="text-purple-800">{committedForm.city}</strong>
-                  </span>
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+                    Vui Lòng Điền Thông Tin Để An Sao &amp; Mở Toàn Bộ Hồ Sơ Tử Vi AI
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto">
+                    Ngay sau khi bấm <strong>&ldquo;An Sao Lập Lá Số Ngay&rdquo;</strong>, hệ thống sẽ
+                    hiển thị đầy đủ Bàn Lá Số 12 Cung, Cách Cục, 13 Chiều Luận Giải Cuộc Đời và Trạm
+                    Chat Hỏi Đáp Trực Tiếp cùng Đại Sư AI.
+                  </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSchoolModalOpen(true)}
-                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-extrabold transition-colors cursor-pointer ${
-                      customSchoolRulesCount > 0
-                        ? 'bg-orange-50 text-[#F05A28] border-[#F05A28]'
-                        : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
-                    }`}
-                  >
-                    <SlidersHorizontal size={14} />
-                    <span>
-                      Cài Đặt Trường Phái
-                      {customSchoolRulesCount > 0 ? ` (${customSchoolRulesCount}/10)` : ' (10 Nhóm)'}
-                    </span>
-                  </button>
+                {/* Khung Thông Tin Lập Lá Số Tử Vi */}
+                <BirthFormCard
+                  form={formState}
+                  onChange={setFormState}
+                  onSubmit={handleApplyBirthForm}
+                />
 
-                  <button
-                    type="button"
-                    onClick={scrollToAiSection}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 text-xs font-extrabold transition-colors cursor-pointer"
-                  >
-                    <Sparkles size={14} className="text-[#F05A28]" />
-                    <span>Luận Giải 13 Chiều &amp; AI</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowBirthForm((v) => !v)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F05A28] hover:bg-[#d94b1c] text-white text-xs font-extrabold shadow-xs transition-all cursor-pointer"
-                  >
-                    <SlidersHorizontal size={14} />
-                    <span>
-                      {showBirthForm
-                        ? 'Thu Gọn Khung Nhập'
-                        : 'Đổi Ngày Giờ Sinh / Lập Lá Số Mới'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Thanh chọn nhanh Lá Số Danh Nhân Thế Giới */}
-              <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
-                <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mr-1">
-                  <Award size={13} className="text-[#F05A28]" />
-                  <span>Lá Số Danh Nhân Mẫu:</span>
-                </span>
-                {FAMOUS_CHART_PRESETS_VI.map((preset) => {
-                  const isCurrent = committedForm.name === preset.nameVi;
-                  return (
+                {/* Chọn nhanh Lá số Danh nhân mẫu hoặc Lá số đã lưu gần đây */}
+                <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                      <Award size={15} className="text-[#F05A28]" />
+                      <span>Hoặc Chọn Nhanh Lá Số Danh Nhân Thế Giới Để Xem Thử Ngay:</span>
+                    </div>
                     <button
-                      key={preset.id}
                       type="button"
-                      onClick={() => {
-                        const next: BirthFormState = {
-                          name: preset.nameVi,
-                          year: String(preset.year),
-                          month: String(preset.month),
-                          day: String(preset.day),
-                          clockHour: String(preset.clockHour),
-                          clockMinute: '0',
-                          unknownTime: false,
-                          gender: preset.gender,
-                          province: 'Miền Bắc',
-                          city: 'Hà Nội',
-                          longitude: 105.85,
-                          utcOffsetMinutes: 420,
-                          calendarType: 'solar',
-                          isLeapMonth: false,
-                        };
-                        handleApplyBirthForm(next);
-                      }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                        isCurrent
-                          ? 'bg-slate-900 text-white border-slate-900'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-orange-300 hover:bg-orange-50/60'
-                      }`}
-                      title={preset.highlightVi}
+                      onClick={() => setSchoolModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 cursor-pointer"
                     >
-                      {preset.nameVi}
+                      <SlidersHorizontal size={13} />
+                      <span>Cài đặt Trường Phái An Sao (10 Nhóm)</span>
                     </button>
-                  );
-                })}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {FAMOUS_CHART_PRESETS_VI.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => {
+                          const next: BirthFormState = {
+                            name: preset.nameVi,
+                            year: String(preset.year),
+                            month: String(preset.month),
+                            day: String(preset.day),
+                            clockHour: String(preset.clockHour),
+                            clockMinute: '0',
+                            unknownTime: false,
+                            gender: preset.gender,
+                            province: 'Miền Bắc',
+                            city: 'Hà Nội',
+                            longitude: 105.85,
+                            utcOffsetMinutes: 420,
+                            calendarType: 'solar',
+                            isLeapMonth: false,
+                          };
+                          handleApplyBirthForm(next);
+                        }}
+                        className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-800 border border-slate-200 hover:border-[#F05A28] hover:bg-orange-50/70 transition-all cursor-pointer"
+                        title={preset.highlightVi}
+                      >
+                        {preset.nameVi} ({preset.highlightVi})
+                      </button>
+                    ))}
+                  </div>
+
+                  {localHistory.length > 0 && (
+                    <div className="pt-3 border-t border-slate-100 space-y-2">
+                      <div className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                        Lá Số Bạn Đã Lập Gần Đây:
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {localHistory.slice(0, 6).map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => handleApplyBirthForm(item.form)}
+                            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-purple-50 text-purple-900 border border-purple-200 hover:border-purple-400 cursor-pointer"
+                          >
+                            {item.form.name || 'Lá số Tử Vi'} ({item.form.day}/{item.form.month}/
+                            {item.form.year})
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            ) : (
+              /* ─── BƯỚC 2: HIỂN THỊ TẤT CẢ MỌI THỨ VỀ ĐƯƠNG SỐ + 13 CHIỀU + CHAT AI ─── */
+              <div className="space-y-6">
+                {/* Thanh Hồ Sơ Đương Số & Điều Khiển Nhanh */}
+                <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-xs space-y-3.5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-white font-extrabold">
+                        <Compass size={14} className="text-[#F05A28]" />
+                        <span>{committedForm.name || 'Lá Số Đương Số'}</span>
+                      </span>
 
-            {showBirthForm && (
-              <BirthFormCard
-                form={formState}
-                onChange={setFormState}
-                onSubmit={handleApplyBirthForm}
-              />
+                      <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-900 border border-purple-200 font-bold">
+                        {translateYinYangGender(chart.yinYangGender)} •{' '}
+                        {translateWuxingJu(chart.wuxingJuName)}
+                      </span>
+
+                      <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-950 border border-amber-200 font-bold">
+                        Mệnh: {mingMainStarsVi}
+                      </span>
+
+                      <span className="text-slate-600 font-medium">
+                        Dương lịch:{' '}
+                        <strong className="text-slate-900">
+                          {committedForm.day}/{committedForm.month}/{committedForm.year}
+                        </strong>{' '}
+                        (
+                        {committedForm.unknownTime
+                          ? 'Giờ Tý'
+                          : `${committedForm.clockHour}:${committedForm.clockMinute.padStart(2, '0')}`}
+                        ) • <strong className="text-purple-800">{committedForm.city}</strong>
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSchoolModalOpen(true)}
+                        className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-extrabold transition-colors cursor-pointer ${
+                          customSchoolRulesCount > 0
+                            ? 'bg-orange-50 text-[#F05A28] border-[#F05A28]'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200'
+                        }`}
+                      >
+                        <SlidersHorizontal size={14} />
+                        <span>
+                          Cài Đặt Trường Phái
+                          {customSchoolRulesCount > 0
+                            ? ` (${customSchoolRulesCount}/10)`
+                            : ' (10 Nhóm)'}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={scrollToAiSection}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 text-xs font-extrabold transition-colors cursor-pointer"
+                      >
+                        <Sparkles size={14} className="text-[#F05A28]" />
+                        <span>Xuống 13 Chiều &amp; Chat AI</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowBirthForm((v) => !v)}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F05A28] hover:bg-[#d94b1c] text-white text-xs font-extrabold shadow-xs transition-all cursor-pointer"
+                      >
+                        <SlidersHorizontal size={14} />
+                        <span>
+                          {showBirthForm
+                            ? 'Thu Gọn Khung Nhập'
+                            : 'Sửa Thông Tin / Lập Lá Số Khác'}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleBackToInputStep}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                        title="Quay về màn hình nhập mới"
+                      >
+                        <RotateCcw size={13} />
+                        <span>Nhập Mới</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Thanh chọn nhanh Lá Số Danh Nhân Thế Giới */}
+                  <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mr-1">
+                      <Award size={13} className="text-[#F05A28]" />
+                      <span>Lá Số Danh Nhân Mẫu:</span>
+                    </span>
+                    {FAMOUS_CHART_PRESETS_VI.map((preset) => {
+                      const isCurrent = committedForm.name === preset.nameVi;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => {
+                            const next: BirthFormState = {
+                              name: preset.nameVi,
+                              year: String(preset.year),
+                              month: String(preset.month),
+                              day: String(preset.day),
+                              clockHour: String(preset.clockHour),
+                              clockMinute: '0',
+                              unknownTime: false,
+                              gender: preset.gender,
+                              province: 'Miền Bắc',
+                              city: 'Hà Nội',
+                              longitude: 105.85,
+                              utcOffsetMinutes: 420,
+                              calendarType: 'solar',
+                              isLeapMonth: false,
+                            };
+                            handleApplyBirthForm(next);
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                            isCurrent
+                              ? 'bg-slate-900 text-white border-slate-900'
+                              : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-orange-300 hover:bg-orange-50/60'
+                          }`}
+                          title={preset.highlightVi}
+                        >
+                          {preset.nameVi}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {showBirthForm && (
+                  <BirthFormCard
+                    form={formState}
+                    onChange={setFormState}
+                    onSubmit={handleApplyBirthForm}
+                  />
+                )}
+
+                {/* 1. BÀN LÁ SỐ 12 CUNG 4x4 TOÀN CHIỀU RỘNG & VẬN HẠN ĐA TẦNG */}
+                <ChartBoard
+                  chart={chart}
+                  selectedPalace={selectedPalace}
+                  onSelectPalace={setSelectedPalace}
+                  onSelectStar={(star, palace) => setInspectingStar({ star, palace })}
+                  onSelectSiHua={handleSelectSiHua}
+                  onOpenShareModal={() => setShareModalOpen(true)}
+                  onOpenSchoolConfig={() => setSchoolModalOpen(true)}
+                  customSchoolRulesCount={customSchoolRulesCount}
+                  onSaveChart={handleSaveChartToAccount}
+                  isSavingChart={isSavingRecord}
+                />
+
+                {/* 2. NHẬN DIỆN CÁCH CỤC CỔ ĐIỂN CÓ CĂN CỨ & LAI NHÂN TỰ HÓA */}
+                <PatternsPanel chart={chart} onAskAiPattern={handleTriggerAiPrompt} />
+
+                {/* 3. HỒ SƠ TOÀN DIỆN 13 CHIỀU LUẬN GIẢI CUỘC ĐỜI + ĐẠI SƯ AI + KHUNG CHAT AI TRỰC TIẾP */}
+                <div ref={aiSectionRef} className="scroll-mt-20">
+                  <AiInsightPanel
+                    chart={chart}
+                    chartSummaryText={chartSummaryText}
+                    selectedPalace={selectedPalace}
+                    externalPromptRequest={externalPromptRequest}
+                    savedReadings={savedReadingsMap}
+                    onReadingGenerated={(topicKey, content) =>
+                      setSavedReadingsMap((prev) => ({ ...prev, [topicKey]: content }))
+                    }
+                    autoAnalyzeOverview={true}
+                  />
+                </div>
+              </div>
             )}
-
-            {/* 1. BÀN LÁ SỐ 12 CUNG 4x4 TOÀN CHIỀU RỘNG (Rõ ràng, thoáng đãng, chuẩn truyền thống) */}
-            <ChartBoard
-              chart={chart}
-              selectedPalace={selectedPalace}
-              onSelectPalace={setSelectedPalace}
-              onSelectStar={(star, palace) => setInspectingStar({ star, palace })}
-              onSelectSiHua={handleSelectSiHua}
-              onOpenShareModal={() => setShareModalOpen(true)}
-              onOpenSchoolConfig={() => setSchoolModalOpen(true)}
-              customSchoolRulesCount={customSchoolRulesCount}
-              onSaveChart={handleSaveChartToAccount}
-              isSavingChart={isSavingRecord}
-            />
-
-            {/* 2. TRẠM ĐẠI SƯ AI LUẬN GIẢI (Bố cục 2 cột rộng rãi, có Bảng Tóm Tắt Tinh Hệ Tức Thời) */}
-            <div ref={aiSectionRef} className="scroll-mt-20">
-              <AiInsightPanel
-                chart={chart}
-                chartSummaryText={chartSummaryText}
-                selectedPalace={selectedPalace}
-                externalPromptRequest={externalPromptRequest}
-                savedReadings={savedReadingsMap}
-                onReadingGenerated={(topicKey, content) =>
-                  setSavedReadingsMap((prev) => ({ ...prev, [topicKey]: content }))
-                }
-              />
-            </div>
-
-            {/* 3. NHẬN DIỆN CÁCH CỤC CỔ ĐIỂN & ĐOẠN NGỮ THIÊN KỶ */}
-            <PatternsPanel chart={chart} onAskAiPattern={handleTriggerAiPrompt} />
-          </div>
+          </>
         )}
 
         {/* TAB 2: XEM HỢP HÔN & HỢP TÁC ĐÔI (HEMING) */}
@@ -562,6 +698,7 @@ export default function ZiweiPage() {
                             setFormState(restored);
                             setCommittedForm(restored);
                             setSavedReadingsMap(rec.aiReadings || {});
+                            setHasSubmittedChart(true);
                             setActiveTab('chart');
                           }}
                           className="text-xs font-bold text-[#F05A28] hover:underline cursor-pointer"

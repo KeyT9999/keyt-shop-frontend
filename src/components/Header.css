@@ -365,10 +365,10 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 0.34rem 0.41rem;
-  font-size: 0.745rem;
+  padding: 0.32rem 0.36rem;
+  font-size: 0.725rem;
   font-weight: 650;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.014em;
   color: var(--text-secondary);
   text-decoration: none;
   background: transparent;
@@ -384,19 +384,19 @@
   white-space: nowrap;
 }
 
-/* Balanced 9-item (4-1-4) capsule sizing on wide desktops (1400px+):
-   Keeps total capsule width ~950px so both left & right 1fr tracks (~185px)
-   stay wider than Logo (179px) and User/Auth (156px) for true 50% centering. */
+/* Balanced capsule sizing on wide desktops (1400px+):
+   Keeps total capsule width compact so both left & right 1fr tracks
+   stay wider than Logo and User/Auth for true 50% centering. */
 @media (min-width: 1400px) {
   .header-nav-list {
     padding: 4px 5px;
     gap: 1.5px;
   }
   .header-nav-link {
-    gap: 4px;
-    padding: 0.37rem 0.5rem;
-    font-size: 0.785rem;
-    letter-spacing: -0.005em;
+    gap: 3.5px;
+    padding: 0.35rem 0.44rem;
+    font-size: 0.765rem;
+    letter-spacing: -0.008em;
   }
 }
 

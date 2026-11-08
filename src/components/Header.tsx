@@ -28,11 +28,13 @@ import {
   Headphones,
   Video,
   Dumbbell,
+  Compass,
   type LucideIcon
 } from 'lucide-react';
 import {
   IS_FOCUS_CAFE_ENABLED,
   IS_GYM_COACH_ENABLED,
+  IS_ZIWEI_ENABLED,
 } from '../config/features';
 import { useAuthContext } from '../context/useAuthContext';
 import { useFocusCafeContext } from '../context/useFocusCafeContext';
@@ -119,6 +121,19 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
   // Dropdown data definitions
   const aiTools: SubMenuItem[] = [
+    ...(IS_ZIWEI_ENABLED
+      ? [
+          {
+            title: 'Tử Vi Đẩu Số AI (Thiên Kỷ)',
+            desc: 'An sao 12 cung chuẩn Hán-Việt, bắt 40+ Cách Cục, Xem Hợp Hôn & AI Luận Giải',
+            href: '/tu-vi',
+            icon: Compass,
+            iconBg: 'bg-purple-50 text-purple-600',
+            iconColor: '#7C3AED',
+            badge: 'NEW'
+          }
+        ]
+      : []),
     ...(IS_FOCUS_CAFE_ENABLED
       ? [
           {
@@ -365,7 +380,11 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
 
   const isAiActive = aiTools.some(
-    (t) => location.pathname === t.href && t.href !== '/gym' && t.href !== '/focus'
+    (t) =>
+      location.pathname === t.href &&
+      t.href !== '/gym' &&
+      t.href !== '/focus' &&
+      t.href !== '/tu-vi'
   );
   const isPhotoActive = photoTools.some((t) => location.pathname === t.href);
   const isOtpActive =
@@ -573,6 +592,20 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   >
                     <Headphones size={13} className="nav-icon-highlight nav-icon-animate" />
                     <span>Focus Café</span>
+                  </Link>
+                </li>
+              )}
+
+              {/* 6b. Direct Tử Vi Đẩu Số AI Top-Level Button */}
+              {IS_ZIWEI_ENABLED && (
+                <li className="header-nav-item">
+                  <Link
+                    to="/tu-vi"
+                    className={`header-nav-link cursor-pointer ${location.pathname === '/tu-vi' ? 'active' : ''}`}
+                    title="Tử Vi Đẩu Số AI (Thiên Kỷ) - An sao 12 cung, 40+ Cách Cục & Hợp Hôn"
+                  >
+                    <Compass size={13} className="nav-icon-highlight nav-icon-animate" />
+                    <span>Tử Vi AI</span>
                   </Link>
                 </li>
               )}
@@ -962,6 +995,17 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
 
           {/* Right: User Profile & Actions */}
           <div className="header-right">
+            {IS_ZIWEI_ENABLED && (
+              <Link
+                to="/tu-vi"
+                className={`mobile-gym-quick-pill cursor-pointer ${location.pathname === '/tu-vi' ? 'active' : ''}`}
+                title="Mở nhanh Tử Vi Đẩu Số AI (Thiên Kỷ)"
+                aria-label="Mở Tử Vi Đẩu Số AI"
+              >
+                <Compass size={14} />
+                <span className="mobile-gym-quick-text">Tử Vi AI</span>
+              </Link>
+            )}
             {IS_FOCUS_CAFE_ENABLED && (
               <Link
                 to="/focus"
@@ -1126,6 +1170,17 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
           >
             Trang chủ
           </Link>
+
+          {IS_ZIWEI_ENABLED && (
+            <Link
+              to="/tu-vi"
+              className={`mobile-otp-btn cursor-pointer ${location.pathname === '/tu-vi' ? 'active' : ''}`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <Compass size={16} />
+              <span>Tử Vi Đẩu Số AI (Thiên Kỷ)</span>
+            </Link>
+          )}
 
           {IS_GYM_COACH_ENABLED && (
             <Link

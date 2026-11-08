@@ -9,3 +9,7 @@ export const IS_GYM_COACH_ENABLED =
 
 export const IS_FOCUS_CAFE_ENABLED =
   import.meta.env.VITE_ENABLE_FOCUS_CAFE !== 'false';
+
+export const IS_ZIWEI_ENABLED =
+  import.meta.env.VITE_ENABLE_ZIWEI !== 'false';
+

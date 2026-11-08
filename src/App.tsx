@@ -20,6 +20,7 @@ import {
     IS_FOCUS_CAFE_ENABLED,
     IS_GYM_COACH_ENABLED,
     IS_ROBOT_3D_ENABLED,
+    IS_ZIWEI_ENABLED,
 } from './config/features';
 import { announcementService } from './services/announcementService';
 
@@ -71,6 +72,7 @@ const AiImagePage = lazy(() => import('./pages/AiImagePage'));
 const VideoTranslatePage = lazy(() => import('./pages/VideoTranslatePage'));
 const GymCoachPage = lazy(() => import('./pages/GymCoachPage'));
 const FocusCafePage = lazy(() => import('./pages/FocusCafePage'));
+const ZiweiPage = lazy(() => import('./pages/ZiweiPage'));
 const AdminChatPage = lazy(() => import('./pages/admin/AdminChatPage'));
 
 // Multi-Language Course Pages
@@ -273,6 +275,16 @@ export default function App() {
             };
         }
 
+        if (path === '/tu-vi') {
+            return {
+                ...base,
+                title: 'Lập Lá Số Tử Vi Đẩu Số AI & Xem Hợp Hôn (Thiên Kỷ Nghê Hải Hạ) | KeyT Hub',
+                description:
+                    'Hệ thống an sao Tử Vi Đẩu Số chuẩn Thiên Kỷ Nghê Hải Hạ & Toàn Thư, hiệu chỉnh Giờ Mặt Trời Thực 63 tỉnh thành Việt Nam (UTC+7), tự động bắt 40+ Cách Cục và luận giải bằng AI.',
+                canonicalPath: '/tu-vi',
+            };
+        }
+
         if (path === '/courses/kana' || path.endsWith('/kana')) {
             return {
                 ...base,
@@ -361,6 +373,7 @@ export default function App() {
                         <Route path="/video-translate" element={<VideoTranslatePage />} />
                         {IS_GYM_COACH_ENABLED && <Route path="/gym" element={<GymCoachPage />} />}
                         {IS_FOCUS_CAFE_ENABLED && <Route path="/focus" element={<FocusCafePage />} />}
+                        {IS_ZIWEI_ENABLED && <Route path="/tu-vi" element={<ZiweiPage />} />}
 
                         {/* Multi-Language Course Routes */}
                         <Route path="/courses" element={<CoursesHubPage />} />

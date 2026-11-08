@@ -25,19 +25,16 @@ import {
   ArrowRight,
   Search,
   Flame,
-  Headphones,
   Video,
   Dumbbell,
   Compass,
   type LucideIcon
 } from 'lucide-react';
 import {
-  IS_FOCUS_CAFE_ENABLED,
   IS_GYM_COACH_ENABLED,
   IS_ZIWEI_ENABLED,
 } from '../config/features';
 import { useAuthContext } from '../context/useAuthContext';
-import { useFocusCafeContext } from '../context/useFocusCafeContext';
 import logo from '../assets/logo.png';
 import './Header.css';
 
@@ -58,7 +55,6 @@ interface SubMenuItem {
 
 export default function Header({ onSearch, searchValue }: HeaderProps) {
   const { user, logout } = useAuthContext();
-  const { enterFocusSession } = useFocusCafeContext();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -131,19 +127,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             iconBg: 'bg-purple-50 text-purple-600',
             iconColor: '#7C3AED',
             badge: 'NEW'
-          }
-        ]
-      : []),
-    ...(IS_FOCUS_CAFE_ENABLED
-      ? [
-          {
-            title: 'KeyT Focus Café',
-            desc: 'Góc tự học Lofi toàn màn hình, mưa rơi & đồng hồ đếm giờ học',
-            href: '/focus',
-            icon: Headphones,
-            iconBg: 'bg-orange-50 text-[#F05A28]',
-            iconColor: '#F05A28',
-            badge: 'LOFI'
           }
         ]
       : []),
@@ -383,7 +366,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
     (t) =>
       location.pathname === t.href &&
       t.href !== '/gym' &&
-      t.href !== '/focus' &&
       t.href !== '/tu-vi'
   );
   const isPhotoActive = photoTools.some((t) => location.pathname === t.href);
@@ -473,12 +455,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                             key={item.href}
                             to={item.href}
                             className={`dropdown-card-item cursor-pointer ${location.pathname === item.href ? 'item-active' : ''}`}
-                            onClick={() => {
-                              setActiveDropdown(null);
-                              if (item.href === '/focus') {
-                                enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
-                              }
-                            }}
+                            onClick={() => setActiveDropdown(null)}
                           >
                             <div className="dropdown-item-icon" style={{ color: item.iconColor }}>
                               <Icon size={18} />
@@ -578,23 +555,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                   </span>
                 </Link>
               </li>
-
-              {/* 6. Direct KeyT Focus Café Fullscreen Launch Link (Right of Center Pill, paired with Study Courses) */}
-              {IS_FOCUS_CAFE_ENABLED && (
-                <li className="header-nav-item">
-                  <Link
-                    to="/focus"
-                    onClick={() =>
-                      enterFocusSession({ autoFullscreen: true, autoStartMusic: true })
-                    }
-                    className={`header-nav-link focus-cafe-nav-link cursor-pointer ${location.pathname === '/focus' ? 'active' : ''}`}
-                    title="Mở Góc Tự Học Lofi Toàn Màn Hình & Đồng Hồ Pomodoro"
-                  >
-                    <Headphones size={13} className="nav-icon-highlight nav-icon-animate" />
-                    <span>Focus Café</span>
-                  </Link>
-                </li>
-              )}
 
               {/* 6b. Direct Tử Vi Đẩu Số AI Top-Level Button */}
               {IS_ZIWEI_ENABLED && (
@@ -1006,20 +966,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 <span className="mobile-gym-quick-text">Tử Vi AI</span>
               </Link>
             )}
-            {IS_FOCUS_CAFE_ENABLED && (
-              <Link
-                to="/focus"
-                onClick={() =>
-                  enterFocusSession({ autoFullscreen: true, autoStartMusic: true })
-                }
-                className={`mobile-gym-quick-pill mobile-focus-quick-pill cursor-pointer ${location.pathname === '/focus' ? 'active' : ''}`}
-                title="Mở nhanh Góc Tự Học Lofi Toàn Màn Hình"
-                aria-label="Mở Góc Tự Học Focus Café"
-              >
-                <Headphones size={14} />
-                <span className="mobile-gym-quick-text">Focus Café</span>
-              </Link>
-            )}
             {IS_GYM_COACH_ENABLED && (
               <Link
                 to="/gym"
@@ -1193,20 +1139,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
             </Link>
           )}
 
-          {IS_FOCUS_CAFE_ENABLED && (
-            <Link
-              to="/focus"
-              className={`mobile-otp-btn cursor-pointer ${location.pathname === '/focus' ? 'active' : ''}`}
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
-              }}
-            >
-              <Headphones size={16} />
-              <span>KeyT Focus Café (Góc Học Lofi)</span>
-            </Link>
-          )}
-
           {/* Group: Công cụ AI */}
           <div className="mobile-group-title">Công cụ AI</div>
           {aiTools.map((tool) => {
@@ -1216,12 +1148,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 key={tool.href}
                 to={tool.href}
                 className={`mobile-sub-link ${location.pathname === tool.href ? 'active' : ''}`}
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  if (tool.href === '/focus') {
-                    enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
-                  }
-                }}
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Icon size={16} style={{ color: tool.iconColor }} />
                 <span>{tool.title}</span>
@@ -1239,12 +1166,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 key={tool.href}
                 to={tool.href}
                 className={`mobile-sub-link ${location.pathname === tool.href ? 'active' : ''}`}
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  if (tool.href === '/focus') {
-                    enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
-                  }
-                }}
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Icon size={16} style={{ color: tool.iconColor }} />
                 <span>{tool.title}</span>
@@ -1287,12 +1209,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 key={tool.href}
                 to={tool.href}
                 className={`mobile-sub-link ${location.pathname === tool.href ? 'active' : ''}`}
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  if (tool.href === '/focus') {
-                    enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
-                  }
-                }}
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Icon size={16} style={{ color: tool.iconColor }} />
                 <span>{tool.title}</span>
@@ -1334,12 +1251,7 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
                 key={tool.href}
                 to={tool.href}
                 className={`mobile-sub-link ${location.pathname === tool.href ? 'active' : ''}`}
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  if (tool.href === '/focus') {
-                    enterFocusSession({ autoFullscreen: true, autoStartMusic: true });
-                  }
-                }}
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Icon size={16} style={{ color: tool.iconColor }} />
                 <span>{tool.title}</span>

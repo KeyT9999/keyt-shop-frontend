@@ -984,43 +984,16 @@
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.mobile-focus-quick-pill {
-  background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
-  color: var(--brand-navy);
-  border-color: #CBD5E1;
-  box-shadow: 0 2px 6px -1px rgba(15, 23, 42, 0.06);
-}
-
-.mobile-focus-quick-pill svg {
-  color: var(--brand-orange);
-  transition: color 0.2s ease, transform 0.2s ease;
-}
-
 .mobile-gym-quick-pill:hover {
   background: linear-gradient(135deg, var(--brand-orange) 0%, #EA580C 100%);
   color: #FFFFFF;
   border-color: var(--brand-orange);
 }
 
-.mobile-focus-quick-pill:hover {
-  background: var(--brand-navy);
-  color: #FFFFFF;
-  border-color: var(--brand-navy);
-}
-
-.mobile-focus-quick-pill:hover svg {
-  color: #FB923C;
-  transform: scale(1.08);
-}
-
 .mobile-gym-quick-pill.active {
   background: var(--brand-navy);
   color: #FFFFFF;
   border-color: var(--brand-navy);
-}
-
-.mobile-focus-quick-pill.active svg {
-  color: #FB923C;
 }
 
 @media (max-width: 639px) {

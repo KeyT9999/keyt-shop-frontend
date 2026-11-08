@@ -589,3 +589,63 @@
   .ziwei-chapter-select { display: none; }
   .ziwei-chapter-list { display: block; }
 }
+
+.ziwei-lifetime {
+  display: grid;
+  gap: .65rem;
+  min-width: 0;
+  padding: clamp(.75rem, 2vw, 1.2rem);
+  border: 1px solid var(--zi-soft-line);
+  border-radius: 12px;
+  background: var(--zi-sheet);
+}
+.ziwei-lifetime > h3 { color: var(--zi-red); font: 700 1.65rem var(--zi-serif); }
+.ziwei-lifetime-body { display: grid; gap: .75rem; font-size: .9rem; line-height: 1.6; }
+.ziwei-lifetime-body h4 { color: var(--zi-red); font: 700 1.15rem var(--zi-serif); }
+.ziwei-life-chart {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .4rem;
+}
+.ziwei-life-chart button,
+.ziwei-year-list button {
+  width: 100%;
+  min-height: 44px;
+  padding: .5rem .6rem;
+  border: 1px solid var(--zi-soft-line);
+  border-radius: 6px;
+  background: #fffaf0;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 180ms ease;
+}
+.ziwei-life-chart button {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: .25rem;
+}
+.ziwei-life-chart button > span { font-size: .8rem; }
+.ziwei-life-chart button:hover,
+.ziwei-year-list button:hover { background: #eee2ca; }
+.ziwei-life-chart button[aria-pressed='true'],
+.ziwei-year-list button[aria-pressed='true'] { background: #ead8b9; border-color: var(--zi-line); }
+.ziwei-life-chart progress { width: 100%; height: .5rem; accent-color: var(--zi-jade); }
+.ziwei-year-list { display: grid; gap: .35rem; }
+.ziwei-year-list button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .5rem;
+  font-size: .82rem;
+}
+.ziwei-linked-grid { display: grid; gap: .5rem; }
+.ziwei-summary-patterns { list-style: disc; padding-inline-start: 1.1rem; }
+.ziwei-summary-patterns li + li { margin-top: .45rem; }
+@media (min-width: 768px) {
+  .ziwei-life-chart { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ziwei-year-list, .ziwei-linked-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .ziwei-life-chart { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}

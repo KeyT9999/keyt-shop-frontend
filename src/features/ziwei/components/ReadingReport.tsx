@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { BarChart3, BookOpen, CalendarDays } from 'lucide-react';
 import type { ZiweiChart } from '../engine/types';
 import {
+  buildAnnualOutlook,
   buildYearOutlook,
   getBirthOverview,
   READING_CHAPTERS,
@@ -104,7 +105,7 @@ export function BirthOverview({ chart, unknownTime }: { chart: ZiweiChart; unkno
 
 type Outlook = NonNullable<ReturnType<typeof buildYearOutlook>>;
 
-function TransitList({ marks }: { marks: Outlook['marks'] }) {
+export function TransitList({ marks }: { marks: Outlook['marks'] }) {
   return <ul className="ziwei-transit-list">
     {marks.map(({ label, palace, value }) => (
       <li key={label}><span><strong>{label}</strong> · {palace}</span><span>{value > 0 ? '+' : ''}{value}</span></li>
@@ -112,11 +113,13 @@ function TransitList({ marks }: { marks: Outlook['marks'] }) {
   </ul>;
 }
 
-export function YearOutlook({ year, setYear, minimumYear, outlook }: {
+export function YearOutlook({ year, setYear, minimumYear, maximumYear, outlook, previousOutlook }: {
   year: number;
   setYear: (year: number) => void;
   minimumYear: number;
+  maximumYear: number;
   outlook: Outlook | null;
+  previousOutlook: ReturnType<typeof buildAnnualOutlook>;
 }) {
   const [month, setMonth] = useState(1);
   const selected = outlook?.months[month - 1];
@@ -127,7 +130,7 @@ export function YearOutlook({ year, setYear, minimumYear, outlook }: {
         <h4><CalendarDays size={18} aria-hidden="true" /> Vận năm {year}</h4>
         <label>Năm âm lịch
           <select value={year} onChange={(e) => setYear(Number(e.target.value))}>
-            {Array.from({ length: Math.max(0, 2050 - minimumYear + 1) }, (_, i) => minimumYear + i).map((option) =>
+            {Array.from({ length: Math.max(0, maximumYear - minimumYear + 1) }, (_, i) => minimumYear + i).map((option) =>
               <option key={option} value={option}>{option}</option>
             )}
           </select>
@@ -137,6 +140,14 @@ export function YearOutlook({ year, setYear, minimumYear, outlook }: {
         <>
           <p><strong>Tiểu hạn tại cung {translatePalaceName(outlook.focus.name)}</strong> · {outlook.age} tuổi âm</p>
           <TransitList marks={outlook.marks} />
+          {previousOutlook && (
+            <details className="ziwei-disclosure">
+              <summary>So với năm {year - 1}</summary>
+              <p>Tiểu hạn chuyển từ <strong>{translatePalaceName(previousOutlook.focus.name)}</strong> sang <strong>{translatePalaceName(outlook.focus.name)}</strong>. Điểm tham chiếu từ {previousOutlook.score}/100 sang {outlook.score}/100.</p>
+              <p className="ziwei-report-note">Các sao lưu của năm {year - 1}</p>
+              <TransitList marks={previousOutlook.marks} />
+            </details>
+          )}
           <h4>Điểm theo 12 tháng âm lịch</h4>
           <p className="ziwei-report-note">Mỗi tháng dùng điểm nền của vận năm, rồi cộng trừ theo các sao Tứ Hóa lưu tháng. Chọn tháng để xem chi tiết.</p>
           {leapMonth > 0 && <p className="ziwei-report-note">Năm này có tháng {leapMonth} nhuận. Biểu đồ hiển thị 12 tháng chính.</p>}

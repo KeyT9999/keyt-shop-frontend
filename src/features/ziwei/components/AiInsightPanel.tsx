@@ -29,15 +29,18 @@ import { ziweiApiService } from '../services/ziweiApiService';
 
 import { FormattedAiReading } from './FormattedAiReading';
 
-import { buildYearOutlook, getChapterScore, READING_CHAPTERS, type ReadingChapterKey } from '../engine/reading-report';
+import { buildAnnualOutlook, buildYearOutlook, getChapterPalace, getChapterScore, READING_CHAPTERS, type ReadingChapterKey } from '../engine/reading-report';
 import { BirthOverview, getDefaultReadingYear, ReportComparison, ScoreExplanation, ScoreRing, YearOutlook } from './ReadingReport';
+
+import { getFourPalaceGroup } from '../engine/lifetime-reading';
+import LifetimeReport from './LifetimeReport';
 
 interface AiInsightPanelProps {
   chart: ZiweiChart;
   unknownTime: boolean;
   chartSummaryText: string;
   selectedPalace: Palace | null;
-  onAskQuestion: (prompt: string, context: string) => void;
+  onAskQuestion: (prompt: string, context?: string) => void;
   savedReadings?: Record<string, string>;
   onReadingGenerated?: (key: string, content: string) => void;
   autoAnalyzeOverview?: boolean;
@@ -59,8 +62,10 @@ export default function AiInsightPanel({
   const chapter = READING_CHAPTERS[chapterIndex];
   const chapterRef = useRef<HTMLElement>(null);
   const [year, setYear] = useState(() => Math.max(chart.lunarInfo.lunarYear, getDefaultReadingYear()));
-  const viewingYear = Math.min(2050, Math.max(chart.lunarInfo.lunarYear, year));
+  const maximumYear = Math.max(2050, chart.lunarInfo.lunarYear + (chart.daXians.at(-1)?.endAge ?? 1) - 1);
+  const viewingYear = Math.min(maximumYear, Math.max(chart.lunarInfo.lunarYear, year));
   const outlook = useMemo(() => buildYearOutlook(chart, viewingYear), [chart, viewingYear]);
+  const previousOutlook = useMemo(() => buildAnnualOutlook(chart, viewingYear - 1), [chart, viewingYear]);
   const natalScores = useMemo(() => new Map(READING_CHAPTERS
     .filter(({ key }) => key !== 'forecast')
     .map((entry) => [entry.key, getChapterScore(chart, entry)])), [chart]);
@@ -91,28 +96,10 @@ export default function AiInsightPanel({
     [chart, activeTopic]
   );
 
-  // Tìm 4 cung Tam Phương Tứ Chính của chủ đề hiện tại
-  const topicFocusPalaces = useMemo(() => {
-    const mainPalace =
-      chart.palaces.find((p) => p.name.startsWith(currentTopicMeta.palacePrefixCn)) ||
-      (currentTopicMeta.palacePrefixCn === '交友'
-        ? chart.palaces.find((p) => p.name.startsWith('仆役'))
-        : undefined) ||
-      chart.palaces.find((p) => p.branch === chart.mingGongBranch) ||
-      chart.palaces[0];
-    if (!mainPalace) return [];
-
-    const opp = chart.palaces.find((p) => p.branch === (mainPalace.branch + 6) % 12);
-    const san1 = chart.palaces.find((p) => p.branch === (mainPalace.branch + 4) % 12);
-    const san2 = chart.palaces.find((p) => p.branch === (mainPalace.branch + 8) % 12);
-
-    return [
-      { roleLabel: 'Bản Cung Trọng Tâm', palace: mainPalace },
-      ...(opp ? [{ roleLabel: 'Đối Cung Xung Chiếu', palace: opp }] : []),
-      ...(san1 ? [{ roleLabel: 'Tam Hợp Hội Chiếu 1', palace: san1 }] : []),
-      ...(san2 ? [{ roleLabel: 'Tam Hợp Hội Chiếu 2', palace: san2 }] : []),
-    ];
-  }, [chart, currentTopicMeta]);
+  const focusPalace = activeChapter === 'forecast' && outlook
+    ? outlook.focus
+    : getChapterPalace(chart, chapter);
+  const topicFocusPalaces = getFourPalaceGroup(chart, focusPalace);
 
   const handleAnalyzeTopic = async (topicKey: TopicKey, forceRefresh = false) => {
     setActiveTopic(topicKey);
@@ -184,6 +171,10 @@ export default function AiInsightPanel({
             <h2>Luận mệnh</h2>
             <p>14 phần · Từ Mệnh – Thân đến vận năm và tháng</p>
           </div>
+          <button type="button" className="ziwei-outline" onClick={() =>
+            document.getElementById('ziwei-lifetime')?.scrollIntoView({ block: 'start' })}>
+            Xem vận trình và tổng kết
+          </button>
           {selectedPalace && (
             <button type="button" className="ziwei-outline" onClick={handleAnalyzeSelectedPalace}>
               Hỏi về cung {translatePalaceName(selectedPalace.name)}
@@ -270,7 +261,8 @@ export default function AiInsightPanel({
             </section>
             {activeChapter === 'overview' && <BirthOverview chart={chart} unknownTime={unknownTime} />}
             {activeChapter === 'forecast' ? (
-              <YearOutlook year={viewingYear} setYear={setYear} minimumYear={chart.lunarInfo.lunarYear} outlook={outlook} />
+              <YearOutlook year={viewingYear} setYear={setYear} minimumYear={chart.lunarInfo.lunarYear}
+                maximumYear={maximumYear} outlook={outlook} previousOutlook={previousOutlook} />
             ) : (
               <>
                 {errorMsg && (
@@ -550,6 +542,19 @@ export default function AiInsightPanel({
         </div>
       </section>
 
+      <LifetimeReport
+        chart={chart}
+        focus={focusPalace}
+        year={viewingYear}
+        unknownTime={unknownTime}
+        scores={scores}
+        onAskQuestion={onAskQuestion}
+        onSelectYear={(selectedYear) => {
+          setYear(selectedYear);
+          setActiveTopic('forecast');
+          chapterRef.current?.scrollIntoView({ block: 'start' });
+        }}
+      />
     </div>
   );
 }

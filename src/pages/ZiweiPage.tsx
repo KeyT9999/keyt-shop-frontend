@@ -48,7 +48,6 @@ import {
 import BirthFormCard from '../features/ziwei/components/BirthFormCard';
 import ZiweiChat, { type ZiweiChatRequest } from '../features/ziwei/components/ZiweiChat';
 import ChartBoard, { type ZiweiTimeView } from '../features/ziwei/components/ChartBoard';
-import PatternsPanel from '../features/ziwei/components/PatternsPanel';
 import StarDetailModal from '../features/ziwei/components/StarDetailModal';
 import ShareChartModal from '../features/ziwei/components/ShareChartModal';
 import SchoolConfigModal from '../features/ziwei/components/SchoolConfigModal';
@@ -482,11 +481,6 @@ export default function ZiweiPage() {
                   )}
                 </details>
 
-                {/* 3. Cách cục */}
-                <details className="ziwei-disclosure">
-                  <summary><Layers size={17} aria-hidden="true" /> Cách cục</summary>
-                  <PatternsPanel chart={chart} onAskAiPattern={handleTriggerAiPrompt} />
-                </details>
               </div>
             )}
           </>

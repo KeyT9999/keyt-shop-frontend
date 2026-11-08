@@ -79,7 +79,7 @@ export function getChapterScore(chart: ZiweiChart, chapter: Chapter) {
   return { factors, score: sumScore(factors) };
 }
 
-function getTransitMarks(chart: ZiweiChart, focus: Palace, transforms: Record<SiHua, string>) {
+export function getTransitMarks(chart: ZiweiChart, focus: Palace, transforms: Record<SiHua, string>) {
   return (Object.entries(transforms) as [SiHua, string][]).map(([kind, star]) => {
     const palace = chart.palaces.find((entry) => entry.stars.some(({ name }) => name === star));
     const distance = palace ? wrapBranch(palace.branch - focus.branch) : -1;
@@ -92,7 +92,8 @@ function getTransitMarks(chart: ZiweiChart, focus: Palace, transforms: Record<Si
   });
 }
 
-export function buildYearOutlook(chart: ZiweiChart, year: number) {
+export function buildAnnualOutlook(chart: ZiweiChart, year: number) {
+  if (!Number.isInteger(year)) return null;
   const age = year - chart.lunarInfo.lunarYear + 1;
   if (age < 1) return null;
   const start = SCHOOL_AX.XIAOXIAN[chart.lunarInfo.yearBranch + 1] - 1;
@@ -105,16 +106,24 @@ export function buildYearOutlook(chart: ZiweiChart, year: number) {
     ...getPalaceScoreFactors(focus, chart.palaces),
     ...marks.map(({ label, palace, value }) => ({ label: `Lưu năm · ${label} tại ${palace}`, value })),
   ];
+  return { age, focus, marks, factors, score: sumScore(factors) };
+}
+
+export function buildYearOutlook(chart: ZiweiChart, year: number) {
+  const annual = buildAnnualOutlook(chart, year);
+  if (!annual) return null;
+  const { focus, factors } = annual;
+  const { stemIndex } = getLiuNianSiHua(year);
   const months = Array.from({ length: 12 }, (_, index) => {
     const month = index + 1;
-    const lunar = getLiuYueSiHua(yearSihua.stemIndex, month);
+    const lunar = getLiuYueSiHua(stemIndex, month);
     const marks = getTransitMarks(chart, focus, lunar.transforms);
     const factorsForMonth = [...factors, ...marks.map(({ label, palace, value }) => ({
       label: `Lưu tháng · ${label} tại ${palace}`, value,
     }))];
     return { month, marks, factors: factorsForMonth, score: sumScore(factorsForMonth) };
   });
-  return { age, focus, marks, months, factors, score: sumScore(factors) };
+  return { ...annual, months };
 }
 
 // Cân xương dân gian, tính bằng chỉ. Tháng nhuận lấy số của tháng chính.

@@ -16,6 +16,8 @@ import type {
 
 interface GymMannequin3DViewerProps {
   exercise: GymExerciseDefinition;
+  compact?: boolean;
+  tall?: boolean;
 }
 
 function checkWebGLSupport(): boolean {
@@ -44,7 +46,11 @@ const CAMERA_PRESET_POSITIONS: Record<GymCameraPreset, [number, number, number]>
   side: [2.05, 1.08, 0.08],
 };
 
-export default function GymMannequin3DViewer({ exercise }: GymMannequin3DViewerProps) {
+export default function GymMannequin3DViewer({
+  exercise,
+  compact = false,
+  tall = false,
+}: GymMannequin3DViewerProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [webglSupported, setWebglSupported] = useState<boolean>(() => checkWebGLSupport());
   const [poseMode, setPoseMode] = useState<GymPoseMode>('loop');
@@ -288,65 +294,83 @@ export default function GymMannequin3DViewer({ exercise }: GymMannequin3DViewerP
     .map((m) => GYM_MUSCLE_LABELS_VI[m])
     .join(', ');
 
+  const heightClass = compact
+    ? 'h-44 sm:h-48'
+    : tall
+      ? 'h-72 sm:h-[400px]'
+      : 'h-60 sm:h-80';
+
+  const fallbackImg =
+    exercise.realGymPhoto || exercise.referenceImages?.[1] || exercise.referenceImages?.[0];
+
   return (
-    <div className="relative h-56 sm:h-76 w-full rounded-2xl overflow-hidden border border-slate-800 bg-[#0B1220] shadow-sm select-none">
+    <div
+      className={`relative ${heightClass} w-full rounded-2xl overflow-hidden border border-slate-800 bg-[#0B1220] shadow-sm select-none`}
+    >
       {webglSupported ? (
         <div
           ref={mountRef}
           className="w-full h-full cursor-grab active:cursor-grabbing"
           aria-label={`Mô hình 3D bài tập ${exercise.name}`}
         />
+      ) : fallbackImg ? (
+        <div className="relative w-full h-full bg-[#0B1220]">
+          <img
+            src={fallbackImg}
+            alt={exercise.vietnameseName}
+            className="w-full h-full object-cover opacity-90"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-[#0B1220] via-transparent to-transparent" />
+        </div>
       ) : (
-        <div className="w-full h-full flex flex-col items-center justify-center p-5 text-center text-slate-300 gap-1.5">
-          <Activity size={28} className="text-[#F05A28]" />
-          <p className="text-xs sm:text-sm font-bold text-white">
-            Trình duyệt đang tắt tăng tốc 3D (WebGL)
-          </p>
-          <p className="text-xs text-slate-400 max-w-sm">
-            Bấm chuyển sang tab &ldquo;2 Ảnh Mẫu&rdquo; góc phải để xem tư thế thực tế.
-          </p>
+        <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-slate-300 gap-1">
+          <Activity size={24} className="text-[#FF5C8A]" />
+          <p className="text-xs font-bold text-white">{exercise.vietnameseName}</p>
         </div>
       )}
 
-      {/* Top Overlay: Left Breathing Cue + Right Pose Mode Pills (Zero-wrap on 375px) */}
-      <div className="pointer-events-none absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-slate-700/80 shadow-xs min-w-0">
+      {/* Top Overlay: Left Breathing Cue + Right Pose Mode Pills */}
+      <div className="pointer-events-none absolute top-2 left-2 right-2 flex items-center justify-between gap-1.5">
+        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-900/85 backdrop-blur-md border border-slate-700/80 shadow-xs min-w-0">
           <span
             className={`w-2 h-2 rounded-full shrink-0 transition-colors duration-200 ${
-              isExhalePhase ? 'bg-[#F05A28]' : 'bg-sky-400'
+              isExhalePhase ? 'bg-[#FF5C8A]' : 'bg-[#5CE1E6]'
             }`}
           />
-          <span className="text-[11px] sm:text-xs font-extrabold text-white truncate">
+          <span className="text-[10px] sm:text-xs font-extrabold text-white truncate">
             {breathText}
           </span>
         </div>
 
-        <div className="pointer-events-auto inline-flex items-center gap-0.5 bg-slate-900/90 backdrop-blur-md p-0.5 rounded-xl border border-slate-700/80 shrink-0">
-          {(
-            [
-              { id: 'loop', label: 'Động' },
-              { id: 'start', label: 'Đầu' },
-              { id: 'peak', label: 'Đỉnh' },
-            ] as const
-          ).map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setPoseMode(item.id)}
-              className={`px-2 py-1 rounded-lg text-[11px] sm:text-xs font-extrabold whitespace-nowrap transition-colors duration-150 cursor-pointer ${
-                poseMode === item.id
-                  ? 'bg-[#F05A28] text-white'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+        {!compact && (
+          <div className="pointer-events-auto inline-flex items-center gap-0.5 bg-slate-900/90 backdrop-blur-md p-0.5 rounded-xl border border-slate-700/80 shrink-0">
+            {(
+              [
+                { id: 'loop', label: 'Động' },
+                { id: 'start', label: 'Đầu' },
+                { id: 'peak', label: 'Đỉnh' },
+              ] as const
+            ).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setPoseMode(item.id)}
+                className={`px-2 py-1 rounded-lg text-[11px] sm:text-xs font-extrabold whitespace-nowrap transition-colors duration-150 cursor-pointer ${
+                  poseMode === item.id
+                    ? 'bg-[#FF5C8A] text-[#111114]'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Bottom Overlay: Compact Camera Angle Pills + Target Muscle Chip */}
-      <div className="pointer-events-none absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
+      <div className="pointer-events-none absolute bottom-2 left-2 right-2 flex items-center justify-between gap-1.5">
         <div className="pointer-events-auto inline-flex items-center gap-0.5 bg-slate-900/90 backdrop-blur-md p-0.5 rounded-xl border border-slate-700/80 shrink-0">
           {(
             [
@@ -358,23 +382,26 @@ export default function GymMannequin3DViewer({ exercise }: GymMannequin3DViewerP
             <button
               key={cam.id}
               type="button"
-              onClick={() => applyCameraPreset(cam.id)}
-              className={`px-2 py-1 rounded-lg text-[11px] sm:text-xs font-extrabold whitespace-nowrap transition-colors duration-150 cursor-pointer flex items-center gap-1 ${
+              onClick={(e) => {
+                e.stopPropagation();
+                applyCameraPreset(cam.id);
+              }}
+              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-extrabold whitespace-nowrap transition-colors duration-150 cursor-pointer flex items-center gap-1 ${
                 camPreset === cam.id
                   ? 'bg-white text-slate-900'
                   : 'text-slate-300 hover:text-white'
               }`}
             >
-              <Eye size={11} />
+              <Eye size={10} />
               <span>{cam.label}</span>
             </button>
           ))}
         </div>
 
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900/85 backdrop-blur-md border border-slate-700/80 text-[11px] sm:text-xs text-slate-200 font-bold min-w-0">
-          <span className="w-2 h-2 rounded-full bg-[#F05A28] shrink-0" />
+        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xl bg-slate-900/85 backdrop-blur-md border border-slate-700/80 text-[10px] sm:text-xs text-slate-200 font-bold min-w-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C8A] shrink-0" />
           <span className="truncate">{primaryLabels}</span>
-          <Rotate3d size={12} className="text-slate-400 hidden sm:inline shrink-0" />
+          <Rotate3d size={11} className="text-slate-400 hidden sm:inline shrink-0" />
         </div>
       </div>
     </div>

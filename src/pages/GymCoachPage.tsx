@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  Bot,
   Camera,
   ChevronDown,
   ChevronUp,
@@ -314,17 +313,6 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
         </section>
       </div>
 
-      {/* Floating Bottom-Right AI Coach Quick Trigger */}
-      <button
-        type="button"
-        onClick={() => setAiCoachOpen(true)}
-        aria-label="Mở khung chat Huấn luyện viên AI"
-        className="fixed bottom-5 right-5 z-40 h-11 px-4 rounded-full bg-[#FF5C8A] hover:bg-[#ff4278] text-[#111114] font-black text-xs sm:text-sm flex items-center gap-2 shadow-2xl shadow-[#FF5C8A]/40 transition-transform duration-200 hover:scale-105 cursor-pointer"
-      >
-        <Bot size={17} />
-        <span>AI Coach</span>
-      </button>
-
       {customizerOpen && (
         <SplitCustomizerModal
           open={customizerOpen}
@@ -365,6 +353,7 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
 
       <GymAiCoachDrawer
         open={aiCoachOpen}
+        activeGender={activeGender}
         token={token}
         userProfile={state.userProfile}
         cycleTracking={state.cycleTracking}
@@ -375,6 +364,7 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
         customDays={state.customDays}
         exerciseLogs={state.exerciseLogs}
         chatHistory={state.aiChatHistory}
+        onOpen={() => setAiCoachOpen(true)}
         onClose={() => setAiCoachOpen(false)}
         onAppendMessages={appendAiChatMessages}
         onClearHistory={clearAiChatHistory}

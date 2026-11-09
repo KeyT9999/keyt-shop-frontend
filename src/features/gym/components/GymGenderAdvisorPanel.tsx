@@ -148,13 +148,31 @@ export default function GymGenderAdvisorPanel({
     [activeGender, draftProfile, draftCycle]
   );
 
+  const updateProfileLive = (patch: Partial<GymFemaleBodyProfile>) => {
+    setDraftProfile((prev) => {
+      const next = { ...prev, ...patch, gender: activeGender };
+      onSaveProfile(next);
+      return next;
+    });
+  };
+
+  const updateCycleLive = (patch: Partial<GymCycleTrackingState>) => {
+    setDraftCycle((prev) => {
+      const next = { ...prev, ...patch };
+      onSaveCycle(next);
+      return next;
+    });
+  };
+
   const toggleSymptom = (code: GymSymptomCode) => {
     setDraftCycle((prev) => {
       const exists = prev.todaySymptoms.includes(code);
-      const next = exists
+      const nextSymptoms = exists
         ? prev.todaySymptoms.filter((s) => s !== code)
         : [...prev.todaySymptoms, code];
-      return { ...prev, todaySymptoms: next };
+      const next = { ...prev, todaySymptoms: nextSymptoms };
+      onSaveCycle(next);
+      return next;
     });
   };
 
@@ -284,10 +302,9 @@ export default function GymGenderAdvisorPanel({
                     max={220}
                     value={draftProfile.heightCm}
                     onChange={(e) =>
-                      setDraftProfile((p) => ({
-                        ...p,
+                      updateProfileLive({
                         heightCm: Number(e.target.value) || 172,
-                      }))
+                      })
                     }
                     className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
                   />
@@ -308,10 +325,9 @@ export default function GymGenderAdvisorPanel({
                     step="0.5"
                     value={draftProfile.weightKg}
                     onChange={(e) =>
-                      setDraftProfile((p) => ({
-                        ...p,
+                      updateProfileLive({
                         weightKg: Number(e.target.value) || 68,
-                      }))
+                      })
                     }
                     className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
                   />
@@ -331,10 +347,9 @@ export default function GymGenderAdvisorPanel({
                     max={150}
                     value={draftProfile.chestCm ?? 96}
                     onChange={(e) =>
-                      setDraftProfile((p) => ({
-                        ...p,
+                      updateProfileLive({
                         chestCm: Number(e.target.value) || 96,
-                      }))
+                      })
                     }
                     className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
                   />
@@ -354,10 +369,9 @@ export default function GymGenderAdvisorPanel({
                     max={140}
                     value={draftProfile.waistCm}
                     onChange={(e) =>
-                      setDraftProfile((p) => ({
-                        ...p,
+                      updateProfileLive({
                         waistCm: Number(e.target.value) || 78,
-                      }))
+                      })
                     }
                     className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
                   />
@@ -377,10 +391,9 @@ export default function GymGenderAdvisorPanel({
                     max={60}
                     value={draftProfile.armCm ?? 35}
                     onChange={(e) =>
-                      setDraftProfile((p) => ({
-                        ...p,
+                      updateProfileLive({
                         armCm: Number(e.target.value) || 35,
-                      }))
+                      })
                     }
                     className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
                   />
@@ -397,10 +410,9 @@ export default function GymGenderAdvisorPanel({
                     id="maleWorkoutsPerWeek"
                     value={draftProfile.workoutsPerWeek ?? 4}
                     onChange={(e) =>
-                      setDraftProfile((p) => ({
-                        ...p,
+                      updateProfileLive({
                         workoutsPerWeek: Number(e.target.value) || 4,
-                      }))
+                      })
                     }
                     className="w-full px-2 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7] cursor-pointer"
                   >
@@ -421,9 +433,7 @@ export default function GymGenderAdvisorPanel({
                     <button
                       key={goalKey}
                       type="button"
-                      onClick={() =>
-                        setDraftProfile((p) => ({ ...p, maleGoal: goalKey }))
-                      }
+                      onClick={() => updateProfileLive({ maleGoal: goalKey })}
                       className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
                         selected
                           ? 'bg-[#5CE1E6]/15 border-[#5CE1E6] text-[#F7F7F7]'
@@ -446,7 +456,7 @@ export default function GymGenderAdvisorPanel({
                         key={exp.id}
                         type="button"
                         onClick={() =>
-                          setDraftProfile((p) => ({ ...p, experienceLevel: exp.id }))
+                          updateProfileLive({ experienceLevel: exp.id })
                         }
                         className={`px-2.5 py-1 rounded-lg border text-[11px] font-extrabold cursor-pointer ${
                           active
@@ -487,10 +497,9 @@ export default function GymGenderAdvisorPanel({
                     max={200}
                     value={draftProfile.heightCm}
                     onChange={(e) =>
-                      setDraftProfile((p) => ({
-                        ...p,
+                      updateProfileLive({
                         heightCm: Number(e.target.value) || 160,
-                      }))
+                      })
                     }
                     className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
                   />
@@ -511,10 +520,9 @@ export default function GymGenderAdvisorPanel({
                     step="0.5"
                     value={draftProfile.weightKg}
                     onChange={(e) =>
-                      setDraftProfile((p) => ({
-                        ...p,
+                      updateProfileLive({
                         weightKg: Number(e.target.value) || 50,
-                      }))
+                      })
                     }
                     className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
                   />
@@ -534,10 +542,9 @@ export default function GymGenderAdvisorPanel({
                     max={120}
                     value={draftProfile.waistCm}
                     onChange={(e) =>
-                      setDraftProfile((p) => ({
-                        ...p,
+                      updateProfileLive({
                         waistCm: Number(e.target.value) || 63,
-                      }))
+                      })
                     }
                     className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
                   />
@@ -557,10 +564,9 @@ export default function GymGenderAdvisorPanel({
                     max={140}
                     value={draftProfile.hipCm}
                     onChange={(e) =>
-                      setDraftProfile((p) => ({
-                        ...p,
+                      updateProfileLive({
                         hipCm: Number(e.target.value) || 92,
-                      }))
+                      })
                     }
                     className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
                   />
@@ -577,10 +583,9 @@ export default function GymGenderAdvisorPanel({
                     id="femaleWorkoutsPerWeek"
                     value={draftProfile.workoutsPerWeek ?? 4}
                     onChange={(e) =>
-                      setDraftProfile((p) => ({
-                        ...p,
+                      updateProfileLive({
                         workoutsPerWeek: Number(e.target.value) || 4,
-                      }))
+                      })
                     }
                     className="w-full px-2 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7] cursor-pointer"
                   >
@@ -601,9 +606,7 @@ export default function GymGenderAdvisorPanel({
                       <button
                         key={goalKey}
                         type="button"
-                        onClick={() =>
-                          setDraftProfile((p) => ({ ...p, primaryGoal: goalKey }))
-                        }
+                        onClick={() => updateProfileLive({ primaryGoal: goalKey })}
                         className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
                           selected
                             ? 'bg-[#FF5C8A]/15 border-[#FF5C8A] text-[#F7F7F7]'
@@ -630,7 +633,7 @@ export default function GymGenderAdvisorPanel({
                         key={p.id}
                         type="button"
                         onClick={() =>
-                          setDraftCycle((c) => ({ ...c, manualPhaseOverride: p.id }))
+                          updateCycleLive({ manualPhaseOverride: p.id })
                         }
                         className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-black cursor-pointer ${
                           selected

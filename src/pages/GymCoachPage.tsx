@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
   Bot,
@@ -18,6 +19,7 @@ import ExerciseReferenceDualView from '../features/gym/components/ExerciseRefere
 import FemaleCycleAndProfileModal from '../features/gym/components/FemaleCycleAndProfileModal';
 import GymAiCoachDrawer from '../features/gym/components/GymAiCoachDrawer';
 import GymExerciseSubstituteModal from '../features/gym/components/GymExerciseSubstituteModal';
+import GymGenderAdvisorPanel from '../features/gym/components/GymGenderAdvisorPanel';
 import GymInlineMetricsTools from '../features/gym/components/GymInlineMetricsTools';
 import GymMannequin3DViewer from '../features/gym/components/GymMannequin3DViewer';
 import GymNeonHeroDashboard from '../features/gym/components/GymNeonHeroDashboard';
@@ -25,8 +27,12 @@ import GymRestTimerBar from '../features/gym/components/GymRestTimerBar';
 import GymSelectorCockpit from '../features/gym/components/GymSelectorCockpit';
 import RealGymMachineView from '../features/gym/components/RealGymMachineView';
 import SplitCustomizerModal from '../features/gym/components/SplitCustomizerModal';
-import { GYM_EXERCISE_CATALOG } from '../features/gym/data/defaultGymCatalog';
+import {
+  GYM_EXERCISE_CATALOG,
+  GYM_EXERCISE_MAP,
+} from '../features/gym/data/defaultGymCatalog';
 import { useGymCoachState } from '../features/gym/hooks/useGymCoachState';
+import type { GymGenderMode } from '../features/gym/types/gym';
 import {
   computeSessionEnergyStats,
   computeSmartSetRecommendation,
@@ -40,8 +46,14 @@ import { resolveExercisesForDay } from '../features/gym/utils/gymStateUtils';
  */
 type StageVisualTab = '3d' | 'gym_photo' | 'photo' | 'split';
 
-export default function GymCoachPage() {
+interface GymCoachPageProps {
+  genderRoute?: GymGenderMode;
+}
+
+export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
   const { token } = useAuthContext();
+  const location = useLocation();
+  const navigate = useNavigate();
   const {
     state,
     syncStatus,
@@ -65,6 +77,18 @@ export default function GymCoachPage() {
   const [substituteOpen, setSubstituteOpen] = useState<boolean>(false);
   const [aiCoachOpen, setAiCoachOpen] = useState<boolean>(false);
 
+  const activeGender: GymGenderMode = useMemo(() => {
+    if (genderRoute) return genderRoute;
+    if (location.pathname.startsWith('/gym/nam')) return 'male';
+    if (location.pathname.startsWith('/gym/nu')) return 'female';
+    return state.userProfile.gender === 'male' ? 'male' : 'female';
+  }, [genderRoute, location.pathname, state.userProfile.gender]);
+
+  const handleSelectGenderRoute = (nextGender: GymGenderMode) => {
+    saveUserProfile({ gender: nextGender });
+    navigate(nextGender === 'male' ? '/gym/nam' : '/gym/nu');
+  };
+
   const activeDay = useMemo(() => {
     return (
       state.customDays.find((d) => d.id === state.activeDayId) ||
@@ -80,7 +104,9 @@ export default function GymCoachPage() {
 
   const currentExercise = useMemo(() => {
     return (
-      dayExercises.find((e) => e.id === selectedExerciseId) || dayExercises[0]
+      dayExercises.find((e) => e.id === selectedExerciseId) ||
+      (selectedExerciseId ? GYM_EXERCISE_MAP[selectedExerciseId] : undefined) ||
+      dayExercises[0]
     );
   }, [dayExercises, selectedExerciseId]);
 
@@ -124,6 +150,29 @@ export default function GymCoachPage() {
   return (
     <div className="min-h-screen bg-[#111114] text-[#F7F7F7] py-3 sm:py-6 px-2.5 sm:px-6">
       <div className="max-w-7xl mx-auto space-y-3.5 sm:space-y-5">
+        {/* Dual Router Bar (/gym/nam vs /gym/nu) + Gender-Specific Questionnaire + Instant Workout & Meal Recommendations */}
+        <GymGenderAdvisorPanel
+          activeGender={activeGender}
+          userProfile={state.userProfile}
+          cycleTracking={state.cycleTracking}
+          onSelectGenderRoute={handleSelectGenderRoute}
+          onSaveProfile={saveUserProfile}
+          onSaveCycle={saveCycleTracking}
+          onApplyRecommendedSplit={(days) => {
+            saveCustomSplitDays(days);
+            setSelectedExerciseId('');
+          }}
+          onSelectExerciseFor3D={(exId) => {
+            setSelectedExerciseId(exId);
+            setVisualTab('3d');
+            if (typeof document !== 'undefined') {
+              const el = document.getElementById('gym-3d-stage-anchor');
+              el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }}
+          onOpenAiCoachDrawer={() => setAiCoachOpen(true)}
+        />
+
         {/* Neon Pink & Dark Charcoal Hero Dashboard (Progress / 7-Day Capsules / WORKOUT Hero / 3 Pillar Cards) */}
         {activeDay && (
           <GymNeonHeroDashboard
@@ -285,7 +334,10 @@ export default function GymCoachPage() {
           </aside>
 
           {/* Primary Cockpit Card: Visual Stage + Inline Tools + TECHNIQUE Pillar Card + Execution Steps */}
-          <section className="lg:col-span-8 bg-[#16161C] rounded-3xl border border-[#272732] shadow-2xl overflow-hidden">
+          <section
+            id="gym-3d-stage-anchor"
+            className="lg:col-span-8 bg-[#16161C] rounded-3xl border border-[#272732] shadow-2xl overflow-hidden"
+          >
             {/* Compact Title + Stage Mode Toggle */}
             <div className="px-3.5 sm:px-5 py-3 sm:py-4 border-b border-[#272732] flex flex-wrap items-center justify-between gap-2 bg-[#111114]">
               <div className="min-w-0">

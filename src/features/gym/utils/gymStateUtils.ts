@@ -23,13 +23,18 @@ export function getTodayLocalDateKey(now = new Date()): string {
 
 export function createDefaultFemaleBodyProfile(): GymFemaleBodyProfile {
   return {
+    gender: 'female',
     nickname: 'Challenger',
     age: 23,
     heightCm: 160,
     weightKg: 50,
     waistCm: 63,
     hipCm: 92,
+    chestCm: 96,
+    armCm: 34,
+    workoutsPerWeek: 4,
     primaryGoal: 'glute_sculpt',
+    maleGoal: 'chest_shoulder_3d',
     experienceLevel: 'beginner',
     avoidHeavyQuads: true,
     protectLowerBackKnee: false,

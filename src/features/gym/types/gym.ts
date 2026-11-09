@@ -105,11 +105,19 @@ export interface GymExerciseUserLog {
   updatedAtMs: number;
 }
 
+export type GymGenderMode = 'male' | 'female';
+
 export type GymPrimaryGoal =
   | 'glute_sculpt'
   | 'fat_loss'
   | 'toned_curves'
   | 'strength_health';
+
+export type GymMaleGoal =
+  | 'chest_shoulder_3d'
+  | 'lean_abs_cut'
+  | 'mass_bulking'
+  | 'strength_power';
 
 export type GymExperienceLevel = 'beginner' | 'intermediate' | 'advanced';
 
@@ -133,13 +141,18 @@ export type GymSymptomCode =
 export type GymRestrictionKind = 'dislike' | 'injury' | 'busy';
 
 export interface GymFemaleBodyProfile {
+  gender?: GymGenderMode;
   nickname: string;
   age: number;
   heightCm: number;
   weightKg: number;
   waistCm: number;
   hipCm: number;
+  chestCm?: number;
+  armCm?: number;
+  workoutsPerWeek?: number;
   primaryGoal: GymPrimaryGoal;
+  maleGoal?: GymMaleGoal;
   experienceLevel: GymExperienceLevel;
   avoidHeavyQuads: boolean;
   protectLowerBackKnee: boolean;

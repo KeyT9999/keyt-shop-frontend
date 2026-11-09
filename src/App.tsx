@@ -287,7 +287,7 @@ export default function App() {
     }, [location.pathname]);
 
     const isAdminPage = location.pathname.startsWith('/admin');
-    const isGymPage = location.pathname === '/gym';
+    const isGymPage = location.pathname === '/gym' || location.pathname.startsWith('/gym/');
     const isZiweiPage = location.pathname === '/tu-vi';
     const isAdmin = user?.admin === true;
     const showChatWidget = !isAdmin && !isAdminPage && !isGymPage && !isZiweiPage;
@@ -359,6 +359,8 @@ export default function App() {
                         <Route path="/ai-image" element={<AiImagePage />} />
                         <Route path="/video-translate" element={<VideoTranslatePage />} />
                         {IS_GYM_COACH_ENABLED && <Route path="/gym" element={<GymCoachPage />} />}
+                        {IS_GYM_COACH_ENABLED && <Route path="/gym/nam" element={<GymCoachPage genderRoute="male" />} />}
+                        {IS_GYM_COACH_ENABLED && <Route path="/gym/nu" element={<GymCoachPage genderRoute="female" />} />}
                         {IS_ZIWEI_ENABLED && <Route path="/tu-vi" element={<ZiweiPage />} />}
 
                         {/* Multi-Language Course Routes */}

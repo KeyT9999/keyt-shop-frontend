@@ -11,7 +11,7 @@ afterEach(() => {
 });
 
 describe('GymGenderAdvisorPanel', () => {
-  it('renders Male questionnaire on /gym/nam and shows workout + meal plan below on submit', () => {
+  it('renders Male questionnaire on /gym/nam and shows single detailed 3D exercise + meal plan on submit', () => {
     const onSelectGenderRoute = vi.fn();
     const onSaveProfile = vi.fn();
     const onSaveCycle = vi.fn();
@@ -44,6 +44,14 @@ describe('GymGenderAdvisorPanel', () => {
     expect(
       screen.getByText(/1\. Đề Xuất Bài Tập Trọng Tâm Cho Bạn/i)
     ).toBeTruthy();
+    expect(screen.getByText(/Bài 1\/6/i)).toBeTruthy();
+
+    const nextBtn = screen.getByRole('button', {
+      name: /Tập Xong • Qua Bài 2 \(Next\)/i,
+    });
+    fireEvent.click(nextBtn);
+    expect(screen.getByText(/Bài 2\/6/i)).toBeTruthy();
+
     expect(
       screen.getByText(/2\. Đề Xuất Chế Độ Ăn Uống & Thực Đơn 4 Bữa Trong Ngày/i)
     ).toBeTruthy();

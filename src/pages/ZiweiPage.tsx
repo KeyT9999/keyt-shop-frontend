@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import '../features/ziwei/ziwei.css';
 import { useSearchParams } from 'react-router-dom';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import {
   Compass,
   Sparkles,
@@ -52,9 +53,9 @@ import StarDetailModal from '../features/ziwei/components/StarDetailModal';
 import ShareChartModal from '../features/ziwei/components/ShareChartModal';
 import SchoolConfigModal from '../features/ziwei/components/SchoolConfigModal';
 
-const AiInsightPanel = lazy(() => import('../features/ziwei/components/AiInsightPanel'));
-const HemingPanel = lazy(() => import('../features/ziwei/components/HemingPanel'));
-const ClassicsLibraryPanel = lazy(() => import('../features/ziwei/components/ClassicsLibraryPanel'));
+const AiInsightPanel = lazyWithRetry(() => import('../features/ziwei/components/AiInsightPanel'));
+const HemingPanel = lazyWithRetry(() => import('../features/ziwei/components/HemingPanel'));
+const ClassicsLibraryPanel = lazyWithRetry(() => import('../features/ziwei/components/ClassicsLibraryPanel'));
 
 type ZiweiPageTab = 'chart' | 'heming' | 'classics' | 'history';
 

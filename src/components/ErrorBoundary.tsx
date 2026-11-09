@@ -1,5 +1,9 @@
-import { Component } from 'react';
-import type { ErrorInfo, ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { AlertTriangle, Home, RefreshCw } from 'lucide-react';
+import {
+    isDynamicImportError,
+    tryReloadOnDynamicImportError,
+} from '../utils/lazyWithRetry';
 
 interface Props {
     children: ReactNode;
@@ -31,6 +35,14 @@ class ErrorBoundary extends Component<Props, State> {
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+        if (isDynamicImportError(error)) {
+            const reloaded = tryReloadOnDynamicImportError('ErrorBoundary', error);
+            if (reloaded) {
+                return;
+            }
+        }
+
         this.setState({
             error,
             errorInfo,
@@ -39,99 +51,65 @@ class ErrorBoundary extends Component<Props, State> {
 
     render() {
         if (this.state.hasError) {
+            const isChunkError = isDynamicImportError(this.state.error);
+
             return (
-                <div style={{
-                    minHeight: '100vh',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '2rem',
-                    backgroundColor: '#f8fafc',
-                    fontFamily: 'system-ui, sans-serif',
-                }}>
-                    <div style={{
-                        maxWidth: '600px',
-                        width: '100%',
-                        backgroundColor: 'white',
-                        padding: '2rem',
-                        borderRadius: '12px',
-                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                    }}>
-                        <h1 style={{
-                            fontSize: '1.5rem',
-                            fontWeight: 'bold',
-                            color: '#dc2626',
-                            marginBottom: '1rem',
-                        }}>
-                            Đã xảy ra lỗi
+                <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#F8FAFC] text-[#1E293B]">
+                    <div className="max-w-lg w-full bg-white p-7 sm:p-8 rounded-2xl border border-slate-200/80 shadow-[0_14px_28px_rgba(15,23,42,0.08)]">
+                        <div className="w-12 h-12 rounded-2xl bg-orange-50 text-[#F05A28] flex items-center justify-center mb-4">
+                            <AlertTriangle size={24} />
+                        </div>
+
+                        <h1 className="text-xl sm:text-2xl font-extrabold text-[#1E293B] mb-2">
+                            {isChunkError
+                                ? 'Đã có bản cập nhật mới trên KeyT Hub'
+                                : 'Đã xảy ra sự cố không mong muốn'}
                         </h1>
-                        <p style={{
-                            color: '#64748b',
-                            marginBottom: '1.5rem',
-                        }}>
-                            Ứng dụng gặp sự cố không mong muốn. Vui lòng thử lại sau.
+
+                        <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-6">
+                            {isChunkError
+                                ? 'Hệ thống vừa cập nhật phiên bản mới. Vui lòng tải lại trang để đồng bộ tài nguyên mới nhất.'
+                                : 'Ứng dụng gặp sự cố tạm thời trong quá trình hiển thị. Vui lòng tải lại trang hoặc quay về trang chủ.'}
                         </p>
-                        <details style={{
-                            marginTop: '1rem',
-                            padding: '1rem',
-                            backgroundColor: '#f1f5f9',
-                            borderRadius: '8px',
-                            fontSize: '0.875rem',
-                        }}>
-                            <summary style={{
-                                cursor: 'pointer',
-                                fontWeight: '600',
-                                marginBottom: '0.5rem',
-                            }}>
-                                {process.env.NODE_ENV === 'development' ? 'Chi tiết lỗi (Development)' : 'Thông tin lỗi'}
+
+                        <details className="mb-6 p-3.5 bg-slate-50 border border-slate-200/70 rounded-xl text-xs text-slate-600">
+                            <summary className="cursor-pointer font-semibold text-slate-700 select-none">
+                                {import.meta.env.DEV ? 'Chi tiết lỗi (Development)' : 'Thông tin kỹ thuật'}
                             </summary>
-                            <div style={{ marginTop: '0.5rem' }}>
-                                <p style={{ color: '#dc2626', fontWeight: '600', marginBottom: '0.5rem' }}>
+                            <div className="mt-2.5 pt-2.5 border-t border-slate-200/70">
+                                <p className="text-red-600 font-semibold break-words">
                                     {this.state.error?.message || 'Unknown error'}
                                 </p>
-                                {process.env.NODE_ENV === 'development' && this.state.error && (
-                                    <pre style={{
-                                        whiteSpace: 'pre-wrap',
-                                        wordBreak: 'break-word',
-                                        color: '#64748b',
-                                        fontSize: '0.8rem',
-                                        marginTop: '0.5rem',
-                                        padding: '0.5rem',
-                                        backgroundColor: '#ffffff',
-                                        borderRadius: '4px',
-                                        overflow: 'auto',
-                                        maxHeight: '300px',
-                                    }}>
+                                {import.meta.env.DEV && this.state.error && (
+                                    <pre className="whitespace-pre-wrap break-words text-slate-500 text-[11px] mt-2 p-2.5 bg-white rounded-lg border border-slate-200 overflow-auto max-h-60">
                                         {this.state.error.toString()}
                                         {this.state.errorInfo?.componentStack}
                                     </pre>
                                 )}
-                                {process.env.NODE_ENV === 'production' && (
-                                    <p style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                                        Vui lòng mở Developer Tools (F12) → Console để xem chi tiết lỗi.
-                                    </p>
-                                )}
                             </div>
                         </details>
-                        <button
-                            onClick={() => {
-                                window.location.reload();
-                            }}
-                            style={{
-                                marginTop: '1.5rem',
-                                padding: '0.75rem 1.5rem',
-                                backgroundColor: '#2563eb',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '1rem',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            Tải lại trang
-                        </button>
+
+                        <div className="flex flex-wrap items-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => window.location.reload()}
+                                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#F05A28] hover:bg-[#d94b1d] text-white text-sm font-bold transition-colors duration-200 cursor-pointer"
+                            >
+                                <RefreshCw size={16} />
+                                <span>Tải lại trang</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    window.location.href = '/';
+                                }}
+                                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#1E293B] text-sm font-bold transition-colors duration-200 cursor-pointer"
+                            >
+                                <Home size={16} />
+                                <span>Về trang chủ</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             );

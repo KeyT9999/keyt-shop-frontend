@@ -15,6 +15,9 @@ import { AddToCartAnimationProvider } from './context/AddToCartAnimationContext'
 
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import ErrorBoundary from './components/ErrorBoundary';
+import { setupVitePreloadErrorHandler } from './utils/lazyWithRetry';
+
+setupVitePreloadErrorHandler();
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 

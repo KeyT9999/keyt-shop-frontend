@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { gymSyncService } from '../services/gymSyncService';
-import type { GymClientPersistedState, GymSplitDayConfig } from '../types/gym';
+import type {
+  GymAiChatMessage,
+  GymClientPersistedState,
+  GymCycleTrackingState,
+  GymFemaleBodyProfile,
+  GymRestrictionKind,
+  GymSplitDayConfig,
+} from '../types/gym';
 import {
   advanceToNextGymSplitDay,
   cloneDefaultSplitDays,
@@ -200,6 +207,98 @@ export function useGymCoachState(token: string | null) {
     [commitUpdate]
   );
 
+  const saveUserProfile = useCallback(
+    (patch: Partial<GymFemaleBodyProfile>) => {
+      const now = Date.now();
+      commitUpdate((prev) => ({
+        ...prev,
+        clientUpdatedAt: now,
+        userProfile: {
+          ...prev.userProfile,
+          ...patch,
+          updatedAtMs: now,
+        },
+      }));
+    },
+    [commitUpdate]
+  );
+
+  const saveCycleTracking = useCallback(
+    (patch: Partial<GymCycleTrackingState>) => {
+      const now = Date.now();
+      commitUpdate((prev) => ({
+        ...prev,
+        clientUpdatedAt: now,
+        cycleTracking: {
+          ...prev.cycleTracking,
+          ...patch,
+          updatedAtMs: now,
+        },
+      }));
+    },
+    [commitUpdate]
+  );
+
+  const replaceExerciseInActiveDay = useCallback(
+    (oldExerciseId: string, newExerciseId: string) => {
+      const now = Date.now();
+      commitUpdate((prev) => ({
+        ...prev,
+        clientUpdatedAt: now,
+        customDays: prev.customDays.map((day) => {
+          if (day.id !== prev.activeDayId) return day;
+          const nextIds = day.exerciseIds.map((id) =>
+            id === oldExerciseId ? newExerciseId : id
+          );
+          return {
+            ...day,
+            exerciseIds: Array.from(new Set(nextIds)),
+          };
+        }),
+      }));
+    },
+    [commitUpdate]
+  );
+
+  const setExerciseRestriction = useCallback(
+    (exerciseId: string, kind: GymRestrictionKind | null) => {
+      const now = Date.now();
+      commitUpdate((prev) => {
+        const filtered = prev.exerciseRestrictions.filter(
+          (r) => r.exerciseId !== exerciseId
+        );
+        return {
+          ...prev,
+          clientUpdatedAt: now,
+          exerciseRestrictions: kind
+            ? [...filtered, { exerciseId, kind, updatedAtMs: now }]
+            : filtered,
+        };
+      });
+    },
+    [commitUpdate]
+  );
+
+  const appendAiChatMessages = useCallback(
+    (messages: GymAiChatMessage[]) => {
+      const now = Date.now();
+      commitUpdate((prev) => ({
+        ...prev,
+        clientUpdatedAt: now,
+        aiChatHistory: [...prev.aiChatHistory, ...messages].slice(-20),
+      }));
+    },
+    [commitUpdate]
+  );
+
+  const clearAiChatHistory = useCallback(() => {
+    commitUpdate((prev) => ({
+      ...prev,
+      clientUpdatedAt: Date.now(),
+      aiChatHistory: [],
+    }));
+  }, [commitUpdate]);
+
   const syncStatus: GymCloudSyncStatus = token ? cloudStatus : 'local-only';
 
   return {
@@ -210,5 +309,11 @@ export function useGymCoachState(token: string | null) {
     completeDayAndAdvance,
     saveExerciseLog,
     saveCustomSplitDays,
+    saveUserProfile,
+    saveCycleTracking,
+    replaceExerciseInActiveDay,
+    setExerciseRestriction,
+    appendAiChatMessages,
+    clearAiChatHistory,
   };
 }

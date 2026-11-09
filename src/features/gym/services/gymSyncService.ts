@@ -1,4 +1,9 @@
-import type { GymServerProfilePayload } from '../types/gym';
+import type {
+  GymAiChatMessage,
+  GymCycleTrackingState,
+  GymFemaleBodyProfile,
+  GymServerProfilePayload,
+} from '../types/gym';
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
@@ -7,6 +12,23 @@ interface ApiEnvelope<T> {
   success: boolean;
   data: T;
   message?: string;
+}
+
+export interface GymAiUserSnapshot {
+  userProfile: GymFemaleBodyProfile;
+  cycleTracking: GymCycleTrackingState;
+  resolvedCyclePhase: string;
+  activeDayTitle: string;
+  currentExerciseName: string;
+  workoutStreak: number;
+  customDaysSummary: string[];
+  exerciseLogsSummary: string[];
+}
+
+export interface GymAiCoachResponse {
+  reply: string;
+  provider: string;
+  model: string;
 }
 
 export const gymSyncService = {
@@ -46,5 +68,36 @@ export const gymSyncService = {
 
     const body = (await res.json()) as ApiEnvelope<GymServerProfilePayload | null>;
     return body.data ?? null;
+  },
+
+  async askAiCoach(params: {
+    question: string;
+    history: GymAiChatMessage[];
+    userSnapshot: GymAiUserSnapshot;
+    token?: string | null;
+  }): Promise<GymAiCoachResponse> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (params.token) {
+      headers.Authorization = `Bearer ${params.token}`;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/gym/ai-chat`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        question: params.question,
+        history: params.history.slice(-8),
+        userSnapshot: params.userSnapshot,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`AI Coach tạm thời gián đoạn (${res.status}).`);
+    }
+
+    const body = (await res.json()) as ApiEnvelope<GymAiCoachResponse>;
+    return body.data;
   },
 };

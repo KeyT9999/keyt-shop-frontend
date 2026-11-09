@@ -6,8 +6,10 @@ import {
 } from '../data/defaultGymCatalog';
 import type {
   GymClientPersistedState,
+  GymCycleTrackingState,
   GymExerciseDefinition,
   GymExerciseUserLog,
+  GymFemaleBodyProfile,
   GymServerProfilePayload,
   GymSplitDayConfig,
 } from '../types/gym';
@@ -17,6 +19,36 @@ export function getTodayLocalDateKey(now = new Date()): string {
   const m = String(now.getMonth() + 1).padStart(2, '0');
   const d = String(now.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+export function createDefaultFemaleBodyProfile(): GymFemaleBodyProfile {
+  return {
+    nickname: 'Challenger',
+    age: 23,
+    heightCm: 160,
+    weightKg: 50,
+    waistCm: 63,
+    hipCm: 92,
+    primaryGoal: 'glute_sculpt',
+    experienceLevel: 'beginner',
+    avoidHeavyQuads: true,
+    protectLowerBackKnee: false,
+    personalNotes: '',
+    updatedAtMs: 0,
+  };
+}
+
+export function createDefaultCycleTracking(): GymCycleTrackingState {
+  return {
+    enabled: true,
+    lastPeriodStartDate: '',
+    cycleLengthDays: 28,
+    periodDurationDays: 5,
+    manualPhaseOverride: 'auto',
+    todayEnergyLevel: 4,
+    todaySymptoms: [],
+    updatedAtMs: 0,
+  };
 }
 
 export function cloneDefaultSplitDays(): GymSplitDayConfig[] {
@@ -35,6 +67,10 @@ export function createInitialGymState(todayKey = getTodayLocalDateKey()): GymCli
     lastCompletedSessionDate: '',
     customDays: cloneDefaultSplitDays(),
     exerciseLogs: {},
+    userProfile: createDefaultFemaleBodyProfile(),
+    cycleTracking: createDefaultCycleTracking(),
+    exerciseRestrictions: [],
+    aiChatHistory: [],
     clientUpdatedAt: 0,
   };
 }
@@ -94,11 +130,30 @@ export function normalizeDailySessionRollover(
     ? Math.max((state.clientUpdatedAt || 0) + 1, Date.now())
     : state.clientUpdatedAt;
 
+  const safeUserProfile: GymFemaleBodyProfile = {
+    ...createDefaultFemaleBodyProfile(),
+    ...(state.userProfile || {}),
+  };
+  const safeCycleTracking: GymCycleTrackingState = {
+    ...createDefaultCycleTracking(),
+    ...(state.cycleTracking || {}),
+  };
+  const safeRestrictions = Array.isArray(state.exerciseRestrictions)
+    ? state.exerciseRestrictions
+    : [];
+  const safeChatHistory = Array.isArray(state.aiChatHistory)
+    ? state.aiChatHistory
+    : [];
+
   if (!state.sessionDateKey || state.sessionDateKey === todayKey) {
     return {
       ...state,
       sessionDateKey: todayKey,
       customDays: days,
+      userProfile: safeUserProfile,
+      cycleTracking: safeCycleTracking,
+      exerciseRestrictions: safeRestrictions,
+      aiChatHistory: safeChatHistory,
       clientUpdatedAt: nextClientTs,
     };
   }
@@ -118,6 +173,10 @@ export function normalizeDailySessionRollover(
     completedExerciseIdsToday: [],
     sessionDateKey: todayKey,
     customDays: days,
+    userProfile: safeUserProfile,
+    cycleTracking: safeCycleTracking,
+    exerciseRestrictions: safeRestrictions,
+    aiChatHistory: safeChatHistory,
     clientUpdatedAt: nextClientTs,
   };
 }
@@ -157,6 +216,10 @@ export function serializeGymStateForServer(
     lastCompletedSessionDate: state.lastCompletedSessionDate,
     customDays: state.customDays,
     exerciseLogs: Object.values(state.exerciseLogs),
+    userProfile: state.userProfile,
+    cycleTracking: state.cycleTracking,
+    exerciseRestrictions: state.exerciseRestrictions,
+    aiChatHistory: state.aiChatHistory,
     clientUpdatedAt: state.clientUpdatedAt || Date.now(),
   };
 }
@@ -189,7 +252,7 @@ export function mergeGymClientAndServerState(
   }
 
   const remoteIsNewer = (remote.clientUpdatedAt || 0) > (local.clientUpdatedAt || 0);
-  const winnerBase = remoteIsNewer
+  const winnerBase: GymClientPersistedState = remoteIsNewer
     ? {
         activeDayId: remote.activeDayId || local.activeDayId,
         completedExerciseIdsToday: remote.completedExerciseIdsToday || [],
@@ -202,6 +265,21 @@ export function mergeGymClientAndServerState(
             ? remote.customDays
             : local.customDays,
         exerciseLogs: mergedLogs,
+        userProfile: remote.userProfile
+          ? { ...createDefaultFemaleBodyProfile(), ...remote.userProfile }
+          : local.userProfile,
+        cycleTracking: remote.cycleTracking
+          ? { ...createDefaultCycleTracking(), ...remote.cycleTracking }
+          : local.cycleTracking,
+        exerciseRestrictions:
+          Array.isArray(remote.exerciseRestrictions) &&
+          remote.exerciseRestrictions.length > 0
+            ? remote.exerciseRestrictions
+            : local.exerciseRestrictions,
+        aiChatHistory:
+          Array.isArray(remote.aiChatHistory) && remote.aiChatHistory.length > 0
+            ? remote.aiChatHistory
+            : local.aiChatHistory,
         clientUpdatedAt: remote.clientUpdatedAt || local.clientUpdatedAt,
       }
     : {

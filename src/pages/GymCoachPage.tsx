@@ -1,31 +1,42 @@
 import { useMemo, useState } from 'react';
 import {
   AlertTriangle,
+  Bot,
   Camera,
   Check,
   CheckCircle2,
   Columns2,
+  HeartPulse,
   MapPin,
+  RefreshCw,
   Rotate3d,
   Sparkles,
   Wrench,
 } from 'lucide-react';
 import { useAuthContext } from '../context/useAuthContext';
 import ExerciseReferenceDualView from '../features/gym/components/ExerciseReferenceDualView';
+import FemaleCycleAndProfileModal from '../features/gym/components/FemaleCycleAndProfileModal';
+import GymAiCoachDrawer from '../features/gym/components/GymAiCoachDrawer';
+import GymExerciseSubstituteModal from '../features/gym/components/GymExerciseSubstituteModal';
 import GymInlineMetricsTools from '../features/gym/components/GymInlineMetricsTools';
 import GymMannequin3DViewer from '../features/gym/components/GymMannequin3DViewer';
+import GymNeonHeroDashboard from '../features/gym/components/GymNeonHeroDashboard';
 import GymRestTimerBar from '../features/gym/components/GymRestTimerBar';
 import GymSelectorCockpit from '../features/gym/components/GymSelectorCockpit';
 import RealGymMachineView from '../features/gym/components/RealGymMachineView';
 import SplitCustomizerModal from '../features/gym/components/SplitCustomizerModal';
 import { GYM_EXERCISE_CATALOG } from '../features/gym/data/defaultGymCatalog';
 import { useGymCoachState } from '../features/gym/hooks/useGymCoachState';
+import {
+  computeSessionEnergyStats,
+  computeSmartSetRecommendation,
+  resolveCycleStatus,
+} from '../features/gym/utils/gymCycleAndProgressionUtils';
 import { resolveExercisesForDay } from '../features/gym/utils/gymStateUtils';
 
 /**
  * Decision: Default to single-stage '3d' on mobile so the visual viewport stays
- * fixed at 224px (h-56) and "Máy tập + Cách thực hiện" appear right above the fold
- * without scrolling. Users can flip to 'photo' in 1 tap, or 'split' on wider screens.
+ * compact and "Máy tập + Cách thực hiện + Technique Pillar Card" appear right below.
  */
 type StageVisualTab = '3d' | 'gym_photo' | 'photo' | 'split';
 
@@ -39,11 +50,20 @@ export default function GymCoachPage() {
     completeDayAndAdvance,
     saveExerciseLog,
     saveCustomSplitDays,
+    saveUserProfile,
+    saveCycleTracking,
+    replaceExerciseInActiveDay,
+    setExerciseRestriction,
+    appendAiChatMessages,
+    clearAiChatHistory,
   } = useGymCoachState(token);
 
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>('');
   const [visualTab, setVisualTab] = useState<StageVisualTab>('3d');
   const [customizerOpen, setCustomizerOpen] = useState<boolean>(false);
+  const [cycleProfileOpen, setCycleProfileOpen] = useState<boolean>(false);
+  const [substituteOpen, setSubstituteOpen] = useState<boolean>(false);
+  const [aiCoachOpen, setAiCoachOpen] = useState<boolean>(false);
 
   const activeDay = useMemo(() => {
     return (
@@ -73,12 +93,59 @@ export default function GymCoachPage() {
     state.completedExerciseIdsToday.includes(e.id)
   ).length;
 
+  const cycleStatus = useMemo(
+    () => resolveCycleStatus(state.cycleTracking, currentExercise),
+    [state.cycleTracking, currentExercise]
+  );
+
+  const setRecommendation = useMemo(
+    () =>
+      computeSmartSetRecommendation(
+        currentExercise,
+        state.exerciseLogs[currentExercise.id],
+        cycleStatus
+      ),
+    [currentExercise, state.exerciseLogs, cycleStatus]
+  );
+
+  const sessionStats = useMemo(
+    () =>
+      computeSessionEnergyStats(
+        dayExercises,
+        state.completedExerciseIdsToday,
+        state.userProfile
+      ),
+    [dayExercises, state.completedExerciseIdsToday, state.userProfile]
+  );
+
   const effectiveVisualTab: StageVisualTab =
     visualTab === 'gym_photo' && !currentExercise.realGymPhoto ? '3d' : visualTab;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] py-2.5 sm:py-5 px-2.5 sm:px-6">
-      <div className="max-w-7xl mx-auto space-y-2.5 sm:space-y-4">
+    <div className="min-h-screen bg-[#111114] text-[#F7F7F7] py-3 sm:py-6 px-2.5 sm:px-6">
+      <div className="max-w-7xl mx-auto space-y-3.5 sm:space-y-5">
+        {/* Neon Pink & Dark Charcoal Hero Dashboard (Progress / 7-Day Capsules / WORKOUT Hero / 3 Pillar Cards) */}
+        {activeDay && (
+          <GymNeonHeroDashboard
+            userProfile={state.userProfile}
+            cycleStatus={cycleStatus}
+            sessionStats={sessionStats}
+            setRecommendation={setRecommendation}
+            days={state.customDays}
+            activeDay={activeDay}
+            currentExercise={currentExercise}
+            workoutStreak={state.workoutStreak}
+            onSelectDay={(dayId) => {
+              selectDay(dayId);
+              setSelectedExerciseId('');
+            }}
+            onOpenCycleProfileModal={() => setCycleProfileOpen(true)}
+            onOpenSubstituteModal={() => setSubstituteOpen(true)}
+            onOpenAiCoachDrawer={() => setAiCoachOpen(true)}
+            onOpenCustomizerModal={() => setCustomizerOpen(true)}
+          />
+        )}
+
         {/* Compact Dual-Dropdown Cockpit (Day Dropdown + Exercise Dropdown + Prev/Next/Done) */}
         {activeDay && (
           <GymSelectorCockpit
@@ -102,29 +169,30 @@ export default function GymCoachPage() {
               setSelectedExerciseId('');
             }}
             onOpenCustomizer={() => setCustomizerOpen(true)}
+            onOpenSubstitute={() => setSubstituteOpen(true)}
           />
         )}
 
-        {/* Main Workspace: Mobile shows Main Simulation + Execution FIRST (zero bloat above!) */}
+        {/* Main Workspace: Desktop Queue + Primary 3D & Technique Cockpit */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-          {/* Desktop-Only Left Queue Sidebar (hidden on mobile because mobile uses the fast top Dropdowns) */}
+          {/* Desktop-Only Left Queue Sidebar */}
           <aside className="hidden lg:block lg:col-span-4 space-y-4">
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
+            <div className="bg-[#16161C] rounded-3xl border border-[#272732] p-4 shadow-xl">
               <div className="flex items-center justify-between gap-2 mb-2.5">
                 <div>
-                  <h2 className="text-sm font-extrabold text-slate-900">
+                  <h2 className="text-sm font-black text-[#F7F7F7]">
                     {activeDay?.dayLabel}: {activeDay?.title}
                   </h2>
-                  <p className="text-xs text-slate-500">{activeDay?.subtitle}</p>
+                  <p className="text-xs text-zinc-400">{activeDay?.subtitle}</p>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-extrabold">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#A3F77B]/15 text-[#A3F77B] border border-[#A3F77B]/40 text-xs font-extrabold">
                   {completedInCurrentDay}/{dayExercises.length} xong
                 </span>
               </div>
 
-              <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden mb-3">
+              <div className="w-full h-1.5 rounded-full bg-[#242430] overflow-hidden mb-3">
                 <div
-                  className="h-full bg-emerald-500 transition-all duration-300"
+                  className="h-full bg-linear-to-r from-[#FF5C8A] to-[#A3F77B] transition-all duration-300"
                   style={{
                     width: `${Math.round(
                       (completedInCurrentDay / Math.max(dayExercises.length, 1)) * 100
@@ -152,39 +220,39 @@ export default function GymCoachPage() {
                           setSelectedExerciseId(ex.id);
                         }
                       }}
-                      className={`p-3 rounded-xl border transition-all duration-150 cursor-pointer flex items-center justify-between gap-2 ${
+                      className={`p-3 rounded-2xl border transition-all duration-150 cursor-pointer flex items-center justify-between gap-2 ${
                         isSelected
-                          ? 'bg-orange-50/80 border-[#F05A28] shadow-2xs'
-                          : 'bg-slate-50/60 border-slate-200 hover:border-slate-300 hover:bg-white'
+                          ? 'bg-[#FF5C8A]/15 border-[#FF5C8A] shadow-lg shadow-[#FF5C8A]/10'
+                          : 'bg-[#111114] border-[#272732] hover:border-[#3A3A48]'
                       }`}
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span
-                            className={`text-xs font-extrabold ${
-                              isSelected ? 'text-[#F05A28]' : 'text-slate-500'
+                            className={`text-xs font-black ${
+                              isSelected ? 'text-[#FF5C8A]' : 'text-zinc-400'
                             }`}
                           >
                             Bài {idx + 1}
                           </span>
-                          <span className="text-xs text-slate-400">•</span>
-                          <span className="text-xs font-semibold text-slate-600">
+                          <span className="text-xs text-zinc-600">•</span>
+                          <span className="text-xs font-semibold text-zinc-300">
                             {ex.sets} × {ex.reps}
                           </span>
                           {shownWeight > 0 && (
-                            <span className="px-1.5 py-0.5 rounded bg-slate-200/80 text-slate-800 text-[11px] font-bold">
+                            <span className="px-1.5 py-0.5 rounded bg-[#252532] text-[#FF85A9] text-[11px] font-bold">
                               {shownWeight}kg
                             </span>
                           )}
                         </div>
                         <div
                           className={`text-sm font-extrabold truncate mt-0.5 ${
-                            isDone ? 'line-through text-slate-400' : 'text-slate-900'
+                            isDone ? 'line-through text-zinc-500' : 'text-[#F7F7F7]'
                           }`}
                         >
                           {ex.vietnameseName}
                         </div>
-                        <div className="text-xs text-slate-500 truncate">
+                        <div className="text-xs text-zinc-400 truncate">
                           {ex.name}
                         </div>
                       </div>
@@ -198,8 +266,8 @@ export default function GymCoachPage() {
                         aria-label={`Đánh dấu hoàn thành ${ex.vietnameseName}`}
                         className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 transition-colors cursor-pointer ${
                           isDone
-                            ? 'bg-emerald-500 border-emerald-500 text-white'
-                            : 'bg-white border-slate-300 text-slate-400 hover:border-emerald-500'
+                            ? 'bg-[#A3F77B] border-[#A3F77B] text-[#111114]'
+                            : 'bg-[#1B1B22] border-[#323240] text-zinc-400 hover:border-[#A3F77B]'
                         }`}
                       >
                         <Check size={15} />
@@ -216,30 +284,40 @@ export default function GymCoachPage() {
             />
           </aside>
 
-          {/* Primary Cockpit Card: Visual Stage + Inline Tools + Machine + Execution Steps */}
-          <section className="lg:col-span-8 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+          {/* Primary Cockpit Card: Visual Stage + Inline Tools + TECHNIQUE Pillar Card + Execution Steps */}
+          <section className="lg:col-span-8 bg-[#16161C] rounded-3xl border border-[#272732] shadow-2xl overflow-hidden">
             {/* Compact Title + Stage Mode Toggle */}
-            <div className="px-3 sm:px-5 py-2.5 sm:py-3.5 border-b border-slate-100 flex items-center justify-between gap-2">
+            <div className="px-3.5 sm:px-5 py-3 sm:py-4 border-b border-[#272732] flex flex-wrap items-center justify-between gap-2 bg-[#111114]">
               <div className="min-w-0">
-                <h1 className="text-sm sm:text-lg font-black text-slate-900 truncate">
-                  {currentExercise.name}
-                </h1>
-                <p className="text-xs text-slate-500 font-semibold truncate">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-sm sm:text-lg font-black text-[#F7F7F7] truncate">
+                    {currentExercise.name}
+                  </h1>
+                  <button
+                    type="button"
+                    onClick={() => setSubstituteOpen(true)}
+                    className="px-2 py-0.5 rounded-lg bg-[#242430] hover:bg-[#FF5C8A] text-zinc-300 hover:text-[#111114] text-[11px] font-extrabold flex items-center gap-1 transition-colors shrink-0 cursor-pointer"
+                  >
+                    <RefreshCw size={11} />
+                    <span>Đổi bài</span>
+                  </button>
+                </div>
+                <p className="text-xs text-[#FF85A9] font-bold truncate mt-0.5">
                   {currentExercise.vietnameseName} • {currentExercise.muscleTag}
                 </p>
               </div>
 
-              <div className="inline-flex items-center gap-0.5 bg-slate-100 p-1 rounded-xl shrink-0">
+              <div className="inline-flex items-center gap-0.5 bg-[#1B1B22] border border-[#2E2E3A] p-1 rounded-xl shrink-0">
                 <button
                   type="button"
                   onClick={() => setVisualTab('3d')}
                   className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 transition-colors cursor-pointer ${
                     effectiveVisualTab === '3d'
-                      ? 'bg-[#1E293B] text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#FF5C8A] text-[#111114] shadow-xs'
+                      : 'text-zinc-300 hover:text-white'
                   }`}
                 >
-                  <Rotate3d size={13} className="text-[#F05A28]" />
+                  <Rotate3d size={13} />
                   <span>3D</span>
                 </button>
 
@@ -249,11 +327,11 @@ export default function GymCoachPage() {
                     onClick={() => setVisualTab('gym_photo')}
                     className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 transition-colors cursor-pointer ${
                       effectiveVisualTab === 'gym_photo'
-                        ? 'bg-[#1E293B] text-white shadow-2xs'
-                        : 'text-slate-600 hover:text-slate-900'
+                        ? 'bg-[#FF5C8A] text-[#111114] shadow-xs'
+                        : 'text-zinc-300 hover:text-white'
                     }`}
                   >
-                    <MapPin size={13} className="text-[#F05A28]" />
+                    <MapPin size={13} />
                     <span>Máy thật</span>
                   </button>
                 )}
@@ -263,11 +341,11 @@ export default function GymCoachPage() {
                   onClick={() => setVisualTab('photo')}
                   className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 transition-colors cursor-pointer ${
                     effectiveVisualTab === 'photo'
-                      ? 'bg-[#1E293B] text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#FF5C8A] text-[#111114] shadow-xs'
+                      : 'text-zinc-300 hover:text-white'
                   }`}
                 >
-                  <Camera size={13} className="text-[#F05A28]" />
+                  <Camera size={13} />
                   <span>2 Ảnh</span>
                 </button>
 
@@ -276,18 +354,40 @@ export default function GymCoachPage() {
                   onClick={() => setVisualTab('split')}
                   className={`hidden md:inline-flex px-2.5 py-1 rounded-lg text-xs font-extrabold items-center gap-1 transition-colors cursor-pointer ${
                     effectiveVisualTab === 'split'
-                      ? 'bg-[#1E293B] text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-[#FF5C8A] text-[#111114] shadow-xs'
+                      : 'text-zinc-300 hover:text-white'
                   }`}
                 >
-                  <Columns2 size={13} className="text-[#F05A28]" />
+                  <Columns2 size={13} />
                   <span>Song song</span>
                 </button>
               </div>
             </div>
 
-            {/* Unified Visual Stage (Fixed compact height on mobile so Steps stay visible right below!) */}
-            <div className="p-2.5 sm:p-4 bg-slate-50/60">
+            {/* Period / Spinal Load Safety Alert when applicable */}
+            {cycleStatus.isHighSpinalLoadWarning && (
+              <div className="px-4 py-2.5 bg-[#FF5C8A]/18 border-b border-[#FF5C8A]/40 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 text-[#F7F7F7]">
+                  <HeartPulse size={15} className="text-[#FF5C8A] shrink-0" />
+                  <span>
+                    <strong>Lưu ý Chu kỳ / Lưng dưới:</strong> Bài tập này tạo áp lực ổ
+                    bụng &amp; cột sống khá lớn. Bạn nên giảm tạ xuống{' '}
+                    <strong>{setRecommendation.recommendedWeightKg}kg</strong> hoặc đổi
+                    sang bài cô lập mông êm hơn.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSubstituteOpen(true)}
+                  className="px-2.5 py-1 rounded-lg bg-[#FF5C8A] text-[#111114] font-black cursor-pointer"
+                >
+                  Đổi bài êm hơn
+                </button>
+              </div>
+            )}
+
+            {/* Unified Visual Stage */}
+            <div className="p-2.5 sm:p-4 bg-[#111114]">
               {effectiveVisualTab === '3d' && (
                 <GymMannequin3DViewer exercise={currentExercise} />
               )}
@@ -317,27 +417,52 @@ export default function GymCoachPage() {
               key={currentExercise.id}
               exercise={currentExercise}
               savedLog={state.exerciseLogs[currentExercise.id]}
+              recommendation={setRecommendation}
               onSaveLog={(w, r, tip) =>
                 saveExerciseLog(currentExercise.id, w, r, tip)
               }
             />
 
-            {/* Above-the-Fold Execution Guide: Machine Setup + Step-by-Step + Mistakes */}
-            <div className="p-3 sm:p-5 space-y-3 sm:space-y-4 bg-white">
+            {/* Execution Guide + Signature Neon Pink TECHNIQUE Pillar Card */}
+            <div className="p-3.5 sm:p-5 space-y-4 bg-[#16161C]">
+              {/* Signature TECHNIQUE Header + Neon Pink Pillar Card (from Right Phone Screen of Reference Design) */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-[#F7F7F7]">
+                    TECHNIQUE
+                  </h2>
+                  <span className="text-xs font-extrabold text-[#FF5C8A]">
+                    {setRecommendation.badgeTextVi}
+                  </span>
+                </div>
+
+                <div className="rounded-3xl bg-[#FF85A9] text-[#111114] p-4 sm:p-5 shadow-lg space-y-2">
+                  <div className="text-[11px] font-black uppercase tracking-widest opacity-75">
+                    TIPS • {currentExercise.categoryLabel}
+                  </div>
+                  <div className="text-base sm:text-lg font-black leading-snug">
+                    Pillar description: {currentExercise.vietnameseName}
+                  </div>
+                  <p className="text-xs sm:text-sm font-semibold leading-relaxed opacity-90">
+                    {currentExercise.benefit} {setRecommendation.reasonVi}
+                  </p>
+                </div>
+              </div>
+
               {/* Compact Machine & Seat Setup Banner */}
-              <div className="rounded-xl border border-orange-200/90 bg-orange-50/55 px-3 py-2.5 flex items-start justify-between gap-2.5">
+              <div className="rounded-2xl border border-[#2E2E3C] bg-[#111114] px-3.5 py-3 flex items-start justify-between gap-2.5">
                 <div className="flex items-start gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-[#F05A28]/15 text-[#F05A28] flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#FF5C8A]/15 text-[#FF5C8A] flex items-center justify-center shrink-0 mt-0.5">
                     <Wrench size={15} />
                   </div>
                   <div className="min-w-0 text-xs sm:text-sm leading-snug">
-                    <div className="font-extrabold text-slate-900">
+                    <div className="font-extrabold text-[#F7F7F7]">
                       Máy / Dụng cụ: {currentExercise.machineName}
                     </div>
-                    <div className="text-xs text-slate-600 mt-0.5 flex items-start gap-1">
+                    <div className="text-xs text-zinc-300 mt-1 flex items-start gap-1.5">
                       <CheckCircle2
                         size={13}
-                        className="text-emerald-600 shrink-0 mt-0.5"
+                        className="text-[#A3F77B] shrink-0 mt-0.5"
                       />
                       <span>{currentExercise.machineSetupTip}</span>
                     </div>
@@ -353,7 +478,7 @@ export default function GymCoachPage() {
                       )
                     }
                     title="Xem ảnh máy thực tế ở phòng Gym"
-                    className="shrink-0 w-11 h-11 rounded-lg overflow-hidden border border-orange-300 shadow-2xs relative group cursor-pointer"
+                    className="shrink-0 w-12 h-12 rounded-xl overflow-hidden border border-[#FF5C8A] shadow-sm relative group cursor-pointer"
                   >
                     <img
                       src={currentExercise.realGymPhoto}
@@ -365,18 +490,18 @@ export default function GymCoachPage() {
                 )}
               </div>
 
-              {/* Step-by-Step Execution (Immediately visible without scrolling!) */}
+              {/* Step-by-Step Execution */}
               <div>
-                <h2 className="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-[#1E293B] mb-2">
+                <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#FF5C8A] mb-2.5">
                   Cách thực hiện chuẩn kỹ thuật
-                </h2>
-                <ol className="space-y-1.5 sm:space-y-2">
+                </h3>
+                <ol className="space-y-2">
                   {currentExercise.steps.map((step, i) => (
                     <li
                       key={i}
-                      className="flex items-start gap-2 text-[13px] sm:text-sm text-slate-800 leading-snug"
+                      className="flex items-start gap-2.5 text-[13px] sm:text-sm text-zinc-200 leading-relaxed"
                     >
-                      <span className="w-5 h-5 rounded-md bg-[#1E293B] text-white text-[11px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-lg bg-[#FF5C8A] text-[#111114] text-[11px] font-black flex items-center justify-center shrink-0 mt-0.5">
                         {i + 1}
                       </span>
                       <span>{step}</span>
@@ -385,31 +510,33 @@ export default function GymCoachPage() {
                 </ol>
               </div>
 
-              {/* Mistakes to Avoid + Benefit */}
+              {/* Mistakes to Avoid + Cycle Nutrition Tip */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                <div className="p-3 rounded-xl bg-red-50/80 border border-red-200/90 flex items-start gap-2 text-xs sm:text-sm leading-snug text-slate-800">
+                <div className="p-3.5 rounded-2xl bg-rose-950/40 border border-rose-500/40 flex items-start gap-2.5 text-xs sm:text-sm leading-snug text-zinc-200">
                   <AlertTriangle
                     size={16}
-                    className="text-red-600 shrink-0 mt-0.5"
+                    className="text-[#FF5C8A] shrink-0 mt-0.5"
                   />
                   <div>
-                    <strong className="font-extrabold text-red-700">
+                    <strong className="font-black text-[#FF85A9]">
                       Lỗi cần tránh:{' '}
                     </strong>
                     <span>{currentExercise.mistakes}</span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2 text-xs sm:text-sm leading-snug text-slate-700">
+                <div className="p-3.5 rounded-2xl bg-[#111114] border border-[#2E2E3C] flex items-start gap-2.5 text-xs sm:text-sm leading-snug text-zinc-200">
                   <Sparkles
                     size={16}
-                    className="text-[#F05A28] shrink-0 mt-0.5"
+                    className="text-[#A3F77B] shrink-0 mt-0.5"
                   />
                   <div>
-                    <strong className="font-extrabold text-slate-900">
-                      Tác dụng:{' '}
+                    <strong className="font-black text-[#A3F77B]">
+                      Mẹo Dinh Dưỡng &amp; Đốt Calo:{' '}
                     </strong>
-                    <span>{currentExercise.benefit}</span>
+                    <span>
+                      {cycleStatus.nutritionTipVi} ({sessionStats.funEquivalenceVi})
+                    </span>
                   </div>
                 </div>
               </div>
@@ -418,12 +545,73 @@ export default function GymCoachPage() {
         </div>
       </div>
 
+      {/* Floating Bottom-Right AI Coach Quick Trigger */}
+      <button
+        type="button"
+        onClick={() => setAiCoachOpen(true)}
+        aria-label="Mở khung chat Huấn luyện viên AI"
+        className="fixed bottom-5 right-5 z-40 h-12 px-4 rounded-full bg-[#FF5C8A] hover:bg-[#ff4278] text-[#111114] font-black text-xs sm:text-sm flex items-center gap-2 shadow-2xl shadow-[#FF5C8A]/40 transition-transform duration-200 hover:scale-105 cursor-pointer"
+      >
+        <Bot size={18} />
+        <span>Hỏi AI Coach</span>
+      </button>
+
       {customizerOpen && (
         <SplitCustomizerModal
           open={customizerOpen}
           currentDays={state.customDays}
           onClose={() => setCustomizerOpen(false)}
           onSave={saveCustomSplitDays}
+        />
+      )}
+
+      {cycleProfileOpen && (
+        <FemaleCycleAndProfileModal
+          open={cycleProfileOpen}
+          userProfile={state.userProfile}
+          cycleTracking={state.cycleTracking}
+          onClose={() => setCycleProfileOpen(false)}
+          onSaveProfile={saveUserProfile}
+          onSaveCycle={saveCycleTracking}
+          onApplyPresetDays={saveCustomSplitDays}
+        />
+      )}
+
+      {substituteOpen && (
+        <GymExerciseSubstituteModal
+          open={substituteOpen}
+          currentExercise={currentExercise}
+          currentDayExerciseIds={dayExercises.map((e) => e.id)}
+          restrictions={state.exerciseRestrictions}
+          userProfile={state.userProfile}
+          isDeloadOrPeriod={cycleStatus.isDeloadRecommended}
+          onClose={() => setSubstituteOpen(false)}
+          onSelectSubstitute={(newExId) => {
+            replaceExerciseInActiveDay(currentExercise.id, newExId);
+            setSelectedExerciseId(newExId);
+          }}
+          onSetRestriction={setExerciseRestriction}
+        />
+      )}
+
+      {aiCoachOpen && activeDay && (
+        <GymAiCoachDrawer
+          open={aiCoachOpen}
+          token={token}
+          userProfile={state.userProfile}
+          cycleTracking={state.cycleTracking}
+          cycleStatus={cycleStatus}
+          activeDay={activeDay}
+          currentExercise={currentExercise}
+          customDays={state.customDays}
+          exerciseLogs={state.exerciseLogs}
+          workoutStreak={state.workoutStreak}
+          chatHistory={state.aiChatHistory}
+          onClose={() => setAiCoachOpen(false)}
+          onAppendMessages={appendAiChatMessages}
+          onClearHistory={clearAiChatHistory}
+          onApplyPresetDays={saveCustomSplitDays}
+          onOpenProfileModal={() => setCycleProfileOpen(true)}
         />
       )}
     </div>

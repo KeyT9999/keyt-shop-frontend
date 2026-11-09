@@ -9,15 +9,18 @@ import {
   Plus,
   RotateCcw,
   Save,
+  Sparkles,
 } from 'lucide-react';
 import type {
   GymExerciseDefinition,
   GymExerciseUserLog,
 } from '../types/gym';
+import type { SmartSetRecommendation } from '../utils/gymCycleAndProgressionUtils';
 
 interface GymInlineMetricsToolsProps {
   exercise: GymExerciseDefinition;
   savedLog?: GymExerciseUserLog;
+  recommendation?: SmartSetRecommendation;
   onSaveLog: (weightKg: number, repsNote: string, personalTip: string) => void;
 }
 
@@ -52,14 +55,10 @@ function formatClock(totalSec: number): string {
   return `${m}:${s}`;
 }
 
-/**
- * Decision: Unify Sets/Reps metrics, 1-tap Rest Timer, and +/-2.5kg Weight Stepper
- * into a single compact horizontal strip (~56px) right below the 3D stage so that
- * "Máy tập & Cách thực hiện" stay visible above the fold on mobile phones.
- */
 export default function GymInlineMetricsTools({
   exercise,
   savedLog,
+  recommendation,
   onSaveLog,
 }: GymInlineMetricsToolsProps) {
   const [secondsLeft, setSecondsLeft] = useState<number>(exercise.restSeconds);
@@ -100,22 +99,22 @@ export default function GymInlineMetricsTools({
   };
 
   return (
-    <div className="border-t border-b border-slate-200 bg-slate-50/70 px-3 sm:px-5 py-2.5 space-y-2.5">
-      {/* Main Compact Row: Sets x Reps | Inline Rest Timer | Quick +/- Weight */}
+    <div className="border-t border-b border-[#272732] bg-[#14141A] px-3 sm:px-5 py-2.5 space-y-2.5 text-[#F7F7F7]">
+      {/* Main Compact Row: Sets x Reps | Inline Rest Timer | Smart Suggestion | Quick +/- Weight */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         {/* Sets & Reps */}
         <div className="flex items-center gap-2.5">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
               Hiệp × Lần
             </div>
-            <div className="text-sm sm:text-base font-black text-slate-900 leading-tight">
-              {exercise.sets} <span className="text-slate-400 font-semibold">×</span>{' '}
+            <div className="text-sm sm:text-base font-black text-[#F7F7F7] leading-tight">
+              {exercise.sets} <span className="text-zinc-500 font-semibold">×</span>{' '}
               {exercise.reps}
             </div>
           </div>
 
-          <div className="h-7 w-px bg-slate-200" />
+          <div className="h-7 w-px bg-[#282834]" />
 
           {/* 1-Tap Rest Timer Pill */}
           <div className="flex items-center gap-1">
@@ -125,12 +124,12 @@ export default function GymInlineMetricsTools({
                 setFinishedAlert(false);
                 setIsRunning((r) => !r);
               }}
-              className={`h-9 px-2.5 sm:px-3 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-colors duration-150 cursor-pointer ${
+              className={`h-9 px-2.5 sm:px-3 rounded-xl text-xs font-black flex items-center gap-1.5 transition-colors duration-150 cursor-pointer ${
                 finishedAlert
-                  ? 'bg-emerald-500 text-white'
+                  ? 'bg-[#A3F77B] text-[#111114]'
                   : isRunning
-                    ? 'bg-[#1E293B] text-white'
-                    : 'bg-[#F05A28] hover:bg-orange-600 text-white'
+                    ? 'bg-[#7CE7FF] text-[#111114]'
+                    : 'bg-[#FF5C8A] hover:bg-[#ff4278] text-[#111114]'
               }`}
             >
               {finishedAlert ? (
@@ -154,7 +153,7 @@ export default function GymInlineMetricsTools({
                   setSecondsLeft(exercise.restSeconds);
                 }}
                 aria-label="Đặt lại đồng hồ nghỉ"
-                className="w-8 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+                className="w-8 h-9 rounded-xl border border-[#2E2E3A] bg-[#1B1B22] hover:bg-[#252530] text-zinc-300 flex items-center justify-center transition-colors cursor-pointer"
               >
                 <RotateCcw size={13} />
               </button>
@@ -162,13 +161,27 @@ export default function GymInlineMetricsTools({
           </div>
         </div>
 
-        {/* Inline Weight Stepper + Seat Note Toggle */}
-        <div className="flex items-center gap-1 ml-auto">
+        {/* Smart Set Recommendation Pill + Inline Weight Stepper */}
+        <div className="flex items-center gap-1.5 ml-auto">
+          {recommendation &&
+            recommendation.recommendedWeightKg > 0 &&
+            recommendation.recommendedWeightKg !== weightKg && (
+              <button
+                type="button"
+                onClick={() => persistWeight(recommendation.recommendedWeightKg)}
+                title={recommendation.reasonVi}
+                className="hidden sm:inline-flex items-center gap-1 h-9 px-2.5 rounded-xl bg-[#A3F77B]/15 border border-[#A3F77B]/40 text-[#A3F77B] text-[11px] font-extrabold cursor-pointer"
+              >
+                <Sparkles size={12} />
+                <span>{recommendation.badgeTextVi}</span>
+              </button>
+            )}
+
           <button
             type="button"
             onClick={() => persistWeight(Math.max(0, weightKg - 2.5))}
             aria-label="Giảm 2.5kg"
-            className="w-8 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-9 rounded-xl border border-[#2E2E3A] bg-[#1B1B22] hover:bg-[#252530] text-zinc-200 flex items-center justify-center transition-colors cursor-pointer"
           >
             <Minus size={14} />
           </button>
@@ -177,9 +190,9 @@ export default function GymInlineMetricsTools({
             type="button"
             onClick={() => setNotesOpen((o) => !o)}
             title="Bấm để sửa mức tạ chi tiết hoặc ghi nấc ghế"
-            className="h-9 px-2.5 rounded-xl border border-slate-200 bg-white hover:border-[#F05A28] text-xs font-black text-slate-900 flex items-center gap-1 transition-colors cursor-pointer"
+            className="h-9 px-2.5 rounded-xl border border-[#2E2E3A] bg-[#1B1B22] hover:border-[#FF5C8A] text-xs font-black text-[#F7F7F7] flex items-center gap-1 transition-colors cursor-pointer"
           >
-            <Dumbbell size={12} className="text-[#F05A28]" />
+            <Dumbbell size={12} className="text-[#FF5C8A]" />
             <span>{justSaved ? 'Đã lưu!' : `${weightKg}kg`}</span>
           </button>
 
@@ -187,7 +200,7 @@ export default function GymInlineMetricsTools({
             type="button"
             onClick={() => persistWeight(weightKg + 2.5)}
             aria-label="Tăng 2.5kg"
-            className="w-8 h-9 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-9 rounded-xl border border-[#2E2E3A] bg-[#1B1B22] hover:bg-[#252530] text-zinc-200 flex items-center justify-center transition-colors cursor-pointer"
           >
             <Plus size={14} />
           </button>
@@ -199,8 +212,8 @@ export default function GymInlineMetricsTools({
             title="Ghi chú nấc ghế / chỉnh giờ nghỉ"
             className={`w-8 h-9 rounded-xl border flex items-center justify-center transition-colors cursor-pointer ${
               notesOpen || personalTip
-                ? 'bg-orange-50 border-[#F05A28] text-[#F05A28]'
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                ? 'bg-[#FF5C8A]/18 border-[#FF5C8A] text-[#FF5C8A]'
+                : 'bg-[#1B1B22] border-[#2E2E3A] text-zinc-300 hover:bg-[#252530]'
             }`}
           >
             <NotebookPen size={14} />
@@ -208,16 +221,16 @@ export default function GymInlineMetricsTools({
         </div>
       </div>
 
-      {/* Saved Personal Seat Tip Quick Pill (if present & drawer closed) */}
+      {/* Saved Personal Seat Tip Quick Pill */}
       {!notesOpen && (personalTip || repsNote) && (
-        <div className="text-xs text-slate-600 flex flex-wrap items-center gap-2">
+        <div className="text-xs text-zinc-300 flex flex-wrap items-center gap-2">
           {personalTip && (
-            <span className="px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 font-semibold">
+            <span className="px-2 py-0.5 rounded-lg bg-[#FF5C8A]/15 border border-[#FF5C8A]/40 text-[#FF85A9] font-semibold">
               Ghi nhớ máy: {personalTip}
             </span>
           )}
           {repsNote && (
-            <span className="px-2 py-0.5 rounded-lg bg-slate-200/70 text-slate-700 font-semibold">
+            <span className="px-2 py-0.5 rounded-lg bg-[#22222C] text-zinc-300 font-semibold">
               Buổi trước: {repsNote}
             </span>
           )}
@@ -226,13 +239,13 @@ export default function GymInlineMetricsTools({
 
       {/* Expandable Drawer for Custom Weight / Seat Pin / Timer Presets */}
       {notesOpen && (
-        <div className="pt-2 border-t border-slate-200/80 space-y-2">
+        <div className="pt-2 border-t border-[#272732] space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-            <span className="font-bold text-slate-600">
+            <span className="font-bold text-zinc-400">
               Đơn vị: {exercise.weightUnitLabel}
             </span>
             <div className="flex items-center gap-1">
-              <span className="text-slate-500 font-semibold">Đếm nhanh:</span>
+              <span className="text-zinc-400 font-semibold">Đếm nhanh:</span>
               {[60, 90, 120].map((sec) => (
                 <button
                   key={sec}
@@ -242,7 +255,7 @@ export default function GymInlineMetricsTools({
                     setSecondsLeft(sec);
                     setIsRunning(true);
                   }}
-                  className="px-2 py-0.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-bold text-slate-700 cursor-pointer"
+                  className="px-2 py-0.5 rounded-lg border border-[#2E2E3A] bg-[#1B1B22] hover:bg-[#252530] font-bold text-zinc-200 cursor-pointer"
                 >
                   {sec}s
                 </button>
@@ -258,7 +271,7 @@ export default function GymInlineMetricsTools({
               aria-label="Mức tạ tính bằng kg"
               value={weightKg}
               onChange={(e) => setWeightKg(Math.max(0, Number(e.target.value) || 0))}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-extrabold text-slate-900 focus:outline-none focus:border-[#F05A28]"
+              className="px-3 py-1.5 rounded-xl border border-[#2E2E3A] bg-[#1B1B22] text-xs font-extrabold text-[#F7F7F7] focus:outline-none focus:border-[#FF5C8A]"
             />
             <input
               type="text"
@@ -266,7 +279,7 @@ export default function GymInlineMetricsTools({
               onChange={(e) => setRepsNote(e.target.value)}
               placeholder="Ghi hiệp (VD: 3x12 tốt)"
               aria-label="Ghi chú số hiệp"
-              className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 focus:outline-none focus:border-[#F05A28]"
+              className="px-3 py-1.5 rounded-xl border border-[#2E2E3A] bg-[#1B1B22] text-xs font-medium text-[#F7F7F7] focus:outline-none focus:border-[#FF5C8A]"
             />
             <input
               type="text"
@@ -274,7 +287,7 @@ export default function GymInlineMetricsTools({
               onChange={(e) => setPersonalTip(e.target.value)}
               placeholder="Nấc ghế / Ghim (VD: Ghế số 3)"
               aria-label="Ghi chú nấc ghế"
-              className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 focus:outline-none focus:border-[#F05A28]"
+              className="px-3 py-1.5 rounded-xl border border-[#2E2E3A] bg-[#1B1B22] text-xs font-medium text-[#F7F7F7] focus:outline-none focus:border-[#FF5C8A]"
             />
           </div>
 
@@ -284,7 +297,7 @@ export default function GymInlineMetricsTools({
               persistWeight(weightKg);
               setNotesOpen(false);
             }}
-            className="w-full py-2 px-3 rounded-xl bg-[#1E293B] hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            className="w-full py-2 px-3 rounded-xl bg-[#FF5C8A] hover:bg-[#ff4278] text-[#111114] text-xs font-black flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
           >
             <Save size={13} />
             <span>Lưu mức tạ &amp; nấc ghế</span>

@@ -105,6 +105,73 @@ export interface GymExerciseUserLog {
   updatedAtMs: number;
 }
 
+export type GymPrimaryGoal =
+  | 'glute_sculpt'
+  | 'fat_loss'
+  | 'toned_curves'
+  | 'strength_health';
+
+export type GymExperienceLevel = 'beginner' | 'intermediate' | 'advanced';
+
+export type GymCyclePhase =
+  | 'menstrual'
+  | 'follicular'
+  | 'ovulatory'
+  | 'luteal';
+
+export type GymManualPhaseOverride = 'auto' | GymCyclePhase;
+
+export type GymSymptomCode =
+  | 'cramps'
+  | 'back_pain'
+  | 'bloating'
+  | 'fatigue'
+  | 'headache'
+  | 'cravings'
+  | 'low_mood';
+
+export type GymRestrictionKind = 'dislike' | 'injury' | 'busy';
+
+export interface GymFemaleBodyProfile {
+  nickname: string;
+  age: number;
+  heightCm: number;
+  weightKg: number;
+  waistCm: number;
+  hipCm: number;
+  primaryGoal: GymPrimaryGoal;
+  experienceLevel: GymExperienceLevel;
+  avoidHeavyQuads: boolean;
+  protectLowerBackKnee: boolean;
+  personalNotes: string;
+  updatedAtMs: number;
+}
+
+export interface GymCycleTrackingState {
+  enabled: boolean;
+  lastPeriodStartDate: string;
+  cycleLengthDays: number;
+  periodDurationDays: number;
+  manualPhaseOverride: GymManualPhaseOverride;
+  todayEnergyLevel: 1 | 2 | 3 | 4 | 5;
+  todaySymptoms: GymSymptomCode[];
+  updatedAtMs: number;
+}
+
+export interface GymExerciseRestriction {
+  exerciseId: string;
+  kind: GymRestrictionKind;
+  updatedAtMs: number;
+}
+
+export interface GymAiChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  provider?: string;
+  createdAtMs: number;
+}
+
 export interface GymClientPersistedState {
   activeDayId: string;
   completedExerciseIdsToday: string[];
@@ -113,6 +180,10 @@ export interface GymClientPersistedState {
   lastCompletedSessionDate: string;
   customDays: GymSplitDayConfig[];
   exerciseLogs: Record<string, GymExerciseUserLog>;
+  userProfile: GymFemaleBodyProfile;
+  cycleTracking: GymCycleTrackingState;
+  exerciseRestrictions: GymExerciseRestriction[];
+  aiChatHistory: GymAiChatMessage[];
   clientUpdatedAt: number;
 }
 
@@ -124,6 +195,10 @@ export interface GymServerProfilePayload {
   lastCompletedSessionDate: string;
   customDays: GymSplitDayConfig[];
   exerciseLogs: GymExerciseUserLog[];
+  userProfile?: GymFemaleBodyProfile;
+  cycleTracking?: GymCycleTrackingState;
+  exerciseRestrictions?: GymExerciseRestriction[];
+  aiChatHistory?: GymAiChatMessage[];
   clientUpdatedAt: number;
   updatedAt?: string;
 }
@@ -132,5 +207,6 @@ export interface GymSplitPresetTemplate {
   id: string;
   name: string;
   description: string;
+  badge?: string;
   days: GymSplitDayConfig[];
 }

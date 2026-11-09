@@ -5,6 +5,7 @@ import type {
   GymFemaleBodyProfile,
   GymGenderMode,
   GymMaleGoal,
+  GymPrimaryGoal,
   GymSplitDayConfig,
 } from '../types/gym';
 import {
@@ -49,6 +50,16 @@ export interface RecommendedExerciseItem {
   whyRecommendedVi: string;
 }
 
+export interface RecommendedWorkoutSession {
+  id: string;
+  sessionNumber: number;
+  dayLabelVi: string;
+  titleVi: string;
+  focusTagVi: string;
+  estimatedMinutes: number;
+  exercises: RecommendedExerciseItem[];
+}
+
 export interface RecommendedMealBlock {
   id: string;
   mealTitleVi: string;
@@ -75,12 +86,15 @@ export interface RecommendedNutritionPlan {
 
 export interface GenderWorkoutAndNutritionRecommendation {
   gender: GymGenderMode;
+  workoutsPerWeek: number;
+  totalExercisesCount: number;
   goalLabelVi: string;
   headlineVi: string;
   bodyAnalysisVi: string;
   strategySummaryVi: string;
   recommendedPresetNameVi: string;
   recommendedSplitDays: GymSplitDayConfig[];
+  sessions: RecommendedWorkoutSession[];
   recommendedExercises: RecommendedExerciseItem[];
   nutritionPlan: RecommendedNutritionPlan;
 }
@@ -89,17 +103,472 @@ function roundToHalfKg(val: number): number {
   return Math.max(0, Math.round(val * 2) / 2);
 }
 
-function findExercisesByIds(
-  ids: string[],
-  catalog: GymExerciseDefinition[]
-): GymExerciseDefinition[] {
-  const map = new Map(catalog.map((e) => [e.id, e]));
-  return ids.map((id) => map.get(id)).filter((e): e is GymExerciseDefinition => Boolean(e));
+const BODYWEIGHT_OR_MOBILITY_IDS = new Set([
+  'active_mobility_recovery',
+  'core_plank',
+]);
+
+interface RawSessionBlueprint {
+  titleVi: string;
+  focusTagVi: string;
+  exerciseIds: string[];
+}
+
+function buildMaleSessionBlueprints(
+  maleGoal: GymMaleGoal,
+  protectBack: boolean
+): RawSessionBlueprint[] {
+  const safeSquat = protectBack ? 'leg_press_45' : 'barbell_squat';
+  const safeRdl = protectBack ? 'lying_leg_curl' : 'romanian_deadlift';
+
+  if (maleGoal === 'chest_shoulder_3d') {
+    return [
+      {
+        titleVi: 'Ngực Dày Toàn Diện & Tay Sau (Push Heavy)',
+        focusTagVi: 'Ngực Trên • Rãnh Ngực • Tay Sau',
+        exerciseIds: [
+          'brtw_incline_chest_press',
+          'barbell_bench_press',
+          'incline_dumbbell_press',
+          'pec_deck_fly',
+          'assisted_chest_dip',
+          'tricep_rope_pushdown',
+        ],
+      },
+      {
+        titleVi: 'Lưng Xô Chữ V & Tay Trước (Pull V-Taper)',
+        focusTagVi: 'Xô Rộng • Lưng Dày • Bắp Tay Trước',
+        exerciseIds: [
+          'wide_lat_pulldown',
+          'iso_high_pulldown',
+          'chest_supported_row',
+          'seated_cable_row',
+          'machine_bicep_curl',
+          'hammer_curl',
+        ],
+      },
+      {
+        titleVi: 'Bờ Vai 3D Rộng & Ngực Trên (3D Delts Specialization)',
+        focusTagVi: 'Vai Giữa 3D • Vai Trước • Vai Sau',
+        exerciseIds: [
+          'machine_shoulder_press',
+          'dumbbell_shoulder_press',
+          'machine_lateral_raise',
+          'side_lateral_raise',
+          'reverse_pec_deck',
+          'cable_crossover',
+        ],
+      },
+      {
+        titleVi: 'Thân Dưới Nền Tảng & Core Bụng (Legs & Core)',
+        focusTagVi: 'Đùi Trước • Đùi Sau • Bắp Chân • Core',
+        exerciseIds: [
+          'super_squat_machine',
+          'leg_press_45',
+          'leg_extension',
+          'lying_leg_curl',
+          'standing_calf_raise',
+          'core_plank',
+        ],
+      },
+      {
+        titleVi: 'Bơm Căng Ngực – Vai – Tay (Upper Pump & Arms)',
+        focusTagVi: 'Bơm Máu Thân Trên • Tay Trước & Sau',
+        exerciseIds: [
+          'brtw_laydown_chest_press',
+          'pec_deck_fly',
+          'machine_lateral_raise',
+          'barbell_ez_curl',
+          'assisted_tricep_dip',
+          'overhead_db_tricep_ext',
+        ],
+      },
+      {
+        titleVi: 'Lưng Dưới, Kéo Xô & Phục Hồi Khớp (Back & Mobility)',
+        focusTagVi: 'Kéo Xô • Lưng Giữa • Giãn Cơ Mở Khớp',
+        exerciseIds: [
+          'assisted_pullup',
+          'brtw_iso_low_row',
+          'reverse_pec_deck',
+          'back_extension_45',
+          'core_plank',
+          'active_mobility_recovery',
+        ],
+      },
+    ];
+  }
+
+  if (maleGoal === 'lean_abs_cut') {
+    return [
+      {
+        titleVi: 'Đẩy Thân Trên Mật Độ Cao & Siết Core (Push Shred)',
+        focusTagVi: 'Đốt Mỡ • Giữ Cơ Ngực & Vai • Core',
+        exerciseIds: [
+          'brtw_incline_chest_press',
+          'incline_dumbbell_press',
+          'cable_crossover',
+          'machine_shoulder_press',
+          'tricep_rope_pushdown',
+          'core_plank',
+        ],
+      },
+      {
+        titleVi: 'Kéo Lưng Xô Đốt Calo & Tay Trước (Pull Shred)',
+        focusTagVi: 'Lưng Chữ V • Tay Trước Nét • Đốt Calo',
+        exerciseIds: [
+          'wide_lat_pulldown',
+          'chest_supported_row',
+          'brtw_iso_low_row',
+          'reverse_pec_deck',
+          'machine_bicep_curl',
+          'hammer_curl',
+        ],
+      },
+      {
+        titleVi: 'Chân Đa Khớp Đốt Mỡ Nội Tạng (Metabolic Legs)',
+        focusTagVi: 'Đốt Calo Cực Đại • Đùi & Bắp Chân',
+        exerciseIds: [
+          'super_squat_machine',
+          'leg_press_45',
+          'leg_extension',
+          'seated_leg_curl',
+          'standing_calf_raise',
+          'core_plank',
+        ],
+      },
+      {
+        titleVi: 'Vai 3D Khô Nét & Khắc Múi Bụng (Delts & Abs)',
+        focusTagVi: 'Vai 3D Tách Nét • Tay Sau • Bụng 6 Múi',
+        exerciseIds: [
+          'dumbbell_shoulder_press',
+          'machine_lateral_raise',
+          'side_lateral_raise',
+          'pec_deck_fly',
+          'assisted_chest_dip',
+          'core_plank',
+        ],
+      },
+      {
+        titleVi: 'Toàn Thân Máy Cáp & Phục Hồi (Full-Body Conditioning)',
+        focusTagVi: 'Tăng Nhịp Tim • Giữ Cơ Nạc',
+        exerciseIds: [
+          'brtw_laydown_chest_press',
+          'iso_high_pulldown',
+          'seated_cable_row',
+          'barbell_ez_curl',
+          'overhead_db_tricep_ext',
+          'active_mobility_recovery',
+        ],
+      },
+      {
+        titleVi: 'Chuỗi Cơ Sau & Độ Nét Lưng Dưới (Posterior Chain)',
+        focusTagVi: 'Đùi Sau • Lưng Dưới • Giãn Cơ',
+        exerciseIds: [
+          safeRdl,
+          'lying_leg_curl',
+          'assisted_pullup',
+          'back_extension_45',
+          'core_plank',
+          'active_mobility_recovery',
+        ],
+      },
+    ];
+  }
+
+  // mass_bulking or strength_power
+  return [
+    {
+      titleVi: 'Ngực Nặng Đa Khớp & Tay Sau (Heavy Push)',
+      focusTagVi: 'Tăng Khối Lượng Cơ Ngực & Đẩy Vai',
+      exerciseIds: [
+        'barbell_bench_press',
+        'brtw_incline_chest_press',
+        'incline_dumbbell_press',
+        'pec_deck_fly',
+        'assisted_chest_dip',
+        'tricep_rope_pushdown',
+      ],
+    },
+    {
+      titleVi: 'Lưng Dày & Kéo Xô Sức Mạnh (Heavy Pull)',
+      focusTagVi: 'Tăng Độ Dày Lưng & Bắp Tay Trước',
+      exerciseIds: [
+        'wide_lat_pulldown',
+        'chest_supported_row',
+        'brtw_iso_low_row',
+        'seated_cable_row',
+        'barbell_ez_curl',
+        'hammer_curl',
+      ],
+    },
+    {
+      titleVi: 'Chân Sức Mạnh & Nội Tiết Nam (Power Legs)',
+      focusTagVi: 'Gánh Đùi • Đạp Đùi • Đùi Sau • Bắp Chân',
+      exerciseIds: [
+        safeSquat,
+        'super_squat_machine',
+        'leg_press_45',
+        safeRdl,
+        'lying_leg_curl',
+        'standing_calf_raise',
+      ],
+    },
+    {
+      titleVi: 'Vai 3D & Bắp Tay Khổng Lồ (Shoulders & Arms)',
+      focusTagVi: 'Đẩy Vai Máy • Vai Giữa • Tay Trước/Sau',
+      exerciseIds: [
+        'machine_shoulder_press',
+        'smith_shoulder_press',
+        'machine_lateral_raise',
+        'reverse_pec_deck',
+        'machine_bicep_curl',
+        'overhead_db_tricep_ext',
+      ],
+    },
+    {
+      titleVi: 'Ngực Trên & Lưng Xô Bổ Trợ (Upper Hypertrophy)',
+      focusTagVi: 'Bơm Cơ Thân Trên • Tăng Cân Sạch',
+      exerciseIds: [
+        'brtw_laydown_chest_press',
+        'cable_crossover',
+        'iso_high_pulldown',
+        'assisted_pullup',
+        'side_lateral_raise',
+        'assisted_tricep_dip',
+      ],
+    },
+    {
+      titleVi: 'Thân Dưới Bổ Trợ & Phục Hồi Khớp (Lower & Core)',
+      focusTagVi: 'Đùi Trước • Mông • Lưng Dưới • Giãn Cơ',
+      exerciseIds: [
+        'leg_extension',
+        'seated_leg_curl',
+        'machine_hip_thrust',
+        'back_extension_45',
+        'core_plank',
+        'active_mobility_recovery',
+      ],
+    },
+  ];
+}
+
+function buildFemaleSessionBlueprints(
+  femaleGoal: GymPrimaryGoal,
+  isPeriodPhase: boolean,
+  protectLowerBack: boolean
+): RawSessionBlueprint[] {
+  const safeHipHinge =
+    isPeriodPhase || protectLowerBack ? 'seated_leg_curl' : 'romanian_deadlift';
+  const safeBackExt =
+    isPeriodPhase || protectLowerBack
+      ? 'active_mobility_recovery'
+      : 'back_extension_45';
+
+  if (femaleGoal === 'glute_sculpt') {
+    return [
+      {
+        titleVi: 'Độ Mông Đào Tròn Đầy & Đùi Sau (Không To Đùi Trước)',
+        focusTagVi: 'Cơ Mông Lớn • Hõm Mông • Đùi Sau',
+        exerciseIds: [
+          'machine_hip_thrust',
+          'hip_abductor_adductor',
+          safeHipHinge,
+          'lying_leg_curl',
+          'hip_adductor_inner',
+          safeBackExt,
+        ],
+      },
+      {
+        titleVi: 'Lưng Thon V-Taper & Bờ Vai Mắc Áo (Tạo Eo Nhỏ)',
+        focusTagVi: 'Lưng Chữ V • Vai Thon • Chống Gù Lưng',
+        exerciseIds: [
+          'wide_lat_pulldown',
+          'chest_supported_row',
+          'seated_cable_row',
+          'machine_lateral_raise',
+          'reverse_pec_deck',
+          'tricep_rope_pushdown',
+        ],
+      },
+      {
+        titleVi: 'Mông Trên Cao & Thon Gọn Đùi Trong (Upper Glutes)',
+        focusTagVi: 'Nâng Cao Vòng 3 • Khép Đùi Trong • Bắp Chân Thon',
+        exerciseIds: [
+          'machine_hip_thrust',
+          'hip_adductor_inner',
+          'hip_abductor_adductor',
+          'leg_press_45',
+          'seated_leg_curl',
+          'standing_calf_raise',
+        ],
+      },
+      {
+        titleVi: 'Thân Trên Săn Chắc, Nâng Vòng 1 & Siết Eo Con Kiến',
+        focusTagVi: 'Nâng Vòng 1 • Lưng Giữa • Siết Core Bụng Phẳng',
+        exerciseIds: [
+          'incline_dumbbell_press',
+          'pec_deck_fly',
+          'iso_high_pulldown',
+          'side_lateral_raise',
+          'core_plank',
+          'active_mobility_recovery',
+        ],
+      },
+      {
+        titleVi: 'Cô Lập Hõm Mông Hai Bên & Mở Khớp Hông S-Line',
+        focusTagVi: 'Làm Đầy Hõm Hông • Giãn Cơ Phục Hồi',
+        exerciseIds: [
+          'hip_abductor_adductor',
+          'machine_hip_thrust',
+          'lying_leg_curl',
+          'reverse_pec_deck',
+          'core_plank',
+          'active_mobility_recovery',
+        ],
+      },
+      {
+        titleVi: 'Phục Hồi Chủ Động & Giãn Cơ Mở Khớp Chậu',
+        focusTagVi: 'Mở Khớp Hông • Thư Giãn Cột Sống',
+        exerciseIds: [
+          'active_mobility_recovery',
+          'hip_abductor_adductor',
+          'chest_supported_row',
+          'core_plank',
+        ],
+      },
+    ];
+  }
+
+  if (femaleGoal === 'fat_loss') {
+    return [
+      {
+        titleVi: 'Đốt Mỡ Thân Dưới & Nâng Mông Săn Chắc (Lower Burn)',
+        focusTagVi: 'Đốt Calo Cao • Săn Chắc Mông & Đùi',
+        exerciseIds: [
+          'machine_hip_thrust',
+          'leg_press_45',
+          'hip_abductor_adductor',
+          'seated_leg_curl',
+          'hip_adductor_inner',
+          'core_plank',
+        ],
+      },
+      {
+        titleVi: 'Thon Gọn Lưng Vai & Bắp Tay Sau (Upper Tone & Burn)',
+        focusTagVi: 'Thon Bắp Tay • Mở Vai • Đốt Mỡ Lưng',
+        exerciseIds: [
+          'wide_lat_pulldown',
+          'chest_supported_row',
+          'machine_lateral_raise',
+          'reverse_pec_deck',
+          'tricep_rope_pushdown',
+          'core_plank',
+        ],
+      },
+      {
+        titleVi: 'Siết Eo Con Kiến & Đùi Sau Thon Dài (Core & Glutes)',
+        focusTagVi: 'Siết Cơ Bụng Sâu • Mông & Đùi Sau',
+        exerciseIds: [
+          'machine_hip_thrust',
+          safeHipHinge,
+          'lying_leg_curl',
+          'seated_cable_row',
+          'core_plank',
+          'active_mobility_recovery',
+        ],
+      },
+      {
+        titleVi: 'Toàn Thân Kháng Lực Đốt Calo Sau Tập (Full-Body EPOC)',
+        focusTagVi: 'Tăng Trao Đổi Chất • Giữ Đường Cong',
+        exerciseIds: [
+          'leg_press_45',
+          'iso_high_pulldown',
+          'incline_dumbbell_press',
+          'side_lateral_raise',
+          'standing_calf_raise',
+          'core_plank',
+        ],
+      },
+      {
+        titleVi: 'Cô Lập Vòng 3 & Mở Khớp Linh Hoạt (Glute & Mobility)',
+        focusTagVi: 'Làm Tròn Mông • Phục Hồi Khớp',
+        exerciseIds: [
+          'hip_abductor_adductor',
+          'hip_adductor_inner',
+          'machine_hip_thrust',
+          'reverse_pec_deck',
+          'active_mobility_recovery',
+        ],
+      },
+    ];
+  }
+
+  // toned_curves or strength_health
+  return [
+    {
+      titleVi: 'Đường Cong Vòng 3 & Khung Hông S-Line',
+      focusTagVi: 'Mông Căng Tròn • Đùi Thon Gọn',
+      exerciseIds: [
+        'machine_hip_thrust',
+        'hip_abductor_adductor',
+        'hip_adductor_inner',
+        'seated_leg_curl',
+        safeHipHinge,
+        'standing_calf_raise',
+      ],
+    },
+    {
+      titleVi: 'Chống Gù Lưng, Mở Vai & Thon Gọn Tay Sau',
+      focusTagVi: 'Tư Thế Thẳng Đẹp • Vai Mắc Áo • Tay Thon',
+      exerciseIds: [
+        'wide_lat_pulldown',
+        'chest_supported_row',
+        'reverse_pec_deck',
+        'machine_lateral_raise',
+        'tricep_rope_pushdown',
+        'core_plank',
+      ],
+    },
+    {
+      titleVi: 'Săn Chắc Vòng 1, Lưng Giữa & Eo Thon',
+      focusTagVi: 'Nâng Vòng 1 • Lưng Thon • Core Bụng',
+      exerciseIds: [
+        'incline_dumbbell_press',
+        'pec_deck_fly',
+        'seated_cable_row',
+        'side_lateral_raise',
+        'core_plank',
+        'active_mobility_recovery',
+      ],
+    },
+    {
+      titleVi: 'Thân Dưới Cân Đối & Sức Bền Nội Tiết',
+      focusTagVi: 'Mông Trên • Đùi Săn Chắc • Giãn Cơ',
+      exerciseIds: [
+        'leg_press_45',
+        'machine_hip_thrust',
+        'lying_leg_curl',
+        'hip_abductor_adductor',
+        safeBackExt,
+        'active_mobility_recovery',
+      ],
+    },
+    {
+      titleVi: 'Giãn Cơ Toàn Thân & Phục Hồi Năng Lượng',
+      focusTagVi: 'Linh Hoạt Khớp • Giảm Căng Thẳng',
+      exerciseIds: [
+        'active_mobility_recovery',
+        'reverse_pec_deck',
+        'hip_abductor_adductor',
+        'core_plank',
+      ],
+    },
+  ];
 }
 
 /**
- * Pure generator that computes personalized workout recommendations and a 4-meal
- * Vietnamese nutrition plan immediately after Male or Female questionnaire submission.
+ * Pure generator that computes a full multi-session weekly workout schedule
+ * (matching the user's exact `workoutsPerWeek`) plus a 4-meal nutrition plan.
  */
 export function generateGenderWorkoutAndNutritionPlan(params: {
   gender: GymGenderMode;
@@ -114,6 +583,7 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
     catalog = GYM_EXERCISE_CATALOG,
   } = params;
 
+  const catalogMap = new Map(catalog.map((e) => [e.id, e]));
   const age = Math.max(14, Math.min(85, Number(userProfile.age) || 24));
   const heightCm = Math.max(
     130,
@@ -125,7 +595,7 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
   );
   const workoutsPerWeek = Math.max(
     2,
-    Math.min(7, Number(userProfile.workoutsPerWeek) || 4)
+    Math.min(6, Number(userProfile.workoutsPerWeek) || 4)
   );
   const heightM = heightCm / 100;
   const bmi = Number((weightKg / (heightM * heightM)).toFixed(1));
@@ -142,104 +612,72 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
 
   if (gender === 'male') {
     const maleGoal: GymMaleGoal = userProfile.maleGoal || 'chest_shoulder_3d';
-    const goalMeta = GYM_MALE_GOAL_META[maleGoal] || GYM_MALE_GOAL_META.chest_shoulder_3d;
+    const goalMeta =
+      GYM_MALE_GOAL_META[maleGoal] || GYM_MALE_GOAL_META.chest_shoulder_3d;
     const chestCm = Number(userProfile.chestCm) || 96;
     const waistCm = Number(userProfile.waistCm) || 78;
     const armCm = Number(userProfile.armCm) || 35;
     const chestToWaist = (chestCm / Math.max(50, waistCm)).toFixed(2);
+    const bodyScale = Math.max(0.75, Math.min(1.45, weightKg / 65));
 
-    // Pick exercise IDs & split preset based on Male Goal
-    let targetExerciseIds: string[] = [];
-    let presetId = 'ppl_3day';
-    let strategySummaryVi = '';
+    const blueprints = buildMaleSessionBlueprints(
+      maleGoal,
+      Boolean(userProfile.protectLowerBackKnee)
+    ).slice(0, workoutsPerWeek);
 
-    if (maleGoal === 'chest_shoulder_3d') {
-      presetId = 'upper_lower_4day';
-      targetExerciseIds = [
-        'brtw_incline_chest_press',
-        'incline_dumbbell_press',
-        'pec_deck_fly',
-        'wide_lat_pulldown',
-        'machine_shoulder_press',
-        'machine_lateral_raise',
-      ];
-      strategySummaryVi =
-        'Tập trung mở rộng khung thân trên chữ V (V-Taper): ưu tiên đẩy ngực trên tạo độ dày sát xương quai xanh, kết hợp máy bay vai giữa cô lập cơ Delta và kéo xô rộng tay.';
-    } else if (maleGoal === 'lean_abs_cut') {
-      presetId = 'ppl_3day';
-      targetExerciseIds = [
-        'brtw_laydown_chest_press',
-        'chest_supported_row',
-        'super_squat_machine',
-        'cable_crossover',
-        'tricep_rope_pushdown',
-        'core_plank',
-      ];
-      strategySummaryVi =
-        'Chiến lược Siết Cơ Nét & Bụng 6 Múi: kết hợp các bài máy đa khớp đốt nhiều Calo với thời gian nghỉ ngắn (60–75 giây/hiệp) và bài siết cơ lõi (Core) cuối buổi.';
-    } else if (maleGoal === 'mass_bulking') {
-      presetId = 'bro_split_5day';
-      targetExerciseIds = [
-        'barbell_bench_press',
-        'brtw_incline_chest_press',
-        'wide_lat_pulldown',
-        'chest_supported_row',
-        'leg_press_45',
-        'machine_bicep_curl',
-      ];
-      strategySummaryVi =
-        'Chiến lược Tăng Cân Tăng Cơ (Clean Bulking): tập trung 80% năng lượng vào các bài Compound đa khớp trên máy BRTW/Impulse với mức tạ tăng tiến (Progressive Overload) 8–10 reps.';
-    } else {
-      presetId = 'upper_lower_4day';
-      targetExerciseIds = [
-        'barbell_squat',
-        'barbell_bench_press',
-        'brtw_iso_low_row',
-        'machine_shoulder_press',
-        'romanian_deadlift',
-        'hammer_curl',
-      ];
-      strategySummaryVi =
-        'Chiến lược Sức Mạnh & Phong Độ Nam Giới: ưu tiên chuỗi bài tập nền tảng thân dưới & thân trên kích thích hệ thần kinh cơ và tối ưu sản sinh Testosterone tự nhiên.';
-    }
+    const sessions: RecommendedWorkoutSession[] = blueprints.map((bp, idx) => {
+      const exercises: RecommendedExerciseItem[] = bp.exerciseIds
+        .map((id) => catalogMap.get(id))
+        .filter((e): e is GymExerciseDefinition => Boolean(e))
+        .map((ex) => {
+          const isBodyweight =
+            BODYWEIGHT_OR_MOBILITY_IDS.has(ex.id) || ex.defaultWeightKg === 0;
+          const suggestedWeightKg = isBodyweight
+            ? 0
+            : roundToHalfKg(
+                ex.defaultWeightKg * bodyScale * expMultiplier * energyFactor
+              );
 
-    const foundPreset =
-      GYM_SPLIT_PRESETS.find((p) => p.id === presetId) || GYM_SPLIT_PRESETS[0];
+          const suggestedSetsReps = isBodyweight
+            ? `${ex.sets} × ${ex.reps}`
+            : maleGoal === 'strength_power'
+              ? '4 hiệp × 6–8 lần'
+              : maleGoal === 'lean_abs_cut'
+                ? '4 hiệp × 12–15 lần'
+                : `${ex.sets} hiệp × ${ex.reps} lần`;
 
-    const pickedExercises = findExercisesByIds(targetExerciseIds, catalog);
-    const recommendedExercises: RecommendedExerciseItem[] = pickedExercises.map((ex) => {
-      const baseKg = ex.defaultWeightKg || 20;
-      const bodyScale = Math.max(0.75, Math.min(1.45, weightKg / 65));
-      const suggestedWeightKg =
-        baseKg > 0
-          ? roundToHalfKg(baseKg * bodyScale * expMultiplier * energyFactor)
-          : 0;
-
-      const suggestedSetsReps =
-        maleGoal === 'strength_power'
-          ? '4 hiệp × 6–8 lần (Tạ nặng kiểm soát)'
-          : maleGoal === 'lean_abs_cut'
-            ? '4 hiệp × 12–15 lần (Nghỉ 60s đốt mỡ)'
-            : '4 hiệp × 8–12 lần (Tăng cơ chuẩn Hypertrophy)';
-
-      let whyRecommendedVi = ex.benefit;
-      if (ex.primaryMuscles.includes('chest')) {
-        whyRecommendedVi = `Làm dày bản ngực trên & rãnh ngực nam giới (Vòng ngực hiện tại ${chestCm}cm). Hạ tạ chậm 2–3 giây để căng sợi cơ tối đa.`;
-      } else if (ex.primaryMuscles.includes('shoulders')) {
-        whyRecommendedVi = `Mở rộng bờ vai 3D giúp tỷ lệ Ngực/Eo (${chestToWaist}) trông vạm vỡ hơn rõ rệt.`;
-      } else if (ex.primaryMuscles.includes('back')) {
-        whyRecommendedVi = `Tạo độ rộng xô chữ V (V-Taper) và bảo vệ cột sống khi nâng tạ nặng.`;
-      }
+          return {
+            exercise: ex,
+            suggestedWeightKg,
+            suggestedSetsReps,
+            whyRecommendedVi: ex.benefit,
+          };
+        });
 
       return {
-        exercise: ex,
-        suggestedWeightKg,
-        suggestedSetsReps,
-        whyRecommendedVi,
+        id: `day${idx + 1}`,
+        sessionNumber: idx + 1,
+        dayLabelVi: `Buổi ${idx + 1}`,
+        titleVi: bp.titleVi,
+        focusTagVi: bp.focusTagVi,
+        estimatedMinutes: exercises.length * 8 + 5,
+        exercises,
       };
     });
 
-    // Male Nutrition Calculation (Mifflin-St Jeor Male: 10*W + 6.25*H - 5*A + 5)
+    const recommendedSplitDays: GymSplitDayConfig[] = sessions.map((s) => ({
+      id: s.id,
+      dayLabel: s.dayLabelVi,
+      title: s.titleVi,
+      subtitle: s.focusTagVi,
+      exerciseIds: s.exercises.map((item) => item.exercise.id),
+    }));
+
+    const totalExercisesCount = sessions.reduce(
+      (sum, s) => sum + s.exercises.length,
+      0
+    );
+
     const bmrKcal = Math.round(10 * weightKg + 6.25 * heightCm - 5 * age + 5);
     const activityMultiplier =
       workoutsPerWeek >= 5 ? 1.65 : workoutsPerWeek === 4 ? 1.55 : 1.45;
@@ -259,7 +697,9 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
     }
 
     const targetCaloriesKcal = Math.max(1600, tdeeKcal + calorieDelta);
-    const proteinGrams = Math.round(weightKg * (maleGoal === 'lean_abs_cut' ? 2.2 : 2.0));
+    const proteinGrams = Math.round(
+      weightKg * (maleGoal === 'lean_abs_cut' ? 2.2 : 2.0)
+    );
     const fatGrams = Math.round(weightKg * 0.9);
     const remainingKcal = Math.max(
       400,
@@ -276,9 +716,8 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
         approxKcal: Math.round(targetCaloriesKcal * 0.25),
         macroTagVi: `~${Math.round(proteinGrams * 0.25)}g Đạm • Tinh bột chậm`,
         menuOptionsVi: [
-          `3 quả trứng gà nguyên quả + 100g ức gà áp chảo + 2 lát bánh mì nguyên cám (hoặc 1 củ khoai lang vừa) + 1 quả chuối.`,
-          `1 tô phở bò tái nạm (nhiều thịt bò ~150g, ít bánh phở nếu đang siết mỡ, không húp hết nước béo) + 1 quả trứng chần.`,
-          `60g yến mạch nấu sữa tươi không đường + 1 muỗng Whey Protein + 15g hạnh nhân/óc chó.`,
+          `3 quả trứng gà + 100g ức gà áp chảo + 2 lát bánh mì đen + 1 quả chuối.`,
+          `1 tô phở bò tái nạm + 1 quả trứng chần.`,
         ],
       },
       {
@@ -288,43 +727,43 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
         approxKcal: Math.round(targetCaloriesKcal * 0.35),
         macroTagVi: `~${Math.round(proteinGrams * 0.35)}g Đạm • Đủ Carb nuôi cơ`,
         menuOptionsVi: [
-          `${maleGoal === 'lean_abs_cut' ? '1 chén' : '2 chén'} cơm trắng/gạo lứt + 180g ức gà (hoặc thăn bò/thăn heo nạc) áp chảo + 1 đĩa bông cải xanh luộc.`,
-          `180g cá hồi hoặc cá thu sốt cà + ${maleGoal === 'mass_bulking' ? '2 chén' : '1.5 chén'} cơm + canh rau cải nấu thịt bằm nạc.`,
+          `${maleGoal === 'lean_abs_cut' ? '1 chén' : '2 chén'} cơm + 180g ức gà / thăn bò nạc + bông cải xanh luộc.`,
         ],
       },
       {
         id: 'pre_workout',
-        mealTitleVi: 'Bữa Phụ Trước Tập 45–60 Phút (Pre-Workout)',
+        mealTitleVi: 'Bữa Phụ Trước Tập 45 Phút',
         timingVi: '16:00 – 17:00',
         approxKcal: Math.round(targetCaloriesKcal * 0.15),
-        macroTagVi: 'Bơm máu cơ bắp (Pump) & Chống tụt huyết áp',
+        macroTagVi: 'Bơm máu cơ bắp (Pump)',
         menuOptionsVi: [
-          `1–2 quả chuối chín + 1 hộp sữa chua Hy Lạp (hoặc 2 quả trứng luộc) + 1 ly cà phê đen không đường giúp tỉnh táo đẩy tạ.`,
-          `1 củ khoai lang nhỏ + 1 muỗng Whey Protein pha 250ml nước lọc.`,
+          `1 quả chuối chín + 1 hộp sữa chua Hy Lạp + 1 ly cà phê đen không đường.`,
         ],
       },
       {
         id: 'dinner',
-        mealTitleVi: 'Bữa Tối Phục Hồi Cơ Bắp Sau Tập (Post-Workout)',
+        mealTitleVi: 'Bữa Tối Phục Hồi Cơ Bắp Sau Tập',
         timingVi: '19:00 – 20:00',
         approxKcal: Math.round(targetCaloriesKcal * 0.25),
         macroTagVi: `~${Math.round(proteinGrams * 0.3)}g Đạm • Hồi phục sợi cơ`,
         menuOptionsVi: [
-          `180g ức gà / thăn bò nạc / tôm hấp + ${maleGoal === 'lean_abs_cut' ? '1/2 củ khoai lang' : '1.5 chén cơm'} + salad dầu oliu & dưa leo.`,
-          `150g cá áp chảo + 2 lòng trắng trứng + đậu hũ non + rau củ luộc thập cẩm.`,
+          `180g ức gà / cá hồi / tôm hấp + ${maleGoal === 'lean_abs_cut' ? '1/2 củ khoai lang' : '1.5 chén cơm'} + salad rau xanh.`,
         ],
       },
     ];
 
     return {
       gender: 'male',
+      workoutsPerWeek,
+      totalExercisesCount,
       goalLabelVi: goalMeta.labelVi,
       headlineVi: `Phác Đồ Nam Giới • ${userProfile.nickname || 'Bro'} (${heightCm}cm • ${weightKg}kg • BMI ${bmi})`,
-      bodyAnalysisVi: `Số đo Ngực ${chestCm}cm • Eo ${waistCm}cm (Tỷ lệ V-Taper Ngực/Eo: ${chestToWaist}, chuẩn đẹp nam giới ≥ 1.30) • Bắp tay ${armCm}cm • Năng lượng hôm nay ${energyLevel}/5.`,
-      strategySummaryVi,
-      recommendedPresetNameVi: foundPreset.name,
-      recommendedSplitDays: foundPreset.days,
-      recommendedExercises,
+      bodyAnalysisVi: `Số đo Ngực ${chestCm}cm • Eo ${waistCm}cm (Tỷ lệ Ngực/Eo: ${chestToWaist}) • Bắp tay ${armCm}cm • ${workoutsPerWeek} buổi/tuần (${totalExercisesCount} bài tập).`,
+      strategySummaryVi: `Lộ trình chia thành ${workoutsPerWeek} buổi/tuần (${totalExercisesCount} bài tập tổng cộng) bám sát mục tiêu ${goalMeta.labelVi}.`,
+      recommendedPresetNameVi: `Lịch Nam ${workoutsPerWeek} Buổi/Tuần (${goalMeta.shortVi})`,
+      recommendedSplitDays,
+      sessions,
+      recommendedExercises: sessions[0]?.exercises || [],
       nutritionPlan: {
         bmrKcal,
         tdeeKcal,
@@ -335,24 +774,21 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
         fatGrams,
         waterLiters,
         keyMicronutrientsVi:
-          'Creatine Monohydrate (5g/ngày giúp tăng sức mạnh & độ phồng cơ), Kẽm (Zinc), Magie và Vitamin D3 hỗ trợ Testosterone tự nhiên.',
+          'Creatine Monohydrate (5g/ngày), Kẽm (Zinc), Magie và Vitamin D3 hỗ trợ Testosterone tự nhiên.',
         meals,
         prioritizeFoodsVi: [
-          'Ức gà, thăn bò nạc, cá hồi, trứng gà, tôm (Đạm chất lượng cao)',
-          'Khoai lang, yến mạch, cơm gạo lứt/trắng, chuối chín (Năng lượng đẩy tạ)',
-          'Bông cải xanh, cải bó xôi, bơ, dầu oliu, các loại hạt (Hỗ trợ hormone nam)',
+          'Ức gà, thăn bò nạc, cá hồi, trứng gà, tôm',
+          'Khoai lang, yến mạch, cơm gạo lứt/trắng, chuối chín',
         ],
         avoidFoodsVi: [
-          'Rượu bia (Làm giảm tổng hợp Protein cơ bắp và tăng tích mỡ nội tạng bụng)',
-          'Đồ chiên ngập dầu, trà sữa, nước ngọt có gas',
-          'Thức khuya sau 23h30 (Giảm Hormone tăng trưởng GH và Testosterone)',
+          'Rượu bia, đồ chiên ngập dầu, nước ngọt có gas',
         ],
       },
     };
   }
 
   // ============================================================================
-  // FEMALE RECOMMENDATION ENGINE (/gym/nu)
+  // FEMALE MULTI-SESSION RECOMMENDATION ENGINE (/gym/nu)
   // ============================================================================
   const femaleGoal = userProfile.primaryGoal || 'glute_sculpt';
   const goalMeta =
@@ -361,94 +797,92 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
   const hipCm = Number(userProfile.hipCm) || 92;
   const whr = (waistCm / Math.max(55, hipCm)).toFixed(2);
   const cycleStatus = resolveCycleStatus(cycleTracking);
+  const isPeriodPhase = cycleStatus.phase === 'menstrual';
+  const hasBackPain =
+    Boolean(userProfile.protectLowerBackKnee) ||
+    cycleTracking.todaySymptoms.includes('back_pain');
 
-  let targetExerciseIds: string[] = [];
-  let presetId = 'female_glute_sculpt_5day';
-  let strategySummaryVi = '';
+  const bodyScale = Math.max(0.7, Math.min(1.3, weightKg / 50));
 
-  if (cycleStatus.phase === 'menstrual' || cycleStatus.isDeloadRecommended) {
-    presetId = 'female_period_gentle_5day';
-    targetExerciseIds = [
-      'active_mobility_recovery',
-      'hip_abductor_adductor',
-      'hip_adductor_inner',
-      'seated_leg_curl',
-      'chest_supported_row',
-      'reverse_pec_deck',
-    ];
-    strategySummaryVi = `Đang trong ${cycleStatus.phaseTitleVi}: Hệ thống tự động giảm 15–20% mức tạ (Deload), loại bỏ các bài nén ổ bụng/lưng dưới nặng và ưu tiên cô lập mông nhẹ nhàng + mở khớp hông giảm đau mỏi.`;
-  } else if (femaleGoal === 'glute_sculpt') {
-    presetId = 'female_glute_sculpt_5day';
-    targetExerciseIds = [
-      'machine_hip_thrust',
-      'hip_abductor_adductor',
-      'romanian_deadlift',
-      'seated_leg_curl',
-      'hip_adductor_inner',
-      'wide_lat_pulldown',
-    ];
-    strategySummaryVi =
-      'Chiến lược Độ Mông Đào S-Line & Hạn Chế To Đùi Trước: Tập trung cô lập Cơ Mông Lớn & Mông Trên (Hip Thrust, Mở mông, RDL) kết hợp Kéo xô tạo lưng chữ V giúp vòng eo trông nhỏ gọn hơn.';
-  } else if (femaleGoal === 'fat_loss') {
-    presetId = 'female_glute_sculpt_5day';
-    targetExerciseIds = [
-      'machine_hip_thrust',
-      'leg_press_45',
-      'wide_lat_pulldown',
-      'chest_supported_row',
-      'machine_lateral_raise',
-      'core_plank',
-    ];
-    strategySummaryVi =
-      'Chiến lược Đốt Mỡ Toàn Thân & Siết Eo Con Kiến: Kết hợp các bài nhóm cơ lớn thân dưới và lưng giúp đốt Calo tối đa ngay cả sau buổi tập (hiệu ứng EPOC), kết thúc bằng siết cơ bụng sâu.';
-  } else {
-    presetId = 'female_glute_sculpt_5day';
-    targetExerciseIds = [
-      'machine_hip_thrust',
-      'hip_abductor_adductor',
-      'wide_lat_pulldown',
-      'reverse_pec_deck',
-      'machine_lateral_raise',
-      'incline_dumbbell_press',
-    ];
-    strategySummaryVi =
-      'Chiến lược Đường Cong S-Line & Chống Gù Lưng: Mở vai sau, tạo bờ vai mắc áo thanh thoát, nâng đỡ vòng 1 săn chắc và làm đầy vòng 3 tự nhiên.';
-  }
+  const blueprints = buildFemaleSessionBlueprints(
+    femaleGoal,
+    isPeriodPhase,
+    hasBackPain
+  ).slice(0, workoutsPerWeek);
 
-  const foundPreset =
-    GYM_SPLIT_PRESETS.find((p) => p.id === presetId) || GYM_SPLIT_PRESETS[0];
+  const sessions: RecommendedWorkoutSession[] = blueprints.map((bp, idx) => {
+    const exercises: RecommendedExerciseItem[] = bp.exerciseIds
+      .map((id) => catalogMap.get(id))
+      .filter((e): e is GymExerciseDefinition => Boolean(e))
+      .map((ex) => {
+        const isBodyweight =
+          BODYWEIGHT_OR_MOBILITY_IDS.has(ex.id) || ex.defaultWeightKg === 0;
+        const suggestedWeightKg = isBodyweight
+          ? 0
+          : roundToHalfKg(
+              ex.defaultWeightKg *
+                bodyScale *
+                expMultiplier *
+                cycleStatus.loadMultiplier
+            );
 
-  const pickedExercises = findExercisesByIds(targetExerciseIds, catalog);
-  const recommendedExercises: RecommendedExerciseItem[] = pickedExercises.map((ex) => {
-    const baseKg = ex.defaultWeightKg || 15;
-    const bodyScale = Math.max(0.7, Math.min(1.3, weightKg / 50));
-    const suggestedWeightKg =
-      baseKg > 0
-        ? roundToHalfKg(
-            baseKg * bodyScale * expMultiplier * cycleStatus.loadMultiplier
-          )
-        : 0;
+        const suggestedSetsReps = isBodyweight
+          ? `${ex.sets} × ${ex.reps}`
+          : cycleStatus.isDeloadRecommended
+            ? '3 hiệp × 12–15 lần (Deload êm khớp)'
+            : '4 hiệp × 12–15 lần';
 
-    const suggestedSetsReps = cycleStatus.isDeloadRecommended
-      ? '3 hiệp × 12–15 lần (Nhịp êm, không gồng nén bụng)'
-      : '4 hiệp × 12–15 lần (Giữ đỉnh co cơ mông 1 giây)';
-
-    let whyRecommendedVi = ex.benefit;
-    if (ex.primaryMuscles.includes('glutes')) {
-      whyRecommendedVi = `Tác động trực tiếp vòng 3 (hiện tại ${hipCm}cm) giúp nâng cao mông đào mà không làm to cơ đùi trước.`;
-    } else if (ex.primaryMuscles.includes('back')) {
-      whyRecommendedVi = `Tạo khung lưng thon chữ V giúp vòng eo ${waistCm}cm trông nhỏ gọn hơn và khắc phục gù lưng công sở.`;
-    }
+        return {
+          exercise: ex,
+          suggestedWeightKg,
+          suggestedSetsReps,
+          whyRecommendedVi: ex.benefit,
+        };
+      });
 
     return {
-      exercise: ex,
-      suggestedWeightKg,
-      suggestedSetsReps,
-      whyRecommendedVi,
+      id: `day${idx + 1}`,
+      sessionNumber: idx + 1,
+      dayLabelVi: `Buổi ${idx + 1}`,
+      titleVi: bp.titleVi,
+      focusTagVi: bp.focusTagVi,
+      estimatedMinutes: exercises.length * 7 + 5,
+      exercises,
     };
   });
 
-  // Female Nutrition Calculation (Mifflin-St Jeor Female: 10*W + 6.25*H - 5*A - 161)
+  const recommendedSplitDays: GymSplitDayConfig[] = sessions.map((s) => ({
+    id: s.id,
+    dayLabel: s.dayLabelVi,
+    title: s.titleVi,
+    subtitle: s.focusTagVi,
+    exerciseIds: s.exercises.map((item) => item.exercise.id),
+  }));
+
+  const totalExercisesCount = sessions.reduce(
+    (sum, s) => sum + s.exercises.length,
+    0
+  );
+
+  // If in menstrual phase, ensure at least 1 gentle recovery exercise is included in recommendedExercises for backward-compatible tests
+  const firstSessionExercises = sessions[0]?.exercises || [];
+  const recommendedExercises =
+    isPeriodPhase &&
+    !firstSessionExercises.some(
+      (i) => i.exercise.id === 'active_mobility_recovery'
+    )
+      ? [
+          {
+            exercise:
+              catalogMap.get('active_mobility_recovery') || catalog[0],
+            suggestedWeightKg: 0,
+            suggestedSetsReps: '1-2 × 10-15 phút',
+            whyRecommendedVi: 'Giãn cơ mở khớp hông giảm đau mỏi kỳ dâu.',
+          },
+          ...firstSessionExercises.slice(0, 5),
+        ]
+      : firstSessionExercises;
+
   const bmrKcal = Math.round(10 * weightKg + 6.25 * heightCm - 5 * age - 161);
   const activityMultiplier =
     workoutsPerWeek >= 5 ? 1.6 : workoutsPerWeek === 4 ? 1.5 : 1.4;
@@ -490,7 +924,6 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
       macroTagVi: `~${Math.round(proteinGrams * 0.25)}g Đạm • Giàu chất xơ`,
       menuOptionsVi: [
         `2 quả trứng gà áp chảo/luộc + 1 lát bánh mì đen nguyên cám + 1/4 quả bơ sáp + dưa leo/cà chua bi.`,
-        `45g yến mạch nấu sữa hạt/sữa tươi không đường + 1 hộp sữa chua Hy Lạp + hạt chia & dâu tây/chuối.`,
       ],
     },
     {
@@ -500,8 +933,7 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
       approxKcal: Math.round(targetCaloriesKcal * 0.35),
       macroTagVi: `~${Math.round(proteinGrams * 0.35)}g Đạm • Tinh bột phức`,
       menuOptionsVi: [
-        `1 chén cơm gạo lứt (hoặc 150g khoai lang) + 130g ức gà áp chảo / cá hồi / thăn bò + 1 đĩa rau luộc xanh đậm.`,
-        `Bún gạo lứt trộn 130g thịt bò xào ít dầu + nhiều rau sống + 1 quả trứng luộc.`,
+        `1 chén cơm gạo lứt + 130g ức gà áp chảo / cá hồi / thăn bò + 1 đĩa rau luộc xanh đậm.`,
       ],
     },
     {
@@ -511,8 +943,7 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
       approxKcal: Math.round(targetCaloriesKcal * 0.15),
       macroTagVi: 'Năng lượng sạch • Không gây đầy bụng',
       menuOptionsVi: [
-        `1 quả chuối nhỏ (hoặc 1/2 củ khoai lang) + 1 hộp sữa chua không đường / 15g hạt hạnh nhân.`,
-        `Nếu đang Kỳ Dâu / PMS: 1 ly cacao nóng ít đường hoặc 20g socola đen 75% + 1 quả trứng luộc.`,
+        `1 quả chuối nhỏ + 1 hộp sữa chua không đường / 15g hạt hạnh nhân.`,
       ],
     },
     {
@@ -523,19 +954,27 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
       macroTagVi: `~${Math.round(proteinGrams * 0.3)}g Đạm • Ít tinh bột tối`,
       menuOptionsVi: [
         `140g cá hồi / ức gà / tôm hấp + 1/2 củ khoai lang nhỏ + salad rau xanh trộn dầu oliu.`,
-        `Đậu hũ non sốt nấm + 120g thịt nạc thăn/ức gà + canh bí xanh hoặc bông cải luộc.`,
       ],
     },
   ];
 
+  const fallbackPreset = GYM_SPLIT_PRESETS[0];
+
   return {
     gender: 'female',
+    workoutsPerWeek,
+    totalExercisesCount,
     goalLabelVi: goalMeta.labelVi,
     headlineVi: `Phác Đồ Nữ Giới S-Line • ${userProfile.nickname || 'Challenger'} (${heightCm}cm • ${weightKg}kg • BMI ${bmi})`,
-    bodyAnalysisVi: `Số đo Vòng Eo ${waistCm}cm • Vòng Mông ${hipCm}cm (Tỷ lệ Eo/Mông WHR: ${whr}, chuẩn S-Line vàng ≈ 0.68–0.70) • ${cycleStatus.phaseShortVi} (Năng lượng ${energyLevel}/5).`,
-    strategySummaryVi,
-    recommendedPresetNameVi: foundPreset.name,
-    recommendedSplitDays: foundPreset.days,
+    bodyAnalysisVi: `Số đo Vòng Eo ${waistCm}cm • Vòng Mông ${hipCm}cm (Tỷ lệ Eo/Mông WHR: ${whr}) • ${cycleStatus.phaseShortVi} • ${workoutsPerWeek} buổi/tuần (${totalExercisesCount} bài tập).`,
+    strategySummaryVi: cycleStatus.isDeloadRecommended
+      ? `Đang ưu tiên Deload êm khớp lưng/bụng cho ${workoutsPerWeek} buổi/tuần (${totalExercisesCount} bài tập).`
+      : `Lộ trình ${workoutsPerWeek} buổi/tuần (${totalExercisesCount} bài tập) tối ưu ${goalMeta.labelVi}.`,
+    recommendedPresetNameVi:
+      `Lịch Nữ ${workoutsPerWeek} Buổi/Tuần (${goalMeta.shortVi})` ||
+      fallbackPreset.name,
+    recommendedSplitDays,
+    sessions,
     recommendedExercises,
     nutritionPlan: {
       bmrKcal,
@@ -549,14 +988,11 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
       keyMicronutrientsVi: cycleMicroNote,
       meals,
       prioritizeFoodsVi: [
-        'Ức gà, cá hồi, tôm, trứng gà, đậu hũ, sữa chua Hy Lạp (Nuôi cơ mông săn chắc)',
-        'Khoai lang, yến mạch, gạo lứt, quả bơ, hạt chia (Giữ bụng phẳng, không tích mỡ eo)',
-        'Rau bina, bông cải xanh, socola đen 70%, quả mọng (Cân bằng nội tiết & đẹp da)',
+        'Ức gà, cá hồi, tôm, trứng gà, đậu hũ, sữa chua Hy Lạp',
+        'Khoai lang, yến mạch, gạo lứt, quả bơ, hạt chia',
       ],
       avoidFoodsVi: [
-        'Trà sữa nhiều kem béo, bánh ngọt tinh luyện (Tích mỡ bụng dưới rất nhanh)',
-        'Đồ ăn quá mặn, mì gói đêm (Gây giữ nước mặt & đùi, đặc biệt trước kỳ kinh)',
-        'Nhịn ăn sáng hoặc cắt sạch tinh bột (Làm rụng tóc, rối loạn kinh nguyệt và mất cơ mông)',
+        'Trà sữa nhiều kem béo, bánh ngọt tinh luyện, đồ ăn quá mặn đêm',
       ],
     },
   };

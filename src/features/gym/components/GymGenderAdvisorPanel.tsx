@@ -108,6 +108,7 @@ export default function GymGenderAdvisorPanel({
   const [draftCycle, setDraftCycle] = useState<GymCycleTrackingState>(cycleTracking);
   const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
   const [isFormExpanded, setIsFormExpanded] = useState<boolean>(true);
+  const [activeSessionIdx, setActiveSessionIdx] = useState<number>(0);
 
   useEffect(() => {
     setDraftProfile((prev) => {
@@ -685,8 +686,8 @@ export default function GymGenderAdvisorPanel({
         aria-label="Kết quả đề xuất bài tập và chế độ ăn uống cá nhân hóa"
         className={`space-y-4 ${hasSubmitted ? 'pt-1' : 'pt-2 border-t border-[#262632]'}`}
       >
-        {/* PART A: 6 LIVE 3D EXERCISE CARDS FOR THIS USER'S GOAL */}
-        <div className="space-y-2.5">
+        {/* PART A: MULTI-SESSION 3D WORKOUT SCHEDULE MATCHING USER'S WORKOUTS/WEEK */}
+        <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Rotate3d
@@ -694,7 +695,7 @@ export default function GymGenderAdvisorPanel({
                 className={isMale ? 'text-[#5CE1E6]' : 'text-[#FF5C8A]'}
               />
               <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#F7F7F7]">
-                1. Đề Xuất Bài Tập Trọng Tâm Cho Bạn ({recommendation.recommendedExercises.length} Mô Hình 3D)
+                1. Đề Xuất Bài Tập Trọng Tâm Cho Bạn ({recommendation.workoutsPerWeek} Buổi/Tuần • Tổng {recommendation.totalExercisesCount} Bài 3D)
               </h2>
             </div>
 
@@ -708,57 +709,140 @@ export default function GymGenderAdvisorPanel({
             </button>
           </div>
 
-          {/* 6 Live 3D Visual Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {recommendation.recommendedExercises.map((item, idx) => {
-              const isSelected = selectedExerciseId === item.exercise.id;
+          {/* Session Tabs (Buổi 1, Buổi 2, Buổi 3, Buổi 4... matching Số buổi/tuần) */}
+          <div
+            role="tablist"
+            aria-label="Chọn buổi tập trong tuần"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2"
+          >
+            {recommendation.sessions.map((session, sIdx) => {
+              const safeIdx =
+                activeSessionIdx < recommendation.sessions.length
+                  ? activeSessionIdx
+                  : 0;
+              const isCurrentSession = safeIdx === sIdx;
               return (
-                <div
-                  key={item.exercise.id}
-                  onClick={() => onSelectExerciseFor3D(item.exercise.id)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      onSelectExerciseFor3D(item.exercise.id);
+                <button
+                  key={session.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isCurrentSession}
+                  onClick={() => {
+                    setActiveSessionIdx(sIdx);
+                    if (session.exercises[0]) {
+                      onSelectExerciseFor3D(session.exercises[0].exercise.id);
                     }
                   }}
-                  className={`rounded-2xl bg-[#111114] border p-2.5 flex flex-col gap-2 transition-all cursor-pointer ${
-                    isSelected
+                  className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                    isCurrentSession
                       ? isMale
-                        ? 'border-[#5CE1E6] ring-2 ring-[#5CE1E6]/25'
-                        : 'border-[#FF5C8A] ring-2 ring-[#FF5C8A]/25'
-                      : 'border-[#272733] hover:border-zinc-500'
+                        ? 'bg-[#5CE1E6]/15 border-[#5CE1E6] text-[#F7F7F7]'
+                        : 'bg-[#FF5C8A]/15 border-[#FF5C8A] text-[#F7F7F7]'
+                      : 'bg-[#111114] border-[#272733] text-zinc-300 hover:border-zinc-500'
                   }`}
                 >
-                  {/* Live 3D Mannequin Illustration Inside Every Card */}
-                  <GymMannequin3DViewer exercise={item.exercise} compact />
-
-                  {/* Ultra-Clean 2-Line Footer (Minimal Text) */}
-                  <div className="px-1 space-y-1.5">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <span className="text-xs sm:text-sm font-black text-[#F7F7F7] truncate">
-                        {idx + 1}. {item.exercise.vietnameseName}
-                      </span>
-                      {item.suggestedWeightKg > 0 && (
-                        <span className="px-2 py-0.5 rounded-full bg-[#A3F77B]/15 text-[#A3F77B] text-[11px] font-black shrink-0">
-                          {item.suggestedWeightKg}kg
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2 text-[11px] font-bold text-zinc-400">
-                      <span className="text-[#FF85A9]">
-                        {item.exercise.sets} × {item.exercise.reps}
-                      </span>
-                      <span className="truncate">{item.exercise.machineName}</span>
-                    </div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span
+                      className={`text-xs font-black ${
+                        isCurrentSession
+                          ? isMale
+                            ? 'text-[#5CE1E6]'
+                            : 'text-[#FF5C8A]'
+                          : 'text-zinc-200'
+                      }`}
+                    >
+                      {session.dayLabelVi}
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded-md bg-[#1D1D27] text-[#A3F77B] text-[10px] font-black">
+                      {session.exercises.length} bài • ~{session.estimatedMinutes}p
+                    </span>
                   </div>
-                </div>
+                  <div className="text-[11px] font-bold text-zinc-300 truncate mt-1">
+                    {session.titleVi}
+                  </div>
+                </button>
               );
             })}
           </div>
+
+          {/* Active Session Banner */}
+          {(() => {
+            const safeIdx =
+              activeSessionIdx < recommendation.sessions.length
+                ? activeSessionIdx
+                : 0;
+            const currentSession =
+              recommendation.sessions[safeIdx] || recommendation.sessions[0];
+            if (!currentSession) return null;
+
+            return (
+              <>
+                <div className="px-3.5 py-2 rounded-xl bg-[#111114] border border-[#272733] flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="font-black text-[#F7F7F7]">
+                    Đang xem {currentSession.dayLabelVi}/{recommendation.workoutsPerWeek}:{' '}
+                    <span className={isMale ? 'text-[#5CE1E6]' : 'text-[#FF85A9]'}>
+                      {currentSession.titleVi}
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-bold text-zinc-400">
+                    Trọng tâm: {currentSession.focusTagVi} ({currentSession.exercises.length} bài tập trong buổi này)
+                  </div>
+                </div>
+
+                {/* 6 Live 3D Visual Cards Grid for Selected Session */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {currentSession.exercises.map((item, idx) => {
+                    const isSelected = selectedExerciseId === item.exercise.id;
+                    return (
+                      <div
+                        key={`${currentSession.id}_${item.exercise.id}`}
+                        onClick={() => onSelectExerciseFor3D(item.exercise.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            onSelectExerciseFor3D(item.exercise.id);
+                          }
+                        }}
+                        className={`rounded-2xl bg-[#111114] border p-2.5 flex flex-col gap-2 transition-all cursor-pointer ${
+                          isSelected
+                            ? isMale
+                              ? 'border-[#5CE1E6] ring-2 ring-[#5CE1E6]/25'
+                              : 'border-[#FF5C8A] ring-2 ring-[#FF5C8A]/25'
+                            : 'border-[#272733] hover:border-zinc-500'
+                        }`}
+                      >
+                        {/* Live 3D Mannequin Illustration Inside Every Card */}
+                        <GymMannequin3DViewer exercise={item.exercise} compact />
+
+                        {/* Ultra-Clean 2-Line Footer (Minimal Text) */}
+                        <div className="px-1 space-y-1.5">
+                          <div className="flex items-center justify-between gap-1.5">
+                            <span className="text-xs sm:text-sm font-black text-[#F7F7F7] truncate">
+                              Bài {idx + 1}. {item.exercise.vietnameseName}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full bg-[#A3F77B]/15 text-[#A3F77B] text-[11px] font-black shrink-0">
+                              {item.suggestedWeightKg > 0
+                                ? `${item.suggestedWeightKg}kg`
+                                : 'Bodyweight'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-2 text-[11px] font-bold text-zinc-400">
+                            <span className="text-[#FF85A9]">
+                              {item.exercise.sets} × {item.exercise.reps}
+                            </span>
+                            <span className="truncate">{item.exercise.machineName}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         {/* PART B: ULTRA-CONCISE VISUAL NUTRITION & 4 MEAL CHIPS */}

@@ -29,6 +29,7 @@ import {
   translateGanZhi,
   translateWuxingJu,
   translateStarName,
+  translateBrightness,
   translateYinYangGender,
   translatePalaceName,
   translateSiHua,
@@ -82,6 +83,44 @@ const BRANCH_SVG_POS: Record<number, [number, number]> = {
 };
 
 const DISPLAY_BRANCH_ORDER = [5, 6, 7, 8, 4, 9, 3, 10, 2, 1, 0, 11];
+
+/**
+ * Hậu Thiên Bát Quái & Phương vị tương ứng với 12 Địa Chi trên Thiên Bàn Tử Vi
+ * (Ngọ = Chính Nam / Quẻ Ly ☲ ở trên; Tý = Chính Bắc / Quẻ Khảm ☵ ở dưới)
+ */
+const BRANCH_BAGUA_META: Record<
+  number,
+  { trigram: string; trigramVi: string; directionVi: string }
+> = {
+  5: { trigram: '☴', trigramVi: 'Tốn', directionVi: 'Đông Nam' }, // Tỵ
+  6: { trigram: '☲', trigramVi: 'Ly', directionVi: 'Chính Nam' }, // Ngọ
+  7: { trigram: '☷', trigramVi: 'Khôn', directionVi: 'Tây Nam' }, // Mùi
+  8: { trigram: '☷', trigramVi: 'Khôn', directionVi: 'Tây Nam' }, // Thân
+  4: { trigram: '☴', trigramVi: 'Tốn', directionVi: 'Đông Nam' }, // Thìn
+  9: { trigram: '☱', trigramVi: 'Đoài', directionVi: 'Chính Tây' }, // Dậu
+  3: { trigram: '☳', trigramVi: 'Chấn', directionVi: 'Chính Đông' }, // Mão
+  10: { trigram: '☰', trigramVi: 'Càn', directionVi: 'Tây Bắc' }, // Tuất
+  2: { trigram: '☶', trigramVi: 'Cấn', directionVi: 'Đông Bắc' }, // Dần
+  1: { trigram: '☶', trigramVi: 'Cấn', directionVi: 'Đông Bắc' }, // Sửu
+  0: { trigram: '☵', trigramVi: 'Khảm', directionVi: 'Chính Bắc' }, // Tý
+  11: { trigram: '☰', trigramVi: 'Càn', directionVi: 'Tây Bắc' }, // Hợi
+};
+
+const HOU_TIAN_BAGUA_RING: Array<{
+  trigram: string;
+  nameVi: string;
+  elementVi: string;
+  angleDeg: number;
+}> = [
+  { trigram: '☲', nameVi: 'Ly', elementVi: 'Hỏa', angleDeg: 0 }, // Nam (Top)
+  { trigram: '☷', nameVi: 'Khôn', elementVi: 'Thổ', angleDeg: 45 }, // Tây Nam
+  { trigram: '☱', nameVi: 'Đoài', elementVi: 'Kim', angleDeg: 90 }, // Tây (Right)
+  { trigram: '☰', nameVi: 'Càn', elementVi: 'Kim', angleDeg: 135 }, // Tây Bắc
+  { trigram: '☵', nameVi: 'Khảm', elementVi: 'Thủy', angleDeg: 180 }, // Bắc (Bottom)
+  { trigram: '☶', nameVi: 'Cấn', elementVi: 'Thổ', angleDeg: 225 }, // Đông Bắc
+  { trigram: '☳', nameVi: 'Chấn', elementVi: 'Mộc', angleDeg: 270 }, // Đông (Left)
+  { trigram: '☴', nameVi: 'Tốn', elementVi: 'Mộc', angleDeg: 315 }, // Đông Nam
+];
 
 function getYearStemIndex(solarYear: number): number {
   return (((solarYear - 4) % 10) + 10) % 10;
@@ -152,12 +191,16 @@ export default function ChartBoard({
   const sanHeBranch2 = (activeBranch + 8) % 12;
 
   // Tứ Hóa Overlay cho Đại Hạn (kể cả Đồng Hạn) hoặc Lưu Niên
-  const { overlaySiHua, overlayPrefix, activeAnchorBranch } = useMemo(() => {
+  const { overlaySiHua, overlayPrefix, activeAnchorBranch } = useMemo<{
+    overlaySiHua: Record<string, string>;
+    overlayPrefix?: string;
+    activeAnchorBranch: number;
+  }>(() => {
     if (timeView === 'daxian') {
       if (selectedDaXianIdx === CHILDHOOD_DAXIAN_INDEX) {
         const chPalace = getChildhoodDaXianPalace(chart, liunianYear);
         return {
-          overlaySiHua: chPalace ? buildSiHuaOverlayMap(chPalace.stem) : {},
+          overlaySiHua: chPalace ? buildSiHuaOverlayMap(chPalace.stem) : ({} as Record<string, string>),
           overlayPrefix: 'Đồng Hạn',
           activeAnchorBranch: chPalace ? chPalace.branch : chart.mingGongBranch,
         };
@@ -166,7 +209,7 @@ export default function ChartBoard({
       if (dx) {
         const dxPalace = palaceByBranch[dx.palaceBranch];
         return {
-          overlaySiHua: dxPalace ? buildSiHuaOverlayMap(dxPalace.stem) : {},
+          overlaySiHua: dxPalace ? buildSiHuaOverlayMap(dxPalace.stem) : ({} as Record<string, string>),
           overlayPrefix: 'Đ.Hạn',
           activeAnchorBranch: dx.palaceBranch,
         };
@@ -182,7 +225,7 @@ export default function ChartBoard({
       };
     }
     return {
-      overlaySiHua: {},
+      overlaySiHua: {} as Record<string, string>,
       overlayPrefix: undefined,
       activeAnchorBranch: chart.lunarInfo.yearBranch,
     };
@@ -535,14 +578,160 @@ export default function ChartBoard({
             const isSelected = activeBranch === branch;
             const isOpposite = oppositeBranch === branch;
             const isSanFang = sanHeBranch1 === branch || sanHeBranch2 === branch;
+            const relation = isSelected
+              ? 'selected'
+              : isOpposite
+              ? 'opposite'
+              : isSanFang
+              ? 'sanfang'
+              : 'none';
+
+            const stemCn = STEMS[palace.stem] || '';
+            const branchCn = BRANCHES[branch] || '';
+            const ganZhiVi = `${translateStem(stemCn)} ${translateBranch(branchCn)}`;
+            const bagua = BRANCH_BAGUA_META[branch];
+            const majorStars = palace.stars.filter((star) => star.type === 'major');
+            const notableAuxStars = palace.stars
+              .filter((star) => star.type === 'lucky' || star.type === 'sha')
+              .slice(0, 4);
 
             return (
-              <div key={branch} className="ziwei-palace-slot" style={{ gridRow: row, gridColumn: col }}>
-                <button type="button" className="ziwei-palace-preview"
-                  aria-pressed={isSelected} onClick={() => onSelectPalace(palace)}>
-                  <strong>{translatePalaceName(palace.name)}</strong>
-                  <span>{palace.stars.filter((star) => star.type === 'major').map((star) => translateStarName(star.name)).join(' · ') || 'Vô chính diệu'}</span>
-                  {bilingual && <small lang="zh">{palace.name}</small>}
+              <div
+                key={branch}
+                className="ziwei-palace-slot"
+                data-relation={relation}
+                style={{ gridRow: row, gridColumn: col }}
+              >
+                <button
+                  type="button"
+                  className="ziwei-palace-preview"
+                  data-relation={relation}
+                  aria-pressed={isSelected}
+                  onClick={() => onSelectPalace(palace)}
+                >
+                  {/* Chữ Địa Chi & Quẻ Bát Quái chìm dưới nền */}
+                  <span className="ziwei-palace-watermark" aria-hidden="true">
+                    {branchCn}
+                  </span>
+
+                  {/* Đầu cung: Tên cung + Ấn Mệnh/Thân + Vai trò Tam Phương / Quẻ */}
+                  <div className="ziwei-palace-head">
+                    <div className="ziwei-palace-title-group">
+                      <strong>{translatePalaceName(palace.name)}</strong>
+                      {bilingual && <small lang="zh">{palace.name}</small>}
+                      {palace.isMingGong && (
+                        <em className="ziwei-seal-tag ziwei-seal-ming">Mệnh</em>
+                      )}
+                      {palace.isShenGong && (
+                        <em className="ziwei-seal-tag ziwei-seal-shen">Thân</em>
+                      )}
+                    </div>
+
+                    {isSelected ? (
+                      <span className="ziwei-relation-pill ziwei-relation-selected">
+                        Bản cung
+                      </span>
+                    ) : isOpposite ? (
+                      <span className="ziwei-relation-pill ziwei-relation-opposite">
+                        Xung chiếu
+                      </span>
+                    ) : isSanFang ? (
+                      <span className="ziwei-relation-pill ziwei-relation-sanfang">
+                        Tam hợp
+                      </span>
+                    ) : (
+                      bagua && (
+                        <span
+                          className="ziwei-bagua-chip"
+                          title={`Phương ${bagua.directionVi} • Quẻ ${bagua.trigramVi}`}
+                        >
+                          {bagua.trigram} {bagua.trigramVi}
+                        </span>
+                      )
+                    )}
+                  </div>
+
+                  {/* Thân cung: Chính tinh + Độ sáng + Tứ Hóa + Cát/Sát tinh */}
+                  <div className="ziwei-palace-body">
+                    {majorStars.length > 0 ? (
+                      <div className="ziwei-major-list">
+                        {majorStars.map((star) => {
+                          const overSh = overlaySiHua[star.name];
+                          return (
+                            <div key={star.name} className="ziwei-major-item">
+                              <span className="ziwei-major-name">
+                                {translateStarName(star.name, bilingual)}
+                              </span>
+                              {star.brightnessRaw && (
+                                <span className="ziwei-brightness-tag">
+                                  {translateBrightness(star.brightnessRaw)}
+                                </span>
+                              )}
+                              {star.siHua && (
+                                <span
+                                  className={`ziwei-sihua-pill ziwei-sihua-${star.siHua}`}
+                                >
+                                  {translateSiHua(star.siHua)}
+                                </span>
+                              )}
+                              {overSh && (
+                                <span
+                                  className={`ziwei-sihua-pill ziwei-sihua-overlay ziwei-sihua-${overSh}`}
+                                >
+                                  {overlayPrefix}:{translateSiHua(overSh)}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="ziwei-empty-major">
+                        <span>Vô chính diệu</span>
+                        {palace.borrowedStars && palace.borrowedStars.length > 0 && (
+                          <small>
+                            Mượn:{' '}
+                            {palace.borrowedStars
+                              .map((s) => translateStarName(s))
+                              .join(' · ')}
+                          </small>
+                        )}
+                      </div>
+                    )}
+
+                    {notableAuxStars.length > 0 && (
+                      <div className="ziwei-aux-row">
+                        {notableAuxStars.map((star) => (
+                          <span
+                            key={star.name}
+                            className={`ziwei-aux-chip ${
+                              star.type === 'lucky' ? 'is-lucky' : 'is-sha'
+                            }`}
+                          >
+                            {translateStarName(star.name)}
+                            {star.siHua ? ` (${translateSiHua(star.siHua)})` : ''}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Chân cung: Can Chi + Đại Hạn */}
+                  <div className="ziwei-palace-foot">
+                    <span className="ziwei-ganzhi-label">
+                      {ganZhiVi}
+                      {bilingual ? ` · ${stemCn}${branchCn}` : ''}
+                    </span>
+                    {palace.daXianAge && (
+                      <span
+                        className={`ziwei-daxian-label ${
+                          palace.isCurrentDaXian ? 'is-current' : ''
+                        }`}
+                      >
+                        {palace.daXianAge[0]}–{palace.daXianAge[1]}t
+                      </span>
+                    )}
+                  </div>
                 </button>
                 <div className="ziwei-palace-full">
                 <PalaceCell
@@ -566,15 +755,216 @@ export default function ChartBoard({
             );
           })}
 
-          {/* THIÊN BÀN TRUNG TÂM (2x2 Ô Giữa) */}
+          {/* THIÊN BÀN TRUNG TÂM (2x2 Ô Giữa) — LA KINH BÁT QUÁI & THÁI CỰC ĐỒ */}
           <div
             style={{ gridRow: '2 / 4', gridColumn: '2 / 4' }}
             className="ziwei-board-center"
           >
+            {/* Vòng La Kinh Bát Quái & Thái Cực Đồ (SVG Cổ Phong Chìm + Tâm Ấn) */}
+            <svg
+              viewBox="0 0 320 320"
+              className="ziwei-bagua-mandala"
+              aria-hidden="true"
+            >
+              <defs>
+                <radialGradient id="ziweiBaguaGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#d4af37" stopOpacity="0.26" />
+                  <stop offset="65%" stopColor="#8c3528" stopOpacity="0.08" />
+                  <stop offset="100%" stopColor="#17372f" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+
+              <circle cx="160" cy="160" r="150" fill="url(#ziweiBaguaGlow)" />
+
+              {/* Bát Giác Hậu Thiên Bát Quái Ngoại Vi */}
+              <polygon
+                points="160,12 265,55 308,160 265,265 160,308 55,265 12,160 55,55"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeOpacity="0.45"
+              />
+              <polygon
+                points="160,24 256,64 296,160 256,256 160,296 64,256 24,160 64,64"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="0.8"
+                strokeDasharray="3 3"
+                strokeOpacity="0.35"
+              />
+
+              {/* Vòng La Kinh 24 Sơn & Tinh Bàn */}
+              <circle
+                cx="160"
+                cy="160"
+                r="116"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.1"
+                strokeOpacity="0.4"
+              />
+              <circle
+                cx="160"
+                cy="160"
+                r="88"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="0.8"
+                strokeDasharray="2 4"
+                strokeOpacity="0.35"
+              />
+              <circle
+                cx="160"
+                cy="160"
+                r="56"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+                strokeOpacity="0.35"
+              />
+
+              {/* 8 Trục Phương Vị Bát Quái & Quẻ Hậu Thiên */}
+              {HOU_TIAN_BAGUA_RING.map((item) => (
+                <g
+                  key={item.nameVi}
+                  transform={`rotate(${item.angleDeg} 160 160)`}
+                >
+                  <line
+                    x1="160"
+                    y1="24"
+                    x2="160"
+                    y2="104"
+                    stroke="currentColor"
+                    strokeWidth="0.65"
+                    strokeOpacity="0.25"
+                  />
+                  <text
+                    x="160"
+                    y="42"
+                    textAnchor="middle"
+                    fill="currentColor"
+                    fontSize="16"
+                    fontWeight="700"
+                    opacity="0.62"
+                  >
+                    {item.trigram}
+                  </text>
+                  <text
+                    x="160"
+                    y="55"
+                    textAnchor="middle"
+                    fill="currentColor"
+                    fontSize="7.5"
+                    fontWeight="700"
+                    letterSpacing="1"
+                    opacity="0.48"
+                  >
+                    {item.nameVi.toUpperCase()}
+                  </text>
+                </g>
+              ))}
+
+              {/* Thái Cực Âm Dương Đồ ở Tâm */}
+              <g opacity="0.22">
+                <circle
+                  cx="160"
+                  cy="160"
+                  r="34"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                />
+                <path
+                  d="M160,126 A34,34 0 0,1 160,194 A17,17 0 0,1 160,160 A17,17 0 0,0 160,126 Z"
+                  fill="currentColor"
+                />
+                <circle cx="160" cy="143" r="4.5" fill="currentColor" />
+                <circle cx="160" cy="177" r="4.5" fill="#fcf5e8" />
+              </g>
+            </svg>
+
             <div className="ziwei-center-preview">
-              <span aria-hidden="true">紫微</span>
+              {/* Huy hiệu Thái Cực Bát Quái & Triện Chu Sa */}
+              <div className="ziwei-center-crest">
+                <span className="ziwei-crest-line" aria-hidden="true" />
+                <span className="ziwei-crest-badge">
+                  <span className="ziwei-taiji-symbol" aria-hidden="true">
+                    ☯
+                  </span>
+                  <span>THIÊN KỶ • TỬ VI ĐẨU SỐ</span>
+                </span>
+                <span className="ziwei-crest-seal" aria-hidden="true">
+                  紫微命盤
+                </span>
+                <span className="ziwei-crest-line" aria-hidden="true" />
+              </div>
+
               <h3>{birthInfo.name || 'Lá số Tử Vi'}</h3>
-              <p>{translateYinYangGender(chart.yinYangGender)} · {translateWuxingJu(chart.wuxingJuName)}</p>
+
+              <div className="ziwei-center-meta-pills">
+                <span className="ziwei-meta-pill is-primary">
+                  {translateYinYangGender(chart.yinYangGender)} ·{' '}
+                  {translateWuxingJu(chart.wuxingJuName)}
+                </span>
+                <span className="ziwei-meta-pill">
+                  Mệnh chủ:{' '}
+                  <strong>{translateStarName(chart.mingZhu || '', bilingual)}</strong>
+                </span>
+                <span className="ziwei-meta-pill">
+                  Thân chủ:{' '}
+                  <strong>{translateStarName(chart.shenZhu || '', bilingual)}</strong>
+                </span>
+              </div>
+
+              {/* Tứ Trụ Bát Tự Cổ Phong (Năm - Tháng - Ngày - Giờ) */}
+              {lunarInfo.fourPillars && lunarInfo.fourPillars.length === 4 && (
+                <div className="ziwei-four-pillars" aria-label="Tứ trụ Bát tự">
+                  {(['Năm', 'Tháng', 'Ngày', 'Giờ'] as const).map((label, idx) => (
+                    <div key={label} className="ziwei-pillar-box">
+                      <small>{label}</small>
+                      <strong>
+                        {translateGanZhi(lunarInfo.fourPillars![idx] || '')}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <p className="ziwei-center-dates">
+                Dương lịch:{' '}
+                <strong>
+                  {String(birthInfo.day).padStart(2, '0')}/
+                  {String(birthInfo.month).padStart(2, '0')}/{birthInfo.year}
+                </strong>{' '}
+                · Âm lịch:{' '}
+                <strong>
+                  {lunarInfo.lunarDay}/{Math.abs(lunarInfo.lunarMonth)} {lunarYearVi}
+                </strong>{' '}
+                ({hourInfo.nameVi})
+              </p>
+
+              {/* Thanh trạng thái Tam Phương Tứ Chính & Phương Vị Bát Quái */}
+              <div className="ziwei-center-compass-bar">
+                <span>
+                  ☯ Đang chiếu:{' '}
+                  <strong>
+                    Cung {translatePalaceName(palaceByBranch[activeBranch]?.name || '命宫')}
+                  </strong>
+                  {BRANCH_BAGUA_META[activeBranch] && (
+                    <em>
+                      {' '}
+                      ({BRANCH_BAGUA_META[activeBranch].trigram} Quẻ{' '}
+                      {BRANCH_BAGUA_META[activeBranch].trigramVi} ·{' '}
+                      {BRANCH_BAGUA_META[activeBranch].directionVi})
+                    </em>
+                  )}
+                </span>
+                <small>
+                  Đối cung: {translatePalaceName(palaceByBranch[oppositeBranch]?.name || '')} ·
+                  Tam hợp: {translatePalaceName(palaceByBranch[sanHeBranch1]?.name || '')},{' '}
+                  {translatePalaceName(palaceByBranch[sanHeBranch2]?.name || '')}
+                </small>
+              </div>
             </div>
             <div className="ziwei-center-full">
               <div className="flex items-center justify-between gap-2 pb-2.5 mb-3 border-b border-white/10">
@@ -682,19 +1072,19 @@ export default function ChartBoard({
           </div>
         </div>
 
-        {/* Lớp SVG vẽ đường chiếu Tam Phương Tứ Chính */}
-        {showFullBoard && pMain && pOpp && pSan1 && pSan2 && (
+        {/* Lớp SVG vẽ đường chiếu Tam Phương Tứ Chính (Tinh Đồ Cổ Phong) */}
+        {pMain && pOpp && pSan1 && pSan2 && (
           <svg
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
-            className="absolute inset-0 w-full h-full pointer-events-none z-10"
+            className="ziwei-constellation-lines absolute inset-0 w-full h-full pointer-events-none z-10"
           >
             {/* Đường Tam Hợp */}
             <polygon
               points={`${pMain[0]},${pMain[1]} ${pSan1[0]},${pSan1[1]} ${pSan2[0]},${pSan2[1]}`}
-              fill="rgba(124, 58, 237, 0.04)"
-              stroke="rgba(124, 58, 237, 0.42)"
-              strokeWidth="0.35"
+              fill="rgba(182, 154, 105, 0.05)"
+              stroke="rgba(37, 69, 61, 0.35)"
+              strokeWidth="0.32"
               strokeDasharray="1.2 0.8"
             />
             {/* Đường Xung Chiếu (Đối cung) */}
@@ -703,14 +1093,14 @@ export default function ChartBoard({
               y1={pMain[1]}
               x2={pOpp[0]}
               y2={pOpp[1]}
-              stroke="rgba(240, 90, 40, 0.65)"
-              strokeWidth="0.45"
-              strokeDasharray="1.5 1"
+              stroke="rgba(140, 53, 40, 0.55)"
+              strokeWidth="0.4"
+              strokeDasharray="1.4 0.9"
             />
-            <circle cx={pMain[0]} cy={pMain[1]} r="1.1" fill="#7C3AED" />
-            <circle cx={pOpp[0]} cy={pOpp[1]} r="0.9" fill="#F05A28" />
-            <circle cx={pSan1[0]} cy={pSan1[1]} r="0.8" fill="#6366F1" />
-            <circle cx={pSan2[0]} cy={pSan2[1]} r="0.8" fill="#6366F1" />
+            <circle cx={pMain[0]} cy={pMain[1]} r="1.05" fill="#8c3528" />
+            <circle cx={pOpp[0]} cy={pOpp[1]} r="0.85" fill="#b68d40" />
+            <circle cx={pSan1[0]} cy={pSan1[1]} r="0.75" fill="#25453d" />
+            <circle cx={pSan2[0]} cy={pSan2[1]} r="0.75" fill="#25453d" />
           </svg>
         )}
       </div>

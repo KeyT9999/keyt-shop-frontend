@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, Suspense } from 'react';
-import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
+import { Link, Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import './App.css';
 import { useAuthContext } from './context/useAuthContext';
 import { lazyWithRetry } from './utils/lazyWithRetry';
@@ -14,7 +14,6 @@ import Seo from './components/Seo';
 import StructuredData from './components/StructuredData';
 import VisitTracker from './components/VisitTracker';
 import AnnouncementModal from './components/AnnouncementModal';
-import AffiliateReferralTracker from './components/affiliate/AffiliateReferralTracker';
 import DraggableRobotWidget from './components/robot/DraggableRobotWidget';
 import {
     IS_GYM_COACH_ENABLED,
@@ -23,13 +22,8 @@ import {
 } from './config/features';
 import { announcementService } from './services/announcementService';
 
-// Lazy loading pages
-const ProductList = lazyWithRetry(() => import('./pages/ProductList'));
+// Lazy loading pages (with auto-recovery on stale deployment chunks)
 const HomePage = lazyWithRetry(() => import('./pages/HomePage'));
-const ProductDetail = lazyWithRetry(() => import('./pages/ProductDetail'));
-const CartPage = lazyWithRetry(() => import('./pages/CartPage'));
-const WishlistPage = lazyWithRetry(() => import('./pages/WishlistPage'));
-const CheckoutPage = lazyWithRetry(() => import('./pages/CheckoutPage'));
 const LoginPage = lazyWithRetry(() => import('./pages/LoginPage'));
 const RegisterPage = lazyWithRetry(() => import('./pages/RegisterPage'));
 const YoutubeSummarizerPage = lazyWithRetry(() => import('./pages/YoutubeSummarizerPage'));
@@ -40,7 +34,6 @@ const VerifyEmailPage = lazyWithRetry(() => import('./pages/VerifyEmailPage'));
 const ResetPasswordPage = lazyWithRetry(() => import('./pages/ResetPasswordPage'));
 const AdminLayout = lazyWithRetry(() => import('./pages/admin/AdminLayout'));
 const AdminDashboard = lazyWithRetry(() => import('./pages/admin/AdminDashboard'));
-const AdminBannerPage = lazyWithRetry(() => import('./pages/admin/AdminBannerPage'));
 const EvidenceCheckerPage = lazyWithRetry(() => import('./pages/EvidenceCheckerPage'));
 const ChatGptAccountsPage = lazyWithRetry(() => import('./pages/admin/ChatGptAccountsPage'));
 const GeminiAccountsPage = lazyWithRetry(() => import('./pages/admin/GeminiAccountsPage'));
@@ -48,21 +41,14 @@ const SubscriptionsPage = lazyWithRetry(() => import('./pages/admin/Subscription
 const UserLoginHistoryPage = lazyWithRetry(() => import('./pages/admin/UserLoginHistoryPage'));
 const OtpRequestsPage = lazyWithRetry(() => import('./pages/admin/OtpRequestsPage'));
 const UsersPage = lazyWithRetry(() => import('./pages/admin/UsersPage'));
-const ProductsPage = lazyWithRetry(() => import('./pages/admin/ProductsPage'));
 const OrdersPage = lazyWithRetry(() => import('./pages/admin/OrdersPage'));
 const AdminOrderDetailPage = lazyWithRetry(() => import('./pages/admin/AdminOrderDetailPage'));
 const NetflixReplacementTicketsPage = lazyWithRetry(() => import('./pages/admin/NetflixReplacementTicketsPage'));
-const AdminAffiliatePage = lazyWithRetry(() => import('./pages/admin/AdminAffiliatePage'));
-const ReviewsPage = lazyWithRetry(() => import('./pages/admin/ReviewsPage'));
 const AnnouncementPage = lazyWithRetry(() => import('./pages/admin/AnnouncementPage'));
 const OrderDetailPage = lazyWithRetry(() => import('./pages/OrderDetailPage'));
 const UserOrdersPage = lazyWithRetry(() => import('./pages/UserOrdersPage'));
 const InvoiceView = lazyWithRetry(() => import('./components/order/InvoiceView'));
-const PaymentSuccessPage = lazyWithRetry(() => import('./pages/PaymentSuccessPage'));
-const QrPaymentPage = lazyWithRetry(() => import('./pages/QrPaymentPage'));
 const WarrantyRefundPage = lazyWithRetry(() => import('./pages/WarrantyRefundPage'));
-const PurchaseGuidePage = lazyWithRetry(() => import('./pages/PurchaseGuidePage'));
-const FAQPage = lazyWithRetry(() => import('./pages/FAQPage'));
 const PrivacyPolicyPage = lazyWithRetry(() => import('./pages/PrivacyPolicyPage'));
 const TermsOfServicePage = lazyWithRetry(() => import('./pages/TermsOfServicePage'));
 const PhotoFramePage = lazyWithRetry(() => import('./pages/PhotoFramePage'));
@@ -88,7 +74,6 @@ const KanaQuizPage = lazyWithRetry(() => import('./pages/courses/KanaQuizPage'))
 
 export default function App() {
     const { user, token } = useAuthContext();
-    const [searchQuery, setSearchQuery] = useState('');
     const location = useLocation();
     const [announcementOpen, setAnnouncementOpen] = useState(false);
     const [announcementTitle, setAnnouncementTitle] = useState('');
@@ -132,17 +117,12 @@ export default function App() {
         };
 
         const staticNoIndexPaths = [
-            '/cart',
-            '/checkout',
             '/profile',
-            '/wishlist',
             '/login',
             '/register',
             '/forgot-password',
             '/reset-password',
             '/verify-email',
-            '/payment-success',
-            '/payment-qr',
             '/get-otp',
             '/get-otp-gemini',
             '/2falive',
@@ -153,8 +133,7 @@ export default function App() {
         if (
             staticNoIndexPaths.includes(path) ||
             path.startsWith('/orders') ||
-            path.startsWith('/admin') ||
-            path.startsWith('/payment')
+            path.startsWith('/admin')
         ) {
             return { ...base, noIndex: true };
         }
@@ -162,44 +141,10 @@ export default function App() {
         if (path === '/') {
             return {
                 ...base,
-                title: 'KeyT Hub – Học Ngoại Ngữ AI (Nhật • Trung • Anh), Lấy Mã OTP 2FA & Khung Ảnh EXIF',
+                title: 'KeyT Hub – Tử Vi Đẩu Số AI, Ngoại Ngữ (Nhật • Trung • Anh), Gym 3D, OTP 2FA & Ảnh EXIF',
                 description:
-                    'Khám phá hệ sinh thái KeyT Hub: Cổng lấy mã OTP ChatGPT/Gemini & 2FA Live 30s, Học viện Tiếng Nhật FPT (JPD113/123, Giám thị AI 1-1, Kana), Tiếng Trung HSK 1–2, Hackers TOEIC 5.900+ từ & Studio Ảnh EXIF 4K.',
+                    'Khám phá hệ sinh thái KeyT Hub: Lập lá số Tử Vi Đẩu Số AI 12 cung & Hợp Hôn, Huấn luyện viên Gym 3D Nam/Nữ, Cổng lấy mã OTP ChatGPT/Gemini & 2FA Live 30s, Học viện Tiếng Nhật FPT (JPD113/123), HSK, TOEIC & Studio Ảnh EXIF 4K.',
                 canonicalPath: '/',
-            };
-        }
-
-        if (path.startsWith('/products/') && path !== '/products') {
-            return base;
-        }
-
-        if (path === '/products') {
-            return {
-                ...base,
-                title: 'Danh Sách Công Cụ & Dịch Vụ Số | KeyT Hub',
-                description:
-                    'Xem bảng giá và đăng ký các công cụ AI hỗ trợ học tập, làm việc hiệu quả tại KeyT Hub. Dịch vụ chất lượng, kích hoạt nhanh, bảo hành rõ ràng.',
-                canonicalPath: '/products',
-            };
-        }
-
-        if (path === '/purchase-guide') {
-            return {
-                ...base,
-                title: 'Hướng Dẫn Mua Hàng & Sử Dụng Dịch Vụ | KeyT Hub',
-                description:
-                    'Xem hướng dẫn chi tiết các bước đặt mua và sử dụng các công cụ AI, dịch vụ công nghệ tại KeyT Hub – thao tác đơn giản, thanh toán an toàn, kích hoạt nhanh chóng.',
-                canonicalPath: '/purchase-guide',
-            };
-        }
-
-        if (path === '/faq') {
-            return {
-                ...base,
-                title: 'FAQ KeyT Hub – Giải Đáp Thắc Mắc Về Dịch Vụ & Bảo Hành',
-                description:
-                    'Câu hỏi thường gặp về đặt hàng, thanh toán, thời gian nhận dịch vụ, bảo hành và hoàn tiền khi sử dụng các công cụ AI và dịch vụ công nghệ tại KeyT Hub.',
-                canonicalPath: '/faq',
             };
         }
 
@@ -253,13 +198,19 @@ export default function App() {
             };
         }
 
-        if (path === '/gym') {
+        if (path === '/gym' || path.startsWith('/gym/')) {
+            const isMaleGym = path.startsWith('/gym/nam');
+            const isFemaleGym = path.startsWith('/gym/nu');
             return {
                 ...base,
-                title: 'KeyT Gym 3D Coach – Lộ Trình Tập Gym 5 Ngày, Máy Tập & Mô Phỏng Tư Thế 3D',
+                title: isMaleGym
+                    ? 'KeyT Gym 3D Nam (/gym/nam) – Lịch Tập Ngực Dày, Vai 3D, 6 Múi & Thực Đơn Tăng Cơ'
+                    : isFemaleGym
+                      ? 'KeyT Gym 3D Nữ (/gym/nu) – Độ Mông Đào S-Line, Đồng Bộ Chu Kỳ & Thực Đơn Giữ Dáng'
+                      : 'KeyT Gym 3D Coach – Lộ Trình Tập Gym Nam & Nữ, Mô Phỏng 3D & Thực Đơn Cá Nhân Hóa',
                 description:
-                    'Trợ lý nhắc lịch tập Gym 5 ngày (Ngực • Tay sau-Lưng • Tay trước-Vai • Chân), mô hình Mannequin 3D xoay 360° chuẩn form, nhận diện máy tập và lưu mức tạ thông minh.',
-                canonicalPath: '/gym',
+                    'Trợ lý tập Gym 3D chuyên biệt cho Nam (/gym/nam) và Nữ (/gym/nu): Khảo sát thể trạng, đề xuất bài tập máy BRTW/Impulse, mô hình 3D xoay 360° và thực đơn ăn uống 4 bữa.',
+                canonicalPath: isMaleGym ? '/gym/nam' : isFemaleGym ? '/gym/nu' : '/gym',
             };
         }
 
@@ -295,7 +246,6 @@ export default function App() {
     return (
         <div className="app">
             <VisitTracker />
-            <AffiliateReferralTracker />
             <Seo {...seoConfig} />
             <StructuredData />
             {!isAdminPage && !isGymPage && !isZiweiPage && <FloatingContact />}
@@ -309,7 +259,7 @@ export default function App() {
                 onClose={() => setAnnouncementOpen(false)}
             />
 
-            {!isAdminPage && <Header onSearch={setSearchQuery} searchValue={searchQuery} />}
+            {!isAdminPage && <Header />}
 
             <main className={isAdminPage ? "main-content-admin" : "main-content-full"}>
                 <Suspense
@@ -324,16 +274,9 @@ export default function App() {
                 >
                     <Routes>
                         <Route path="/" element={<HomePage />} />
-                        <Route path="/products" element={<ProductList searchQuery={searchQuery} showHero={false} />} />
-                        <Route path="/products/:id" element={<ProductDetail />} />
-                        <Route path="/cart" element={<CartPage />} />
-                        <Route path="/wishlist" element={<WishlistPage />} />
-                        <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
                         <Route path="/orders" element={<ProtectedRoute><UserOrdersPage /></ProtectedRoute>} />
                         <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
                         <Route path="/orders/:id/invoice" element={<ProtectedRoute><InvoiceView /></ProtectedRoute>} />
-                        <Route path="/payment-success" element={<ProtectedRoute><PaymentSuccessPage /></ProtectedRoute>} />
-                        <Route path="/payment-qr" element={<QrPaymentPage />} />
                         <Route path="/evidence" element={<ProtectedRoute><EvidenceCheckerPage /></ProtectedRoute>} />
                         <Route path="/summarizer" element={<ProtectedRoute><YoutubeSummarizerPage /></ProtectedRoute>} />
                         <Route path="/get-otp" element={<ProtectedRoute><GetOtpPage /></ProtectedRoute>} />
@@ -350,8 +293,6 @@ export default function App() {
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/warranty-refund" element={<WarrantyRefundPage />} />
-                        <Route path="/purchase-guide" element={<PurchaseGuidePage />} />
-                        <Route path="/faq" element={<FAQPage />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
                         <Route path="/photo-frame" element={<PhotoFramePage />} />
@@ -396,20 +337,22 @@ export default function App() {
                             <Route path="chatgpt-accounts" element={<ChatGptAccountsPage />} />
                             <Route path="gemini" element={<GeminiAccountsPage />} />
                             <Route path="subscriptions" element={<SubscriptionsPage />} />
-                            <Route path="banners" element={<AdminBannerPage />} />
                             <Route path="users" element={<UsersPage />} />
-                            <Route path="products" element={<ProductsPage />} />
                             <Route path="orders" element={<OrdersPage />} />
                             <Route path="orders/:id" element={<AdminOrderDetailPage />} />
-                            <Route path="affiliate" element={<AdminAffiliatePage />} />
                             <Route path="netflix-replacements" element={<NetflixReplacementTicketsPage />} />
                             <Route path="user-login-history/:userId" element={<UserLoginHistoryPage />} />
                             <Route path="otp-requests" element={<OtpRequestsPage />} />
-                            <Route path="reviews" element={<ReviewsPage />} />
                             <Route path="announcement" element={<AnnouncementPage />} />
                             <Route path="chat" element={<AdminChatPage />} />
                             <Route path="video-translate" element={<VideoTranslatePage />} />
                         </Route>
+                        <Route path="*" element={
+                            <section className="mx-auto max-w-3xl px-5 py-16 text-center text-brand-navy">
+                                <h1 className="mb-4 text-2xl font-bold">Không tìm thấy trang</h1>
+                                <Link to="/" className="cursor-pointer underline">Về trang chủ</Link>
+                            </section>
+                        } />
                     </Routes>
                 </Suspense>
             </main>

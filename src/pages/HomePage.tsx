@@ -28,7 +28,12 @@ import {
   Clock,
   Lock,
   Compass,
-  Play
+  Play,
+  Dumbbell,
+  HeartHandshake,
+  Star,
+  Calendar,
+  MessageSquare,
 } from 'lucide-react';
 import Robot3DCanvas from '../components/robot/Robot3DCanvas';
 import {
@@ -141,7 +146,71 @@ const DEMO_FLASHCARDS = {
   }
 } as const;
 
-type HeroTabType = 'overview' | 'otp' | 'languages' | 'studio';
+const ZIWEI_PALACE_PREVIEWS = {
+  menh: {
+    id: 'menh',
+    palaceName: 'Cung Mệnh (Thân)',
+    branch: 'Ngọ • Dương Hỏa',
+    majorStars: ['Tử Vi (Miếu)', 'Thiên Phủ (Vượng)'],
+    minorStars: ['Văn Xương', 'Tả Phù', 'Hóa Khoa', 'Lộc Tồn'],
+    patternBadge: 'Tử Phủ Đồng Cung • Thượng Cách',
+    aiSummary:
+      'Mệnh Tử Phủ hội Văn Xương, Hóa Khoa: Tư chất thông tuệ, khí chất điềm đạm, có năng lực lãnh đạo và quản trị tài chính vững vàng. Đại vận 26–35 tuổi đắc Tam Hóa liên châu.',
+  },
+  taibach: {
+    id: 'taibach',
+    palaceName: 'Cung Tài Bạch',
+    branch: 'Dần • Dương Mộc',
+    majorStars: ['Vũ Khúc (Đắc)', 'Thiên Tướng (Miếu)'],
+    minorStars: ['Hóa Lộc', 'Thiên Mã', 'Hữu Bật'],
+    patternBadge: 'Tài Ấm Giáp Ấn • Lộc Mã Giao Trì',
+    aiSummary:
+      'Vũ Khúc chủ tài tinh gặp Hóa Lộc, Thiên Mã: Nguồn thu nhập đa kênh, nhạy bén đầu tư và thương mại quốc tế. Càng đi xa hoặc đổi mới công nghệ càng vượng tài lộc.',
+  },
+  quanloc: {
+    id: 'quanloc',
+    palaceName: 'Cung Quan Lộc',
+    branch: 'Tuất • Dương Thổ',
+    majorStars: ['Liêm Trinh (Vượng)', 'Thiên Phủ (Đắc)'],
+    minorStars: ['Hóa Quyền', 'Thiên Khôi', 'Quốc Ấn'],
+    patternBadge: 'Quyền Ấn Tương Sinh • Quý Nhân Trợ',
+    aiSummary:
+      'Quan lộc hội Hóa Quyền, Quốc Ấn: Sự nghiệp thăng tiến rõ rệt trong các ngành công nghệ, quản lý, tài chính hoặc học thuật chuyên sâu. Có quý nhân nâng đỡ.',
+  },
+  phuthe: {
+    id: 'phuthe',
+    palaceName: 'Cung Phu Thê',
+    branch: 'Thìn • Dương Thổ',
+    majorStars: ['Thất Sát (Miếu)'],
+    minorStars: ['Hồng Loan', 'Thiên Hỷ', 'Ân Quang'],
+    patternBadge: 'Thất Sát Triều Đẩu • Duyên Tiền Định',
+    aiSummary:
+      'Phối ngẫu là người bản lĩnh, quyết đoán, ngoại hình sáng và hỗ trợ đắc lực cho sự nghiệp sau khi lập gia đình. Hợp hôn độ tương hợp Ngũ hành đạt 92%.',
+  },
+  phucduc: {
+    id: 'phucduc',
+    palaceName: 'Cung Phúc Đức',
+    branch: 'Thân • Dương Kim',
+    majorStars: ['Tham Lang (Vượng)'],
+    minorStars: ['Thiên Phúc', 'Thiên Quan', 'Trường Sinh'],
+    patternBadge: 'Phúc Ấm Dồi Dào • Tâm An Trí Sáng',
+    aiSummary:
+      'Hưởng phúc đức tổ tiên, tinh thần lạc quan, gặp hung hóa cát. Về trung và hậu vận cuộc sống an nhàn, con cháu hiếu thuận.',
+  },
+  thiendi: {
+    id: 'thiendi',
+    palaceName: 'Cung Thiên Di',
+    branch: 'Tý • Dương Thủy',
+    majorStars: ['Phá Quân (Miếu)'],
+    minorStars: ['Thiên Việt', 'Đào Hoa', 'Phong Cáo'],
+    patternBadge: 'Xuất Ngoại Đắc Tài • Nhân Duyên Rộng',
+    aiSummary:
+      'Ra ngoài giao thiệp rộng, được nhiều người quý mến, rất hợp làm việc tại các đô thị lớn hoặc môi trường đa quốc gia.',
+  },
+} as const;
+
+type ZiweiPalacePreviewKey = keyof typeof ZIWEI_PALACE_PREVIEWS;
+type HeroTabType = 'overview' | 'ziwei' | 'otp' | 'languages' | 'studio';
 type LangFilterType = 'all' | 'jp' | 'cn' | 'en';
 type FlashcardLangType = 'jp' | 'cn' | 'en';
 
@@ -160,6 +229,33 @@ export default function HomePage() {
 
   // Interactive 3D Robot Hero Mascot State
   const [heroRobotStatus, setHeroRobotStatus] = useState<RobotStatus>('idle');
+
+  // Interactive Ziwei Quick Birth Form & 12-Palace Preview State
+  const [ziweiName, setZiweiName] = useState('Nguyễn Minh Anh');
+  const [ziweiYear, setZiweiYear] = useState('2000');
+  const [ziweiMonth, setZiweiMonth] = useState('8');
+  const [ziweiDay, setZiweiDay] = useState('15');
+  const [ziweiHour, setZiweiHour] = useState('9');
+  const [ziweiGender, setZiweiGender] = useState<'male' | 'female'>('female');
+  const [activePalaceKey, setActivePalaceKey] = useState<ZiweiPalacePreviewKey>('menh');
+
+  const handleQuickLaunchZiwei = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const params = new URLSearchParams({
+      n: ziweiName.trim() || 'Khách Quý Thiên Kỷ',
+      y: String(Number(ziweiYear) || 2000),
+      m: String(Math.min(12, Math.max(1, Number(ziweiMonth) || 8))),
+      d: String(Math.min(31, Math.max(1, Number(ziweiDay) || 15))),
+      h: String(Math.min(23, Math.max(0, Number(ziweiHour) || 9))),
+      mi: '30',
+      p: 'Miền Bắc',
+      c: 'Hà Nội',
+      lo: '105.85',
+      tz: '420',
+      g: ziweiGender === 'female' ? 'f' : 'm',
+    });
+    navigate(`/tu-vi?${params.toString()}`);
+  };
 
   // 1. Automated Before/After scanner for Photo Frame Box
   const [scannerPos, setScannerPos] = useState(58);
@@ -215,8 +311,28 @@ export default function HomePage() {
     }, 2000);
   };
 
-  // Quick-launch dock items (6 core pillars)
+  // Quick-launch dock items (8 core pillars including Tử Vi AI & Gym 3D)
   const quickLaunchItems = [
+    {
+      id: 'ziwei',
+      title: 'Tử Vi Đẩu Số AI (Thiên Kỷ)',
+      subtitle: '12 Cung • Hợp Hôn • AI Luận Giải',
+      badge: 'MỚI • HOT',
+      badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
+      iconBg: 'from-amber-500 via-[#F05A28] to-rose-600 shadow-amber-500/25',
+      icon: Compass,
+      href: '/tu-vi',
+    },
+    {
+      id: 'gym-3d',
+      title: 'Gym 3D Nam & Nữ',
+      subtitle: 'Mô hình 3D • Chu kỳ • Thực đơn 4 bữa',
+      badge: '3D COACH',
+      badgeClass: 'bg-pink-50 text-pink-700 border-pink-200',
+      iconBg: 'from-pink-500 to-rose-600 shadow-pink-500/25',
+      icon: Dumbbell,
+      href: '/gym',
+    },
     {
       id: 'otp',
       title: 'Lấy Mã OTP & 2FA Live',
@@ -280,6 +396,7 @@ export default function HomePage() {
   ];
 
   const currentFlashcard = DEMO_FLASHCARDS[cardLang];
+  const currentPalacePreview = ZIWEI_PALACE_PREVIEWS[activePalaceKey];
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-[#F05A28]/15 selection:text-[#F05A28] overflow-x-hidden relative font-sans">
@@ -328,61 +445,74 @@ export default function HomePage() {
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#F05A28]" />
             </span>
             <span className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-slate-700">
-              <span className="sm:hidden">KeyT Hub • Nhật Trung Anh • OTP 2FA &amp; Ảnh AI</span>
+              <span className="sm:hidden">
+                KeyT Hub • Tử Vi AI • Gym 3D • Ngoại Ngữ • OTP 2FA
+              </span>
               <span className="hidden sm:inline">
-                KeyT Super Hub • Ngoại Ngữ AI (Nhật • Trung • Anh) • Cổng OTP 2FA &amp; Studio Ảnh
+                KeyT Super Hub • Tử Vi Đẩu Số AI • Gym 3D Nam/Nữ • Ngoại Ngữ AI (Nhật • Trung • Anh) • OTP 2FA &amp; Ảnh 4K
               </span>
             </span>
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-3xl sm:text-5xl lg:text-[56px] font-black tracking-tight text-slate-900 leading-[1.12] mb-5">
+          <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black tracking-tight text-slate-900 leading-[1.13] mb-5">
             Hệ Sinh Thái{' '}
             <span className="bg-gradient-to-r from-[#F05A28] via-[#EA580C] to-amber-500 bg-clip-text text-transparent">
-              Ngoại Ngữ AI,
+              Tử Vi Đẩu Số AI, Ngoại Ngữ,
             </span>
             <br className="hidden sm:inline" />{' '}
-            Cổng OTP 2FA &amp; Studio Nhiếp Ảnh Số
+            Gym 3D, Cổng OTP 2FA &amp; Studio Ảnh Số
           </h1>
 
-          {/* Subtitle covering all pillars */}
-          <p className="text-base sm:text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed mb-8 font-normal">
-            Truy cập tức thì toàn bộ tiện ích trên một nền tảng duy nhất: Lấy mã{' '}
+          {/* Subtitle covering all pillars including Tử Vi AI & Gym 3D */}
+          <p className="text-base sm:text-lg text-slate-600 max-w-4xl mx-auto leading-relaxed mb-8 font-normal">
+            Trải nghiệm trọn vẹn hệ sinh thái tiện ích thông minh trên một nền tảng duy nhất: Lập lá số{' '}
+            <strong className="font-bold text-slate-800">Tử Vi Đẩu Số AI 12 Cung (Thiên Kỷ • Hợp Hôn • Bắt 40+ Cách Cục)</strong>, tập luyện cùng{' '}
+            <strong className="font-bold text-slate-800">Huấn Luyện Viên Gym 3D Nam &amp; Nữ</strong>, lấy mã{' '}
             <strong className="font-bold text-slate-800">OTP ChatGPT / Gemini &amp; 2FA Live 30s</strong>, học{' '}
-            <strong className="font-bold text-slate-800">Tiếng Nhật FPT (JPD113 • JPD123 • Kana)</strong>,{' '}
-            <strong className="font-bold text-slate-800">Tiếng Trung HSK 1–2</strong>,{' '}
-            <strong className="font-bold text-slate-800">Tiếng Anh Hackers TOEIC (5.900+ từ)</strong> cùng bộ công cụ{' '}
-            <strong className="font-bold text-slate-800">Khung Ảnh EXIF, Xóa Nền AI &amp; Nén Ảnh HD</strong>.
+            <strong className="font-bold text-slate-800">Nhật (FPT JPD) • Trung (HSK) • Anh (TOEIC)</strong> và xử lý{' '}
+            <strong className="font-bold text-slate-800">Khung Ảnh EXIF 4K &amp; Xóa Nền AI</strong>.
           </p>
 
           {/* Primary Action Buttons */}
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center gap-3 sm:gap-4 mb-10 max-w-md sm:max-w-none mx-auto">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center gap-3 sm:gap-3.5 mb-10 max-w-md sm:max-w-none mx-auto">
             <button
-              onClick={() => navigate('/courses')}
-              className="group relative inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#F05A28] to-[#EA580C] text-white font-bold text-sm sm:text-base shadow-lg shadow-[#F05A28]/25 hover:shadow-xl hover:shadow-[#F05A28]/35 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+              onClick={() => navigate('/tu-vi')}
+              className="group relative inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full bg-gradient-to-r from-amber-500 via-[#F05A28] to-rose-600 text-white font-bold text-sm sm:text-base shadow-lg shadow-[#F05A28]/25 hover:shadow-xl hover:shadow-[#F05A28]/35 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
             >
-              <GraduationCap size={19} />
-              <span>Học Viện Nhật • Trung • Anh</span>
+              <Compass size={19} />
+              <span>Xem Tử Vi Đẩu Số AI</span>
+              <span className="px-2 py-0.5 text-[10px] font-black rounded-full bg-white/20 text-white">
+                12 CUNG
+              </span>
               <ArrowRight size={17} className="group-hover:translate-x-1 transition-transform" />
             </button>
 
             <button
-              onClick={() => navigate('/get-otp')}
-              className="group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full bg-[#0F172A] text-white font-bold text-sm sm:text-base shadow-md hover:bg-slate-800 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+              onClick={() => navigate('/courses')}
+              className="group inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-[#0F172A] text-white font-bold text-sm sm:text-base shadow-md hover:bg-slate-800 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
             >
-              <KeyRound size={17} className="text-emerald-400" />
-              <span>Lấy Mã OTP &amp; 2FA Live</span>
-              <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+              <GraduationCap size={18} className="text-orange-400" />
+              <span>Học Viện Nhật • Trung • Anh</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/get-otp')}
+              className="group inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-emerald-600 text-white font-bold text-sm sm:text-base shadow-md shadow-emerald-600/20 hover:bg-emerald-500 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+            >
+              <KeyRound size={17} />
+              <span>Lấy Mã OTP &amp; 2FA</span>
+              <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-white/20 text-white">
                 30s
               </span>
             </button>
 
             <button
-              onClick={() => navigate('/photo-frame')}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white text-slate-800 font-bold text-sm sm:text-base border border-slate-200/90 shadow-xs hover:bg-slate-50 hover:border-slate-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+              onClick={() => navigate('/gym')}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-white text-slate-800 font-bold text-sm sm:text-base border border-slate-200/90 shadow-xs hover:bg-pink-50/50 hover:border-pink-300 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
             >
-              <Frame size={17} className="text-[#F05A28]" />
-              <span>Tạo Khung Ảnh EXIF</span>
+              <Dumbbell size={17} className="text-pink-600" />
+              <span>Gym 3D Nam &amp; Nữ</span>
             </button>
           </div>
 
@@ -435,20 +565,20 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* ── ARGON QUICK-LAUNCH DOCK (6 PILLARS) ─────────────────── */}
+          {/* ── ARGON QUICK-LAUNCH DOCK (8 CORE PILLARS) ─────────────────── */}
           <div className="rounded-3xl bg-white/85 backdrop-blur-xl border border-slate-200/90 shadow-[0_18px_50px_-15px_rgba(15,23,42,0.08)] p-3.5 sm:p-5 mb-10 text-left">
             <div className="flex items-center justify-between px-2 pb-3 mb-3 border-b border-slate-100">
               <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-500">
                 <Compass size={14} className="text-[#F05A28] shrink-0" />
-                <span>Lối Tắt Truy Cập Nhanh Toàn Bộ Chức Năng (1 Chạm)</span>
+                <span>Lối Tắt Truy Cập Nhanh Toàn Bộ 8 Phân Khu (1 Chạm)</span>
               </div>
               <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-600">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                Tất cả dịch vụ đang hoạt động ổn định
+                Tất cả dịch vụ &amp; AI đang hoạt động ổn định
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {quickLaunchItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
@@ -465,10 +595,10 @@ export default function HomePage() {
                         <IconComponent size={19} />
                       </div>
                       <div className="min-w-0">
-                        <div className="font-extrabold text-[13.5px] text-slate-900 group-hover:text-[#F05A28] transition-colors whitespace-nowrap">
+                        <div className="font-extrabold text-[13px] text-slate-900 group-hover:text-[#F05A28] transition-colors truncate">
                           {item.title}
                         </div>
-                        <p className="text-[11.5px] text-slate-500 whitespace-nowrap mt-0.5">{item.subtitle}</p>
+                        <p className="text-[11px] text-slate-500 truncate mt-0.5">{item.subtitle}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
@@ -478,7 +608,7 @@ export default function HomePage() {
                         {item.badge}
                       </span>
                       <ChevronRight
-                        size={15}
+                        size={14}
                         className="text-slate-400 group-hover:text-[#F05A28] group-hover:translate-x-0.5 transition-all"
                       />
                     </div>
@@ -502,13 +632,14 @@ export default function HomePage() {
                   </span>
                 </div>
 
-                {/* 4 Switchable Preview Tabs */}
+                {/* 5 Switchable Preview Tabs */}
                 <div className="flex flex-wrap items-center gap-1.5 bg-slate-100/90 p-1 rounded-2xl border border-slate-200/60">
                   {[
                     { id: 'overview', label: 'Toàn Cảnh Hệ Sinh Thái', icon: Layers },
+                    { id: 'ziwei', label: 'Tử Vi Đẩu Số AI', icon: Compass },
                     { id: 'otp', label: 'Cổng OTP & 2FA 30s', icon: KeyRound },
                     { id: 'languages', label: 'Nhật • Trung • Anh', icon: GraduationCap },
-                    { id: 'studio', label: 'Studio Ảnh EXIF & AI', icon: Frame },
+                    { id: 'studio', label: 'Studio Ảnh & Gym 3D', icon: Frame },
                   ].map((tab) => {
                     const TabIcon = tab.icon;
                     const active = heroTab === tab.id;
@@ -531,10 +662,51 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* TAB 1: OVERVIEW (3 Pillars Side-by-Side Live Preview) */}
+              {/* TAB 1: OVERVIEW (4 Pillars Side-by-Side Live Preview including Tử Vi AI) */}
               {heroTab === 'overview' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left animate-fadeIn">
-                  {/* Card A: OTP & 2FA Live */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-left animate-fadeIn">
+                  {/* Card 1: Tử Vi Đẩu Số AI (Thiên Kỷ) */}
+                  <div
+                    onClick={() => navigate('/tu-vi')}
+                    className="rounded-2xl bg-gradient-to-br from-[#1C162E] via-[#13182B] to-[#0F172A] text-white p-5 border border-amber-500/30 flex flex-col justify-between hover:border-amber-400/70 transition-all cursor-pointer group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold border border-amber-400/30">
+                          <Compass size={12} /> Tử Vi Đẩu Số AI
+                        </span>
+                        <span className="text-[10px] font-extrabold text-amber-300 bg-amber-950/70 px-2 py-0.5 rounded border border-amber-700/40">
+                          12 CUNG
+                        </span>
+                      </div>
+                      <h3 className="text-base font-extrabold text-white mb-1 group-hover:text-amber-300 transition-colors">
+                        Lập Lá Số Thiên Kỷ &amp; Luận Giải AI
+                      </h3>
+                      <p className="text-xs text-slate-300 leading-relaxed mb-3">
+                        An sao 12 cung chuẩn Hán-Việt, bắt 40+ Cách Cục cổ học, Xem Hợp Hôn &amp; Chat hỏi Thầy Tử Vi AI.
+                      </p>
+
+                      <div className="rounded-xl bg-white/8 border border-amber-500/20 p-2.5 space-y-1.5 mb-3">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="font-bold text-amber-300">Cung Mệnh (Ngọ)</span>
+                          <span className="text-emerald-300 font-bold">Thượng Cách</span>
+                        </div>
+                        <div className="text-xs font-extrabold text-white">
+                          Tử Vi (Miếu) • Thiên Phủ (Vượng)
+                        </div>
+                        <div className="text-[11px] text-slate-300">
+                          Hội Hóa Khoa, Văn Xương, Lộc Tồn
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs font-bold text-amber-300">
+                      <span>Lập lá số miễn phí ngay</span>
+                      <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+
+                  {/* Card 2: OTP & 2FA Live */}
                   <div
                     onClick={() => navigate('/get-otp')}
                     className="rounded-2xl bg-[#0F172A] text-white p-5 border border-slate-800 flex flex-col justify-between hover:border-emerald-500/40 transition-all cursor-pointer group"
@@ -545,7 +717,7 @@ export default function HomePage() {
                           <KeyRound size={12} /> Cổng OTP &amp; 2FA
                         </span>
                         <span className="text-xs font-mono font-bold text-orange-400 bg-orange-950/60 px-2 py-0.5 rounded border border-orange-800/40">
-                          Làm mới: {otpTimer}s
+                          {otpTimer}s
                         </span>
                       </div>
                       <h3 className="text-base font-extrabold text-white mb-1 group-hover:text-emerald-300 transition-colors">
@@ -557,11 +729,11 @@ export default function HomePage() {
                     </div>
 
                     <div>
-                      <div className="grid grid-cols-6 gap-1.5 mb-3">
+                      <div className="grid grid-cols-6 gap-1 mb-3">
                         {otpCode.split('').map((digit, idx) => (
                           <div
                             key={idx}
-                            className="h-10 rounded-lg bg-slate-800/90 border border-emerald-500/30 flex items-center justify-center font-mono font-black text-base text-emerald-300"
+                            className="h-9 rounded-lg bg-slate-800/90 border border-emerald-500/30 flex items-center justify-center font-mono font-black text-sm text-emerald-300"
                           >
                             {digit}
                           </div>
@@ -582,7 +754,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* Card B: Multi-Language Academy (JP / CN / EN) */}
+                  {/* Card 3: Multi-Language Academy (JP / CN / EN) */}
                   <div
                     onClick={() => navigate('/courses')}
                     className="rounded-2xl bg-slate-50 p-5 border border-slate-200/80 flex flex-col justify-between hover:border-[#F05A28]/50 transition-all cursor-pointer group"
@@ -590,15 +762,15 @@ export default function HomePage() {
                     <div>
                       <div className="flex items-center justify-between mb-3">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-100 text-[#F05A28] text-[11px] font-bold">
-                          <GraduationCap size={12} /> 3 Ngôn Ngữ • 9 Bộ Quiz
+                          <GraduationCap size={12} /> 3 Ngôn Ngữ
                         </span>
                         <span className="text-[11px] font-bold text-slate-500">144 Bài Quiz</span>
                       </div>
                       <h3 className="text-base font-extrabold text-slate-900 mb-2 group-hover:text-[#F05A28] transition-colors">
-                        Học Viện &amp; Chọn Quiz Nhật • Trung • Anh
+                        Học Viện Nhật • Trung • Anh
                       </h3>
 
-                      <div className="space-y-2 my-3">
+                      <div className="space-y-1.5 my-2.5">
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
@@ -610,9 +782,9 @@ export default function HomePage() {
                             <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-black text-[10px]">
                               JP
                             </span>
-                            JPD113 • JPD123 • Kana
+                            JPD113 • JPD123
                           </span>
-                          <span className="text-[#F05A28] font-bold">24 Quiz &amp; AI 1-1</span>
+                          <span className="text-[#F05A28] font-bold">AI 1-1</span>
                         </div>
                         <div
                           onClick={(e) => {
@@ -625,9 +797,9 @@ export default function HomePage() {
                             <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-black text-[10px]">
                               CN
                             </span>
-                            Tiếng Trung HSK 1 &amp; 2
+                            HSK 1 &amp; HSK 2
                           </span>
-                          <span className="text-emerald-700 font-bold">22 Quiz • 290 Từ</span>
+                          <span className="text-emerald-700 font-bold">290 Từ</span>
                         </div>
                         <div
                           onClick={(e) => {
@@ -640,20 +812,20 @@ export default function HomePage() {
                             <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-black text-[10px]">
                               EN
                             </span>
-                            Hackers, Bá Khí &amp; TOEIC
+                            Hackers &amp; Bá Khí
                           </span>
-                          <span className="text-blue-700 font-bold">98 Quiz • 6.949 Từ</span>
+                          <span className="text-blue-700 font-bold">6.949 Từ</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="pt-2 border-t border-slate-200/70 flex items-center justify-between text-xs font-bold text-[#F05A28]">
-                      <span>Chọn bài Quiz Nhật • Trung • Anh</span>
+                      <span>Chọn bài Quiz ngay</span>
                       <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
 
-                  {/* Card C: EXIF Photo Studio & AI Image */}
+                  {/* Card 4: Studio Ảnh EXIF & Gym 3D */}
                   <div
                     onClick={() => navigate('/photo-frame')}
                     className="rounded-2xl bg-slate-50 p-5 border border-slate-200/80 flex flex-col justify-between hover:border-blue-500/40 transition-all cursor-pointer group"
@@ -661,29 +833,24 @@ export default function HomePage() {
                     <div>
                       <div className="flex items-center justify-between mb-3">
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-[11px] font-bold">
-                          <Frame size={12} /> Studio Ảnh &amp; AI
+                          <Frame size={12} /> Ảnh EXIF &amp; Gym 3D
                         </span>
                         <span className="text-[11px] font-bold text-emerald-600">100% Free</span>
                       </div>
                       <h3 className="text-base font-extrabold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
-                        Khung EXIF, Xóa Nền &amp; Nén HD
+                        Studio Ảnh 4K &amp; Huấn Luyện Gym 3D
                       </h3>
 
-                      {/* Mini EXIF frame visual */}
                       <div className="rounded-xl bg-white p-2.5 border border-slate-200 shadow-xs mb-3">
-                        <div className="h-20 rounded-lg bg-gradient-to-tr from-slate-800 via-indigo-900 to-[#F05A28] relative overflow-hidden flex items-center justify-center">
+                        <div className="h-16 rounded-lg bg-gradient-to-tr from-slate-800 via-indigo-900 to-[#F05A28] relative overflow-hidden flex items-center justify-center">
                           <span className="text-[11px] font-bold text-white/90 px-2.5 py-1 rounded-full bg-black/35 backdrop-blur-xs">
-                            Leica Q3 • 28mm f/1.7 • ISO 100
+                            Leica Q3 • 4K EXIF &amp; Gym 3D
                           </span>
-                        </div>
-                        <div className="pt-2 flex items-center justify-between text-[10px] font-mono text-slate-600">
-                          <span className="font-bold text-slate-900">LEICA CAMERA AG</span>
-                          <span>1/1000s • 4K Lossless</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-1.5 text-[11px] font-bold text-center">
+                    <div className="grid grid-cols-2 gap-1.5 text-[11px] font-bold text-center">
                       <span
                         onClick={(e) => {
                           e.stopPropagation();
@@ -691,27 +858,81 @@ export default function HomePage() {
                         }}
                         className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-[#F05A28] hover:text-[#F05A28] transition-colors"
                       >
-                        Khung EXIF
+                        Khung EXIF 4K
                       </span>
                       <span
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate('/ai-image');
+                          navigate('/gym');
                         }}
-                        className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-violet-600 hover:text-violet-600 transition-colors"
+                        className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-pink-600 hover:text-pink-600 transition-colors"
                       >
-                        Xóa Nền AI
-                      </span>
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate('/compress');
-                        }}
-                        className="py-1.5 px-2 rounded-lg bg-white border border-slate-200 text-slate-700 hover:border-emerald-600 hover:text-emerald-600 transition-colors"
-                      >
-                        Nén Ảnh 90%
+                        Gym 3D Nam/Nữ
                       </span>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 1B: ZIWEI (TỬ VI ĐẨU SỐ AI PREVIEW) */}
+              {heroTab === 'ziwei' && (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 text-left animate-fadeIn">
+                  <div className="md:col-span-7 rounded-2xl bg-gradient-to-br from-[#1A142D] via-[#13182B] to-[#0F172A] text-white p-6 border border-amber-500/30 flex flex-col justify-between">
+                    <div>
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 text-xs font-bold mb-3 border border-amber-500/30">
+                        <Compass size={14} />
+                        <span>Tử Vi Đẩu Số AI • Thiên Kỷ Các</span>
+                      </div>
+                      <h3 className="text-xl sm:text-2xl font-black mb-2">
+                        An Sao 12 Cung, Bắt 40+ Cách Cục &amp; Xem Hợp Hôn Đôi Lứa
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-5">
+                        Hệ thống tự động quy đổi Âm/Dương lịch, hiệu chỉnh Giờ Mặt Trời Thực theo kinh độ 63 tỉnh thành, lập Thiên Bàn 12 cung kèm Đại Vận – Lưu Niên và tích hợp Thầy Tử Vi AI luận giải chuyên sâu.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/tu-vi')}
+                        className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-[#F05A28] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all"
+                      >
+                        <Compass size={14} /> Lập Lá Số Tử Vi Ngay
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleQuickLaunchZiwei}
+                        className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all border border-white/15"
+                      >
+                        <Sparkles size={14} className="text-amber-300" /> Mở Lá Số Mẫu &amp; Luận Giải AI
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-5 rounded-2xl bg-slate-900 text-white p-5 border border-slate-800 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between text-xs mb-2">
+                        <span className="text-amber-400 font-bold flex items-center gap-1.5">
+                          <Star size={13} /> CUNG MỆNH • DƯƠNG HỎA
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-black">
+                          Tử Phủ Đồng Cung
+                        </span>
+                      </div>
+                      <div className="text-sm font-black text-white mb-1">
+                        Chính Tinh: Tử Vi (Miếu) • Thiên Phủ (Vượng)
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        Hội Văn Xương, Hóa Khoa, Lộc Tồn: Chủ về trí tuệ uyên bác, tài chính vững vàng và quý nhân phù trợ.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/tu-vi')}
+                      className="mt-3 w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                    >
+                      <span>Khám Phá 12 Cung Của Bạn</span>
+                      <ArrowRight size={14} />
+                    </button>
                   </div>
                 </div>
               )}
@@ -845,10 +1066,17 @@ export default function HomePage() {
                 </div>
               )}
 
-              {/* TAB 4: STUDIO PREVIEW */}
+              {/* TAB 4: STUDIO & GYM 3D PREVIEW */}
               {heroTab === 'studio' && (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-left animate-fadeIn">
                   {[
+                    {
+                      title: 'Gym 3D Nam & Nữ',
+                      desc: 'Mô hình 3D chi tiết từng bài, chia router Nam/Nữ, thực đơn 4 bữa & AI Coach.',
+                      href: '/gym',
+                      badge: '3D Fitness',
+                      color: 'text-pink-700 bg-pink-50 border-pink-200',
+                    },
                     {
                       title: 'Khung Ảnh EXIF',
                       desc: 'Tự động đọc metadata Leica, Sony, Fujifilm, Apple, xuất ảnh 4K.',
@@ -869,13 +1097,6 @@ export default function HomePage() {
                       href: '/compress',
                       badge: 'Tối ưu Web',
                       color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-                    },
-                    {
-                      title: 'YouTube & Evidence AI',
-                      desc: 'Tóm tắt video YouTube siêu tốc & Kiểm tra bằng chứng AI.',
-                      href: '/summarizer',
-                      badge: 'Trợ lý AI',
-                      color: 'text-blue-700 bg-blue-50 border-blue-200',
                     },
                   ].map((tool, i) => (
                     <div
@@ -902,7 +1123,398 @@ export default function HomePage() {
         </section>
 
         {/* ============================================================
-            SECTION 2: CỔNG XÁC THỰC OTP & 2FA LIVE (SPOTLIGHT COMMAND BAR)
+            SECTION 2: TỬ VI ĐẨU SỐ AI — THIÊN KỶ (LẬP LÁ SỐ 12 CUNG, HỢP HÔN & AI LUẬN GIẢI)
+           ============================================================ */}
+        <section
+          aria-label="Giới thiệu Tử Vi Đẩu Số AI Thiên Kỷ"
+          className="py-8 sm:py-12"
+        >
+          <div className="rounded-3xl bg-gradient-to-br from-[#17132A] via-[#111827] to-[#0F172A] text-white p-6 sm:p-8 lg:p-10 shadow-2xl border border-amber-500/30 relative overflow-hidden">
+            {/* Ambient Gold & Coral Glow */}
+            <div className="absolute -top-28 -right-28 w-96 h-96 rounded-full bg-amber-500/15 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-28 -left-28 w-96 h-96 rounded-full bg-[#F05A28]/15 blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+              {/* Left 7 Cols: Story, 4 Core Ziwei Features & Quick Birth Form */}
+              <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-extrabold uppercase tracking-wider">
+                      <Compass size={14} />
+                      <span>Tính Năng Mới Nổi Bật • Tử Vi Đẩu Số AI (Thiên Kỷ)</span>
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-[#F05A28]/20 border border-[#F05A28]/40 text-orange-300 text-[11px] font-bold">
+                      Tam Hợp Phái &amp; Tứ Hóa
+                    </span>
+                  </div>
+
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight mb-3 leading-tight">
+                    Lập Lá Số Tử Vi 12 Cung, Bắt 40+ Cách Cục &amp; Luận Giải Cùng Thầy AI
+                  </h2>
+                  <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
+                    Sự kết hợp giữa tinh hoa <strong className="text-amber-300">Tử Vi Đẩu Số Toàn Thư</strong> và trí tuệ nhân tạo thế hệ mới: Tự động quy đổi Âm – Dương lịch, hiệu chỉnh <strong className="text-white">Giờ Mặt Trời Thực (True Solar Time)</strong> theo kinh độ 63 tỉnh thành, chấm điểm Đại Vận – Lưu Niên 2026 và đối chiếu Hợp Hôn đôi lứa.
+                  </p>
+                </div>
+
+                {/* 4 Feature Highlights Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    {
+                      icon: Compass,
+                      title: 'An Sao 12 Cung & Giờ Mặt Trời Thực',
+                      desc: 'Đầy đủ 14 Chính Tinh, hơn 90 Phụ Tinh, Vòng Trường Sinh, Tuần – Triệt và Lưu Niên.',
+                      accent: 'text-amber-300 bg-amber-500/15 border-amber-400/30',
+                    },
+                    {
+                      icon: Award,
+                      title: 'Tự Động Bắt 40+ Cách Cục Cổ Học',
+                      desc: 'Nhận diện tức thì Tử Phủ Vũ Tướng, Cơ Nguyệt Đồng Lương, Nhật Nguyệt Tịnh Minh...',
+                      accent: 'text-orange-300 bg-[#F05A28]/15 border-[#F05A28]/30',
+                    },
+                    {
+                      icon: HeartHandshake,
+                      title: 'Xem Hợp Hôn & Độ Tương Hợp Đôi Lứa',
+                      desc: 'Đối chiếu 2 lá số Nam – Nữ, phân tích cung Phu Thê, Ngũ Hành nạp âm và duyên nợ.',
+                      accent: 'text-rose-300 bg-rose-500/15 border-rose-400/30',
+                    },
+                    {
+                      icon: MessageSquare,
+                      title: 'Chat Trực Tiếp Với Thầy Tử Vi AI',
+                      desc: 'Đặt câu hỏi riêng về Công danh, Tài lộc, Tình duyên, Thi cử dựa sát trên lá số của bạn.',
+                      accent: 'text-emerald-300 bg-emerald-500/15 border-emerald-400/30',
+                    },
+                  ].map((item, idx) => {
+                    const FeatIcon = item.icon;
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => navigate('/tu-vi')}
+                        className="p-3.5 rounded-2xl bg-white/6 hover:bg-white/10 border border-white/10 hover:border-amber-400/40 transition-all cursor-pointer flex items-start gap-3"
+                      >
+                        <div
+                          className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 mt-0.5 ${item.accent}`}
+                        >
+                          <FeatIcon size={17} />
+                        </div>
+                        <div>
+                          <div className="text-xs sm:text-sm font-extrabold text-white">
+                            {item.title}
+                          </div>
+                          <p className="text-[11px] text-slate-300 leading-relaxed mt-0.5">
+                            {item.desc}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Quick Birth Form Widget right on Homepage */}
+                <form
+                  onSubmit={handleQuickLaunchZiwei}
+                  className="rounded-2xl bg-slate-950/85 border border-amber-500/30 p-4 sm:p-5 space-y-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                      <Calendar size={14} />
+                      <span>Lập Lá Số Nhanh Ngay Trên Trang Chủ (Dương Lịch)</span>
+                    </span>
+                    <span className="text-[11px] font-bold text-slate-400">
+                      Tự động mở Thiên Bàn 12 Cung
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                    <div className="col-span-2">
+                      <label
+                        htmlFor="homeZiweiName"
+                        className="block text-[10px] font-bold text-slate-400 mb-1"
+                      >
+                        Họ và tên
+                      </label>
+                      <input
+                        id="homeZiweiName"
+                        type="text"
+                        value={ziweiName}
+                        onChange={(e) => setZiweiName(e.target.value)}
+                        placeholder="Nhập họ tên..."
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white focus:border-amber-400 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="homeZiweiDay"
+                        className="block text-[10px] font-bold text-slate-400 mb-1"
+                      >
+                        Ngày sinh
+                      </label>
+                      <input
+                        id="homeZiweiDay"
+                        type="number"
+                        min={1}
+                        max={31}
+                        value={ziweiDay}
+                        onChange={(e) => setZiweiDay(e.target.value)}
+                        className="w-full px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="homeZiweiMonth"
+                        className="block text-[10px] font-bold text-slate-400 mb-1"
+                      >
+                        Tháng
+                      </label>
+                      <input
+                        id="homeZiweiMonth"
+                        type="number"
+                        min={1}
+                        max={12}
+                        value={ziweiMonth}
+                        onChange={(e) => setZiweiMonth(e.target.value)}
+                        className="w-full px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="homeZiweiYear"
+                        className="block text-[10px] font-bold text-slate-400 mb-1"
+                      >
+                        Năm sinh
+                      </label>
+                      <input
+                        id="homeZiweiYear"
+                        type="number"
+                        min={1930}
+                        max={2030}
+                        value={ziweiYear}
+                        onChange={(e) => setZiweiYear(e.target.value)}
+                        className="w-full px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="homeZiweiHour"
+                        className="block text-[10px] font-bold text-slate-400 mb-1"
+                      >
+                        Giờ (0–23h)
+                      </label>
+                      <input
+                        id="homeZiweiHour"
+                        type="number"
+                        min={0}
+                        max={23}
+                        value={ziweiHour}
+                        onChange={(e) => setZiweiHour(e.target.value)}
+                        className="w-full px-2.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
+                    <div className="inline-flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setZiweiGender('male')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black cursor-pointer transition-all ${
+                          ziweiGender === 'male'
+                            ? 'bg-amber-400 text-slate-950'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Nam Mệnh
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setZiweiGender('female')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-black cursor-pointer transition-all ${
+                          ziweiGender === 'female'
+                            ? 'bg-[#F05A28] text-white'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Nữ Mệnh
+                      </button>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-[#F05A28] to-rose-600 hover:brightness-110 text-white font-black text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-[#F05A28]/25 cursor-pointer transition-all"
+                    >
+                      <Sparkles size={15} />
+                      <span>LẬP LÁ SỐ 12 CUNG &amp; LUẬN GIẢI AI NGAY</span>
+                      <ArrowRight size={15} />
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Right 5 Cols: Interactive 12-Palace Mini Thiên Bàn Preview */}
+              <div className="lg:col-span-5 flex flex-col justify-between rounded-2xl bg-slate-950/90 border border-amber-500/35 p-5 sm:p-6 shadow-2xl">
+                <div>
+                  <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full bg-amber-400 animate-ping" />
+                      <span className="text-xs font-extrabold uppercase tracking-wider text-amber-300">
+                        Mô Phỏng Thiên Bàn 12 Cung Tương Tác
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-400">
+                      Bấm chọn cung để xem
+                    </span>
+                  </div>
+
+                  {/* 6 Interactive Palace Selector Pills */}
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    {(Object.keys(ZIWEI_PALACE_PREVIEWS) as ZiweiPalacePreviewKey[]).map(
+                      (pKey) => {
+                        const item = ZIWEI_PALACE_PREVIEWS[pKey];
+                        const isSelected = activePalaceKey === pKey;
+                        return (
+                          <button
+                            key={pKey}
+                            type="button"
+                            onClick={() => setActivePalaceKey(pKey)}
+                            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-amber-500/20 border-amber-400 text-white shadow-md shadow-amber-500/10'
+                                : 'bg-slate-900/90 border-slate-800 text-slate-400 hover:border-slate-600 hover:text-white'
+                            }`}
+                          >
+                            <div className="text-[10px] font-bold text-amber-300/90 truncate">
+                              {item.branch}
+                            </div>
+                            <div className="text-xs font-black truncate mt-0.5">
+                              {item.palaceName}
+                            </div>
+                          </button>
+                        );
+                      }
+                    )}
+                  </div>
+
+                  {/* Active Palace Star & AI Insight Display */}
+                  <div className="rounded-2xl bg-gradient-to-b from-slate-900 to-[#13182B] border border-amber-500/30 p-4 space-y-3 mb-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <span className="text-[11px] font-bold text-amber-300 uppercase">
+                          {currentPalacePreview.branch}
+                        </span>
+                        <h3 className="text-base sm:text-lg font-black text-white">
+                          {currentPalacePreview.palaceName}
+                        </h3>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-black">
+                        {currentPalacePreview.patternBadge}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="text-[11px] font-bold text-slate-400">
+                        Chính Tinh Tọa Thủ:
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {currentPalacePreview.majorStars.map((st, i) => (
+                          <span
+                            key={i}
+                            className="px-2.5 py-1 rounded-lg bg-[#F05A28]/20 border border-[#F05A28]/40 text-xs font-black text-orange-300 flex items-center gap-1"
+                          >
+                            <Star size={12} className="text-amber-400" />
+                            <span>{st}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="text-[11px] font-bold text-slate-400">
+                        Cát Tinh &amp; Tứ Hóa Hội Hợp:
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {currentPalacePreview.minorStars.map((st, i) => (
+                          <span
+                            key={i}
+                            className="px-2 py-0.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-[11px] font-bold text-emerald-300"
+                          >
+                            {st}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-200 leading-relaxed">
+                      <span className="font-black text-amber-300">Thầy Tử Vi AI luận giải: </span>
+                      {currentPalacePreview.aiSummary}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/tu-vi')}
+                    className="py-2.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                  >
+                    <Compass size={14} />
+                    <span>Mở Toàn Bộ 12 Cung</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/tu-vi')}
+                    className="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/15 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                  >
+                    <HeartHandshake size={14} className="text-rose-400" />
+                    <span>Xem Hợp Hôn Đôi Lứa</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Companion Strip: Gym 3D Nam & Nữ Quick Spotlight */}
+            <div className="relative z-10 mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-pink-500/20 border border-pink-400/40 text-pink-300 flex items-center justify-center shrink-0">
+                  <Dumbbell size={19} />
+                </div>
+                <div>
+                  <div className="text-xs sm:text-sm font-black text-white flex items-center gap-2">
+                    <span>Huấn Luyện Viên Gym 3D Nam &amp; Nữ Cá Nhân Hóa</span>
+                    <span className="px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 text-[10px] font-black">
+                      MỚI
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300">
+                    Mô hình Mannequin 3D chi tiết từng bài tập, tự động chia lịch theo số buổi/tuần, đồng bộ chu kỳ sinh học Nữ &amp; thực đơn 4 bữa.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => navigate('/gym/nam')}
+                  className="px-3.5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs cursor-pointer transition-all"
+                >
+                  Gym Nam (/gym/nam)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/gym/nu')}
+                  className="px-3.5 py-2 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-black text-xs cursor-pointer transition-all"
+                >
+                  Gym Nữ (/gym/nu)
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================================
+            SECTION 3: CỔNG XÁC THỰC OTP & 2FA LIVE (SPOTLIGHT COMMAND BAR)
            ============================================================ */}
         <section className="py-8 sm:py-10">
           <div className="rounded-3xl bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white p-6 sm:p-8 lg:p-10 shadow-xl border border-slate-800 relative overflow-hidden">
@@ -1849,7 +2461,7 @@ export default function HomePage() {
               </div>
             </TiltCard>
 
-            {/* BOX 5 (4 Cols): EVIDENCE CHECKER & DIGITAL STORE */}
+            {/* BOX 5 (4 Cols): EVIDENCE CHECKER */}
             <TiltCard
               onClick={() => navigate('/evidence')}
               className="lg:col-span-4 group rounded-3xl bg-white border border-slate-200/90 p-6 shadow-sm hover:shadow-xl hover:border-blue-400/50 transition-all flex flex-col justify-between"
@@ -1859,7 +2471,7 @@ export default function HomePage() {
                   <FileSearch size={13} /> Evidence Checker &amp; Tiện Ích
                 </div>
                 <h3 className="text-lg sm:text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors mb-2">
-                  Kiểm Tra Bằng Chứng &amp; Kho Dịch Vụ Số
+                  Kiểm Tra Bằng Chứng
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed mb-4">
                   Công cụ phân tích, đối chiếu dữ liệu minh chứng thông minh cùng danh mục dịch vụ &amp; tài khoản công nghệ hỗ trợ học tập 24/7.
@@ -1875,16 +2487,6 @@ export default function HomePage() {
                     className="p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 text-xs font-bold text-slate-800 hover:text-blue-700 transition-colors text-left cursor-pointer"
                   >
                     Evidence Checker
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/products');
-                    }}
-                    className="p-2.5 rounded-xl bg-slate-50 hover:bg-orange-50 border border-slate-200 text-xs font-bold text-slate-800 hover:text-[#F05A28] transition-colors text-left cursor-pointer"
-                  >
-                    Kho Sản Phẩm Số
                   </button>
                 </div>
               </div>
@@ -1905,6 +2507,12 @@ export default function HomePage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-14">
             {[
               {
+                value: '12 Cung',
+                label: 'Tử Vi Đẩu Số AI & 40+ Cách Cục',
+                sub: 'An sao chuẩn Hán-Việt • Xem Hợp Hôn & AI',
+                color: 'text-amber-600',
+              },
+              {
                 value: '6.800+',
                 label: 'Từ Vựng & Hán Tự Đa Ngôn Ngữ',
                 sub: 'Nhật (JPD) • Trung (HSK) • Anh (TOEIC)',
@@ -1917,16 +2525,10 @@ export default function HomePage() {
                 color: 'text-emerald-600',
               },
               {
-                value: '4K / 8K',
-                label: 'Độ Phân Giải Xuất Ảnh EXIF',
-                sub: 'Giữ nguyên chất lượng gốc & nén HD 90%',
+                value: '3D & 4K',
+                label: 'Gym 3D Nam/Nữ & Studio Ảnh EXIF',
+                sub: 'Mô hình 3D bài tập • Xuất ảnh 4K & nén 90%',
                 color: 'text-blue-600',
-              },
-              {
-                value: '24 / 7',
-                label: 'Giám Thị AI 1-1 & Công Cụ Web',
-                sub: 'Hoạt động mượt trên cả Desktop & Mobile',
-                color: 'text-violet-600',
               },
             ].map((stat, i) => (
               <div
@@ -1957,17 +2559,17 @@ export default function HomePage() {
               {
                 step: '01',
                 title: 'Chọn Phân Khu Bạn Cần',
-                desc: 'Truy cập nhanh từ thanh Argon Dock: Lấy mã OTP/2FA, Học ngoại ngữ Nhật - Trung - Anh, hoặc mở Studio Khung Ảnh EXIF & AI.',
+                desc: 'Truy cập nhanh từ thanh Argon Dock: Lập lá số Tử Vi Đẩu Số AI, Tập Gym 3D Nam/Nữ, Lấy mã OTP/2FA, Học ngoại ngữ hoặc mở Studio Ảnh EXIF.',
               },
               {
                 step: '02',
                 title: 'Tương Tác Trực Tiếp Trên Web',
-                desc: 'Luyện phát âm qua Micro với Giám thị AI, lật Flashcard 3D, bật Nghe thụ động hoặc kéo thả ảnh cần đóng khung / xóa nền.',
+                desc: 'Nhập ngày giờ sinh để an sao 12 cung & hỏi Thầy Tử Vi AI, xem mô hình Gym 3D từng bài, luyện nói với Giám thị AI hoặc kéo thả ảnh cần đóng khung.',
               },
               {
                 step: '03',
                 title: 'Nhận Kết Quả Tức Thì',
-                desc: 'Sao chép mã OTP trong 1 chạm, nhận điểm chấm phát âm chi tiết từng từ hoặc tải về bức ảnh EXIF 4K sắc nét chỉ sau 2 giây.',
+                desc: 'Nhận luận giải Tử Vi & Hợp Hôn chi tiết, phác đồ tập luyện + ăn uống 4 bữa, sao chép mã OTP 1 chạm hoặc tải ảnh EXIF 4K sắc nét.',
               },
             ].map((step, idx) => (
               <div
@@ -1995,25 +2597,33 @@ export default function HomePage() {
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-orange-300 text-xs font-bold mb-4 backdrop-blur-md">
                 <Sparkles size={14} />
-                <span>Hệ Sinh Thái Học Tập &amp; Sáng Tạo Số Toàn Diện</span>
+                <span>Hệ Sinh Thái Học Tập, Tử Vi AI, Gym 3D &amp; Sáng Tạo Số</span>
               </div>
               <h2 className="text-2xl sm:text-4xl font-black tracking-tight mb-3 leading-tight">
                 Sẵn Sàng Khám Phá Toàn Bộ Tiện Ích Tại KeyT Hub?
               </h2>
               <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                Từ cổng lấy mã OTP/2FA tự động, học viện đa ngôn ngữ Nhật • Trung • Anh (JPD, Kana, HSK, TOEIC) đến bộ công cụ nhiếp ảnh EXIF &amp; AI hoàn toàn miễn phí.
+                Từ Tử Vi Đẩu Số AI 12 cung (Thiên Kỷ), Huấn luyện viên Gym 3D Nam &amp; Nữ, Cổng lấy mã OTP/2FA tự động, Học viện Nhật • Trung • Anh đến Studio Ảnh EXIF 4K hoàn toàn miễn phí.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-3 shrink-0">
               <button
                 type="button"
+                onClick={() => navigate('/tu-vi')}
+                className="px-6 py-3.5 rounded-full bg-gradient-to-r from-amber-500 via-[#F05A28] to-rose-600 text-white font-bold text-sm shadow-lg shadow-orange-500/30 hover:-translate-y-0.5 transition-all cursor-pointer inline-flex items-center gap-2"
+              >
+                <Compass size={18} />
+                <span>Xem Tử Vi Đẩu Số AI</span>
+                <ArrowRight size={16} />
+              </button>
+              <button
+                type="button"
                 onClick={() => navigate('/courses')}
                 className="px-6 py-3.5 rounded-full bg-[#F05A28] hover:bg-[#EA580C] text-white font-bold text-sm shadow-lg shadow-orange-500/30 hover:-translate-y-0.5 transition-all cursor-pointer inline-flex items-center gap-2"
               >
                 <GraduationCap size={18} />
-                <span>Cổng Ngoại Ngữ Nhật • Trung • Anh</span>
-                <ArrowRight size={16} />
+                <span>Học Ngoại Ngữ Nhật • Trung • Anh</span>
               </button>
               <button
                 type="button"
@@ -2025,11 +2635,11 @@ export default function HomePage() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/photo-frame')}
+                onClick={() => navigate('/gym')}
                 className="px-6 py-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-sm border border-white/20 transition-all cursor-pointer inline-flex items-center gap-2"
               >
-                <Frame size={17} />
-                <span>Studio Ảnh EXIF</span>
+                <Dumbbell size={17} />
+                <span>Gym 3D Nam &amp; Nữ</span>
               </button>
             </div>
           </div>

@@ -1,8 +1,11 @@
 import type {
   GymAiChatMessage,
   GymCycleTrackingState,
+  GymExerciseUserLog,
   GymFemaleBodyProfile,
+  GymGenderMode,
   GymServerProfilePayload,
+  GymWorkoutHistoryEntry,
 } from '../types/gym';
 
 const API_BASE_URL =
@@ -23,12 +26,36 @@ export interface GymAiUserSnapshot {
   workoutStreak: number;
   customDaysSummary: string[];
   exerciseLogsSummary: string[];
+  prSummary?: string[];
+  recentWorkoutSummary?: string;
 }
 
 export interface GymAiCoachResponse {
   reply: string;
   provider: string;
   model: string;
+}
+
+export interface CompleteSessionRequestPayload {
+  id?: string;
+  dateKey: string;
+  gender: GymGenderMode;
+  dayId: string;
+  dayTitle: string;
+  nextDayId?: string;
+  durationMinutes: number;
+  totalVolumeKg: number;
+  completedExercisesCount: number;
+  caloriesBurned: number;
+  prCount: number;
+  prHighlights: string[];
+  exerciseLogs: GymExerciseUserLog[];
+}
+
+export interface CompleteSessionServerResponse {
+  profile: GymServerProfilePayload;
+  sessionEntry: GymWorkoutHistoryEntry;
+  newPrHighlights: string[];
 }
 
 export const gymSyncService = {
@@ -67,6 +94,27 @@ export const gymSyncService = {
     }
 
     const body = (await res.json()) as ApiEnvelope<GymServerProfilePayload | null>;
+    return body.data ?? null;
+  },
+
+  async completeSession(
+    token: string,
+    payload: CompleteSessionRequestPayload
+  ): Promise<CompleteSessionServerResponse | null> {
+    const res = await fetch(`${API_BASE_URL}/gym/sessions/complete`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Không thể lưu tổng kết buổi tập (${res.status}).`);
+    }
+
+    const body = (await res.json()) as ApiEnvelope<CompleteSessionServerResponse | null>;
     return body.data ?? null;
   },
 

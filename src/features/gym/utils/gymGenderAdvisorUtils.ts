@@ -1,4 +1,4 @@
-import { GYM_EXERCISE_CATALOG, GYM_SPLIT_PRESETS } from '../data/defaultGymCatalog';
+import { GYM_EXERCISE_CATALOG } from '../data/defaultGymCatalog';
 import type {
   GymCycleTrackingState,
   GymExerciseDefinition,
@@ -10,7 +10,10 @@ import type {
 } from '../types/gym';
 import {
   GYM_PRIMARY_GOAL_META,
+  getGenderDefaultWeightKg,
   resolveCycleStatus,
+  resolveGenderReadinessStatus,
+  roundToEquipmentStep,
 } from './gymCycleAndProgressionUtils';
 
 export const GYM_MALE_GOAL_META: Record<
@@ -99,10 +102,6 @@ export interface GenderWorkoutAndNutritionRecommendation {
   nutritionPlan: RecommendedNutritionPlan;
 }
 
-function roundToHalfKg(val: number): number {
-  return Math.max(0, Math.round(val * 2) / 2);
-}
-
 const BODYWEIGHT_OR_MOBILITY_IDS = new Set([
   'active_mobility_recovery',
   'core_plank',
@@ -116,24 +115,30 @@ interface RawSessionBlueprint {
 
 function buildMaleSessionBlueprints(
   maleGoal: GymMaleGoal,
-  protectBack: boolean
+  protectBack: boolean,
+  shoulderSafe = false
 ): RawSessionBlueprint[] {
   const safeSquat = protectBack ? 'leg_press_45' : 'barbell_squat';
   const safeRdl = protectBack ? 'lying_leg_curl' : 'romanian_deadlift';
+  const safeBench = shoulderSafe ? 'brtw_laydown_chest_press' : 'barbell_bench_press';
+  const safeChestDip = shoulderSafe ? 'cable_crossover' : 'assisted_chest_dip';
+  const safeOverheadPress = shoulderSafe ? 'cable_face_pull' : 'smith_shoulder_press';
 
   if (maleGoal === 'chest_shoulder_3d') {
     return [
       {
         titleVi: 'Ngực Dày Toàn Diện & Tay Sau (Push Heavy)',
         focusTagVi: 'Ngực Trên • Rãnh Ngực • Tay Sau',
-        exerciseIds: [
-          'brtw_incline_chest_press',
-          'barbell_bench_press',
-          'incline_dumbbell_press',
-          'pec_deck_fly',
-          'assisted_chest_dip',
-          'tricep_rope_pushdown',
-        ],
+        exerciseIds: Array.from(
+          new Set([
+            'brtw_incline_chest_press',
+            safeBench,
+            'incline_dumbbell_press',
+            'pec_deck_fly',
+            safeChestDip,
+            'tricep_rope_pushdown',
+          ])
+        ),
       },
       {
         titleVi: 'Lưng Xô Chữ V & Tay Trước (Pull V-Taper)',
@@ -280,14 +285,16 @@ function buildMaleSessionBlueprints(
     {
       titleVi: 'Ngực Nặng Đa Khớp & Tay Sau (Heavy Push)',
       focusTagVi: 'Tăng Khối Lượng Cơ Ngực & Đẩy Vai',
-      exerciseIds: [
-        'barbell_bench_press',
-        'brtw_incline_chest_press',
-        'incline_dumbbell_press',
-        'pec_deck_fly',
-        'assisted_chest_dip',
-        'tricep_rope_pushdown',
-      ],
+      exerciseIds: Array.from(
+        new Set([
+          safeBench,
+          'brtw_incline_chest_press',
+          'incline_dumbbell_press',
+          'pec_deck_fly',
+          safeChestDip,
+          'tricep_rope_pushdown',
+        ])
+      ),
     },
     {
       titleVi: 'Lưng Dày & Kéo Xô Sức Mạnh (Heavy Pull)',
@@ -316,14 +323,16 @@ function buildMaleSessionBlueprints(
     {
       titleVi: 'Vai 3D & Bắp Tay Khổng Lồ (Shoulders & Arms)',
       focusTagVi: 'Đẩy Vai Máy • Vai Giữa • Tay Trước/Sau',
-      exerciseIds: [
-        'machine_shoulder_press',
-        'smith_shoulder_press',
-        'machine_lateral_raise',
-        'reverse_pec_deck',
-        'machine_bicep_curl',
-        'overhead_db_tricep_ext',
-      ],
+      exerciseIds: Array.from(
+        new Set([
+          'machine_shoulder_press',
+          safeOverheadPress,
+          'machine_lateral_raise',
+          'reverse_pec_deck',
+          'machine_bicep_curl',
+          'overhead_db_tricep_ext',
+        ])
+      ),
     },
     {
       titleVi: 'Ngực Trên & Lưng Xô Bổ Trợ (Upper Hypertrophy)',
@@ -607,8 +616,8 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
         ? 1.1
         : 0.9;
 
-  const energyLevel = cycleTracking.todayEnergyLevel || 4;
-  const energyFactor = energyLevel <= 2 ? 0.85 : energyLevel === 5 ? 1.05 : 1.0;
+  const maleEnergy = userProfile.maleEnergyLevel ?? cycleTracking.todayEnergyLevel ?? 4;
+  const energyFactor = maleEnergy <= 2 ? 0.9 : maleEnergy === 5 ? 1.05 : 1.0;
 
   if (gender === 'male') {
     const maleGoal: GymMaleGoal = userProfile.maleGoal || 'chest_shoulder_3d';
@@ -622,7 +631,8 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
 
     const blueprints = buildMaleSessionBlueprints(
       maleGoal,
-      Boolean(userProfile.protectLowerBackKnee)
+      Boolean(userProfile.protectLowerBackKnee),
+      Boolean(userProfile.shoulderSafe)
     ).slice(0, workoutsPerWeek);
 
     const sessions: RecommendedWorkoutSession[] = blueprints.map((bp, idx) => {
@@ -630,12 +640,14 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
         .map((id) => catalogMap.get(id))
         .filter((e): e is GymExerciseDefinition => Boolean(e))
         .map((ex) => {
+          const baseMaleWeight = getGenderDefaultWeightKg(ex, 'male');
           const isBodyweight =
-            BODYWEIGHT_OR_MOBILITY_IDS.has(ex.id) || ex.defaultWeightKg === 0;
+            BODYWEIGHT_OR_MOBILITY_IDS.has(ex.id) || baseMaleWeight === 0;
           const suggestedWeightKg = isBodyweight
             ? 0
-            : roundToHalfKg(
-                ex.defaultWeightKg * bodyScale * expMultiplier * energyFactor
+            : roundToEquipmentStep(
+                baseMaleWeight * bodyScale * expMultiplier * energyFactor,
+                ex
               );
 
           const suggestedSetsReps = isBodyweight
@@ -655,7 +667,7 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
         });
 
       return {
-        id: `day${idx + 1}`,
+        id: `m_session_${idx + 1}`,
         sessionNumber: idx + 1,
         dayLabelVi: `Buổi ${idx + 1}`,
         titleVi: bp.titleVi,
@@ -815,15 +827,17 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
       .map((id) => catalogMap.get(id))
       .filter((e): e is GymExerciseDefinition => Boolean(e))
       .map((ex) => {
+        const baseFemaleWeight = getGenderDefaultWeightKg(ex, 'female');
         const isBodyweight =
-          BODYWEIGHT_OR_MOBILITY_IDS.has(ex.id) || ex.defaultWeightKg === 0;
+          BODYWEIGHT_OR_MOBILITY_IDS.has(ex.id) || baseFemaleWeight === 0;
         const suggestedWeightKg = isBodyweight
           ? 0
-          : roundToHalfKg(
-              ex.defaultWeightKg *
+          : roundToEquipmentStep(
+              baseFemaleWeight *
                 bodyScale *
                 expMultiplier *
-                cycleStatus.loadMultiplier
+                cycleStatus.loadMultiplier,
+              ex
             );
 
         const suggestedSetsReps = isBodyweight
@@ -841,7 +855,7 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
       });
 
     return {
-      id: `day${idx + 1}`,
+      id: `f_session_${idx + 1}`,
       sessionNumber: idx + 1,
       dayLabelVi: `Buổi ${idx + 1}`,
       titleVi: bp.titleVi,
@@ -958,8 +972,6 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
     },
   ];
 
-  const fallbackPreset = GYM_SPLIT_PRESETS[0];
-
   return {
     gender: 'female',
     workoutsPerWeek,
@@ -970,9 +982,7 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
     strategySummaryVi: cycleStatus.isDeloadRecommended
       ? `Đang ưu tiên Deload êm khớp lưng/bụng cho ${workoutsPerWeek} buổi/tuần (${totalExercisesCount} bài tập).`
       : `Lộ trình ${workoutsPerWeek} buổi/tuần (${totalExercisesCount} bài tập) tối ưu ${goalMeta.labelVi}.`,
-    recommendedPresetNameVi:
-      `Lịch Nữ ${workoutsPerWeek} Buổi/Tuần (${goalMeta.shortVi})` ||
-      fallbackPreset.name,
+    recommendedPresetNameVi: `Lịch Nữ ${workoutsPerWeek} Buổi/Tuần (${goalMeta.shortVi})`,
     recommendedSplitDays,
     sessions,
     recommendedExercises,
@@ -996,4 +1006,99 @@ export function generateGenderWorkoutAndNutritionPlan(params: {
       ],
     },
   };
+}
+
+/**
+ * Hydrates a user's persisted gender split (`maleCustomDays` or `femaleCustomDays`)
+ * into `RecommendedWorkoutSession[]` so any swapped/customized exercises in LocalStorage/MongoDB
+ * reflect immediately in the active 3D workout UI ("Single Source of Truth").
+ */
+export function buildSessionsFromSavedSplitDays(params: {
+  savedDays: GymSplitDayConfig[] | undefined;
+  fallbackSessions: RecommendedWorkoutSession[];
+  gender: GymGenderMode;
+  userProfile: GymFemaleBodyProfile;
+  cycleTracking: GymCycleTrackingState;
+  catalog?: GymExerciseDefinition[];
+}): RecommendedWorkoutSession[] {
+  const {
+    savedDays,
+    fallbackSessions,
+    gender,
+    userProfile,
+    cycleTracking,
+    catalog = GYM_EXERCISE_CATALOG,
+  } = params;
+
+  if (!savedDays || savedDays.length === 0) {
+    return fallbackSessions;
+  }
+
+  const catalogMap = new Map(catalog.map((e) => [e.id, e]));
+  const weightKg = Math.max(
+    35,
+    Math.min(160, Number(userProfile.weightKg) || (gender === 'male' ? 68 : 50))
+  );
+  const expMultiplier =
+    userProfile.experienceLevel === 'advanced'
+      ? 1.25
+      : userProfile.experienceLevel === 'intermediate'
+        ? 1.1
+        : 0.9;
+  const bodyScale =
+    gender === 'male'
+      ? Math.max(0.75, Math.min(1.45, weightKg / 65))
+      : Math.max(0.7, Math.min(1.3, weightKg / 50));
+
+  const readinessStatus = resolveGenderReadinessStatus(
+    gender,
+    userProfile,
+    cycleTracking
+  );
+
+  return savedDays.map((day, idx) => {
+    const exercises: RecommendedExerciseItem[] = day.exerciseIds
+      .map((id) => catalogMap.get(id))
+      .filter((e): e is GymExerciseDefinition => Boolean(e))
+      .map((ex) => {
+        const baseWeight = getGenderDefaultWeightKg(ex, gender);
+        const isBodyweight =
+          BODYWEIGHT_OR_MOBILITY_IDS.has(ex.id) || baseWeight === 0;
+        const suggestedWeightKg = isBodyweight
+          ? 0
+          : roundToEquipmentStep(
+              baseWeight * bodyScale * expMultiplier * readinessStatus.loadMultiplier,
+              ex
+            );
+
+        const suggestedSetsReps = isBodyweight
+          ? `${ex.sets} × ${ex.reps}`
+          : gender === 'male'
+            ? userProfile.maleGoal === 'strength_power'
+              ? '4 hiệp × 6–8 lần'
+              : userProfile.maleGoal === 'lean_abs_cut'
+                ? '4 hiệp × 12–15 lần'
+                : `${ex.sets} hiệp × ${ex.reps} lần`
+            : readinessStatus.isDeloadRecommended
+              ? '3 hiệp × 12–15 lần (Deload êm khớp)'
+              : '4 hiệp × 12–15 lần';
+
+        return {
+          exercise: ex,
+          suggestedWeightKg,
+          suggestedSetsReps,
+          whyRecommendedVi: ex.benefit,
+        };
+      });
+
+    return {
+      id: day.id,
+      sessionNumber: idx + 1,
+      dayLabelVi: day.dayLabel || `Buổi ${idx + 1}`,
+      titleVi: day.title || `Buổi ${idx + 1}`,
+      focusTagVi: day.subtitle || 'Lộ trình cá nhân hóa',
+      estimatedMinutes: exercises.length * (gender === 'male' ? 8 : 7) + 5,
+      exercises,
+    };
+  });
 }

@@ -19,8 +19,12 @@ import type {
   GymFemaleBodyProfile,
   GymGenderMode,
   GymSplitDayConfig,
+  GymWorkoutHistoryEntry,
 } from '../types/gym';
-import { type ResolvedCycleStatus } from '../utils/gymCycleAndProgressionUtils';
+import {
+  computeEstimated1RM,
+  type ResolvedCycleStatus,
+} from '../utils/gymCycleAndProgressionUtils';
 import { generateGenderWorkoutAndNutritionPlan } from '../utils/gymGenderAdvisorUtils';
 
 interface GymAiCoachDrawerProps {
@@ -34,6 +38,7 @@ interface GymAiCoachDrawerProps {
   currentExercise: GymExerciseDefinition;
   customDays: GymSplitDayConfig[];
   exerciseLogs: Record<string, GymExerciseUserLog>;
+  workoutHistory?: GymWorkoutHistoryEntry[];
   workoutStreak: number;
   chatHistory: GymAiChatMessage[];
   onOpen?: () => void;
@@ -46,13 +51,13 @@ interface GymAiCoachDrawerProps {
 
 const MALE_SUGGESTIONS_VI = [
   'Dựa vào chiều cao, cân nặng và số đo Ngực/Bụng/Tay mình vừa nhập, hôm nay nên tập mức tạ nào?',
-  'Với chỉ số của mình, thực đơn 4 bữa hôm nay nên ăn cụ thể bao nhiêu gram ức gà, cơm, trứng?',
+  'Đi ăn ngoài (cơm tấm, phở bò, bún thịt nướng) thì gọi thế nào để đủ Đạm mà không tích mỡ bụng?',
   'Làm sao để đẩy ngực vào đúng ngực trên mà không bị mỏi khớp vai trước?',
 ];
 
 const FEMALE_SUGGESTIONS_VI = [
   'Dựa vào chiều cao, cân nặng, số đo Eo/Mông và pha chu kỳ mình vừa nhập, hôm nay nên tập thế nào?',
-  'Với chỉ số của mình, hôm nay nên ăn uống 4 bữa ra sao để tăng vòng 3 mà không tích mỡ bụng?',
+  'Đi ăn ngoài (phở gà, bún thịt nướng, cơm văn phòng) thì ăn sao để nuôi vòng 3 mà giữ eo thon?',
   'Mình muốn độ mông đào mà không bị to đùi trước, cần lưu ý kỹ thuật gì ở bài đang xem?',
 ];
 
@@ -75,8 +80,8 @@ function buildLocalFallbackCoachAnswer(
     return [
       `Dựa trên thông tin bạn vừa nhập (**Nam • ${userProfile.heightCm}cm • ${userProfile.weightKg}kg • BMI ${bmi}**, Ngực **${chest}cm** • Bụng **${waist}cm** • Bắp tay **${arm}cm**):`,
       `• **Bài tập & Mức tạ (${currentExercise.vietnameseName}):** Thực hiện **${currentExercise.sets} hiệp × ${currentExercise.reps} lần**, hạ tạ chậm 2–3 giây để tối ưu kích thích cơ.`,
-      `• **Ăn uống theo chỉ số của bạn:** Mục tiêu **${targetKcal} kcal/ngày** và **${proteinGrams}g Đạm/ngày** (chia đều 4 bữa: ức gà, bò nạc, cá, trứng, khoai lang/cơm).`,
-      `• **Trả lời "${question.slice(0, 60)}":** Giữ lưng dưới áp sát ghế đệm, thở ra khi phát lực đẩy/kéo và nghỉ ${currentExercise.restSeconds}s giữa các hiệp.`,
+      `• **Ăn uống theo chỉ số của bạn:** Mục tiêu **${targetKcal} kcal/ngày** và **${proteinGrams}g Đạm/ngày** (chia đều 4 bữa: ức gà, thăn bò nạc, cá, trứng; ăn ngoài chọn phở bò tái nạc hoặc cơm tấm sườn nạc bỏ mỡ hành).`,
+      `• **Trả lời "${question.slice(0, 60)}":** Giữ lưng dưới áp sát ghế đệm, hạ bả vai, thở ra khi phát lực đẩy/kéo và nghỉ ${currentExercise.restSeconds}s giữa các hiệp.`,
     ].join('\n');
   }
 
@@ -86,13 +91,13 @@ function buildLocalFallbackCoachAnswer(
     cycleStatus.isDeloadRecommended
       ? `• **Điều chỉnh theo Chu kỳ:** Hôm nay nên **giảm 15–20% mức tạ (Deload)**, ưu tiên bài cô lập mông nhẹ nhàng và tránh nén ổ bụng.`
       : `• **Bài tập & Mức tạ (${currentExercise.vietnameseName}):** Tập **${currentExercise.sets} hiệp × ${currentExercise.reps} lần**, dồn lực qua gót chân và giữ đỉnh co cơ mông 1 giây để ăn vào vòng 3 mà không to đùi trước.`,
-    `• **Ăn uống theo chỉ số của bạn:** Mục tiêu **${targetKcal} kcal/ngày** và **${proteinGrams}g Đạm/ngày**. ${cycleStatus.nutritionTipVi}`,
+    `• **Ăn uống theo chỉ số của bạn:** Mục tiêu **${targetKcal} kcal/ngày** và **${proteinGrams}g Đạm/ngày** (ăn ngoài ưu tiên phở gà bỏ da, bún bò nạc ít nước béo, khoai lang/trứng). ${cycleStatus.nutritionTipVi}`,
   ].join('\n');
 }
 
 /**
  * Floating bottom-right corner AI Chat Dock (modeled after ZiweiChat in /tu-vi)
- * that reads the user's live entered metrics (Nam / Nữ) to think and reply.
+ * that reads the user's live entered metrics, PRs, and workout history (Nam / Nữ).
  */
 export default function GymAiCoachDrawer({
   open,
@@ -103,6 +108,7 @@ export default function GymAiCoachDrawer({
   cycleStatus,
   currentExercise,
   exerciseLogs,
+  workoutHistory = [],
   workoutStreak,
   chatHistory,
   onOpen,
@@ -172,8 +178,28 @@ export default function GymAiCoachDrawer({
       .map((log) => {
         const name =
           GYM_EXERCISE_MAP[log.exerciseId]?.vietnameseName || log.exerciseId;
-        return `${name}: ${log.weightKg}kg`;
+        const pin = log.seatPinNote || log.personalTip;
+        return `${name}: ${log.weightKg}kg${pin ? ` (${pin})` : ''}`;
       });
+
+    const prSummary = Object.values(exerciseLogs)
+      .filter((log) => (log.personalRecordKg || log.weightKg || 0) > 0)
+      .slice(0, 8)
+      .map((log) => {
+        const name =
+          GYM_EXERCISE_MAP[log.exerciseId]?.vietnameseName || log.exerciseId;
+        const pr = Math.max(log.personalRecordKg || 0, log.weightKg || 0);
+        const e1rm = log.estimated1RM || computeEstimated1RM(pr, 10);
+        return `${name}: PR ${pr}kg (1RM ~${e1rm}kg)`;
+      });
+
+    const recentWorkoutSummary = workoutHistory
+      .slice(0, 5)
+      .map(
+        (s) =>
+          `${s.dateKey} - ${s.dayTitle}: ${s.totalVolumeKg}kg Volume (${s.durationMinutes}p)`
+      )
+      .join(' | ');
 
     return {
       userProfile: {
@@ -187,6 +213,8 @@ export default function GymAiCoachDrawer({
       workoutStreak,
       customDaysSummary: [...recExercisesSummary, nutritionSummary],
       exerciseLogsSummary,
+      prSummary,
+      recentWorkoutSummary,
     };
   };
 
@@ -266,7 +294,7 @@ export default function GymAiCoachDrawer({
           aria-label="Hỏi AI Coach về thông tin thể trạng của bạn"
           className="w-[min(25rem,calc(100vw-1.5rem))] h-[min(33rem,calc(100dvh-2rem))] rounded-2xl border border-[#2E2E3D] bg-[#15151C] text-[#F7F7F7] shadow-2xl flex flex-col overflow-hidden"
         >
-          {/* Corner Chat Header (Like ZiweiChat) */}
+          {/* Corner Chat Header */}
           <header
             className={`px-3.5 py-2.5 flex items-center justify-between gap-2 border-b border-[#272734] ${
               isMale ? 'bg-[#102329]' : 'bg-[#28131B]'
@@ -278,13 +306,24 @@ export default function GymAiCoachDrawer({
                 className={isMale ? 'text-[#5CE1E6] shrink-0' : 'text-[#FF5C8A] shrink-0'}
               />
               <div className="min-w-0">
-                <h2 className="text-xs sm:text-sm font-black text-[#F7F7F7] truncate">
-                  Hỏi AI Coach ({isMale ? 'Nam' : 'Nữ'})
-                </h2>
+                <div className="flex items-center gap-1.5">
+                  <h2 className="text-xs sm:text-sm font-black text-[#F7F7F7] truncate">
+                    KeyT Neon AI Coach
+                  </h2>
+                  <span
+                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-black shrink-0 ${
+                      isMale
+                        ? 'bg-[#5CE1E6]/20 text-[#5CE1E6]'
+                        : 'bg-[#FF5C8A]/20 text-[#FF5C8A]'
+                    }`}
+                  >
+                    {isMale ? 'Nam' : 'Nữ'}
+                  </span>
+                </div>
                 <div className="text-[10px] font-bold text-zinc-300 truncate">
                   {isMale
-                    ? `${userProfile.heightCm}cm • ${userProfile.weightKg}kg • Ngực/Bụng/Tay ${userProfile.chestCm ?? 96}/${userProfile.waistCm}/${userProfile.armCm ?? 35}`
-                    : `${userProfile.heightCm}cm • ${userProfile.weightKg}kg • Eo/Mông ${userProfile.waistCm}/${userProfile.hipCm} • ${cycleStatus.phaseShortVi}`}
+                    ? `${userProfile.heightCm}cm • ${userProfile.weightKg}kg • Ngực/Bụng/Tay: ${userProfile.chestCm ?? 96}/${userProfile.waistCm}/${userProfile.armCm ?? 35}cm`
+                    : `${userProfile.heightCm}cm • ${userProfile.weightKg}kg • Eo/Mông: ${userProfile.waistCm}/${userProfile.hipCm}cm • ${cycleStatus.phaseShortVi}`}
                 </div>
               </div>
             </div>
@@ -382,7 +421,9 @@ export default function GymAiCoachDrawer({
               onChange={(e) => setInput(e.target.value)}
               placeholder="Hỏi về bài tập, mức tạ, ăn uống…"
               aria-label="Câu hỏi cho AI Coach"
-              className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-[#1B1B24] border border-[#2E2E3C] text-xs sm:text-sm text-[#F7F7F7] placeholder:text-zinc-500 focus:outline-none focus:border-[#FF5C8A]"
+              className={`flex-1 min-w-0 px-3 py-2 rounded-xl bg-[#1B1B24] border border-[#2E2E3C] text-xs sm:text-sm text-[#F7F7F7] placeholder:text-zinc-500 focus:outline-none ${
+                isMale ? 'focus:border-[#5CE1E6]' : 'focus:border-[#FF5C8A]'
+              }`}
             />
             <button
               type="submit"

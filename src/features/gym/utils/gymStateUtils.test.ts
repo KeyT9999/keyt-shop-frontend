@@ -6,6 +6,7 @@ import {
 import { computeGym3DPoseKeyframes } from '../three/gym3DPoseData';
 import {
   advanceToNextGymSplitDay,
+  computeSmartWorkoutStreak,
   createInitialGymState,
   mergeGymClientAndServerState,
   normalizeDailySessionRollover,
@@ -148,5 +149,59 @@ describe('gymStateUtils', () => {
         }
       }
     }
+  });
+
+  it('maintains Smart Streak across 1-3 rest days and preserves lifetime PR during deload merges', () => {
+    // Same day -> idempotent
+    expect(computeSmartWorkoutStreak(5, '2026-11-10', '2026-11-10')).toBe(5);
+    // 2 rest days (3-day difference) -> increments streak to 6!
+    expect(computeSmartWorkoutStreak(5, '2026-11-07', '2026-11-10')).toBe(6);
+    // 5 days gap -> resets to 1
+    expect(computeSmartWorkoutStreak(5, '2026-11-01', '2026-11-10')).toBe(1);
+
+    const localDeload = {
+      ...createInitialGymState('2026-11-10'),
+      clientUpdatedAt: 5000,
+      exerciseLogs: {
+        machine_hip_thrust: {
+          exerciseId: 'machine_hip_thrust',
+          weightKg: 25, // Deloaded today
+          personalRecordKg: 25,
+          repsNote: '3x12 deload',
+          personalTip: 'Ghế nấc 2',
+          updatedAtMs: 5000,
+        },
+      },
+    };
+
+    const remoteWithHigherPR = {
+      activeDayId: 'day1',
+      completedExerciseIdsToday: [],
+      sessionDateKey: '2026-11-08',
+      workoutStreak: 3,
+      lastCompletedSessionDate: '2026-11-08',
+      customDays: localDeload.customDays,
+      clientUpdatedAt: 3000,
+      exerciseLogs: [
+        {
+          exerciseId: 'machine_hip_thrust',
+          weightKg: 45,
+          personalRecordKg: 45,
+          estimated1RM: 60,
+          repsNote: '4x10 PR',
+          personalTip: 'Ghế nấc 2',
+          updatedAtMs: 3000,
+        },
+      ],
+    };
+
+    const merged = mergeGymClientAndServerState(
+      localDeload,
+      remoteWithHigherPR,
+      '2026-11-10'
+    );
+    expect(merged.exerciseLogs.machine_hip_thrust.weightKg).toBe(25);
+    expect(merged.exerciseLogs.machine_hip_thrust.personalRecordKg).toBe(45);
+    expect(merged.exerciseLogs.machine_hip_thrust.estimated1RM).toBe(60);
   });
 });

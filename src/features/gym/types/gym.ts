@@ -1,6 +1,7 @@
 /**
- * Single Source of Truth for KeyT Gym 3D Coach (/gym)
- * Covers 5-day customizable split, exercise library, 3D pose animations, and LocalStorage/MongoDB sync.
+ * Single Source of Truth for KeyT Gym 3D Coach (/gym, /gym/nam, /gym/nu)
+ * Covers per-gender customizable splits, exercise library, 3D pose animations, set-by-set tracking,
+ * PR / 1RM / Workout History / Body Metrics, and LocalStorage <-> MongoDB Cloud sync.
  */
 
 export type GymMuscleRegion =
@@ -70,6 +71,12 @@ export interface GymExerciseDefinition {
   machineName: string;
   machineSetupTip: string;
   defaultWeightKg: number;
+  /** Safe, realistic starting weight for Female (/gym/nu) */
+  defaultFemaleWeightKg?: number;
+  /** Real gym increment step (e.g. 1 or 2 for dumbbells, 2.5 or 5 for cables/plates) */
+  equipmentStepKg?: number;
+  /** True when weight is loaded per side on barbell/machine horns (enables Plate Calculator) */
+  isPlateLoadedPerSide?: boolean;
   weightUnitLabel: string;
   sets: string;
   reps: string;
@@ -97,11 +104,25 @@ export interface GymSplitDayConfig {
   exerciseIds: string[];
 }
 
+export interface GymSetDetailItem {
+  setNumber: number;
+  weightKg: number;
+  reps: number;
+  isWarmup?: boolean;
+  completed: boolean;
+}
+
 export interface GymExerciseUserLog {
   exerciseId: string;
   weightKg: number;
   repsNote: string;
   personalTip: string;
+  seatPinNote?: string;
+  personalRecordKg?: number;
+  estimated1RM?: number;
+  setsCompletedToday?: number[];
+  setsCompletedDateKey?: string;
+  setsDetail?: GymSetDetailItem[];
   updatedAtMs: number;
 }
 
@@ -156,6 +177,10 @@ export interface GymFemaleBodyProfile {
   experienceLevel: GymExperienceLevel;
   avoidHeavyQuads: boolean;
   protectLowerBackKnee: boolean;
+  shoulderSafe?: boolean;
+  maleEnergyLevel?: 1 | 2 | 3 | 4 | 5;
+  waterIntakeMlToday?: number;
+  waterDateKey?: string;
   personalNotes: string;
   updatedAtMs: number;
 }
@@ -185,14 +210,46 @@ export interface GymAiChatMessage {
   createdAtMs: number;
 }
 
+export interface GymWorkoutHistoryEntry {
+  id: string;
+  dateKey: string;
+  gender: GymGenderMode;
+  dayId: string;
+  dayTitle: string;
+  durationMinutes: number;
+  totalVolumeKg: number;
+  completedExercisesCount: number;
+  caloriesBurned: number;
+  prCount: number;
+  prHighlights: string[];
+  createdAtMs: number;
+}
+
+export interface GymBodyMetricEntry {
+  dateKey: string;
+  gender: GymGenderMode;
+  weightKg: number;
+  waistCm: number;
+  hipCm: number;
+  chestCm: number;
+  armCm: number;
+  createdAtMs: number;
+}
+
 export interface GymClientPersistedState {
   activeDayId: string;
+  activeMaleDayId?: string;
+  activeFemaleDayId?: string;
   completedExerciseIdsToday: string[];
   sessionDateKey: string;
   workoutStreak: number;
   lastCompletedSessionDate: string;
   customDays: GymSplitDayConfig[];
+  maleCustomDays?: GymSplitDayConfig[];
+  femaleCustomDays?: GymSplitDayConfig[];
   exerciseLogs: Record<string, GymExerciseUserLog>;
+  workoutHistory?: GymWorkoutHistoryEntry[];
+  bodyMetricsHistory?: GymBodyMetricEntry[];
   userProfile: GymFemaleBodyProfile;
   cycleTracking: GymCycleTrackingState;
   exerciseRestrictions: GymExerciseRestriction[];
@@ -202,12 +259,18 @@ export interface GymClientPersistedState {
 
 export interface GymServerProfilePayload {
   activeDayId: string;
+  activeMaleDayId?: string;
+  activeFemaleDayId?: string;
   completedExerciseIdsToday: string[];
   sessionDateKey: string;
   workoutStreak: number;
   lastCompletedSessionDate: string;
   customDays: GymSplitDayConfig[];
+  maleCustomDays?: GymSplitDayConfig[];
+  femaleCustomDays?: GymSplitDayConfig[];
   exerciseLogs: GymExerciseUserLog[];
+  workoutHistory?: GymWorkoutHistoryEntry[];
+  bodyMetricsHistory?: GymBodyMetricEntry[];
   userProfile?: GymFemaleBodyProfile;
   cycleTracking?: GymCycleTrackingState;
   exerciseRestrictions?: GymExerciseRestriction[];

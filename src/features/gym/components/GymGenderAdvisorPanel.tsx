@@ -1,27 +1,35 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Activity,
   ArrowLeft,
   ArrowRight,
+  Calendar,
   Camera,
   Check,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Cloud,
   Columns2,
   Droplets,
   Dumbbell,
   Flame,
   HeartPulse,
+  ListChecks,
   MapPin,
+  Minus,
+  Plus,
   RefreshCw,
   Rotate3d,
+  ShieldAlert,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
+  Trophy,
   Utensils,
   Zap,
 } from 'lucide-react';
+import type { GymCloudSyncStatus } from '../hooks/useGymCoachState';
 import type {
   GymCycleTrackingState,
   GymExerciseUserLog,
@@ -31,6 +39,7 @@ import type {
   GymMaleGoal,
   GymManualPhaseOverride,
   GymPrimaryGoal,
+  GymSetDetailItem,
   GymSplitDayConfig,
   GymSymptomCode,
 } from '../types/gym';
@@ -38,9 +47,10 @@ import {
   computeSmartSetRecommendation,
   GYM_PRIMARY_GOAL_META,
   GYM_SYMPTOM_META,
-  resolveCycleStatus,
+  resolveGenderReadinessStatus,
 } from '../utils/gymCycleAndProgressionUtils';
 import {
+  buildSessionsFromSavedSplitDays,
   generateGenderWorkoutAndNutritionPlan,
   GYM_MALE_GOAL_META,
   type GenderWorkoutAndNutritionRecommendation,
@@ -48,19 +58,34 @@ import {
 import ExerciseReferenceDualView from './ExerciseReferenceDualView';
 import GymInlineMetricsTools from './GymInlineMetricsTools';
 import GymMannequin3DViewer from './GymMannequin3DViewer';
-import GymRestTimerBar from './GymRestTimerBar';
 import RealGymMachineView from './RealGymMachineView';
 
 type StageVisualTab = '3d' | 'gym_photo' | 'photo' | 'split';
 
+export interface CompleteSessionSummaryInput {
+  dayId: string;
+  dayTitle: string;
+  nextDayId: string;
+  durationMinutes: number;
+  totalVolumeKg: number;
+  completedExercisesCount: number;
+  caloriesBurned: number;
+  prHighlights: string[];
+}
+
 interface GymGenderAdvisorPanelProps {
   activeGender: GymGenderMode;
   selectedExerciseId?: string;
+  savedGenderDays?: GymSplitDayConfig[];
+  activeGenderDayId?: string;
+  syncStatus?: GymCloudSyncStatus;
+  workoutStreak?: number;
   userProfile: GymFemaleBodyProfile;
   cycleTracking: GymCycleTrackingState;
   exerciseLogs?: Record<string, GymExerciseUserLog>;
   completedIdsToday?: string[];
   onSelectGenderRoute: (gender: GymGenderMode) => void;
+  onSelectGenderDay?: (dayId: string) => void;
   onSaveProfile: (patch: Partial<GymFemaleBodyProfile>) => void;
   onSaveCycle: (patch: Partial<GymCycleTrackingState>) => void;
   onApplyRecommendedSplit: (days: GymSplitDayConfig[]) => void;
@@ -70,9 +95,19 @@ interface GymGenderAdvisorPanelProps {
     exerciseId: string,
     weightKg: number,
     repsNote: string,
-    personalTip: string
+    personalTip: string,
+    extra?: {
+      seatPinNote?: string;
+      setsDetail?: GymSetDetailItem[];
+      setsCompletedToday?: number[];
+      autoMarkCompleted?: boolean;
+    }
   ) => void;
+  onAddWaterIntakeMl?: (deltaMl: number) => void;
+  onCompleteSession?: (summary: CompleteSessionSummaryInput) => void;
   onOpenSubstituteModal?: () => void;
+  onOpenCustomizerModal?: () => void;
+  onOpenProgressModal?: () => void;
   onOpenAiCoachDrawer: () => void;
 }
 
@@ -80,10 +115,17 @@ const FEMALE_PHASE_OPTIONS: {
   id: GymManualPhaseOverride;
   label: string;
 }[] = [
+  { id: 'auto', label: 'Tự động theo ngày' },
   { id: 'follicular', label: 'Nang Trứng (Sung sức)' },
   { id: 'ovulatory', label: 'Rụng Trứng (Đỉnh lực)' },
   { id: 'luteal', label: 'Hoàng Thể / PMS' },
   { id: 'menstrual', label: 'Kỳ Dâu (Giảm 20% tạ)' },
+];
+
+const MALE_ENERGY_OPTIONS: { level: 2 | 4 | 5; label: string }[] = [
+  { level: 2, label: 'Hơi mỏi / Thiếu ngủ (-10% tạ)' },
+  { level: 4, label: 'Phong độ chuẩn' },
+  { level: 5, label: 'Đỉnh sung sức (Thử PR)' },
 ];
 
 const EXPERIENCE_OPTIONS: { id: GymExperienceLevel; label: string }[] = [
@@ -103,22 +145,33 @@ function extractShortFoodChips(menuOption: string): string[] {
 
 export default function GymGenderAdvisorPanel({
   activeGender,
+  selectedExerciseId,
+  savedGenderDays,
+  activeGenderDayId,
+  syncStatus = 'local-only',
+  workoutStreak = 0,
   userProfile,
   cycleTracking,
   exerciseLogs = {},
   completedIdsToday = [],
   onSelectGenderRoute,
+  onSelectGenderDay,
   onSaveProfile,
   onSaveCycle,
   onApplyRecommendedSplit,
   onSelectExerciseFor3D,
   onToggleExerciseDone,
   onSaveExerciseLog,
+  onAddWaterIntakeMl,
+  onCompleteSession,
   onOpenSubstituteModal,
+  onOpenCustomizerModal,
+  onOpenProgressModal,
 }: GymGenderAdvisorPanelProps) {
   const [draftProfile, setDraftProfile] = useState<GymFemaleBodyProfile>(() => ({
     ...userProfile,
     gender: activeGender,
+    age: userProfile.age || 24,
     heightCm:
       userProfile.heightCm || (activeGender === 'male' ? 172 : 160),
     weightKg:
@@ -127,46 +180,20 @@ export default function GymGenderAdvisorPanel({
     armCm: userProfile.armCm || 35,
     workoutsPerWeek: userProfile.workoutsPerWeek || 4,
     maleGoal: userProfile.maleGoal || 'chest_shoulder_3d',
+    maleEnergyLevel: userProfile.maleEnergyLevel || 4,
+    shoulderSafe: Boolean(userProfile.shoulderSafe),
   }));
 
   const [draftCycle, setDraftCycle] = useState<GymCycleTrackingState>(cycleTracking);
   const [isFormExpanded, setIsFormExpanded] = useState<boolean>(true);
-  const [activeSessionIdx, setActiveSessionIdx] = useState<number>(0);
+  const [pickedSessionId, setPickedSessionId] = useState<string>('');
   const [activeExerciseIdx, setActiveExerciseIdx] = useState<number>(0);
   const [visualTab, setVisualTab] = useState<StageVisualTab>('3d');
   const [showStepsDetail, setShowStepsDetail] = useState<boolean>(false);
   const [localDoneIds, setLocalDoneIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    setDraftProfile((prev) => {
-      const switchingToMaleDefault =
-        activeGender === 'male' && prev.heightCm === 160 && prev.weightKg === 50;
-      const switchingToFemaleDefault =
-        activeGender === 'female' && prev.heightCm === 172 && prev.weightKg === 68;
-
-      return {
-        ...prev,
-        gender: activeGender,
-        heightCm: switchingToMaleDefault
-          ? 172
-          : switchingToFemaleDefault
-            ? 160
-            : prev.heightCm,
-        weightKg: switchingToMaleDefault
-          ? 68
-          : switchingToFemaleDefault
-            ? 50
-            : prev.weightKg,
-        waistCm: switchingToMaleDefault
-          ? 78
-          : switchingToFemaleDefault
-            ? 63
-            : prev.waistCm,
-      };
-    });
-    setActiveSessionIdx(0);
-    setActiveExerciseIdx(0);
-  }, [activeGender]);
+  const [localWaterMl, setLocalWaterMl] = useState<number>(
+    userProfile.waterIntakeMlToday || 0
+  );
 
   const recommendation: GenderWorkoutAndNutritionRecommendation = useMemo(
     () =>
@@ -178,19 +205,50 @@ export default function GymGenderAdvisorPanel({
     [activeGender, draftProfile, draftCycle]
   );
 
-  const safeSessionIdx =
-    activeSessionIdx < recommendation.sessions.length ? activeSessionIdx : 0;
+  // Single Source of Truth: hydrate persisted gender split days if user customized or swapped exercises
+  const displayedSessions = useMemo(
+    () =>
+      buildSessionsFromSavedSplitDays({
+        savedDays: savedGenderDays,
+        fallbackSessions: recommendation.sessions,
+        gender: activeGender,
+        userProfile: draftProfile,
+        cycleTracking: draftCycle,
+      }),
+    [savedGenderDays, recommendation.sessions, activeGender, draftProfile, draftCycle]
+  );
+
+  const targetSessionId = pickedSessionId || activeGenderDayId || '';
+  const foundSessionIdx = targetSessionId
+    ? displayedSessions.findIndex((s) => s.id === targetSessionId)
+    : 0;
+  const safeSessionIdx = foundSessionIdx >= 0 ? foundSessionIdx : 0;
   const currentSession =
-    recommendation.sessions[safeSessionIdx] || recommendation.sessions[0];
-  const sessionExercises = currentSession?.exercises || [];
+    displayedSessions[safeSessionIdx] || displayedSessions[0];
+  const sessionExercises = useMemo(
+    () => currentSession?.exercises || [],
+    [currentSession]
+  );
+
+  const propExerciseIdx = selectedExerciseId
+    ? sessionExercises.findIndex((item) => item.exercise.id === selectedExerciseId)
+    : -1;
+  const rawExerciseIdx =
+    propExerciseIdx >= 0 ? propExerciseIdx : activeExerciseIdx;
   const safeExerciseIdx =
-    activeExerciseIdx < sessionExercises.length ? activeExerciseIdx : 0;
+    rawExerciseIdx < sessionExercises.length ? rawExerciseIdx : 0;
   const currentItem = sessionExercises[safeExerciseIdx] || sessionExercises[0];
   const currentExercise = currentItem?.exercise;
 
-  const cycleStatus = useMemo(
-    () => resolveCycleStatus(draftCycle, currentExercise),
-    [draftCycle, currentExercise]
+  const readinessStatus = useMemo(
+    () =>
+      resolveGenderReadinessStatus(
+        activeGender,
+        draftProfile,
+        draftCycle,
+        currentExercise
+      ),
+    [activeGender, draftProfile, draftCycle, currentExercise]
   );
 
   const setRecommendation = useMemo(
@@ -199,10 +257,11 @@ export default function GymGenderAdvisorPanel({
         ? computeSmartSetRecommendation(
             currentExercise,
             exerciseLogs[currentExercise.id],
-            cycleStatus
+            readinessStatus,
+            activeGender
           )
         : null,
-    [currentExercise, exerciseLogs, cycleStatus]
+    [currentExercise, exerciseLogs, readinessStatus, activeGender]
   );
 
   const updateProfileLive = (patch: Partial<GymFemaleBodyProfile>) => {
@@ -241,16 +300,58 @@ export default function GymGenderAdvisorPanel({
     });
     onSaveCycle(draftCycle);
     onApplyRecommendedSplit(recommendation.recommendedSplitDays);
-    setActiveSessionIdx(0);
+    const firstSession = recommendation.sessions[0];
+    setPickedSessionId(firstSession?.id || '');
     setActiveExerciseIdx(0);
-    if (recommendation.sessions[0]?.exercises[0]) {
-      onSelectExerciseFor3D(recommendation.sessions[0].exercises[0].exercise.id);
+    if (firstSession) {
+      onSelectGenderDay?.(firstSession.id);
+      if (firstSession.exercises[0]) {
+        onSelectExerciseFor3D(firstSession.exercises[0].exercise.id);
+      }
     }
     setIsFormExpanded(false);
   };
 
   const isExerciseDone = (exId: string) =>
     completedIdsToday.includes(exId) || localDoneIds.includes(exId);
+
+  const buildCurrentSessionSummary = (nextSessionId: string): CompleteSessionSummaryInput => {
+    let totalVolumeKg = 0;
+    const prHighlights: string[] = [];
+
+    for (const item of sessionExercises) {
+      const log = exerciseLogs[item.exercise.id];
+      const w = log?.weightKg ?? item.suggestedWeightKg ?? 0;
+      if (log?.setsDetail && log.setsDetail.some((s) => s.completed)) {
+        for (const s of log.setsDetail) {
+          if (s.completed) {
+            totalVolumeKg += (s.weightKg || w) * (s.reps || 10);
+          }
+        }
+      } else if (w > 0) {
+        totalVolumeKg += w * 3 * 10;
+      }
+
+      if (log && log.weightKg > 0 && log.personalRecordKg && log.weightKg >= log.personalRecordKg) {
+        prHighlights.push(`${item.exercise.vietnameseName}: ${log.weightKg}kg`);
+      }
+    }
+
+    const weightFactor = Math.max(40, Math.min(130, draftProfile.weightKg || 55)) / 55;
+    const durationMinutes = currentSession?.estimatedMinutes || sessionExercises.length * 7;
+    const caloriesBurned = Math.round(sessionExercises.length * 42 * weightFactor);
+
+    return {
+      dayId: currentSession?.id || 'session_1',
+      dayTitle: `${currentSession?.dayLabelVi || 'Buổi tập'}: ${currentSession?.titleVi || ''}`,
+      nextDayId: nextSessionId,
+      durationMinutes,
+      totalVolumeKg: Math.round(totalVolumeKg),
+      completedExercisesCount: sessionExercises.length,
+      caloriesBurned,
+      prHighlights: prHighlights.slice(0, 5),
+    };
+  };
 
   const handleCompleteAndNextExercise = () => {
     if (!currentExercise) return;
@@ -266,14 +367,20 @@ export default function GymGenderAdvisorPanel({
       const nextIdx = safeExerciseIdx + 1;
       setActiveExerciseIdx(nextIdx);
       onSelectExerciseFor3D(sessionExercises[nextIdx].exercise.id);
-    } else if (safeSessionIdx + 1 < recommendation.sessions.length) {
-      const nextSIdx = safeSessionIdx + 1;
-      setActiveSessionIdx(nextSIdx);
-      setActiveExerciseIdx(0);
-      const firstEx = recommendation.sessions[nextSIdx]?.exercises[0]?.exercise;
-      if (firstEx) onSelectExerciseFor3D(firstEx.id);
     } else {
+      const nextSIdx =
+        safeSessionIdx + 1 < displayedSessions.length ? safeSessionIdx + 1 : 0;
+      const nextSession = displayedSessions[nextSIdx] || displayedSessions[0];
+      if (onCompleteSession && nextSession) {
+        onCompleteSession(buildCurrentSessionSummary(nextSession.id));
+      }
+      setPickedSessionId(nextSession?.id || '');
       setActiveExerciseIdx(0);
+      if (nextSession) {
+        onSelectGenderDay?.(nextSession.id);
+        const firstEx = nextSession.exercises[0]?.exercise;
+        if (firstEx) onSelectExerciseFor3D(firstEx.id);
+      }
     }
   };
 
@@ -285,16 +392,42 @@ export default function GymGenderAdvisorPanel({
     }
   };
 
+  const handleAdjustWater = (deltaMl: number) => {
+    if (onAddWaterIntakeMl) {
+      onAddWaterIntakeMl(deltaMl);
+    }
+    setLocalWaterMl((prev) => Math.max(0, Math.min(8000, prev + deltaMl)));
+  };
+
+  const displayedWaterMl = userProfile.waterIntakeMlToday ?? localWaterMl;
+  const targetWaterMl = Math.round(recommendation.nutritionPlan.waterLiters * 1000);
+  const waterPercent = Math.min(
+    100,
+    Math.round((displayedWaterMl / Math.max(1000, targetWaterMl)) * 100)
+  );
+
   const isMale = activeGender === 'male';
+  const accentBtnClass = isMale
+    ? 'bg-[#5CE1E6] text-[#111114]'
+    : 'bg-[#FF5C8A] text-[#111114]';
+  const accentSoftText = isMale ? 'text-[#5CE1E6]' : 'text-[#FF85A9]';
+
   const effectiveVisualTab: StageVisualTab =
     visualTab === 'gym_photo' && !currentExercise?.realGymPhoto ? '3d' : visualTab;
+
+  const syncLabelVi =
+    syncStatus === 'synced'
+      ? 'Đã đồng bộ Cloud'
+      : syncStatus === 'syncing'
+        ? 'Đang đồng bộ...'
+        : 'Lưu trên máy';
 
   return (
     <section
       aria-label="Bộ định tuyến Nam Nữ và tư vấn bài tập ăn uống cá nhân hóa"
       className="rounded-3xl bg-[#16161C] border border-[#282834] p-3.5 sm:p-5 text-[#F7F7F7] shadow-2xl space-y-4"
     >
-      {/* 1. COMPACT 2-ROUTER BAR (/gym/nam vs /gym/nu) */}
+      {/* 1. COMPACT 2-ROUTER BAR (/gym/nam vs /gym/nu) + PROGRESS + SYNC */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3 border-b border-[#262632]">
         <div className="flex items-center gap-2.5">
           <div
@@ -307,7 +440,7 @@ export default function GymGenderAdvisorPanel({
             {isMale ? <Dumbbell size={18} /> : <HeartPulse size={18} />}
           </div>
           <div>
-            <h1 className="text-sm sm:text-base font-black text-[#F7F7F7] flex items-center gap-2">
+            <h1 className="text-sm sm:text-base font-black text-[#F7F7F7] flex flex-wrap items-center gap-2">
               <span>{isMale ? 'GYM 3D NAM' : 'GYM 3D NỮ'}</span>
               <span
                 className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
@@ -319,10 +452,23 @@ export default function GymGenderAdvisorPanel({
                 {recommendation.goalLabelVi}
               </span>
             </h1>
+            <div className="text-[11px] font-semibold text-zinc-400 flex items-center gap-2 mt-0.5">
+              <span className="inline-flex items-center gap-1">
+                <Cloud
+                  size={12}
+                  className={
+                    syncStatus === 'synced' ? 'text-[#A3F77B]' : 'text-zinc-400'
+                  }
+                />
+                <span>{syncLabelVi}</span>
+              </span>
+              <span>•</span>
+              <span className={accentSoftText}>{readinessStatus.phaseShortVi}</span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div
             role="tablist"
             aria-label="Chọn chế độ Gym Nam hoặc Gym Nữ"
@@ -336,7 +482,7 @@ export default function GymGenderAdvisorPanel({
                 onSelectGenderRoute('male');
                 setIsFormExpanded(true);
               }}
-              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`px-3 sm:px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 isMale
                   ? 'bg-[#5CE1E6] text-[#111114] shadow-md shadow-[#5CE1E6]/25'
                   : 'text-zinc-300 hover:text-white'
@@ -354,7 +500,7 @@ export default function GymGenderAdvisorPanel({
                 onSelectGenderRoute('female');
                 setIsFormExpanded(true);
               }}
-              className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`px-3 sm:px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 !isMale
                   ? 'bg-[#FF5C8A] text-[#111114] shadow-md shadow-[#FF5C8A]/25'
                   : 'text-zinc-300 hover:text-white'
@@ -364,6 +510,28 @@ export default function GymGenderAdvisorPanel({
               <span>GYM NỮ (/gym/nu)</span>
             </button>
           </div>
+
+          {onOpenProgressModal && (
+            <button
+              type="button"
+              onClick={onOpenProgressModal}
+              className="px-3 py-2 rounded-xl bg-[#111114] border border-[#2A2A36] hover:border-[#A3F77B] text-xs font-extrabold text-[#A3F77B] flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Trophy size={13} />
+              <span>PR &amp; Tiến độ{workoutStreak > 0 ? ` (${workoutStreak})` : ''}</span>
+            </button>
+          )}
+
+          {onOpenCustomizerModal && (
+            <button
+              type="button"
+              onClick={onOpenCustomizerModal}
+              className="px-3 py-2 rounded-xl bg-[#111114] border border-[#2A2A36] hover:border-zinc-400 text-xs font-extrabold text-zinc-200 flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <ListChecks size={13} />
+              <span className="hidden sm:inline">Tùy chỉnh lịch</span>
+            </button>
+          )}
 
           <button
             type="button"
@@ -377,13 +545,33 @@ export default function GymGenderAdvisorPanel({
         </div>
       </div>
 
-      {/* 2. ULTRA-CONCISE QUESTIONNAIRE FORM */}
+      {/* 2. CONCISE, GENDER-ACCURATE QUESTIONNAIRE FORM */}
       {isFormExpanded && (
         <form onSubmit={handleSubmitForm} className="space-y-3">
           {isMale ? (
             /* ================= MALE COMPACT FORM (/gym/nam) ================= */
             <div className="space-y-3 rounded-2xl bg-[#111114] border border-[#262632] p-3.5">
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                <div>
+                  <label
+                    htmlFor="maleAge"
+                    className="block text-[11px] font-bold text-zinc-400 mb-1"
+                  >
+                    Tuổi
+                  </label>
+                  <input
+                    id="maleAge"
+                    type="number"
+                    min={14}
+                    max={80}
+                    value={draftProfile.age ?? 24}
+                    onChange={(e) =>
+                      updateProfileLive({ age: Number(e.target.value) || 24 })
+                    }
+                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
+                  />
+                </div>
+
                 <div>
                   <label
                     htmlFor="maleHeight"
@@ -495,7 +683,7 @@ export default function GymGenderAdvisorPanel({
                   />
                 </div>
 
-                <div>
+                <div className="col-span-2 sm:col-span-1">
                   <label
                     htmlFor="maleWorkoutsPerWeek"
                     className="block text-[11px] font-bold text-zinc-400 mb-1"
@@ -542,6 +730,59 @@ export default function GymGenderAdvisorPanel({
                 })}
               </div>
 
+              {/* Male Readiness + Joint Guard Controls */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                {MALE_ENERGY_OPTIONS.map((opt) => {
+                  const selected = (draftProfile.maleEnergyLevel || 4) === opt.level;
+                  return (
+                    <button
+                      key={opt.level}
+                      type="button"
+                      onClick={() => updateProfileLive({ maleEnergyLevel: opt.level })}
+                      className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-black cursor-pointer ${
+                        selected
+                          ? 'bg-[#5CE1E6]/20 border-[#5CE1E6] text-[#5CE1E6]'
+                          : 'bg-[#1B1B22] border-[#2E2E3A] text-zinc-300'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateProfileLive({ shoulderSafe: !draftProfile.shoulderSafe })
+                  }
+                  className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 cursor-pointer ${
+                    draftProfile.shoulderSafe
+                      ? 'bg-[#A3F77B] text-[#111114] border-[#A3F77B]'
+                      : 'bg-[#1B1B22] text-zinc-300 border-[#2E2E3A]'
+                  }`}
+                >
+                  <ShieldCheck size={12} />
+                  <span>Bảo vệ khớp vai trước</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateProfileLive({
+                      protectLowerBackKnee: !draftProfile.protectLowerBackKnee,
+                    })
+                  }
+                  className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 cursor-pointer ${
+                    draftProfile.protectLowerBackKnee
+                      ? 'bg-[#A3F77B] text-[#111114] border-[#A3F77B]'
+                      : 'bg-[#1B1B22] text-zinc-300 border-[#2E2E3A]'
+                  }`}
+                >
+                  <ShieldCheck size={12} />
+                  <span>Bảo vệ lưng dưới &amp; gối</span>
+                </button>
+              </div>
+
               <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                 <div className="flex items-center gap-1.5">
                   {EXPERIENCE_OPTIONS.map((exp) => {
@@ -577,7 +818,27 @@ export default function GymGenderAdvisorPanel({
           ) : (
             /* ================= FEMALE COMPACT FORM (/gym/nu) ================= */
             <div className="space-y-3 rounded-2xl bg-[#111114] border border-[#262632] p-3.5">
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                <div>
+                  <label
+                    htmlFor="femaleAge"
+                    className="block text-[11px] font-bold text-zinc-400 mb-1"
+                  >
+                    Tuổi
+                  </label>
+                  <input
+                    id="femaleAge"
+                    type="number"
+                    min={14}
+                    max={80}
+                    value={draftProfile.age ?? 24}
+                    onChange={(e) =>
+                      updateProfileLive({ age: Number(e.target.value) || 24 })
+                    }
+                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
+                  />
+                </div>
+
                 <div>
                   <label
                     htmlFor="femaleHeight"
@@ -667,7 +928,7 @@ export default function GymGenderAdvisorPanel({
                   />
                 </div>
 
-                <div className="col-span-2 sm:col-span-1">
+                <div>
                   <label
                     htmlFor="femaleWorkoutsPerWeek"
                     className="block text-[11px] font-bold text-zinc-400 mb-1"
@@ -717,47 +978,126 @@ export default function GymGenderAdvisorPanel({
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {FEMALE_PHASE_OPTIONS.map((p) => {
-                    const selected = draftCycle.manualPhaseOverride === p.id;
+              {/* Auto Cycle Date Picker + Phase Pills + Female Biomechanics Toggles */}
+              <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                <label
+                  htmlFor="femaleLastPeriod"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-[11px] font-bold text-zinc-300"
+                >
+                  <Calendar size={12} className="text-[#FF5C8A]" />
+                  <span>Ngày đầu kỳ:</span>
+                  <input
+                    id="femaleLastPeriod"
+                    type="date"
+                    value={draftCycle.lastPeriodStartDate || ''}
+                    onChange={(e) =>
+                      updateCycleLive({
+                        lastPeriodStartDate: e.target.value,
+                        manualPhaseOverride: 'auto',
+                      })
+                    }
+                    className="bg-transparent text-[#F7F7F7] font-extrabold focus:outline-none cursor-pointer"
+                  />
+                </label>
+
+                {FEMALE_PHASE_OPTIONS.map((p) => {
+                  const selected = draftCycle.manualPhaseOverride === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() =>
+                        updateCycleLive({ manualPhaseOverride: p.id })
+                      }
+                      className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-black cursor-pointer ${
+                        selected
+                          ? 'bg-[#FF5C8A] text-[#111114] border-[#FF5C8A]'
+                          : 'bg-[#1B1B22] text-zinc-300 border-[#2E2E3A]'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(Object.keys(GYM_SYMPTOM_META) as GymSymptomCode[]).map(
+                  (code) => {
+                    const active = draftCycle.todaySymptoms.includes(code);
                     return (
                       <button
-                        key={p.id}
+                        key={code}
+                        type="button"
+                        onClick={() => toggleSymptom(code)}
+                        className={`px-2.5 py-1 rounded-xl text-[11px] font-bold border cursor-pointer ${
+                          active
+                            ? 'bg-[#A3F77B] text-[#111114] border-[#A3F77B]'
+                            : 'bg-[#1B1B22] text-zinc-400 border-[#2E2E3A]'
+                        }`}
+                      >
+                        {GYM_SYMPTOM_META[code].labelVi}
+                      </button>
+                    );
+                  }
+                )}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateProfileLive({
+                      avoidHeavyQuads: !draftProfile.avoidHeavyQuads,
+                    })
+                  }
+                  className={`px-2.5 py-1 rounded-xl border text-[11px] font-bold flex items-center gap-1 cursor-pointer ${
+                    draftProfile.avoidHeavyQuads
+                      ? 'bg-[#FF5C8A]/20 border-[#FF5C8A] text-[#FF85A9]'
+                      : 'bg-[#1B1B22] border-[#2E2E3A] text-zinc-400'
+                  }`}
+                >
+                  <ShieldCheck size={12} />
+                  <span>Hạn chế to đùi trước</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    updateProfileLive({
+                      protectLowerBackKnee: !draftProfile.protectLowerBackKnee,
+                    })
+                  }
+                  className={`px-2.5 py-1 rounded-xl border text-[11px] font-bold flex items-center gap-1 cursor-pointer ${
+                    draftProfile.protectLowerBackKnee
+                      ? 'bg-[#FF5C8A]/20 border-[#FF5C8A] text-[#FF85A9]'
+                      : 'bg-[#1B1B22] border-[#2E2E3A] text-zinc-400'
+                  }`}
+                >
+                  <ShieldCheck size={12} />
+                  <span>Bảo vệ lưng &amp; gối</span>
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {EXPERIENCE_OPTIONS.map((exp) => {
+                    const active = draftProfile.experienceLevel === exp.id;
+                    return (
+                      <button
+                        key={exp.id}
                         type="button"
                         onClick={() =>
-                          updateCycleLive({ manualPhaseOverride: p.id })
+                          updateProfileLive({ experienceLevel: exp.id })
                         }
-                        className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-black cursor-pointer ${
-                          selected
+                        className={`px-2.5 py-1 rounded-lg border text-[11px] font-extrabold cursor-pointer ${
+                          active
                             ? 'bg-[#FF5C8A] text-[#111114] border-[#FF5C8A]'
                             : 'bg-[#1B1B22] text-zinc-300 border-[#2E2E3A]'
                         }`}
                       >
-                        {p.label}
+                        {exp.label}
                       </button>
                     );
                   })}
-
-                  {(Object.keys(GYM_SYMPTOM_META) as GymSymptomCode[])
-                    .slice(0, 3)
-                    .map((code) => {
-                      const active = draftCycle.todaySymptoms.includes(code);
-                      return (
-                        <button
-                          key={code}
-                          type="button"
-                          onClick={() => toggleSymptom(code)}
-                          className={`px-2.5 py-1.5 rounded-xl text-[11px] font-bold border cursor-pointer ${
-                            active
-                              ? 'bg-[#A3F77B] text-[#111114] border-[#A3F77B]'
-                              : 'bg-[#1B1B22] text-zinc-400 border-[#2E2E3A]'
-                          }`}
-                        >
-                          {GYM_SYMPTOM_META[code].labelVi}
-                        </button>
-                      );
-                    })}
                 </div>
 
                 <button
@@ -787,7 +1127,7 @@ export default function GymGenderAdvisorPanel({
                 className={isMale ? 'text-[#5CE1E6]' : 'text-[#FF5C8A]'}
               />
               <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#F7F7F7]">
-                1. Đề Xuất Bài Tập Trọng Tâm Cho Bạn ({recommendation.workoutsPerWeek} Buổi/Tuần)
+                1. Đề Xuất Bài Tập Trọng Tâm Cho Bạn ({displayedSessions.length} Buổi/Tuần)
               </h2>
             </div>
 
@@ -797,7 +1137,7 @@ export default function GymGenderAdvisorPanel({
               aria-label="Chọn buổi tập trong tuần"
               className="flex flex-wrap items-center gap-1.5"
             >
-              {recommendation.sessions.map((session, sIdx) => {
+              {displayedSessions.map((session, sIdx) => {
                 const isCurrentSession = safeSessionIdx === sIdx;
                 return (
                   <button
@@ -806,8 +1146,9 @@ export default function GymGenderAdvisorPanel({
                     role="tab"
                     aria-selected={isCurrentSession}
                     onClick={() => {
-                      setActiveSessionIdx(sIdx);
+                      setPickedSessionId(session.id);
                       setActiveExerciseIdx(0);
+                      onSelectGenderDay?.(session.id);
                       if (session.exercises[0]) {
                         onSelectExerciseFor3D(session.exercises[0].exercise.id);
                       }
@@ -834,11 +1175,7 @@ export default function GymGenderAdvisorPanel({
               <div className="px-3.5 sm:px-5 py-3 bg-[#15151D] border-b border-[#262632] flex flex-wrap items-center justify-between gap-2.5">
                 <div className="flex items-center gap-2 min-w-0">
                   <span
-                    className={`px-2.5 py-1 rounded-xl text-xs font-black shrink-0 ${
-                      isMale
-                        ? 'bg-[#5CE1E6] text-[#111114]'
-                        : 'bg-[#FF5C8A] text-[#111114]'
-                    }`}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-black shrink-0 ${accentBtnClass}`}
                   >
                     Bài {safeExerciseIdx + 1}/{sessionExercises.length}
                   </span>
@@ -856,7 +1193,7 @@ export default function GymGenderAdvisorPanel({
                           ? `Gợi ý ${currentItem.suggestedWeightKg}kg`
                           : 'Trọng lượng cơ thể'}
                       </span>{' '}
-                      • <span className="text-[#FF85A9]">{currentItem.suggestedSetsReps}</span>
+                      • <span className={accentSoftText}>{currentItem.suggestedSetsReps}</span>
                     </div>
                   </div>
                 </div>
@@ -929,8 +1266,8 @@ export default function GymGenderAdvisorPanel({
                 </div>
               </div>
 
-              {/* View Mode Switcher Bar */}
-              <div className="px-4 py-2 bg-[#111114] border-b border-[#22222C] flex items-center justify-between gap-2">
+              {/* View Mode Switcher Bar (Gender-Adaptive Theme) */}
+              <div className="px-4 py-2 bg-[#111114] border-b border-[#22222C] flex flex-wrap items-center justify-between gap-2">
                 <span className="text-xs font-bold text-zinc-400 truncate">
                   Thiết bị: <strong className="text-zinc-200">{currentExercise.machineName}</strong>
                 </span>
@@ -941,7 +1278,7 @@ export default function GymGenderAdvisorPanel({
                     onClick={() => setVisualTab('3d')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 cursor-pointer ${
                       effectiveVisualTab === '3d'
-                        ? 'bg-[#FF5C8A] text-[#111114]'
+                        ? accentBtnClass
                         : 'text-zinc-300 hover:text-white'
                     }`}
                   >
@@ -955,7 +1292,7 @@ export default function GymGenderAdvisorPanel({
                       onClick={() => setVisualTab('gym_photo')}
                       className={`px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 cursor-pointer ${
                         effectiveVisualTab === 'gym_photo'
-                          ? 'bg-[#FF5C8A] text-[#111114]'
+                          ? accentBtnClass
                           : 'text-zinc-300 hover:text-white'
                       }`}
                     >
@@ -969,7 +1306,7 @@ export default function GymGenderAdvisorPanel({
                     onClick={() => setVisualTab('photo')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 cursor-pointer ${
                       effectiveVisualTab === 'photo'
-                        ? 'bg-[#FF5C8A] text-[#111114]'
+                        ? accentBtnClass
                         : 'text-zinc-300 hover:text-white'
                     }`}
                   >
@@ -982,7 +1319,7 @@ export default function GymGenderAdvisorPanel({
                     onClick={() => setVisualTab('split')}
                     className={`px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 cursor-pointer ${
                       effectiveVisualTab === 'split'
-                        ? 'bg-[#FF5C8A] text-[#111114]'
+                        ? accentBtnClass
                         : 'text-zinc-300 hover:text-white'
                     }`}
                   >
@@ -992,11 +1329,15 @@ export default function GymGenderAdvisorPanel({
                 </div>
               </div>
 
-              {/* Single Detailed 3D Canvas + Visual Reference + Rest Timer */}
+              {/* Single Detailed 3D Canvas + Visual Reference + Dark Readiness Card */}
               <div className="p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
                 <div className="lg:col-span-7">
                   {effectiveVisualTab === '3d' && (
-                    <GymMannequin3DViewer exercise={currentExercise} tall />
+                    <GymMannequin3DViewer
+                      exercise={currentExercise}
+                      gender={activeGender}
+                      tall
+                    />
                   )}
                   {effectiveVisualTab === 'gym_photo' && currentExercise.realGymPhoto && (
                     <RealGymMachineView exercise={currentExercise} />
@@ -1006,7 +1347,10 @@ export default function GymGenderAdvisorPanel({
                   )}
                   {effectiveVisualTab === 'split' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <GymMannequin3DViewer exercise={currentExercise} />
+                      <GymMannequin3DViewer
+                        exercise={currentExercise}
+                        gender={activeGender}
+                      />
                       {currentExercise.realGymPhoto ? (
                         <RealGymMachineView exercise={currentExercise} />
                       ) : (
@@ -1025,22 +1369,46 @@ export default function GymGenderAdvisorPanel({
                     )}
                   </div>
 
-                  <GymRestTimerBar
-                    key={`timer_${currentExercise.id}`}
-                    defaultSeconds={currentExercise.restSeconds}
-                  />
+                  {/* Dark Neon Biomechanics & Readiness Advice Card (Replaces duplicate white timer) */}
+                  <div className="rounded-2xl bg-[#16161E] border border-[#282836] p-3 space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`font-black flex items-center gap-1.5 ${accentSoftText}`}>
+                        {readinessStatus.isHighSpinalLoadWarning ? (
+                          <ShieldAlert size={14} className="text-amber-400" />
+                        ) : (
+                          <ShieldCheck size={14} className="text-[#A3F77B]" />
+                        )}
+                        <span>{readinessStatus.phaseTitleVi}</span>
+                      </span>
+                      {!isMale && readinessStatus.dayOfCycle > 0 && (
+                        <span className="px-2 py-0.5 rounded-md bg-[#22222E] text-[10px] font-bold text-zinc-300">
+                          Ngày {readinessStatus.dayOfCycle} chu kỳ
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-zinc-300 leading-relaxed">
+                      {readinessStatus.coachingBannerVi}
+                    </p>
+                    {currentExercise.mistakes && (
+                      <p className="text-[11px] text-zinc-400">
+                        <strong className="text-zinc-200">Tránh lỗi sai:</strong>{' '}
+                        {currentExercise.mistakes}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Inline Weight & Reps Stepper */}
-              {setRecommendation && onSaveExerciseLog && (
+              {/* Unified Set-by-Set Cockpit, Timestamp Rest Timer, Plate Calculator & Weight Stepper */}
+              {setRecommendation && (
                 <GymInlineMetricsTools
-                  key={currentExercise.id}
+                  key={`${activeGender}_${currentExercise.id}`}
                   exercise={currentExercise}
+                  gender={activeGender}
                   savedLog={exerciseLogs[currentExercise.id]}
                   recommendation={setRecommendation}
-                  onSaveLog={(w, r, tip) =>
-                    onSaveExerciseLog(currentExercise.id, w, r, tip)
+                  onSaveLog={(w, r, tip, extra) =>
+                    onSaveExerciseLog?.(currentExercise.id, w, r, tip, extra)
                   }
                 />
               )}
@@ -1052,8 +1420,10 @@ export default function GymGenderAdvisorPanel({
                   onClick={() => setShowStepsDetail((v) => !v)}
                   className="w-full flex items-center justify-between text-xs font-extrabold text-zinc-400 hover:text-white cursor-pointer"
                 >
-                  <span>Mẹo chỉnh máy: {currentExercise.machineSetupTip}</span>
-                  <span className="inline-flex items-center gap-1 text-[#FF85A9] shrink-0">
+                  <span className="text-left">
+                    Mẹo chỉnh máy: {currentExercise.machineSetupTip}
+                  </span>
+                  <span className={`inline-flex items-center gap-1 shrink-0 ml-2 ${accentSoftText}`}>
                     <span>{showStepsDetail ? 'Ẩn bước tập' : 'Xem 4 bước ngắn'}</span>
                     {showStepsDetail ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </span>
@@ -1066,7 +1436,9 @@ export default function GymGenderAdvisorPanel({
                         key={i}
                         className="flex items-start gap-2 text-xs text-zinc-300 bg-[#111114] p-2.5 rounded-xl border border-[#252530]"
                       >
-                        <span className="w-4 h-4 rounded-md bg-[#FF5C8A] text-[#111114] text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
+                        <span
+                          className={`w-4 h-4 rounded-md text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5 ${accentBtnClass}`}
+                        >
                           {i + 1}
                         </span>
                         <span>{step}</span>
@@ -1079,7 +1451,7 @@ export default function GymGenderAdvisorPanel({
           )}
         </div>
 
-        {/* PART B: ULTRA-CONCISE VISUAL NUTRITION & 4 MEAL CHIPS */}
+        {/* PART B: VISUAL NUTRITION, INTERACTIVE WATER TRACKER & 4 MEAL CHIPS */}
         <div className="space-y-2.5 pt-2 border-t border-[#262632]">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
@@ -1096,7 +1468,7 @@ export default function GymGenderAdvisorPanel({
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             <div className="rounded-2xl bg-[#111114] border border-[#272733] px-3 py-2.5 flex items-center justify-between">
               <span className="text-xs font-bold text-zinc-400 flex items-center gap-1">
-                <Flame size={13} className="text-[#FF5C8A]" /> Calo
+                <Flame size={13} className={isMale ? 'text-[#5CE1E6]' : 'text-[#FF5C8A]'} /> Calo
               </span>
               <span className="text-sm sm:text-base font-black text-[#F7F7F7]">
                 {recommendation.nutritionPlan.targetCaloriesKcal} kcal
@@ -1130,13 +1502,40 @@ export default function GymGenderAdvisorPanel({
               </span>
             </div>
 
-            <div className="col-span-2 sm:col-span-1 rounded-2xl bg-[#111114] border border-[#272733] px-3 py-2.5 flex items-center justify-between">
-              <span className="text-xs font-bold text-zinc-400 flex items-center gap-1">
-                <Droplets size={13} className="text-[#5CE1E6]" /> Nước
-              </span>
-              <span className="text-sm sm:text-base font-black text-[#F7F7F7]">
-                {recommendation.nutritionPlan.waterLiters}L
-              </span>
+            {/* Interactive Water Intake Tracker */}
+            <div className="col-span-2 sm:col-span-1 rounded-2xl bg-[#111114] border border-[#272733] px-3 py-2 space-y-1.5">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-xs font-bold text-zinc-400 flex items-center gap-1">
+                  <Droplets size={13} className="text-[#5CE1E6]" /> Nước
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleAdjustWater(-250)}
+                    aria-label="Giảm 250ml nước"
+                    className="w-6 h-6 rounded-lg bg-[#1B1B24] hover:bg-[#262634] border border-[#2E2E3C] text-zinc-300 flex items-center justify-center cursor-pointer"
+                  >
+                    <Minus size={11} />
+                  </button>
+                  <span className="text-xs font-black text-[#F7F7F7]">
+                    {(displayedWaterMl / 1000).toFixed(2)}/{recommendation.nutritionPlan.waterLiters}L
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleAdjustWater(250)}
+                    aria-label="Thêm 250ml nước"
+                    className="w-6 h-6 rounded-lg bg-[#5CE1E6]/20 hover:bg-[#5CE1E6]/35 border border-[#5CE1E6]/40 text-[#5CE1E6] flex items-center justify-center cursor-pointer"
+                  >
+                    <Plus size={11} />
+                  </button>
+                </div>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-[#1E1E28] overflow-hidden">
+                <div
+                  className="h-full bg-[#5CE1E6] transition-all duration-200"
+                  style={{ width: `${waterPercent}%` }}
+                />
+              </div>
             </div>
           </div>
 

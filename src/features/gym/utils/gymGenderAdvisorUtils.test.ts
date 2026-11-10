@@ -3,7 +3,10 @@ import {
   createDefaultCycleTracking,
   createDefaultFemaleBodyProfile,
 } from './gymStateUtils';
-import { generateGenderWorkoutAndNutritionPlan } from './gymGenderAdvisorUtils';
+import {
+  buildSessionsFromSavedSplitDays,
+  generateGenderWorkoutAndNutritionPlan,
+} from './gymGenderAdvisorUtils';
 
 describe('gymGenderAdvisorUtils', () => {
   it('generates male chest/shoulder 3D workout & high-protein nutrition plan for /gym/nam', () => {
@@ -96,5 +99,45 @@ describe('gymGenderAdvisorUtils', () => {
       )
     ).toBe(true);
     expect(plan.nutritionPlan.keyMicronutrientsVi).toContain('Kỳ Dâu');
+  });
+
+  it('hydrates saved gender split days (Single Source of Truth) and swaps risky bench when shoulderSafe is enabled', () => {
+    const cycle = createDefaultCycleTracking();
+    const shoulderSafeMaleProfile = {
+      ...createDefaultFemaleBodyProfile(),
+      gender: 'male' as const,
+      maleGoal: 'mass_bulking' as const,
+      shoulderSafe: true,
+    };
+
+    const plan = generateGenderWorkoutAndNutritionPlan({
+      gender: 'male',
+      userProfile: shoulderSafeMaleProfile,
+      cycleTracking: cycle,
+    });
+
+    const firstSessionIds = plan.sessions[0].exercises.map((e) => e.exercise.id);
+    expect(firstSessionIds).not.toContain('barbell_bench_press');
+    expect(firstSessionIds).toContain('brtw_laydown_chest_press');
+
+    // Hydrate customized split where user swapped exercise 1 to pec_deck_fly
+    const hydrated = buildSessionsFromSavedSplitDays({
+      savedDays: [
+        {
+          id: 'm_session_1',
+          dayLabel: 'Buổi 1',
+          title: 'Ngực Custom',
+          subtitle: 'Đã đổi bài',
+          exerciseIds: ['pec_deck_fly', 'tricep_rope_pushdown'],
+        },
+      ],
+      fallbackSessions: plan.sessions,
+      gender: 'male',
+      userProfile: shoulderSafeMaleProfile,
+      cycleTracking: cycle,
+    });
+
+    expect(hydrated).toHaveLength(1);
+    expect(hydrated[0].exercises[0].exercise.id).toBe('pec_deck_fly');
   });
 });

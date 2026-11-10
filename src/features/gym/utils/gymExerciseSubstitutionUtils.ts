@@ -2,6 +2,7 @@ import type {
   GymExerciseDefinition,
   GymExerciseRestriction,
   GymFemaleBodyProfile,
+  GymGenderMode,
 } from '../types/gym';
 
 export interface RankedExerciseSubstitute {
@@ -17,6 +18,14 @@ const LOW_BACK_HEAVY_IDS = new Set([
   'back_extension_45',
 ]);
 
+const SHOULDER_STRESS_IDS = new Set([
+  'barbell_bench_press',
+  'assisted_chest_dip',
+  'assisted_tricep_dip',
+  'smith_shoulder_press',
+  'bench_dips',
+]);
+
 const GLUTE_ISOLATION_FAVORITE_IDS = new Set([
   'machine_hip_thrust',
   'hip_abductor_adductor',
@@ -25,19 +34,35 @@ const GLUTE_ISOLATION_FAVORITE_IDS = new Set([
   'hip_adductor_inner',
 ]);
 
+const MALE_HYPERTROPHY_COMPOUND_FAVORITE_IDS = new Set([
+  'brtw_incline_chest_press',
+  'brtw_laydown_chest_press',
+  'incline_dumbbell_press',
+  'chest_supported_row',
+  'wide_lat_pulldown',
+  'iso_high_pulldown',
+  'machine_shoulder_press',
+  'machine_lateral_raise',
+  'machine_bicep_curl',
+  'super_squat_machine',
+  'leg_press_45',
+]);
+
 /**
- * Pure 0-cost exercise substitution scoring algorithm inspired by musclog-app's
- * `utils/exerciseSubstitution.ts`, customized for female gym priorities:
+ * Pure 0-cost exercise substitution scoring algorithm:
  * - Same primary muscle region (+100)
- * - Overlapping secondary muscles (+25)
- * - Glute isolation & Quad-sparing bonus when `avoidHeavyQuads` is enabled (+35)
- * - Lower-back / knee protection bonus when `protectLowerBackKnee` or menstrual deload is active (+25)
+ * - Overlapping secondary muscles (+35..65)
+ * - Gender-isolated biomechanics:
+ *   • Female (`/gym/nu`): Glute isolation & Quad-sparing bonus when `avoidHeavyQuads` is enabled
+ *   • Male (`/gym/nam`): Compound V-Taper hypertrophy & Guided BRTW machine priority (NEVER applies female quad avoidance!)
+ * - Joint protection: Lower-back/knee protection + Shoulder protection (`shoulderSafe`)
  * - Excludes exercises marked as `injury` or `busy`
  */
 export function rankExerciseSubstitutes(
   targetExercise: GymExerciseDefinition,
   catalog: GymExerciseDefinition[],
   options: {
+    gender?: GymGenderMode;
     currentDayExerciseIds?: string[];
     restrictions?: GymExerciseRestriction[];
     userProfile?: Partial<GymFemaleBodyProfile>;
@@ -46,12 +71,17 @@ export function rankExerciseSubstitutes(
   } = {}
 ): RankedExerciseSubstitute[] {
   const {
+    gender: explicitGender,
     currentDayExerciseIds = [],
     restrictions = [],
     userProfile,
     isDeloadOrPeriod = false,
     limit = 4,
   } = options;
+
+  const activeGender: GymGenderMode =
+    explicitGender || (userProfile?.gender === 'male' ? 'male' : 'female');
+  const isMale = activeGender === 'male';
 
   const restrictionMap = new Map<string, GymExerciseRestriction['kind']>();
   for (const r of restrictions) {
@@ -91,21 +121,43 @@ export function rankExerciseSubstitutes(
       reasonBadgesVi.push('Nhóm cơ bổ trợ');
     }
 
-    // Female Glute-Sculpt & Quad-Sparing preference
-    const hitsGlutes = candidate.primaryMuscles.includes('glutes');
-    const hitsQuadsPrimary = candidate.primaryMuscles.includes('quads');
+    if (isMale) {
+      // Male V-Taper & Guided Hypertrophy preference (no quad-sparing leak!)
+      if (MALE_HYPERTROPHY_COMPOUND_FAVORITE_IDS.has(candidate.id)) {
+        score += 30;
+        reasonBadgesVi.push('Tối ưu bơm cơ & V-Taper');
+      }
+    } else {
+      // Female Glute-Sculpt & Quad-Sparing preference
+      const hitsGlutes = candidate.primaryMuscles.includes('glutes');
+      const hitsQuadsPrimary = candidate.primaryMuscles.includes('quads');
 
-    if (userProfile?.avoidHeavyQuads !== false) {
-      if (hitsGlutes && !hitsQuadsPrimary) {
-        score += 40;
-        reasonBadgesVi.push('Ăn mông • Không to đùi trước');
-      } else if (GLUTE_ISOLATION_FAVORITE_IDS.has(candidate.id)) {
-        score += 25;
-        reasonBadgesVi.push('Cô lập thân dưới thon gọn');
+      if (userProfile?.avoidHeavyQuads !== false) {
+        if (hitsGlutes && !hitsQuadsPrimary) {
+          score += 40;
+          reasonBadgesVi.push('Ăn mông • Không to đùi trước');
+        } else if (GLUTE_ISOLATION_FAVORITE_IDS.has(candidate.id)) {
+          score += 25;
+          reasonBadgesVi.push('Cô lập thân dưới thon gọn');
+        }
       }
     }
 
-    // Lower back / knee protection or menstrual period safety
+    // Shoulder protection (especially valuable on Chest/Delt days)
+    if (userProfile?.shoulderSafe) {
+      if (SHOULDER_STRESS_IDS.has(candidate.id)) {
+        score -= 45;
+      } else if (
+        candidate.primaryMuscles.includes('chest') ||
+        candidate.primaryMuscles.includes('shoulders') ||
+        candidate.primaryMuscles.includes('triceps')
+      ) {
+        score += 22;
+        reasonBadgesVi.push('Êm khớp vai trước');
+      }
+    }
+
+    // Lower back / knee protection or deload safety
     if (userProfile?.protectLowerBackKnee || isDeloadOrPeriod) {
       if (!LOW_BACK_HEAVY_IDS.has(candidate.id)) {
         score += 25;
@@ -115,7 +167,7 @@ export function rankExerciseSubstitutes(
       }
     }
 
-    // Prefer exercises not already in today's queue, but still allow them with slight tie-breaker
+    // Prefer exercises not already in today's queue
     if (!currentDayExerciseIds.includes(candidate.id)) {
       score += 15;
     } else {

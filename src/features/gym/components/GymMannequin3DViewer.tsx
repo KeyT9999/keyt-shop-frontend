@@ -11,11 +11,13 @@ import {
 import type {
   GymCameraPreset,
   GymExerciseDefinition,
+  GymGenderMode,
   GymPoseMode,
 } from '../types/gym';
 
 interface GymMannequin3DViewerProps {
   exercise: GymExerciseDefinition;
+  gender?: GymGenderMode;
   compact?: boolean;
   tall?: boolean;
 }
@@ -48,9 +50,11 @@ const CAMERA_PRESET_POSITIONS: Record<GymCameraPreset, [number, number, number]>
 
 export default function GymMannequin3DViewer({
   exercise,
+  gender = 'female',
   compact = false,
   tall = false,
 }: GymMannequin3DViewerProps) {
+  const isMale = gender === 'male';
   const mountRef = useRef<HTMLDivElement>(null);
   const [webglSupported, setWebglSupported] = useState<boolean>(() => checkWebGLSupport());
   const [poseMode, setPoseMode] = useState<GymPoseMode>('loop');
@@ -59,6 +63,7 @@ export default function GymMannequin3DViewer({
   const [isExhalePhase, setIsExhalePhase] = useState<boolean>(true);
 
   const exerciseRef = useRef<GymExerciseDefinition>(exercise);
+  const genderRef = useRef<GymGenderMode>(gender);
   const poseModeRef = useRef<GymPoseMode>(poseMode);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
@@ -66,6 +71,10 @@ export default function GymMannequin3DViewer({
   useEffect(() => {
     exerciseRef.current = exercise;
   }, [exercise]);
+
+  useEffect(() => {
+    genderRef.current = gender;
+  }, [gender]);
 
   useEffect(() => {
     poseModeRef.current = poseMode;
@@ -145,11 +154,11 @@ export default function GymMannequin3DViewer({
     keyLight.position.set(2.6, 4.2, 3.0);
     scene.add(keyLight);
 
-    const rimLight = new THREE.DirectionalLight(0xf05a28, 1.35);
+    const rimLight = new THREE.DirectionalLight(0x5ce1e6, 1.35);
     rimLight.position.set(-2.4, 2.2, -2.2);
     scene.add(rimLight);
 
-    const coolFillLight = new THREE.DirectionalLight(0x38bdf8, 0.85);
+    const coolFillLight = new THREE.DirectionalLight(0xa3f77b, 0.65);
     coolFillLight.position.set(-1.8, 1.6, 2.4);
     scene.add(coolFillLight);
 
@@ -170,7 +179,7 @@ export default function GymMannequin3DViewer({
 
     const ringGeo = new THREE.RingGeometry(0.74, 0.78, 48);
     const ringMat = new THREE.MeshBasicMaterial({
-      color: 0xf05a28,
+      color: genderRef.current === 'male' ? 0x5ce1e6 : 0xff5c8a,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.55,
@@ -256,11 +265,15 @@ export default function GymMannequin3DViewer({
 
       const frame = computeGym3DPoseKeyframes(ex.animType, p);
       const contraction = ex.isEccentricFirst ? 1 - p * 0.4 : p;
+      const activeGender = genderRef.current;
+      ringMat.color.setHex(activeGender === 'male' ? 0x5ce1e6 : 0xff5c8a);
+      rimLight.color.setHex(activeGender === 'male' ? 0x5ce1e6 : 0xff5c8a);
       proceduralRig.updateFrame(
         frame,
         ex.primaryMuscles,
         ex.secondaryMuscles,
-        contraction
+        contraction,
+        activeGender
       );
 
       controls.update();
@@ -325,7 +338,10 @@ export default function GymMannequin3DViewer({
         </div>
       ) : (
         <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-slate-300 gap-1">
-          <Activity size={24} className="text-[#FF5C8A]" />
+          <Activity
+            size={24}
+            className={isMale ? 'text-[#5CE1E6]' : 'text-[#FF5C8A]'}
+          />
           <p className="text-xs font-bold text-white">{exercise.vietnameseName}</p>
         </div>
       )}
@@ -335,7 +351,11 @@ export default function GymMannequin3DViewer({
         <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-900/85 backdrop-blur-md border border-slate-700/80 shadow-xs min-w-0">
           <span
             className={`w-2 h-2 rounded-full shrink-0 transition-colors duration-200 ${
-              isExhalePhase ? 'bg-[#FF5C8A]' : 'bg-[#5CE1E6]'
+              isExhalePhase
+                ? isMale
+                  ? 'bg-[#5CE1E6]'
+                  : 'bg-[#FF5C8A]'
+                : 'bg-[#A3F77B]'
             }`}
           />
           <span className="text-[10px] sm:text-xs font-extrabold text-white truncate">
@@ -358,7 +378,9 @@ export default function GymMannequin3DViewer({
                 onClick={() => setPoseMode(item.id)}
                 className={`px-2 py-1 rounded-lg text-[11px] sm:text-xs font-extrabold whitespace-nowrap transition-colors duration-150 cursor-pointer ${
                   poseMode === item.id
-                    ? 'bg-[#FF5C8A] text-[#111114]'
+                    ? isMale
+                      ? 'bg-[#5CE1E6] text-[#111114]'
+                      : 'bg-[#FF5C8A] text-[#111114]'
                     : 'text-slate-300 hover:text-white'
                 }`}
               >
@@ -399,7 +421,11 @@ export default function GymMannequin3DViewer({
         </div>
 
         <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xl bg-slate-900/85 backdrop-blur-md border border-slate-700/80 text-[10px] sm:text-xs text-slate-200 font-bold min-w-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C8A] shrink-0" />
+          <span
+            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+              isMale ? 'bg-[#5CE1E6]' : 'bg-[#FF5C8A]'
+            }`}
+          />
           <span className="truncate">{primaryLabels}</span>
           <Rotate3d size={11} className="text-slate-400 hidden sm:inline shrink-0" />
         </div>

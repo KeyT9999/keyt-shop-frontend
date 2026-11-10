@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import type { GymMuscleRegion } from '../types/gym';
+import type { GymGenderMode, GymMuscleRegion } from '../types/gym';
 import { buildGymMachinePropMesh } from './gym3DMachineProps';
 import type { GymMachinePropSpec } from './gym3DMachinePoses';
 import type { ComputedGymPoseFrame, Vec3Tuple } from './gym3DPoseData';
@@ -17,8 +17,9 @@ const glbBufferCache = new Map<string, Promise<ArrayBuffer>>();
 
 const COLOR_NEUTRAL = new THREE.Color(0xcbd5e1);
 const COLOR_JOINT = new THREE.Color(0x475569);
-const COLOR_PRIMARY = new THREE.Color(0xf05a28);
-const COLOR_SECONDARY = new THREE.Color(0xfbbf24);
+const COLOR_PRIMARY_FEMALE = new THREE.Color(0xff5c8a);
+const COLOR_PRIMARY_MALE = new THREE.Color(0x38bdf8);
+const COLOR_SECONDARY = new THREE.Color(0xa3f77b);
 const COLOR_EQUIP_METAL = new THREE.Color(0xe2e8f0);
 const COLOR_EQUIP_PLATE = new THREE.Color(0x1e293b);
 const COLOR_BENCH_PAD = new THREE.Color(0x334155);
@@ -39,7 +40,8 @@ export interface GymProceduralSceneRig {
     frame: ComputedGymPoseFrame,
     primary: GymMuscleRegion[],
     secondary: GymMuscleRegion[],
-    contractionFactor: number
+    contractionFactor: number,
+    gender?: GymGenderMode
   ) => void;
   dispose: () => void;
 }
@@ -74,11 +76,13 @@ function styleMuscleMaterial(
   region: GymMuscleRegion | undefined,
   primary: GymMuscleRegion[],
   secondary: GymMuscleRegion[],
-  contractionFactor: number
+  contractionFactor: number,
+  gender: GymGenderMode = 'female'
 ): void {
+  const primaryColor = gender === 'male' ? COLOR_PRIMARY_MALE : COLOR_PRIMARY_FEMALE;
   if (region && primary.includes(region)) {
-    mat.color.copy(COLOR_PRIMARY);
-    mat.emissive.copy(COLOR_PRIMARY);
+    mat.color.copy(primaryColor);
+    mat.emissive.copy(primaryColor);
     mat.emissiveIntensity = 0.42 + contractionFactor * 0.58;
   } else if (region && secondary.includes(region)) {
     mat.color.copy(COLOR_SECONDARY);
@@ -333,14 +337,17 @@ export function createGymProceduralSceneRig(): GymProceduralSceneRig {
     frame: ComputedGymPoseFrame,
     primary: GymMuscleRegion[],
     secondary: GymMuscleRegion[],
-    contractionFactor: number
+    contractionFactor: number,
+    gender: GymGenderMode = 'female'
   ): void {
+    const isMale = gender === 'male';
     const { joints: j } = frame;
     const fwd = new THREE.Vector3(j.facingDir[0], j.facingDir[1], j.facingDir[2]).normalize();
     const back = fwd.clone().negate();
 
-    // Torso & Chest/Back anatomical plates
-    placeSegmentBetween(handles.coreTorso.mesh, j.pelvis, j.chest, 0.135);
+    // Gender-differentiated anatomical proportions (Male V-Taper vs Female Hourglass S-Line)
+    const torsoRadius = isMale ? 0.14 : 0.112;
+    placeSegmentBetween(handles.coreTorso.mesh, j.pelvis, j.chest, torsoRadius);
 
     const vChest = new THREE.Vector3(...j.chest);
     const vPelvis = new THREE.Vector3(...j.pelvis);
@@ -348,26 +355,39 @@ export function createGymProceduralSceneRig(): GymProceduralSceneRig {
 
     const chestPos = vChest.clone().addScaledVector(fwd, 0.075).addScaledVector(spineUp, -0.03);
     handles.chestPlate.mesh.position.copy(chestPos);
-    handles.chestPlate.mesh.scale.set(0.28, 0.17, 0.09);
+    handles.chestPlate.mesh.scale.set(
+      isMale ? 0.305 : 0.235,
+      isMale ? 0.18 : 0.145,
+      isMale ? 0.10 : 0.088
+    );
     handles.chestPlate.mesh.quaternion.setFromUnitVectors(UP_AXIS, spineUp);
 
     const backPos = vChest.clone().addScaledVector(back, 0.065).addScaledVector(spineUp, -0.05);
     handles.backLatPlate.mesh.position.copy(backPos);
-    handles.backLatPlate.mesh.scale.set(0.30, 0.24, 0.08);
+    handles.backLatPlate.mesh.scale.set(
+      isMale ? 0.33 : 0.255,
+      isMale ? 0.25 : 0.215,
+      isMale ? 0.086 : 0.072
+    );
     handles.backLatPlate.mesh.quaternion.setFromUnitVectors(UP_AXIS, spineUp);
 
     handles.glutesPelvis.mesh.position.set(
-      j.pelvis[0] + back.x * 0.02,
+      j.pelvis[0] + back.x * (isMale ? 0.018 : 0.032),
       j.pelvis[1],
-      j.pelvis[2] + back.z * 0.02
+      j.pelvis[2] + back.z * (isMale ? 0.018 : 0.032)
     );
-    handles.glutesPelvis.mesh.scale.set(0.17, 0.11, 0.13);
+    handles.glutesPelvis.mesh.scale.set(
+      isMale ? 0.162 : 0.184,
+      isMale ? 0.108 : 0.124,
+      isMale ? 0.125 : 0.154
+    );
 
     // Shoulders
+    const deltScale = isMale ? 0.083 : 0.065;
     handles.lDeltoid.mesh.position.set(...j.lShoulder);
-    handles.lDeltoid.mesh.scale.setScalar(0.074);
+    handles.lDeltoid.mesh.scale.setScalar(deltScale);
     handles.rDeltoid.mesh.position.set(...j.rShoulder);
-    handles.rDeltoid.mesh.scale.setScalar(0.074);
+    handles.rDeltoid.mesh.scale.setScalar(deltScale);
 
     // Split Bicep (anterior) vs Tricep (posterior) along upper arm
     const offF = (pt: Vec3Tuple, sign: number, amt: number): Vec3Tuple => [
@@ -376,25 +396,33 @@ export function createGymProceduralSceneRig(): GymProceduralSceneRig {
       pt[2] + fwd.z * sign * amt,
     ];
 
-    placeSegmentBetween(handles.lBicep.mesh, offF(j.lShoulder, 1, 0.018), offF(j.lElbow, 1, 0.018), 0.044);
-    placeSegmentBetween(handles.rBicep.mesh, offF(j.rShoulder, 1, 0.018), offF(j.rElbow, 1, 0.018), 0.044);
-    placeSegmentBetween(handles.lTricep.mesh, offF(j.lShoulder, -1, 0.018), offF(j.lElbow, -1, 0.018), 0.044);
-    placeSegmentBetween(handles.rTricep.mesh, offF(j.rShoulder, -1, 0.018), offF(j.rElbow, -1, 0.018), 0.044);
+    const armRad = isMale ? 0.049 : 0.038;
+    const forearmRad = isMale ? 0.046 : 0.036;
+    placeSegmentBetween(handles.lBicep.mesh, offF(j.lShoulder, 1, 0.018), offF(j.lElbow, 1, 0.018), armRad);
+    placeSegmentBetween(handles.rBicep.mesh, offF(j.rShoulder, 1, 0.018), offF(j.rElbow, 1, 0.018), armRad);
+    placeSegmentBetween(handles.lTricep.mesh, offF(j.lShoulder, -1, 0.018), offF(j.lElbow, -1, 0.018), armRad);
+    placeSegmentBetween(handles.rTricep.mesh, offF(j.rShoulder, -1, 0.018), offF(j.rElbow, -1, 0.018), armRad);
 
-    placeSegmentBetween(handles.lForearm.mesh, j.lElbow, j.lWrist, 0.044);
-    placeSegmentBetween(handles.rForearm.mesh, j.rElbow, j.rWrist, 0.044);
+    placeSegmentBetween(handles.lForearm.mesh, j.lElbow, j.lWrist, forearmRad);
+    placeSegmentBetween(handles.rForearm.mesh, j.rElbow, j.rWrist, forearmRad);
 
     // Split Quad (anterior) vs Hamstring (posterior) along thigh
-    placeSegmentBetween(handles.lQuad.mesh, offF(j.lHip, 1, 0.024), offF(j.lKnee, 1, 0.024), 0.062);
-    placeSegmentBetween(handles.rQuad.mesh, offF(j.rHip, 1, 0.024), offF(j.rKnee, 1, 0.024), 0.062);
-    placeSegmentBetween(handles.lHamstring.mesh, offF(j.lHip, -1, 0.024), offF(j.lKnee, -1, 0.024), 0.058);
-    placeSegmentBetween(handles.rHamstring.mesh, offF(j.rHip, -1, 0.024), offF(j.rKnee, -1, 0.024), 0.058);
+    const quadRad = isMale ? 0.065 : 0.056;
+    const hamRad = isMale ? 0.059 : 0.058;
+    const calfRad = isMale ? 0.054 : 0.046;
+    placeSegmentBetween(handles.lQuad.mesh, offF(j.lHip, 1, 0.024), offF(j.lKnee, 1, 0.024), quadRad);
+    placeSegmentBetween(handles.rQuad.mesh, offF(j.rHip, 1, 0.024), offF(j.rKnee, 1, 0.024), quadRad);
+    placeSegmentBetween(handles.lHamstring.mesh, offF(j.lHip, -1, 0.024), offF(j.lKnee, -1, 0.024), hamRad);
+    placeSegmentBetween(handles.rHamstring.mesh, offF(j.rHip, -1, 0.024), offF(j.rKnee, -1, 0.024), hamRad);
 
-    placeSegmentBetween(handles.lCalf.mesh, j.lKnee, j.lAnkle, 0.052);
-    placeSegmentBetween(handles.rCalf.mesh, j.rKnee, j.rAnkle, 0.052);
-    placeSegmentBetween(handles.neck.mesh, j.chest, j.neck, 0.048);
+    placeSegmentBetween(handles.lCalf.mesh, j.lKnee, j.lAnkle, calfRad);
+    placeSegmentBetween(handles.rCalf.mesh, j.rKnee, j.rAnkle, calfRad);
+    placeSegmentBetween(handles.neck.mesh, j.chest, j.neck, isMale ? 0.05 : 0.042);
 
     // Head + directional visor
+    const visorHex = isMale ? 0x5ce1e6 : 0xff5c8a;
+    visorMat.color.setHex(visorHex);
+    visorMat.emissive.setHex(visorHex);
     headGroup.position.set(...j.head);
     headGroup.lookAt(j.head[0] + fwd.x, j.head[1] + fwd.y, j.head[2] + fwd.z);
 
@@ -413,12 +441,12 @@ export function createGymProceduralSceneRig(): GymProceduralSceneRig {
     ];
     jointPoints.forEach((pt, idx) => {
       jointSpheres[idx].position.set(pt[0], pt[1], pt[2]);
-      jointSpheres[idx].scale.setScalar(idx < 4 ? 0.044 : 0.054);
+      jointSpheres[idx].scale.setScalar(idx < 4 ? (isMale ? 0.045 : 0.039) : (isMale ? 0.055 : 0.049));
     });
 
-    // Apply primary (#F05A28) & secondary (#F59E0B) muscle glow
+    // Apply gender-themed primary & secondary muscle glow
     Object.values(handles).forEach((h) => {
-      styleMuscleMaterial(h.material, h.region, primary, secondary, contractionFactor);
+      styleMuscleMaterial(h.material, h.region, primary, secondary, contractionFactor, gender);
     });
 
     rebuildProps(frame);

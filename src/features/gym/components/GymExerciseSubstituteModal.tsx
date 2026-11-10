@@ -4,12 +4,14 @@ import type {
   GymExerciseDefinition,
   GymExerciseRestriction,
   GymFemaleBodyProfile,
+  GymGenderMode,
   GymRestrictionKind,
 } from '../types/gym';
 import { rankExerciseSubstitutes } from '../utils/gymExerciseSubstitutionUtils';
 
 interface GymExerciseSubstituteModalProps {
   open: boolean;
+  gender?: GymGenderMode;
   currentExercise: GymExerciseDefinition;
   currentDayExerciseIds: string[];
   restrictions: GymExerciseRestriction[];
@@ -22,6 +24,7 @@ interface GymExerciseSubstituteModalProps {
 
 export default function GymExerciseSubstituteModal({
   open,
+  gender,
   currentExercise,
   currentDayExerciseIds,
   restrictions,
@@ -33,6 +36,21 @@ export default function GymExerciseSubstituteModal({
 }: GymExerciseSubstituteModalProps) {
   if (!open) return null;
 
+  const resolvedGender: GymGenderMode =
+    gender || (userProfile.gender === 'male' ? 'male' : 'female');
+  const isMale = resolvedGender === 'male';
+
+  const accentText = isMale ? 'text-[#5CE1E6]' : 'text-[#FF5C8A]';
+  const accentBtn = isMale
+    ? 'bg-[#5CE1E6] hover:bg-[#47d2d8] text-[#111114]'
+    : 'bg-[#FF5C8A] hover:bg-[#ff4278] text-[#111114]';
+  const accentSoftBadge = isMale
+    ? 'bg-[#5CE1E6]/18 text-[#5CE1E6]'
+    : 'bg-[#FF5C8A]/18 text-[#FF5C8A]';
+  const accentHoverBorder = isMale
+    ? 'hover:border-[#5CE1E6]'
+    : 'hover:border-[#FF5C8A]';
+
   const currentRestriction = restrictions.find(
     (r) => r.exerciseId === currentExercise.id
   )?.kind;
@@ -41,6 +59,7 @@ export default function GymExerciseSubstituteModal({
     currentExercise,
     GYM_EXERCISE_CATALOG,
     {
+      gender: resolvedGender,
       currentDayExerciseIds,
       restrictions,
       userProfile,
@@ -48,6 +67,18 @@ export default function GymExerciseSubstituteModal({
       limit: 5,
     }
   );
+
+  const reasonOptions: Array<{ kind: GymRestrictionKind; label: string }> = isMale
+    ? [
+        { kind: 'busy', label: 'Máy đang có người tập (Kẹt máy)' },
+        { kind: 'injury', label: 'Tập bài này thấy cấn vai / mỏi lưng' },
+        { kind: 'dislike', label: 'Không hợp form / Muốn bài bơm cơ hơn' },
+      ]
+    : [
+        { kind: 'busy', label: 'Máy đang có người tập (Kẹt máy)' },
+        { kind: 'injury', label: 'Tập bài này thấy mỏi lưng / đau khớp' },
+        { kind: 'dislike', label: 'Không thích / Sợ vào đùi trước' },
+      ];
 
   return (
     <div
@@ -65,11 +96,11 @@ export default function GymExerciseSubstituteModal({
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-black text-[#F7F7F7]">
-                Đổi Bài Thông Minh 0đ (Smart Substitution)
+                Đổi Bài Thông Minh 0đ ({isMale ? 'Gym Nam' : 'Gym Nữ'})
               </h2>
               <p className="text-xs text-zinc-400">
                 Đang thay cho:{' '}
-                <strong className="text-[#FF5C8A]">
+                <strong className={accentText}>
                   {currentExercise.vietnameseName}
                 </strong>
               </p>
@@ -93,13 +124,7 @@ export default function GymExerciseSubstituteModal({
               Vì sao bạn muốn đổi bài này? (Hệ thống sẽ ghi nhớ để tránh gợi ý lại):
             </div>
             <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  { kind: 'busy', label: 'Máy đang có người tập (Kẹt máy)' },
-                  { kind: 'injury', label: 'Tập bài này thấy mỏi lưng / đau khớp' },
-                  { kind: 'dislike', label: 'Không thích / Sợ vào đùi trước' },
-                ] as const
-              ).map((item) => {
+              {reasonOptions.map((item) => {
                 const isSelected = currentRestriction === item.kind;
                 return (
                   <button
@@ -113,7 +138,9 @@ export default function GymExerciseSubstituteModal({
                     }
                     className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 transition-colors cursor-pointer ${
                       isSelected
-                        ? 'bg-[#FF5C8A] border-[#FF5C8A] text-[#111114]'
+                        ? isMale
+                          ? 'bg-[#5CE1E6] border-[#5CE1E6] text-[#111114]'
+                          : 'bg-[#FF5C8A] border-[#FF5C8A] text-[#111114]'
                         : 'bg-[#1B1B22] border-[#2E2E3A] text-zinc-300 hover:border-zinc-500'
                     }`}
                   >
@@ -138,11 +165,11 @@ export default function GymExerciseSubstituteModal({
             {rankedSubstitutes.map((item, idx) => (
               <div
                 key={item.exercise.id}
-                className="p-3.5 rounded-2xl bg-[#111114] border border-[#272732] hover:border-[#FF5C8A] flex items-center justify-between gap-3 transition-colors"
+                className={`p-3.5 rounded-2xl bg-[#111114] border border-[#272732] ${accentHoverBorder} flex items-center justify-between gap-3 transition-colors`}
               >
                 <div className="min-w-0 space-y-1">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="px-2 py-0.5 rounded-md bg-[#FF5C8A]/18 text-[#FF5C8A] text-[11px] font-black">
+                    <span className={`px-2 py-0.5 rounded-md text-[11px] font-black ${accentSoftBadge}`}>
                       Gợi ý #{idx + 1}
                     </span>
                     {item.reasonBadgesVi.map((badge) => (
@@ -168,7 +195,7 @@ export default function GymExerciseSubstituteModal({
                     onSelectSubstitute(item.exercise.id);
                     onClose();
                   }}
-                  className="shrink-0 px-3.5 py-2 rounded-xl bg-[#FF5C8A] hover:bg-[#ff4278] text-[#111114] text-xs font-black flex items-center gap-1.5 cursor-pointer"
+                  className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 cursor-pointer transition-colors ${accentBtn}`}
                 >
                   <ArrowRightLeft size={13} />
                   <span>Đổi sang bài này</span>
@@ -182,7 +209,9 @@ export default function GymExerciseSubstituteModal({
         <div className="px-5 py-3 bg-[#111114] border-t border-[#272732] flex items-center justify-between text-xs text-zinc-400">
           <span className="flex items-center gap-1">
             <Check size={14} className="text-[#A3F77B]" />
-            Chấm điểm tự động theo nhóm cơ &amp; mục tiêu nữ (0đ phí AI)
+            {isMale
+              ? 'Chấm điểm tự động theo nhóm cơ & khung V-Taper Nam (0đ phí AI)'
+              : 'Chấm điểm tự động theo nhóm cơ & mục tiêu nữ (0đ phí AI)'}
           </span>
           <button
             type="button"

@@ -27,7 +27,64 @@ export const GYM_MUSCLE_LABELS_VI: Record<GymMuscleRegion, string> = {
   core: 'Cơ trọng tâm (Core)',
 };
 
-export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
+const EXERCISE_GENDER_AND_EQUIPMENT_SPECS: Record<
+  string,
+  {
+    defaultFemaleWeightKg: number;
+    equipmentStepKg: number;
+    isPlateLoadedPerSide?: boolean;
+  }
+> = {
+  // Ngực (Chest)
+  brtw_incline_chest_press: { defaultFemaleWeightKg: 5, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  brtw_laydown_chest_press: { defaultFemaleWeightKg: 5, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  incline_dumbbell_press: { defaultFemaleWeightKg: 4, equipmentStepKg: 1 },
+  barbell_bench_press: { defaultFemaleWeightKg: 5, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  leverage_chest_press: { defaultFemaleWeightKg: 5, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  pec_deck_fly: { defaultFemaleWeightKg: 15, equipmentStepKg: 2.5 },
+  cable_crossover: { defaultFemaleWeightKg: 5, equipmentStepKg: 2.5 },
+  assisted_chest_dip: { defaultFemaleWeightKg: 30, equipmentStepKg: 5 },
+  // Lưng & Tay sau (Back & Triceps)
+  wide_lat_pulldown: { defaultFemaleWeightKg: 20, equipmentStepKg: 2.5 },
+  iso_high_pulldown: { defaultFemaleWeightKg: 10, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  chest_supported_row: { defaultFemaleWeightKg: 10, equipmentStepKg: 2.5 },
+  brtw_iso_low_row: { defaultFemaleWeightKg: 10, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  seated_cable_row: { defaultFemaleWeightKg: 20, equipmentStepKg: 2.5 },
+  assisted_pullup: { defaultFemaleWeightKg: 35, equipmentStepKg: 5 },
+  tricep_rope_pushdown: { defaultFemaleWeightKg: 7.5, equipmentStepKg: 2.5 },
+  assisted_tricep_dip: { defaultFemaleWeightKg: 30, equipmentStepKg: 5 },
+  overhead_db_tricep_ext: { defaultFemaleWeightKg: 6, equipmentStepKg: 2 },
+  bench_dips: { defaultFemaleWeightKg: 0, equipmentStepKg: 2.5 },
+  // Tay trước & Vai (Biceps & Shoulders)
+  machine_bicep_curl: { defaultFemaleWeightKg: 5, equipmentStepKg: 2.5 },
+  hammer_curl: { defaultFemaleWeightKg: 3, equipmentStepKg: 1 },
+  barbell_ez_curl: { defaultFemaleWeightKg: 2.5, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  preacher_curl: { defaultFemaleWeightKg: 2.5, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  machine_shoulder_press: { defaultFemaleWeightKg: 5, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  smith_shoulder_press: { defaultFemaleWeightKg: 5, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  dumbbell_shoulder_press: { defaultFemaleWeightKg: 4, equipmentStepKg: 1 },
+  machine_lateral_raise: { defaultFemaleWeightKg: 10, equipmentStepKg: 2.5 },
+  side_lateral_raise: { defaultFemaleWeightKg: 2, equipmentStepKg: 1 },
+  reverse_pec_deck: { defaultFemaleWeightKg: 10, equipmentStepKg: 2.5 },
+  cable_face_pull: { defaultFemaleWeightKg: 7.5, equipmentStepKg: 2.5 },
+  // Chân, Mông & Core (Legs, Glutes & Core)
+  super_squat_machine: { defaultFemaleWeightKg: 10, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  barbell_squat: { defaultFemaleWeightKg: 10, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  leg_press_45: { defaultFemaleWeightKg: 25, equipmentStepKg: 5, isPlateLoadedPerSide: true },
+  leg_extension: { defaultFemaleWeightKg: 15, equipmentStepKg: 2.5 },
+  seated_leg_curl: { defaultFemaleWeightKg: 15, equipmentStepKg: 2.5 },
+  lying_leg_curl: { defaultFemaleWeightKg: 15, equipmentStepKg: 2.5 },
+  machine_hip_thrust: { defaultFemaleWeightKg: 15, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  hip_abductor_adductor: { defaultFemaleWeightKg: 25, equipmentStepKg: 2.5 },
+  hip_adductor_inner: { defaultFemaleWeightKg: 20, equipmentStepKg: 2.5 },
+  romanian_deadlift: { defaultFemaleWeightKg: 10, equipmentStepKg: 2.5, isPlateLoadedPerSide: true },
+  standing_calf_raise: { defaultFemaleWeightKg: 15, equipmentStepKg: 2.5 },
+  back_extension_45: { defaultFemaleWeightKg: 5, equipmentStepKg: 2.5 },
+  core_plank: { defaultFemaleWeightKg: 0, equipmentStepKg: 0 },
+  active_mobility_recovery: { defaultFemaleWeightKg: 0, equipmentStepKg: 0 },
+};
+
+const RAW_GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
   ...REAL_GYM_MACHINE_EXERCISES,
   // ======================== NGỰC (CHEST) ========================
   {
@@ -758,6 +815,27 @@ export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = [
     mistakes: 'Cố tập tạ nặng vào ngày nghỉ khiến khớp vai và khuỷu tay tích tụ viêm mỏi kéo dài.',
   },
 ];
+
+export const GYM_EXERCISE_CATALOG: GymExerciseDefinition[] = RAW_GYM_EXERCISE_CATALOG.map(
+  (item) => {
+    const spec = EXERCISE_GENDER_AND_EQUIPMENT_SPECS[item.id];
+    const autoPlatePerSide =
+      spec?.isPlateLoadedPerSide ?? /\/\s*bên/i.test(item.weightUnitLabel);
+    const defaultFemaleWeightKg =
+      spec?.defaultFemaleWeightKg ??
+      (item.defaultWeightKg === 0 ? 0 : Math.max(2.5, Math.round(item.defaultWeightKg * 0.45)));
+    const equipmentStepKg =
+      spec?.equipmentStepKg ??
+      (/quả/i.test(item.weightUnitLabel) ? 1 : 2.5);
+
+    return {
+      ...item,
+      defaultFemaleWeightKg,
+      equipmentStepKg,
+      isPlateLoadedPerSide: autoPlatePerSide,
+    };
+  }
+);
 
 export const GYM_EXERCISE_MAP: Record<string, GymExerciseDefinition> = Object.fromEntries(
   GYM_EXERCISE_CATALOG.map((item) => [item.id, item])

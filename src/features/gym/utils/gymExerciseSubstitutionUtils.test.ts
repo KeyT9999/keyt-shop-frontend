@@ -45,4 +45,24 @@ describe('gymExerciseSubstitutionUtils (0-cost Smart Substitution)', () => {
     expect(ids).not.toContain('hip_abductor_adductor');
     expect(ids).not.toContain('romanian_deadlift');
   });
+
+  it('prioritizes shoulder-safe guided chest machines for male users without female quad-avoidance bias', () => {
+    const bench = GYM_EXERCISE_MAP.barbell_bench_press;
+    const rankedMale = rankExerciseSubstitutes(bench, GYM_EXERCISE_CATALOG, {
+      gender: 'male',
+      userProfile: {
+        avoidHeavyQuads: true, // Should be ignored for male
+        shoulderSafe: true,
+      },
+      limit: 4,
+    });
+
+    expect(rankedMale.length).toBeGreaterThan(0);
+    expect(rankedMale[0].exercise.primaryMuscles).toContain('chest');
+    expect(
+      rankedMale.some((r) =>
+        r.reasonBadgesVi.includes('Êm khớp vai trước')
+      )
+    ).toBe(true);
+  });
 });

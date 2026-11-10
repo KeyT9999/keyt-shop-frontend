@@ -4,7 +4,9 @@ import type {
   GymExerciseDefinition,
   GymExerciseUserLog,
   GymFemaleBodyProfile,
+  GymGenderMode,
   GymPrimaryGoal,
+  GymSetDetailItem,
   GymSymptomCode,
 } from '../types/gym';
 
@@ -20,6 +22,7 @@ export interface ResolvedCycleStatus {
   nutritionTipVi: string;
   isDeloadRecommended: boolean;
   isHighSpinalLoadWarning: boolean;
+  isMaleMode?: boolean;
 }
 
 export interface SmartSetRecommendation {
@@ -37,6 +40,14 @@ export interface SessionEnergyStats {
   burnedKcalToday: number;
   completionPercent: number;
   funEquivalenceVi: string;
+}
+
+export interface PlateBreakdownResult {
+  targetPerSideKg: number;
+  achievedKg: number;
+  remainderKg: number;
+  plates: Array<{ weightKg: number; count: number }>;
+  summaryVi: string;
 }
 
 export const GYM_PRIMARY_GOAL_META: Record<
@@ -83,13 +94,236 @@ const HIGH_AXIAL_OR_ABDOMINAL_EXERCISE_IDS = new Set([
   'back_extension_45',
 ]);
 
-function roundToHalfKg(val: number): number {
-  return Math.max(0, Math.round(val * 2) / 2);
+const HIGH_SHOULDER_STRESS_EXERCISE_IDS = new Set([
+  'barbell_bench_press',
+  'assisted_chest_dip',
+  'assisted_tricep_dip',
+  'smith_shoulder_press',
+  'bench_dips',
+]);
+
+/**
+ * Rounds weight cleanly to real gym equipment increments:
+ * - Dumbbells (`kg / quả`): 1kg steps up to 10kg, 2kg steps above 10kg
+ * - Cables / Plates / Machines: 2.5kg steps (or exercise.equipmentStepKg)
+ */
+export function roundToEquipmentStep(
+  val: number,
+  exercise?: GymExerciseDefinition
+): number {
+  if (!Number.isFinite(val) || val <= 0) return 0;
+
+  if (exercise && /quả/i.test(exercise.weightUnitLabel)) {
+    if (val <= 10) {
+      return Math.max(1, Math.round(val));
+    }
+    return Math.max(10, Math.round(val / 2) * 2);
+  }
+
+  const step = exercise?.equipmentStepKg && exercise.equipmentStepKg > 0
+    ? Math.min(2.5, exercise.equipmentStepKg)
+    : 2.5;
+  return Math.max(step, Math.round(val / step) * step);
 }
 
 /**
- * Resolves the user's current menstrual cycle phase, day of cycle, deload multiplier,
- * and coaching guidance (clean-room implementation inspired by musclog-app cycle utils).
+ * Returns the realistic default starting weight for a given exercise & gender.
+ */
+export function getGenderDefaultWeightKg(
+  exercise: GymExerciseDefinition,
+  gender: GymGenderMode
+): number {
+  if (exercise.defaultWeightKg <= 0) return 0;
+  if (gender === 'female') {
+    return (
+      exercise.defaultFemaleWeightKg ??
+      roundToEquipmentStep(exercise.defaultWeightKg * 0.45, exercise)
+    );
+  }
+  return exercise.defaultWeightKg;
+}
+
+/**
+ * Epley 1-Rep Max estimator (accurate for 1–15 rep hypertrophy sets).
+ */
+export function computeEstimated1RM(weightKg: number, reps = 10): number {
+  const w = Number(weightKg) || 0;
+  if (w <= 0) return 0;
+  const r = Math.max(1, Math.min(20, Number(reps) || 10));
+  if (r <= 1) return Math.round(w * 10) / 10;
+  return Math.round(w * (1 + r / 30) * 10) / 10;
+}
+
+/**
+ * Computes optimal plate stack for 1 side of a barbell / plate-loaded BRTW machine
+ * using standard commercial gym plates (20kg, 10kg, 5kg, 2.5kg, 1.25kg).
+ */
+export function computePlateBreakdownPerSide(targetPerSideKg: number): PlateBreakdownResult {
+  const cleanTarget = Math.max(0, Math.round(targetPerSideKg * 100) / 100);
+  if (cleanTarget <= 0) {
+    return {
+      targetPerSideKg: 0,
+      achievedKg: 0,
+      remainderKg: 0,
+      plates: [],
+      summaryVi: 'Chưa lắp tạ bánh',
+    };
+  }
+
+  const denominations = [20, 10, 5, 2.5, 1.25];
+  let remaining = cleanTarget;
+  const plates: Array<{ weightKg: number; count: number }> = [];
+
+  for (const denom of denominations) {
+    if (remaining + 0.001 >= denom) {
+      const count = Math.floor((remaining + 0.001) / denom);
+      if (count > 0) {
+        plates.push({ weightKg: denom, count });
+        remaining = Math.max(0, Math.round((remaining - count * denom) * 100) / 100);
+      }
+    }
+  }
+
+  const achievedKg = Math.round((cleanTarget - remaining) * 100) / 100;
+  const summaryVi =
+    plates.length > 0
+      ? plates.map((p) => `${p.count}×${p.weightKg}kg`).join(' + ')
+      : 'Tạ nhẹ < 1.25kg';
+
+  return {
+    targetPerSideKg: cleanTarget,
+    achievedKg,
+    remainderKg: remaining,
+    plates,
+    summaryVi,
+  };
+}
+
+/**
+ * Builds interactive Set-by-Set tracking items (optional Warm-up + Working Sets)
+ * for 1-handed checkoff at the gym.
+ */
+export function buildDefaultSetsForExercise(
+  exercise: GymExerciseDefinition,
+  workingWeightKg: number,
+  includeWarmup = false
+): GymSetDetailItem[] {
+  const setMatch = exercise.sets.match(/(\d+)/g);
+  const workingSetCount = setMatch
+    ? Math.max(2, Math.min(5, Number(setMatch[setMatch.length - 1]) || 3))
+    : 3;
+
+  const repMatch = exercise.reps.match(/(\d+)/g);
+  const targetReps = repMatch
+    ? Math.max(5, Math.min(25, Number(repMatch[repMatch.length - 1]) || 12))
+    : 12;
+
+  const list: GymSetDetailItem[] = [];
+  if (includeWarmup && workingWeightKg > 0) {
+    const warmupWeight = roundToEquipmentStep(workingWeightKg * 0.5, exercise);
+    list.push({
+      setNumber: 0,
+      weightKg: warmupWeight,
+      reps: 12,
+      isWarmup: true,
+      completed: false,
+    });
+  }
+
+  for (let i = 1; i <= workingSetCount; i++) {
+    list.push({
+      setNumber: i,
+      weightKg: workingWeightKg,
+      reps: targetReps,
+      isWarmup: false,
+      completed: false,
+    });
+  }
+
+  return list;
+}
+
+/**
+ * Resolves Male Readiness & Joint Safety status WITHOUT any menstrual cycle logic!
+ */
+export function resolveMaleReadinessStatus(
+  profile: Partial<GymFemaleBodyProfile>,
+  currentExercise?: GymExerciseDefinition
+): ResolvedCycleStatus {
+  const energy = Math.max(1, Math.min(5, Number(profile.maleEnergyLevel) || 4));
+  const isLowEnergy = energy <= 2;
+
+  const isBackWarning = Boolean(
+    currentExercise &&
+      profile.protectLowerBackKnee &&
+      HIGH_AXIAL_OR_ABDOMINAL_EXERCISE_IDS.has(currentExercise.id)
+  );
+  const isShoulderWarning = Boolean(
+    currentExercise &&
+      profile.shoulderSafe &&
+      HIGH_SHOULDER_STRESS_EXERCISE_IDS.has(currentExercise.id)
+  );
+  const isHighSpinalLoadWarning = isBackWarning || isShoulderWarning;
+
+  if (isLowEnergy) {
+    return {
+      phase: 'luteal',
+      phaseTitleVi: 'Điều Tiết Tải (Thiếu Ngủ / Hơi Mỏi)',
+      phaseShortVi: 'Giảm Tải 10% • Giữ Khớp',
+      dayOfCycle: 0,
+      daysUntilNextPeriod: 0,
+      energyPercent: energy * 22,
+      loadMultiplier: 0.9,
+      coachingBannerVi:
+        'Hôm nay mức sung sức thấp: Hệ thống tự động giảm ~10% mức tạ gợi ý, giữ 2 reps dự trữ (RIR 2) và ưu tiên máy dẫn hướng an toàn khớp.',
+      nutritionTipVi:
+        'Uống 300ml nước + 1 quả chuối trước tập 30 phút; tối nay ưu tiên ngủ đủ 7.5–8 tiếng để phục hồi Testosterone.',
+      isDeloadRecommended: true,
+      isHighSpinalLoadWarning,
+      isMaleMode: true,
+    };
+  }
+
+  if (energy === 5) {
+    return {
+      phase: 'ovulatory',
+      phaseTitleVi: 'Đỉnh Phong Độ • Sẵn Sàng Phá PR',
+      phaseShortVi: 'Đỉnh Sung Sức • PR',
+      dayOfCycle: 0,
+      daysUntilNextPeriod: 0,
+      energyPercent: 100,
+      loadMultiplier: 1.05,
+      coachingBannerVi:
+        'Thể lực đạt 5/5! Hãy khởi động kỹ 1–2 hiệp nhẹ ở bài đầu rồi tự tin tăng +2kg đến +2.5kg để bứt phá kỷ lục cá nhân (PR).',
+      nutritionTipVi:
+        'Nạp đủ Tinh bột hấp thu nhanh + 35–40g Protein ngay sau tập để tối đa hóa tổng hợp cơ bắp.',
+      isDeloadRecommended: false,
+      isHighSpinalLoadWarning,
+      isMaleMode: true,
+    };
+  }
+
+  return {
+    phase: 'follicular',
+    phaseTitleVi: 'Phong Độ Ổn Định • Tăng Tiến Đều',
+    phaseShortVi: 'Sẵn Sàng Tập Nặng',
+    dayOfCycle: 0,
+    daysUntilNextPeriod: 0,
+    energyPercent: energy === 4 ? 88 : 74,
+    loadMultiplier: energy === 4 ? 1.02 : 1.0,
+    coachingBannerVi:
+      'Thể trạng tốt: Tập trung kiểm soát nhịp hạ tạ chậm 2–3 giây, siết đỉnh 1 giây và nghỉ 75–90 giây giữa các hiệp.',
+    nutritionTipVi:
+      'Chia đều lượng Đạm (Protein) thành 4 bữa và uống đủ 2.5–3 lít nước xuyên suốt ngày.',
+    isDeloadRecommended: false,
+    isHighSpinalLoadWarning,
+    isMaleMode: true,
+  };
+}
+
+/**
+ * Resolves the female user's current menstrual cycle phase, day of cycle, deload multiplier,
+ * and coaching guidance.
  */
 export function resolveCycleStatus(
   cycle: GymCycleTrackingState,
@@ -218,15 +452,33 @@ export function resolveCycleStatus(
 }
 
 /**
+ * Gender-aware dispatcher: returns Male Readiness status on `/gym/nam`
+ * and Menstrual Cycle status on `/gym/nu`.
+ */
+export function resolveGenderReadinessStatus(
+  gender: GymGenderMode,
+  profile: Partial<GymFemaleBodyProfile>,
+  cycle: GymCycleTrackingState,
+  currentExercise?: GymExerciseDefinition
+): ResolvedCycleStatus {
+  if (gender === 'male') {
+    return resolveMaleReadinessStatus(profile, currentExercise);
+  }
+  return resolveCycleStatus(cycle, currentExercise);
+}
+
+/**
  * Computes smart weight progression / deload / repeat recommendation for an exercise
- * based on user's saved log and current cycle/energy status.
+ * based on user's saved log, gender default weight, and current readiness/cycle status.
  */
 export function computeSmartSetRecommendation(
   exercise: GymExerciseDefinition,
   savedLog: GymExerciseUserLog | undefined,
-  cycleStatus: ResolvedCycleStatus
+  cycleStatus: ResolvedCycleStatus,
+  gender: GymGenderMode = cycleStatus.isMaleMode ? 'male' : 'female'
 ): SmartSetRecommendation {
-  const baseWeightKg = savedLog?.weightKg ?? exercise.defaultWeightKg;
+  const baseWeightKg =
+    savedLog?.weightKg ?? getGenderDefaultWeightKg(exercise, gender);
 
   if (baseWeightKg <= 0) {
     return {
@@ -239,25 +491,40 @@ export function computeSmartSetRecommendation(
   }
 
   if (cycleStatus.isDeloadRecommended) {
-    const deloaded = roundToHalfKg(Math.max(2.5, baseWeightKg * cycleStatus.loadMultiplier));
+    const deloaded = roundToEquipmentStep(
+      baseWeightKg * cycleStatus.loadMultiplier,
+      exercise
+    );
+    const reasonLabel = cycleStatus.isMaleMode
+      ? `Giảm nhẹ từ ${baseWeightKg}kg xuống ${deloaded}kg để bảo vệ khớp khi năng lượng thấp.`
+      : `Giảm nhẹ từ ${baseWeightKg}kg xuống ${deloaded}kg để phù hợp thể trạng & chu kỳ hôm nay.`;
     return {
       recommendedWeightKg: deloaded,
       baseWeightKg,
       adjustmentCause: 'deload',
       badgeTextVi: `Deload gợi ý: ${deloaded}kg`,
-      reasonVi: `Giảm nhẹ từ ${baseWeightKg}kg xuống ${deloaded}kg để phù hợp thể trạng & chu kỳ hôm nay.`,
+      reasonVi: reasonLabel,
     };
   }
 
   if (savedLog && cycleStatus.loadMultiplier > 1) {
-    const step = baseWeightKg >= 25 ? 2.5 : 1.5;
-    const progressed = roundToHalfKg(baseWeightKg + step);
+    const isDumbbell = /quả/i.test(exercise.weightUnitLabel);
+    const step = isDumbbell
+      ? baseWeightKg < 10
+        ? 1
+        : 2
+      : 2.5;
+    const progressed = roundToEquipmentStep(baseWeightKg + step, exercise);
+    const reasonVi = cycleStatus.isMaleMode
+      ? `Buổi trước đã tập ${baseWeightKg}kg tốt • Hôm nay sung sức, hãy thử lên ${progressed}kg!`
+      : `Buổi trước đã tập ${baseWeightKg}kg tốt • Pha ${cycleStatus.phaseShortVi} thuận lợi để tăng nhẹ mức tạ.`;
+
     return {
       recommendedWeightKg: progressed,
       baseWeightKg,
       adjustmentCause: 'progression',
       badgeTextVi: `Thử lên: ${progressed}kg`,
-      reasonVi: `Buổi trước đã tập ${baseWeightKg}kg tốt • Pha ${cycleStatus.phaseShortVi} thuận lợi để tăng nhẹ mức tạ.`,
+      reasonVi,
     };
   }
 
@@ -265,10 +532,9 @@ export function computeSmartSetRecommendation(
     recommendedWeightKg: baseWeightKg,
     baseWeightKg,
     adjustmentCause: 'repeat',
-    badgeTextKgText: `${baseWeightKg}kg`,
     badgeTextVi: `Duy trì: ${baseWeightKg}kg`,
     reasonVi: `Giữ mức tạ chuẩn ${baseWeightKg}kg, kiểm soát nhịp hạ tạ 2–3 giây để ăn sâu vào cơ mục tiêu.`,
-  } as SmartSetRecommendation;
+  };
 }
 
 /**
@@ -285,7 +551,7 @@ export function computeSessionEnergyStats(
     completedIdsToday.includes(e.id)
   ).length;
 
-  const weightFactor = Math.max(40, Math.min(110, profile.weightKg || 50)) / 52;
+  const weightFactor = Math.max(40, Math.min(115, profile.weightKg || 50)) / 52;
   const estimatedMinutes = totalCount * 6;
   const trainedMinutesToday =
     doneCount > 0 ? doneCount * 6 : Math.min(12, estimatedMinutes);
@@ -296,11 +562,19 @@ export function computeSessionEnergyStats(
   const completionPercent = Math.round((doneCount / totalCount) * 100);
 
   const activeKcal = burnedKcalToday > 0 ? burnedKcalToday : estimatedTotalKcal;
-  let funEquivalenceVi = '≈ 1 quả táo & 1 hộp sữa chua Hy Lạp';
+  const isMale = profile.gender === 'male';
+
+  let funEquivalenceVi = isMale
+    ? '≈ 2 quả trứng gà & 1 quả chuối'
+    : '≈ 1 quả táo & 1 hộp sữa chua Hy Lạp';
   if (activeKcal >= 260) {
-    funEquivalenceVi = '≈ 1 ly trà sữa ít đường size M';
+    funEquivalenceVi = isMale
+      ? '≈ 1.5 chén cơm trắng đầy hoặc 1 tô phở nhỏ'
+      : '≈ 1 ly trà sữa ít đường size M';
   } else if (activeKcal >= 160) {
-    funEquivalenceVi = '≈ 1 chiếc bánh croissant bơ';
+    funEquivalenceVi = isMale
+      ? '≈ 1 ổ bánh mì thịt nướng vừa'
+      : '≈ 1 chiếc bánh croissant bơ';
   }
 
   return {

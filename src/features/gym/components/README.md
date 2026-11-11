@@ -1,28 +1,26 @@
-# Module `features/gym` – KeyT Gym 3D Coach v2 (`/gym`, `/gym/nam`, `/gym/nu`)
+# Module `features/gym` – KeyT Gym Coach (Clean Light Sport 4-Tab Mobile App)
 
-## Kiến trúc Single Source of Truth (v2)
-Trợ lý sổ tay phòng tập & mô phỏng giải phẫu 3D dành riêng cho **Nam (`/gym/nam` • Electric Cyan `#5CE1E6`)** và **Nữ (`/gym/nu` • Neon Pink `#FF5C8A`)**, tối ưu thao tác 1 tay trên điện thoại tại phòng gym:
+## Kiến trúc Phong cách A — Clean Light Sport (`/gym`, `/gym/nam`, `/gym/nu`)
+Ứng dụng sổ tay phòng tập tối ưu trải nghiệm điện thoại & máy tính theo chuẩn **KeyT Design System** (`#F8FAFC` nền sáng thoáng, `#FFFFFF` thẻ sạch, `#F05A28` Brand Orange, `#1E293B` Brand Navy, `#16A34A` Emerald hoàn thành):
 
-1. **`GymGenderAdvisorPanel.tsx`:**
-   - Bộ định tuyến đôi `/gym/nam` và `/gym/nu`, tự động dựng phác đồ nhiều buổi/tuần theo mục tiêu + thực đơn 4 bữa và thanh theo dõi uống nước (`±250ml`).
-   - Đồng bộ trực tiếp với `maleCustomDays` và `femaleCustomDays` (`buildSessionsFromSavedSplitDays`) để mọi thao tác đổi bài hoặc chỉnh lịch phản ánh tức thì lên 3D Stage.
-   - Tách bạch hoàn toàn sinh lý Nữ (4 pha chu kỳ kinh nguyệt + tự động tính từ `lastPeriodStartDate`) và trạng thái Nam (`maleEnergyLevel`, bảo vệ khớp vai trước `shoulderSafe`, bảo vệ lưng dưới/gối).
+1. **`GymGenderAdvisorPanel.tsx` (4-Tab App Shell & Focus Workout Player):**
+   - Thanh điều hướng **4 Tab** chuẩn ứng dụng thể thao hiện đại (Fixed Bottom Tab Bar trên mobile `<768px`, Segmented Top Tabs trên desktop `>=768px`):
+     1. **`Tập Hôm Nay` (`workout`):** Danh sách bài tập kèm ảnh thật sắc nét + màn hình **Focus Workout Player** (ưu tiên ảnh máy thực tế / 2 tư thế, tùy chọn `Mô phỏng 3D` chỉ khi cần xoay xem cơ, không nhồi 6 mô hình 3D cùng lúc).
+     2. **`Thực Đơn` (`GymNutritionTabView.tsx`):** Thẻ mục tiêu Calo & 3 nhóm chất (Đạm, Tinh bột, Chất béo), theo dõi uống nước tương tác (`±250ml`) và 4 bữa ăn chuẩn Việt Nam.
+     3. **`Tiến Độ` (`GymProgressHistoryModal.tsx` chế độ `inline` & `modal`):** Smart Streak, bảng kỷ lục cá nhân PR & 1RM (Epley), nhật ký cân đo hình thể theo tuần và lịch sử buổi tập.
+     4. **`Hồ Sơ & Mục Tiêu` (`GymProfileSetupTabView.tsx`):** Chỉ số cơ thể riêng biệt cho Nam (`/gym/nam`) và Nữ (`/gym/nu`), theo dõi 4 pha chu kỳ kinh nguyệt, bảo vệ khớp vai/lưng/gối và nút tùy chỉnh lịch tập.
+   - Đồng bộ Single Source of Truth với `maleCustomDays` và `femaleCustomDays`.
 
-2. **`GymInlineMetricsTools.tsx` (1-Handed Set Cockpit):**
-   - Tích từng hiệp (`Khởi động`, `Hiệp 1..4`), tự động chạy đồng hồ nghỉ dựa trên **Timestamp (`endAtMs - Date.now()`)** chống trôi giây khi khóa màn hình điện thoại, kèm chuông + rung và tùy chọn `WakeLock` (`Giữ sáng`).
-   - Nút tăng/giảm tạ thông minh theo thiết bị (`±1kg/2kg` tạ đơn, `±2.5kg` máy cáp/tạ bánh), công cụ **Tính bánh tạ mỗi bên (Plate Calculator)**, ghi nhớ nấc ghế (`seatPinNote`) và hiển thị `PR` + `1RM` (công thức Epley).
+2. **`GymInlineMetricsTools.tsx` (Hevy / Strong Style Vertical Set Table):**
+   - Bảng tích từng hiệp dọc (`Hiệp | Mức tạ | Mục tiêu | Hoàn thành`) với vùng chạm lớn `40px–44px` dễ bấm bằng 1 ngón cái tại phòng tập.
+   - Đồng hồ nghỉ dựa trên **Timestamp (`endAtMs - Date.now()`)** chống trôi giây khi khóa màn hình điện thoại, kèm chuông + rung và `WakeLock`.
+   - Công cụ **Tính bánh tạ mỗi bên (Plate Calculator)**, ghi nhớ nấc ghế (`seatPinNote`) và hiển thị `PR` + `1RM`.
 
-3. **`GymMannequin3DViewer.tsx` & `gym3DSceneRig.ts`:**
-   - Dựng nhân vật giải phẫu 3D theo giới tính (`gender: 'male' | 'female'` — khung V-Taper vai rộng cho Nam, khung S-Line cho Nữ) cùng 38 máy BRTW & Impulse thực tế.
+3. **`RealGymMachineView.tsx`, `ExerciseReferenceDualView.tsx` & `GymMannequin3DViewer.tsx`:**
+   - Sân khấu trực quan sáng rõ (`#F1F5F9` studio 3D, ảnh chụp thực tế 38 máy BRTW & Impulse kèm nút nhanh `Xoay 3D`).
 
-4. **`GymProgressHistoryModal.tsx`:**
-   - Thẻ chúc mừng sau buổi tập (`POST /api/gym/sessions/complete`), thống kê Smart Streak (cho phép nghỉ 1–3 ngày phục hồi cơ không đứt chuỗi), bảng kỷ lục PR/1RM, lịch sử Volume và nhật ký cân đo hình thể (`bodyMetricsHistory`).
-
-5. **`GymExerciseSubstituteModal.tsx` & `SplitCustomizerModal.tsx`:**
-   - Giao diện Dark Neon đồng bộ `#111114` / `#16161C`, chấm điểm đổi bài 0đ theo giới tính & an toàn khớp, tùy chỉnh thứ tự bài tập cho từng buổi.
-
-6. **`GymAiCoachDrawer.tsx`:**
-   - Trợ lý AI Coach góc phải màn hình nạp đầy đủ số đo Nam/Nữ, danh sách 38 máy tập thực tế, kỷ lục PR/1RM, lịch sử tập và gợi ý món ăn đời thường Việt Nam.
+4. **`GymExerciseSubstituteModal.tsx`, `SplitCustomizerModal.tsx` & `GymAiCoachDrawer.tsx`:**
+   - Đồng bộ 100% giao diện **Clean Light Sport**; trên mobile ẩn bong bóng nổi khi đóng để không bao giờ che khuất thanh điều hướng đáy (mở nhanh qua nút `Hỏi AI` trên thanh tiêu đề).
 
 ## Feature Flag (Kill Switch)
 - Frontend: `VITE_ENABLE_GYM_COACH=false` trong `.env` sẽ ẩn route `/gym` và mục điều hướng trên Header.

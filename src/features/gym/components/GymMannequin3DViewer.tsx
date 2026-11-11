@@ -128,8 +128,8 @@ export default function GymMannequin3DViewer({
     container.appendChild(domCanvas);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0b1220);
-    scene.fog = new THREE.Fog(0x0b1220, 4.8, 10);
+    scene.background = new THREE.Color(0xf1f5f9);
+    scene.fog = new THREE.Fog(0xf1f5f9, 5.2, 11);
 
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 30);
     camera.position.set(...CAMERA_PRESET_POSITIONS.iso);
@@ -146,31 +146,31 @@ export default function GymMannequin3DViewer({
     controls.update();
     controlsRef.current = controls;
 
-    // Bright studio 3-point lighting for crisp pearl-silver silhouette contrast
-    const hemiLight = new THREE.HemisphereLight(0xf8fafc, 0x1e293b, 1.85);
+    // Bright daylight studio 3-point lighting for Clean Light Sport aesthetic
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xcbd5e1, 2.0);
     scene.add(hemiLight);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.35);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.1);
     keyLight.position.set(2.6, 4.2, 3.0);
     scene.add(keyLight);
 
-    const rimLight = new THREE.DirectionalLight(0x5ce1e6, 1.35);
+    const rimLight = new THREE.DirectionalLight(0xf05a28, 0.9);
     rimLight.position.set(-2.4, 2.2, -2.2);
     scene.add(rimLight);
 
-    const coolFillLight = new THREE.DirectionalLight(0xa3f77b, 0.65);
+    const coolFillLight = new THREE.DirectionalLight(0x93c5fd, 0.7);
     coolFillLight.position.set(-1.8, 1.6, 2.4);
     scene.add(coolFillLight);
 
-    const grid = new THREE.GridHelper(3.2, 14, 0x334155, 0x1e293b);
+    const grid = new THREE.GridHelper(3.2, 14, 0xcbd5e1, 0xe2e8f0);
     grid.position.y = 0.004;
     scene.add(grid);
 
     const discGeo = new THREE.CircleGeometry(0.76, 48);
     const discMat = new THREE.MeshBasicMaterial({
-      color: 0x17253b,
+      color: 0xe2e8f0,
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.85,
     });
     const floorDisc = new THREE.Mesh(discGeo, discMat);
     floorDisc.rotation.x = -Math.PI / 2;
@@ -179,10 +179,10 @@ export default function GymMannequin3DViewer({
 
     const ringGeo = new THREE.RingGeometry(0.74, 0.78, 48);
     const ringMat = new THREE.MeshBasicMaterial({
-      color: genderRef.current === 'male' ? 0x5ce1e6 : 0xff5c8a,
+      color: 0xf05a28,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.65,
     });
     const platformRing = new THREE.Mesh(ringGeo, ringMat);
     platformRing.rotation.x = -Math.PI / 2;
@@ -266,8 +266,8 @@ export default function GymMannequin3DViewer({
       const frame = computeGym3DPoseKeyframes(ex.animType, p);
       const contraction = ex.isEccentricFirst ? 1 - p * 0.4 : p;
       const activeGender = genderRef.current;
-      ringMat.color.setHex(activeGender === 'male' ? 0x5ce1e6 : 0xff5c8a);
-      rimLight.color.setHex(activeGender === 'male' ? 0x5ce1e6 : 0xff5c8a);
+      ringMat.color.setHex(activeGender === 'male' ? 0x1e293b : 0xf05a28);
+      rimLight.color.setHex(0xf05a28);
       proceduralRig.updateFrame(
         frame,
         ex.primaryMuscles,
@@ -310,15 +310,15 @@ export default function GymMannequin3DViewer({
   const heightClass = compact
     ? 'h-44 sm:h-48'
     : tall
-      ? 'h-72 sm:h-[400px]'
-      : 'h-60 sm:h-80';
+      ? 'h-56 sm:h-72'
+      : 'h-52 sm:h-64';
 
   const fallbackImg =
     exercise.realGymPhoto || exercise.referenceImages?.[1] || exercise.referenceImages?.[0];
 
   return (
     <div
-      className={`relative ${heightClass} w-full rounded-2xl overflow-hidden border border-slate-800 bg-[#0B1220] shadow-sm select-none`}
+      className={`relative ${heightClass} w-full rounded-2xl overflow-hidden border border-slate-200 bg-[#F1F5F9] select-none`}
     >
       {webglSupported ? (
         <div
@@ -327,44 +327,39 @@ export default function GymMannequin3DViewer({
           aria-label={`Mô hình 3D bài tập ${exercise.name}`}
         />
       ) : fallbackImg ? (
-        <div className="relative w-full h-full bg-[#0B1220]">
+        <div className="relative w-full h-full bg-slate-100">
           <img
             src={fallbackImg}
             alt={exercise.vietnameseName}
-            className="w-full h-full object-cover opacity-90"
+            className="w-full h-full object-contain"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-[#0B1220] via-transparent to-transparent" />
         </div>
       ) : (
-        <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-slate-300 gap-1">
+        <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center text-slate-600 gap-1">
           <Activity
             size={24}
-            className={isMale ? 'text-[#5CE1E6]' : 'text-[#FF5C8A]'}
+            className={isMale ? 'text-[#1E293B]' : 'text-[#F05A28]'}
           />
-          <p className="text-xs font-bold text-white">{exercise.vietnameseName}</p>
+          <p className="text-xs font-bold text-slate-900">{exercise.vietnameseName}</p>
         </div>
       )}
 
       {/* Top Overlay: Left Breathing Cue + Right Pose Mode Pills */}
-      <div className="pointer-events-none absolute top-2 left-2 right-2 flex items-center justify-between gap-1.5">
-        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-900/85 backdrop-blur-md border border-slate-700/80 shadow-xs min-w-0">
+      <div className="pointer-events-none absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/92 backdrop-blur-md border border-slate-200/90 shadow-xs min-w-0">
           <span
             className={`w-2 h-2 rounded-full shrink-0 transition-colors duration-200 ${
-              isExhalePhase
-                ? isMale
-                  ? 'bg-[#5CE1E6]'
-                  : 'bg-[#FF5C8A]'
-                : 'bg-[#A3F77B]'
+              isExhalePhase ? 'bg-[#F05A28]' : 'bg-emerald-500'
             }`}
           />
-          <span className="text-[10px] sm:text-xs font-extrabold text-white truncate">
+          <span className="text-[11px] sm:text-xs font-bold text-slate-800 truncate">
             {breathText}
           </span>
         </div>
 
         {!compact && (
-          <div className="pointer-events-auto inline-flex items-center gap-0.5 bg-slate-900/90 backdrop-blur-md p-0.5 rounded-xl border border-slate-700/80 shrink-0">
+          <div className="pointer-events-auto inline-flex items-center gap-0.5 bg-white/92 backdrop-blur-md p-0.5 rounded-full border border-slate-200/90 shadow-xs shrink-0">
             {(
               [
                 { id: 'loop', label: 'Động' },
@@ -376,12 +371,10 @@ export default function GymMannequin3DViewer({
                 key={item.id}
                 type="button"
                 onClick={() => setPoseMode(item.id)}
-                className={`px-2 py-1 rounded-lg text-[11px] sm:text-xs font-extrabold whitespace-nowrap transition-colors duration-150 cursor-pointer ${
+                className={`px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors duration-150 cursor-pointer ${
                   poseMode === item.id
-                    ? isMale
-                      ? 'bg-[#5CE1E6] text-[#111114]'
-                      : 'bg-[#FF5C8A] text-[#111114]'
-                    : 'text-slate-300 hover:text-white'
+                    ? 'bg-[#1E293B] text-white'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {item.label}
@@ -392,8 +385,8 @@ export default function GymMannequin3DViewer({
       </div>
 
       {/* Bottom Overlay: Compact Camera Angle Pills + Target Muscle Chip */}
-      <div className="pointer-events-none absolute bottom-2 left-2 right-2 flex items-center justify-between gap-1.5">
-        <div className="pointer-events-auto inline-flex items-center gap-0.5 bg-slate-900/90 backdrop-blur-md p-0.5 rounded-xl border border-slate-700/80 shrink-0">
+      <div className="pointer-events-none absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
+        <div className="pointer-events-auto inline-flex items-center gap-0.5 bg-white/92 backdrop-blur-md p-0.5 rounded-full border border-slate-200/90 shadow-xs shrink-0">
           {(
             [
               { id: 'iso', label: '3/4' },
@@ -408,10 +401,10 @@ export default function GymMannequin3DViewer({
                 e.stopPropagation();
                 applyCameraPreset(cam.id);
               }}
-              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-extrabold whitespace-nowrap transition-colors duration-150 cursor-pointer flex items-center gap-1 ${
+              className={`px-2 py-0.5 sm:py-1 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors duration-150 cursor-pointer flex items-center gap-1 ${
                 camPreset === cam.id
-                  ? 'bg-white text-slate-900'
-                  : 'text-slate-300 hover:text-white'
+                  ? 'bg-[#F05A28] text-white'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Eye size={10} />
@@ -420,12 +413,8 @@ export default function GymMannequin3DViewer({
           ))}
         </div>
 
-        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xl bg-slate-900/85 backdrop-blur-md border border-slate-700/80 text-[10px] sm:text-xs text-slate-200 font-bold min-w-0">
-          <span
-            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-              isMale ? 'bg-[#5CE1E6]' : 'bg-[#FF5C8A]'
-            }`}
-          />
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/92 backdrop-blur-md border border-slate-200/90 shadow-xs text-[11px] text-slate-800 font-bold min-w-0">
+          <span className="w-2 h-2 rounded-full bg-[#F05A28] shrink-0" />
           <span className="truncate">{primaryLabels}</span>
           <Rotate3d size={11} className="text-slate-400 hidden sm:inline shrink-0" />
         </div>

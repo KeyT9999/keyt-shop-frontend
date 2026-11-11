@@ -127,8 +127,8 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
   );
 
   return (
-    <div className="min-h-screen bg-[#111114] text-[#F7F7F7] py-3 sm:py-5 px-2.5 sm:px-6">
-      <div className="max-w-7xl mx-auto space-y-4">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 pt-3 sm:pt-5 pb-24 md:pb-12 px-2.5 sm:px-6">
+      <div className="max-w-6xl mx-auto">
         <GymGenderAdvisorPanel
           key={activeGender}
           activeGender={activeGender}
@@ -140,6 +140,8 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
           userProfile={state.userProfile}
           cycleTracking={state.cycleTracking}
           exerciseLogs={state.exerciseLogs}
+          workoutHistory={state.workoutHistory}
+          bodyMetricsHistory={state.bodyMetricsHistory}
           completedIdsToday={state.completedExerciseIdsToday}
           onSelectGenderRoute={handleSelectGenderRoute}
           onSelectGenderDay={(dayId) => selectDay(dayId, activeGender)}
@@ -154,6 +156,9 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
           onToggleExerciseDone={toggleExerciseDone}
           onSaveExerciseLog={saveExerciseLog}
           onAddWaterIntakeMl={addWaterIntakeMl}
+          onRecordTodayBodyMetrics={() =>
+            saveUserProfile({ gender: activeGender }, true)
+          }
           onCompleteSession={(summary) => {
             const entry = completeGenderWorkoutSession({
               gender: activeGender,
@@ -220,6 +225,7 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
       {progressOpen && (
         <GymProgressHistoryModal
           open={progressOpen}
+          mode="modal"
           gender={activeGender}
           workoutStreak={state.workoutStreak}
           userProfile={state.userProfile}

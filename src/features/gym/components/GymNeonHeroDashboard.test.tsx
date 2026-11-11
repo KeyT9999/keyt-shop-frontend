@@ -183,7 +183,7 @@ describe('GymNeonHeroDashboard & Female Gym Modals (Dark Charcoal #111114 & Neon
       />
     );
 
-    expect(screen.getByText('KeyT Neon AI Coach')).toBeTruthy();
+    expect(screen.getByText('KeyT AI Coach')).toBeTruthy();
     expect(screen.getAllByText(/162cm • 50kg/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Eo\/Mông: 62\/93cm/)).toBeTruthy();
   });

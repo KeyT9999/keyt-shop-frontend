@@ -1,66 +1,62 @@
 import { useMemo, useState } from 'react';
 import {
-  Activity,
   ArrowLeft,
   ArrowRight,
-  Calendar,
   Camera,
   Check,
   CheckCircle2,
   ChevronDown,
+  ChevronRight,
   ChevronUp,
+  Clock,
   Cloud,
-  Columns2,
-  Droplets,
   Dumbbell,
   Flame,
   HeartPulse,
   ListChecks,
   MapPin,
-  Minus,
-  Plus,
+  MessageCircle,
+  Play,
   RefreshCw,
   Rotate3d,
   ShieldAlert,
   ShieldCheck,
   SlidersHorizontal,
-  Sparkles,
   Trophy,
   Utensils,
-  Zap,
 } from 'lucide-react';
 import type { GymCloudSyncStatus } from '../hooks/useGymCoachState';
 import type {
+  GymBodyMetricEntry,
   GymCycleTrackingState,
+  GymExerciseDefinition,
   GymExerciseUserLog,
-  GymExperienceLevel,
   GymFemaleBodyProfile,
   GymGenderMode,
-  GymMaleGoal,
-  GymManualPhaseOverride,
-  GymPrimaryGoal,
   GymSetDetailItem,
   GymSplitDayConfig,
   GymSymptomCode,
+  GymWorkoutHistoryEntry,
 } from '../types/gym';
 import {
   computeSmartSetRecommendation,
-  GYM_PRIMARY_GOAL_META,
-  GYM_SYMPTOM_META,
   resolveGenderReadinessStatus,
 } from '../utils/gymCycleAndProgressionUtils';
 import {
   buildSessionsFromSavedSplitDays,
   generateGenderWorkoutAndNutritionPlan,
-  GYM_MALE_GOAL_META,
   type GenderWorkoutAndNutritionRecommendation,
 } from '../utils/gymGenderAdvisorUtils';
 import ExerciseReferenceDualView from './ExerciseReferenceDualView';
 import GymInlineMetricsTools from './GymInlineMetricsTools';
 import GymMannequin3DViewer from './GymMannequin3DViewer';
+import GymNutritionTabView from './GymNutritionTabView';
+import GymProfileSetupTabView from './GymProfileSetupTabView';
+import GymProgressHistoryModal from './GymProgressHistoryModal';
 import RealGymMachineView from './RealGymMachineView';
 
-type StageVisualTab = '3d' | 'gym_photo' | 'photo' | 'split';
+export type GymMainAppTab = 'workout' | 'nutrition' | 'progress' | 'profile';
+type StageVisualTab = 'gym_photo' | 'dual_photo' | '3d';
 
 export interface CompleteSessionSummaryInput {
   dayId: string;
@@ -83,6 +79,8 @@ interface GymGenderAdvisorPanelProps {
   userProfile: GymFemaleBodyProfile;
   cycleTracking: GymCycleTrackingState;
   exerciseLogs?: Record<string, GymExerciseUserLog>;
+  workoutHistory?: GymWorkoutHistoryEntry[];
+  bodyMetricsHistory?: GymBodyMetricEntry[];
   completedIdsToday?: string[];
   onSelectGenderRoute: (gender: GymGenderMode) => void;
   onSelectGenderDay?: (dayId: string) => void;
@@ -104,6 +102,7 @@ interface GymGenderAdvisorPanelProps {
     }
   ) => void;
   onAddWaterIntakeMl?: (deltaMl: number) => void;
+  onRecordTodayBodyMetrics?: () => void;
   onCompleteSession?: (summary: CompleteSessionSummaryInput) => void;
   onOpenSubstituteModal?: () => void;
   onOpenCustomizerModal?: () => void;
@@ -111,36 +110,27 @@ interface GymGenderAdvisorPanelProps {
   onOpenAiCoachDrawer: () => void;
 }
 
-const FEMALE_PHASE_OPTIONS: {
-  id: GymManualPhaseOverride;
-  label: string;
-}[] = [
-  { id: 'auto', label: 'Tự động theo ngày' },
-  { id: 'follicular', label: 'Nang Trứng (Sung sức)' },
-  { id: 'ovulatory', label: 'Rụng Trứng (Đỉnh lực)' },
-  { id: 'luteal', label: 'Hoàng Thể / PMS' },
-  { id: 'menstrual', label: 'Kỳ Dâu (Giảm 20% tạ)' },
-];
+function ExerciseThumb({ exercise }: { exercise: GymExerciseDefinition }) {
+  const [imgFailed, setImgFailed] = useState<boolean>(false);
+  const src = exercise.realGymPhoto || exercise.referenceImages[0];
 
-const MALE_ENERGY_OPTIONS: { level: 2 | 4 | 5; label: string }[] = [
-  { level: 2, label: 'Hơi mỏi / Thiếu ngủ (-10% tạ)' },
-  { level: 4, label: 'Phong độ chuẩn' },
-  { level: 5, label: 'Đỉnh sung sức (Thử PR)' },
-];
+  if (!src || imgFailed) {
+    return (
+      <div className="w-14 h-14 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shrink-0">
+        <Dumbbell size={20} />
+      </div>
+    );
+  }
 
-const EXPERIENCE_OPTIONS: { id: GymExperienceLevel; label: string }[] = [
-  { id: 'beginner', label: 'Mới tập' },
-  { id: 'intermediate', label: 'Trung cấp' },
-  { id: 'advanced', label: 'Nâng cao' },
-];
-
-function extractShortFoodChips(menuOption: string): string[] {
-  return menuOption
-    .replace(/\([^)]*\)/g, '')
-    .split('+')
-    .map((part) => part.replace(/\.$/, '').trim())
-    .filter(Boolean)
-    .slice(0, 4);
+  return (
+    <img
+      src={src}
+      alt={exercise.vietnameseName}
+      loading="lazy"
+      onError={() => setImgFailed(true)}
+      className="w-14 h-14 rounded-xl object-cover bg-slate-100 border border-slate-200 shrink-0"
+    />
+  );
 }
 
 export default function GymGenderAdvisorPanel({
@@ -153,6 +143,8 @@ export default function GymGenderAdvisorPanel({
   userProfile,
   cycleTracking,
   exerciseLogs = {},
+  workoutHistory = [],
+  bodyMetricsHistory = [],
   completedIdsToday = [],
   onSelectGenderRoute,
   onSelectGenderDay,
@@ -163,10 +155,11 @@ export default function GymGenderAdvisorPanel({
   onToggleExerciseDone,
   onSaveExerciseLog,
   onAddWaterIntakeMl,
+  onRecordTodayBodyMetrics,
   onCompleteSession,
   onOpenSubstituteModal,
   onOpenCustomizerModal,
-  onOpenProgressModal,
+  onOpenAiCoachDrawer,
 }: GymGenderAdvisorPanelProps) {
   const [draftProfile, setDraftProfile] = useState<GymFemaleBodyProfile>(() => ({
     ...userProfile,
@@ -185,10 +178,11 @@ export default function GymGenderAdvisorPanel({
   }));
 
   const [draftCycle, setDraftCycle] = useState<GymCycleTrackingState>(cycleTracking);
-  const [isFormExpanded, setIsFormExpanded] = useState<boolean>(true);
+  const [activeMainTab, setActiveMainTab] = useState<GymMainAppTab>('workout');
+  const [mobileWorkoutMode, setMobileWorkoutMode] = useState<'list' | 'player'>('list');
   const [pickedSessionId, setPickedSessionId] = useState<string>('');
   const [activeExerciseIdx, setActiveExerciseIdx] = useState<number>(0);
-  const [visualTab, setVisualTab] = useState<StageVisualTab>('3d');
+  const [visualTab, setVisualTab] = useState<StageVisualTab>('gym_photo');
   const [showStepsDetail, setShowStepsDetail] = useState<boolean>(false);
   const [localDoneIds, setLocalDoneIds] = useState<string[]>([]);
   const [localWaterMl, setLocalWaterMl] = useState<number>(
@@ -309,11 +303,19 @@ export default function GymGenderAdvisorPanel({
         onSelectExerciseFor3D(firstSession.exercises[0].exercise.id);
       }
     }
-    setIsFormExpanded(false);
+    setActiveMainTab('workout');
   };
 
   const isExerciseDone = (exId: string) =>
     completedIdsToday.includes(exId) || localDoneIds.includes(exId);
+
+  const completedInSessionCount = sessionExercises.filter((item) =>
+    isExerciseDone(item.exercise.id)
+  ).length;
+  const sessionProgressPct =
+    sessionExercises.length > 0
+      ? Math.round((completedInSessionCount / sessionExercises.length) * 100)
+      : 0;
 
   const buildCurrentSessionSummary = (nextSessionId: string): CompleteSessionSummaryInput => {
     let totalVolumeKg = 0;
@@ -376,6 +378,7 @@ export default function GymGenderAdvisorPanel({
       }
       setPickedSessionId(nextSession?.id || '');
       setActiveExerciseIdx(0);
+      setMobileWorkoutMode('list');
       if (nextSession) {
         onSelectGenderDay?.(nextSession.id);
         const firstEx = nextSession.exercises[0]?.exercise;
@@ -400,742 +403,201 @@ export default function GymGenderAdvisorPanel({
   };
 
   const displayedWaterMl = userProfile.waterIntakeMlToday ?? localWaterMl;
-  const targetWaterMl = Math.round(recommendation.nutritionPlan.waterLiters * 1000);
-  const waterPercent = Math.min(
-    100,
-    Math.round((displayedWaterMl / Math.max(1000, targetWaterMl)) * 100)
-  );
-
   const isMale = activeGender === 'male';
-  const accentBtnClass = isMale
-    ? 'bg-[#5CE1E6] text-[#111114]'
-    : 'bg-[#FF5C8A] text-[#111114]';
-  const accentSoftText = isMale ? 'text-[#5CE1E6]' : 'text-[#FF85A9]';
 
   const effectiveVisualTab: StageVisualTab =
-    visualTab === 'gym_photo' && !currentExercise?.realGymPhoto ? '3d' : visualTab;
+    visualTab === 'gym_photo' && !currentExercise?.realGymPhoto
+      ? 'dual_photo'
+      : visualTab;
 
   const syncLabelVi =
     syncStatus === 'synced'
-      ? 'Đã đồng bộ Cloud'
+      ? 'Đã đồng bộ'
       : syncStatus === 'syncing'
-        ? 'Đang đồng bộ...'
+        ? 'Đang lưu...'
         : 'Lưu trên máy';
+
+  const navItems: Array<{
+    id: GymMainAppTab;
+    label: string;
+    mobileLabel: string;
+    icon: typeof Dumbbell;
+  }> = [
+    {
+      id: 'workout',
+      label: 'Tập Hôm Nay',
+      mobileLabel: 'Tập luyện',
+      icon: Dumbbell,
+    },
+    {
+      id: 'nutrition',
+      label: 'Thực Đơn',
+      mobileLabel: 'Thực đơn',
+      icon: Utensils,
+    },
+    {
+      id: 'progress',
+      label: 'Tiến Độ',
+      mobileLabel: 'Tiến độ',
+      icon: Trophy,
+    },
+    {
+      id: 'profile',
+      label: 'Hồ Sơ & Mục Tiêu',
+      mobileLabel: 'Hồ sơ',
+      icon: SlidersHorizontal,
+    },
+  ];
 
   return (
     <section
-      aria-label="Bộ định tuyến Nam Nữ và tư vấn bài tập ăn uống cá nhân hóa"
-      className="rounded-3xl bg-[#16161C] border border-[#282834] p-3.5 sm:p-5 text-[#F7F7F7] shadow-2xl space-y-4"
+      aria-label="Ứng dụng Huấn luyện Gym cá nhân hóa KeyT"
+      className="space-y-4"
     >
-      {/* 1. COMPACT 2-ROUTER BAR (/gym/nam vs /gym/nu) + PROGRESS + SYNC */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3 border-b border-[#262632]">
-        <div className="flex items-center gap-2.5">
-          <div
-            className={`w-9 h-9 rounded-2xl flex items-center justify-center border shrink-0 ${
-              isMale
-                ? 'bg-[#5CE1E6]/15 border-[#5CE1E6]/40 text-[#5CE1E6]'
-                : 'bg-[#FF5C8A]/15 border-[#FF5C8A]/40 text-[#FF5C8A]'
-            }`}
-          >
-            {isMale ? <Dumbbell size={18} /> : <HeartPulse size={18} />}
+      {/* 1. CLEAN LIGHT SPORT TOP APP HEADER */}
+      <header className="rounded-3xl bg-white border border-slate-200/90 px-4 py-3.5 sm:px-5 sm:py-4 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-2xl bg-[#F05A28] text-white flex items-center justify-center shadow-xs shrink-0">
+            {isMale ? <Dumbbell size={20} /> : <HeartPulse size={20} />}
           </div>
-          <div>
-            <h1 className="text-sm sm:text-base font-black text-[#F7F7F7] flex flex-wrap items-center gap-2">
-              <span>{isMale ? 'GYM 3D NAM' : 'GYM 3D NỮ'}</span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                  isMale
-                    ? 'bg-[#5CE1E6]/20 text-[#5CE1E6]'
-                    : 'bg-[#FF5C8A]/20 text-[#FF5C8A]'
-                }`}
-              >
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                {isMale ? 'KeyT Gym Nam' : 'KeyT Gym Nữ'}
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full bg-orange-50 border border-orange-200 text-[#F05A28] text-[11px] font-bold truncate max-w-48 sm:max-w-none">
                 {recommendation.goalLabelVi}
               </span>
-            </h1>
-            <div className="text-[11px] font-semibold text-zinc-400 flex items-center gap-2 mt-0.5">
+            </div>
+
+            <div className="text-xs text-slate-500 font-medium flex flex-wrap items-center gap-2 mt-0.5">
               <span className="inline-flex items-center gap-1">
                 <Cloud
                   size={12}
                   className={
-                    syncStatus === 'synced' ? 'text-[#A3F77B]' : 'text-zinc-400'
+                    syncStatus === 'synced' ? 'text-emerald-600' : 'text-slate-400'
                   }
                 />
                 <span>{syncLabelVi}</span>
               </span>
               <span>•</span>
-              <span className={accentSoftText}>{readinessStatus.phaseShortVi}</span>
+              <button
+                type="button"
+                onClick={() => setActiveMainTab('profile')}
+                className="text-slate-700 hover:text-[#F05A28] font-semibold underline-offset-2 hover:underline cursor-pointer"
+              >
+                {readinessStatus.phaseShortVi}
+              </button>
+              {workoutStreak > 0 && (
+                <>
+                  <span>•</span>
+                  <span className="inline-flex items-center gap-1 font-bold text-[#F05A28]">
+                    <Flame size={12} />
+                    <span>{workoutStreak} buổi</span>
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Right Controls: Clean Gender Switch + AI Coach Button */}
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
           <div
             role="tablist"
             aria-label="Chọn chế độ Gym Nam hoặc Gym Nữ"
-            className="grid grid-cols-2 gap-1.5 bg-[#111114] p-1 rounded-2xl border border-[#2A2A36]"
+            className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200/80"
           >
             <button
               type="button"
               role="tab"
               aria-selected={isMale}
-              onClick={() => {
-                onSelectGenderRoute('male');
-                setIsFormExpanded(true);
-              }}
-              className={`px-3 sm:px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              onClick={() => onSelectGenderRoute('male')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 isMale
-                  ? 'bg-[#5CE1E6] text-[#111114] shadow-md shadow-[#5CE1E6]/25'
-                  : 'text-zinc-300 hover:text-white'
+                  ? 'bg-[#1E293B] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Dumbbell size={14} />
-              <span>GYM NAM (/gym/nam)</span>
+              <span>Gym Nam</span>
             </button>
 
             <button
               type="button"
               role="tab"
               aria-selected={!isMale}
-              onClick={() => {
-                onSelectGenderRoute('female');
-                setIsFormExpanded(true);
-              }}
-              className={`px-3 sm:px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              onClick={() => onSelectGenderRoute('female')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 !isMale
-                  ? 'bg-[#FF5C8A] text-[#111114] shadow-md shadow-[#FF5C8A]/25'
-                  : 'text-zinc-300 hover:text-white'
+                  ? 'bg-[#F05A28] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <HeartPulse size={14} />
-              <span>GYM NỮ (/gym/nu)</span>
+              <span>Gym Nữ</span>
             </button>
           </div>
 
-          {onOpenProgressModal && (
-            <button
-              type="button"
-              onClick={onOpenProgressModal}
-              className="px-3 py-2 rounded-xl bg-[#111114] border border-[#2A2A36] hover:border-[#A3F77B] text-xs font-extrabold text-[#A3F77B] flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Trophy size={13} />
-              <span>PR &amp; Tiến độ{workoutStreak > 0 ? ` (${workoutStreak})` : ''}</span>
-            </button>
-          )}
-
-          {onOpenCustomizerModal && (
-            <button
-              type="button"
-              onClick={onOpenCustomizerModal}
-              className="px-3 py-2 rounded-xl bg-[#111114] border border-[#2A2A36] hover:border-zinc-400 text-xs font-extrabold text-zinc-200 flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <ListChecks size={13} />
-              <span className="hidden sm:inline">Tùy chỉnh lịch</span>
-            </button>
-          )}
-
           <button
             type="button"
-            onClick={() => setIsFormExpanded((v) => !v)}
-            className="px-3 py-2 rounded-xl bg-[#111114] border border-[#2A2A36] hover:border-zinc-500 text-xs font-extrabold text-zinc-200 flex items-center gap-1.5 cursor-pointer"
+            onClick={onOpenAiCoachDrawer}
+            className="px-3.5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer shrink-0"
           >
-            <SlidersHorizontal size={13} />
-            <span>{isFormExpanded ? 'Thu gọn' : 'Đổi nhu cầu'}</span>
-            {isFormExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            <MessageCircle size={15} className="text-[#F05A28]" />
+            <span>Hỏi AI</span>
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* 2. CONCISE, GENDER-ACCURATE QUESTIONNAIRE FORM */}
-      {isFormExpanded && (
-        <form onSubmit={handleSubmitForm} className="space-y-3">
-          {isMale ? (
-            /* ================= MALE COMPACT FORM (/gym/nam) ================= */
-            <div className="space-y-3 rounded-2xl bg-[#111114] border border-[#262632] p-3.5">
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-                <div>
-                  <label
-                    htmlFor="maleAge"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Tuổi
-                  </label>
-                  <input
-                    id="maleAge"
-                    type="number"
-                    min={14}
-                    max={80}
-                    value={draftProfile.age ?? 24}
-                    onChange={(e) =>
-                      updateProfileLive({ age: Number(e.target.value) || 24 })
-                    }
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="maleHeight"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Chiều cao (cm)
-                  </label>
-                  <input
-                    id="maleHeight"
-                    type="number"
-                    min={130}
-                    max={220}
-                    value={draftProfile.heightCm}
-                    onChange={(e) =>
-                      updateProfileLive({
-                        heightCm: Number(e.target.value) || 172,
-                      })
-                    }
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="maleWeight"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Cân nặng (kg)
-                  </label>
-                  <input
-                    id="maleWeight"
-                    type="number"
-                    min={40}
-                    max={160}
-                    step="0.5"
-                    value={draftProfile.weightKg}
-                    onChange={(e) =>
-                      updateProfileLive({
-                        weightKg: Number(e.target.value) || 68,
-                      })
-                    }
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="maleChest"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Vòng ngực (cm)
-                  </label>
-                  <input
-                    id="maleChest"
-                    type="number"
-                    min={65}
-                    max={150}
-                    value={draftProfile.chestCm ?? 96}
-                    onChange={(e) =>
-                      updateProfileLive({
-                        chestCm: Number(e.target.value) || 96,
-                      })
-                    }
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="maleWaist"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Vòng bụng (cm)
-                  </label>
-                  <input
-                    id="maleWaist"
-                    type="number"
-                    min={55}
-                    max={140}
-                    value={draftProfile.waistCm}
-                    onChange={(e) =>
-                      updateProfileLive({
-                        waistCm: Number(e.target.value) || 78,
-                      })
-                    }
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="maleArm"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Bắp tay (cm)
-                  </label>
-                  <input
-                    id="maleArm"
-                    type="number"
-                    min={20}
-                    max={60}
-                    value={draftProfile.armCm ?? 35}
-                    onChange={(e) =>
-                      updateProfileLive({
-                        armCm: Number(e.target.value) || 35,
-                      })
-                    }
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
-                  />
-                </div>
-
-                <div className="col-span-2 sm:col-span-1">
-                  <label
-                    htmlFor="maleWorkoutsPerWeek"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Số buổi/tuần
-                  </label>
-                  <select
-                    id="maleWorkoutsPerWeek"
-                    value={draftProfile.workoutsPerWeek ?? 4}
-                    onChange={(e) =>
-                      updateProfileLive({
-                        workoutsPerWeek: Number(e.target.value) || 4,
-                      })
-                    }
-                    className="w-full px-2 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7] cursor-pointer"
-                  >
-                    <option value={3}>3 buổi</option>
-                    <option value={4}>4 buổi</option>
-                    <option value={5}>5 buổi</option>
-                    <option value={6}>6 buổi</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                {(Object.keys(GYM_MALE_GOAL_META) as GymMaleGoal[]).map((goalKey) => {
-                  const meta = GYM_MALE_GOAL_META[goalKey];
-                  const selected = (draftProfile.maleGoal || 'chest_shoulder_3d') === goalKey;
-                  return (
-                    <button
-                      key={goalKey}
-                      type="button"
-                      onClick={() => updateProfileLive({ maleGoal: goalKey })}
-                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
-                        selected
-                          ? 'bg-[#5CE1E6]/15 border-[#5CE1E6] text-[#F7F7F7]'
-                          : 'bg-[#1B1B22] border-[#2E2E3A] text-zinc-300 hover:border-zinc-500'
-                      }`}
-                    >
-                      <span className="text-xs font-black">{meta.labelVi}</span>
-                      {selected && <Check size={14} className="text-[#5CE1E6] shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Male Readiness + Joint Guard Controls */}
-              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                {MALE_ENERGY_OPTIONS.map((opt) => {
-                  const selected = (draftProfile.maleEnergyLevel || 4) === opt.level;
-                  return (
-                    <button
-                      key={opt.level}
-                      type="button"
-                      onClick={() => updateProfileLive({ maleEnergyLevel: opt.level })}
-                      className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-black cursor-pointer ${
-                        selected
-                          ? 'bg-[#5CE1E6]/20 border-[#5CE1E6] text-[#5CE1E6]'
-                          : 'bg-[#1B1B22] border-[#2E2E3A] text-zinc-300'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateProfileLive({ shoulderSafe: !draftProfile.shoulderSafe })
-                  }
-                  className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 cursor-pointer ${
-                    draftProfile.shoulderSafe
-                      ? 'bg-[#A3F77B] text-[#111114] border-[#A3F77B]'
-                      : 'bg-[#1B1B22] text-zinc-300 border-[#2E2E3A]'
-                  }`}
-                >
-                  <ShieldCheck size={12} />
-                  <span>Bảo vệ khớp vai trước</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateProfileLive({
-                      protectLowerBackKnee: !draftProfile.protectLowerBackKnee,
-                    })
-                  }
-                  className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-bold flex items-center gap-1 cursor-pointer ${
-                    draftProfile.protectLowerBackKnee
-                      ? 'bg-[#A3F77B] text-[#111114] border-[#A3F77B]'
-                      : 'bg-[#1B1B22] text-zinc-300 border-[#2E2E3A]'
-                  }`}
-                >
-                  <ShieldCheck size={12} />
-                  <span>Bảo vệ lưng dưới &amp; gối</span>
-                </button>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                <div className="flex items-center gap-1.5">
-                  {EXPERIENCE_OPTIONS.map((exp) => {
-                    const active = draftProfile.experienceLevel === exp.id;
-                    return (
-                      <button
-                        key={exp.id}
-                        type="button"
-                        onClick={() =>
-                          updateProfileLive({ experienceLevel: exp.id })
-                        }
-                        className={`px-2.5 py-1 rounded-lg border text-[11px] font-extrabold cursor-pointer ${
-                          active
-                            ? 'bg-[#5CE1E6] text-[#111114] border-[#5CE1E6]'
-                            : 'bg-[#1B1B22] text-zinc-300 border-[#2E2E3A]'
-                        }`}
-                      >
-                        {exp.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="submit"
-                  className="px-4 py-2.5 rounded-xl bg-linear-to-r from-[#5CE1E6] to-[#A3F77B] text-[#111114] font-black text-xs flex items-center gap-1.5 shadow-lg cursor-pointer"
-                >
-                  <Sparkles size={15} />
-                  <span>PHÂN TÍCH NAM GIỚI &amp; ĐỀ XUẤT BÀI TẬP + ĂN UỐNG NGAY</span>
-                </button>
-              </div>
-            </div>
-          ) : (
-            /* ================= FEMALE COMPACT FORM (/gym/nu) ================= */
-            <div className="space-y-3 rounded-2xl bg-[#111114] border border-[#262632] p-3.5">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-                <div>
-                  <label
-                    htmlFor="femaleAge"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Tuổi
-                  </label>
-                  <input
-                    id="femaleAge"
-                    type="number"
-                    min={14}
-                    max={80}
-                    value={draftProfile.age ?? 24}
-                    onChange={(e) =>
-                      updateProfileLive({ age: Number(e.target.value) || 24 })
-                    }
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="femaleHeight"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Chiều cao (cm)
-                  </label>
-                  <input
-                    id="femaleHeight"
-                    type="number"
-                    min={120}
-                    max={200}
-                    value={draftProfile.heightCm}
-                    onChange={(e) =>
-                      updateProfileLive({
-                        heightCm: Number(e.target.value) || 160,
-                      })
-                    }
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="femaleWeight"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Cân nặng (kg)
-                  </label>
-                  <input
-                    id="femaleWeight"
-                    type="number"
-                    min={35}
-                    max={130}
-                    step="0.5"
-                    value={draftProfile.weightKg}
-                    onChange={(e) =>
-                      updateProfileLive({
-                        weightKg: Number(e.target.value) || 50,
-                      })
-                    }
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="femaleWaist"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Vòng eo V2 (cm)
-                  </label>
-                  <input
-                    id="femaleWaist"
-                    type="number"
-                    min={45}
-                    max={120}
-                    value={draftProfile.waistCm}
-                    onChange={(e) =>
-                      updateProfileLive({
-                        waistCm: Number(e.target.value) || 63,
-                      })
-                    }
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="femaleHip"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Vòng mông V3 (cm)
-                  </label>
-                  <input
-                    id="femaleHip"
-                    type="number"
-                    min={65}
-                    max={140}
-                    value={draftProfile.hipCm}
-                    onChange={(e) =>
-                      updateProfileLive({
-                        hipCm: Number(e.target.value) || 92,
-                      })
-                    }
-                    className="w-full px-2.5 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7]"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="femaleWorkoutsPerWeek"
-                    className="block text-[11px] font-bold text-zinc-400 mb-1"
-                  >
-                    Số buổi/tuần
-                  </label>
-                  <select
-                    id="femaleWorkoutsPerWeek"
-                    value={draftProfile.workoutsPerWeek ?? 4}
-                    onChange={(e) =>
-                      updateProfileLive({
-                        workoutsPerWeek: Number(e.target.value) || 4,
-                      })
-                    }
-                    className="w-full px-2 py-1.5 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-xs font-bold text-[#F7F7F7] cursor-pointer"
-                  >
-                    <option value={3}>3 buổi</option>
-                    <option value={4}>4 buổi</option>
-                    <option value={5}>5 buổi</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                {(Object.keys(GYM_PRIMARY_GOAL_META) as GymPrimaryGoal[]).map(
-                  (goalKey) => {
-                    const meta = GYM_PRIMARY_GOAL_META[goalKey];
-                    const selected = draftProfile.primaryGoal === goalKey;
-                    return (
-                      <button
-                        key={goalKey}
-                        type="button"
-                        onClick={() => updateProfileLive({ primaryGoal: goalKey })}
-                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
-                          selected
-                            ? 'bg-[#FF5C8A]/15 border-[#FF5C8A] text-[#F7F7F7]'
-                            : 'bg-[#1B1B22] border-[#2E2E3A] text-zinc-300 hover:border-zinc-500'
-                        }`}
-                      >
-                        <span className="text-xs font-black">{meta.labelVi}</span>
-                        {selected && (
-                          <Check size={14} className="text-[#FF5C8A] shrink-0" />
-                        )}
-                      </button>
-                    );
-                  }
-                )}
-              </div>
-
-              {/* Auto Cycle Date Picker + Phase Pills + Female Biomechanics Toggles */}
-              <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                <label
-                  htmlFor="femaleLastPeriod"
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#1B1B22] border border-[#2E2E3A] text-[11px] font-bold text-zinc-300"
-                >
-                  <Calendar size={12} className="text-[#FF5C8A]" />
-                  <span>Ngày đầu kỳ:</span>
-                  <input
-                    id="femaleLastPeriod"
-                    type="date"
-                    value={draftCycle.lastPeriodStartDate || ''}
-                    onChange={(e) =>
-                      updateCycleLive({
-                        lastPeriodStartDate: e.target.value,
-                        manualPhaseOverride: 'auto',
-                      })
-                    }
-                    className="bg-transparent text-[#F7F7F7] font-extrabold focus:outline-none cursor-pointer"
-                  />
-                </label>
-
-                {FEMALE_PHASE_OPTIONS.map((p) => {
-                  const selected = draftCycle.manualPhaseOverride === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() =>
-                        updateCycleLive({ manualPhaseOverride: p.id })
-                      }
-                      className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-black cursor-pointer ${
-                        selected
-                          ? 'bg-[#FF5C8A] text-[#111114] border-[#FF5C8A]'
-                          : 'bg-[#1B1B22] text-zinc-300 border-[#2E2E3A]'
-                      }`}
-                    >
-                      {p.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-1.5">
-                {(Object.keys(GYM_SYMPTOM_META) as GymSymptomCode[]).map(
-                  (code) => {
-                    const active = draftCycle.todaySymptoms.includes(code);
-                    return (
-                      <button
-                        key={code}
-                        type="button"
-                        onClick={() => toggleSymptom(code)}
-                        className={`px-2.5 py-1 rounded-xl text-[11px] font-bold border cursor-pointer ${
-                          active
-                            ? 'bg-[#A3F77B] text-[#111114] border-[#A3F77B]'
-                            : 'bg-[#1B1B22] text-zinc-400 border-[#2E2E3A]'
-                        }`}
-                      >
-                        {GYM_SYMPTOM_META[code].labelVi}
-                      </button>
-                    );
-                  }
-                )}
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateProfileLive({
-                      avoidHeavyQuads: !draftProfile.avoidHeavyQuads,
-                    })
-                  }
-                  className={`px-2.5 py-1 rounded-xl border text-[11px] font-bold flex items-center gap-1 cursor-pointer ${
-                    draftProfile.avoidHeavyQuads
-                      ? 'bg-[#FF5C8A]/20 border-[#FF5C8A] text-[#FF85A9]'
-                      : 'bg-[#1B1B22] border-[#2E2E3A] text-zinc-400'
-                  }`}
-                >
-                  <ShieldCheck size={12} />
-                  <span>Hạn chế to đùi trước</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    updateProfileLive({
-                      protectLowerBackKnee: !draftProfile.protectLowerBackKnee,
-                    })
-                  }
-                  className={`px-2.5 py-1 rounded-xl border text-[11px] font-bold flex items-center gap-1 cursor-pointer ${
-                    draftProfile.protectLowerBackKnee
-                      ? 'bg-[#FF5C8A]/20 border-[#FF5C8A] text-[#FF85A9]'
-                      : 'bg-[#1B1B22] border-[#2E2E3A] text-zinc-400'
-                  }`}
-                >
-                  <ShieldCheck size={12} />
-                  <span>Bảo vệ lưng &amp; gối</span>
-                </button>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {EXPERIENCE_OPTIONS.map((exp) => {
-                    const active = draftProfile.experienceLevel === exp.id;
-                    return (
-                      <button
-                        key={exp.id}
-                        type="button"
-                        onClick={() =>
-                          updateProfileLive({ experienceLevel: exp.id })
-                        }
-                        className={`px-2.5 py-1 rounded-lg border text-[11px] font-extrabold cursor-pointer ${
-                          active
-                            ? 'bg-[#FF5C8A] text-[#111114] border-[#FF5C8A]'
-                            : 'bg-[#1B1B22] text-zinc-300 border-[#2E2E3A]'
-                        }`}
-                      >
-                        {exp.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="submit"
-                  className="px-4 py-2.5 rounded-xl bg-linear-to-r from-[#FF5C8A] to-[#FF85A9] text-[#111114] font-black text-xs flex items-center gap-1.5 shadow-lg cursor-pointer"
-                >
-                  <Sparkles size={15} />
-                  <span>PHÂN TÍCH NỮ GIỚI &amp; ĐỀ XUẤT BÀI TẬP + ĂN UỐNG NGAY</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </form>
-      )}
-
-      {/* 3. SINGLE DETAILED 3D MODEL STAGE (STEP-BY-STEP: TẬP XONG -> NEXT BÀI KHÁC) */}
-      <div
-        aria-label="Kết quả đề xuất bài tập và chế độ ăn uống cá nhân hóa"
-        className="space-y-4 pt-2 border-t border-[#262632]"
+      {/* 2. DESKTOP SEGMENTED NAVIGATION BAR (Hidden on Mobile, replaced by Fixed Bottom Bar) */}
+      <nav
+        aria-label="Điều hướng khu vực tập luyện"
+        className="hidden md:flex items-center justify-between gap-3 rounded-2xl bg-white border border-slate-200/90 p-1.5 shadow-2xs"
       >
-        <div className="space-y-3">
-          {/* Header + Session Tabs */}
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Rotate3d
-                size={16}
-                className={isMale ? 'text-[#5CE1E6]' : 'text-[#FF5C8A]'}
-              />
-              <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#F7F7F7]">
-                1. Đề Xuất Bài Tập Trọng Tâm Cho Bạn ({displayedSessions.length} Buổi/Tuần)
-              </h2>
-            </div>
+        <div className="flex items-center gap-1">
+          {navItems.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeMainTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveMainTab(tab.id)}
+                className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold flex items-center gap-2 transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-[#F05A28] text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                <Icon size={16} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-            {/* Session Selector Pills (Buổi 1, Buổi 2, Buổi 3, Buổi 4...) */}
+        {onOpenCustomizerModal && (
+          <button
+            type="button"
+            onClick={onOpenCustomizerModal}
+            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer mr-1"
+          >
+            <ListChecks size={15} />
+            <span>Tùy chỉnh lịch</span>
+          </button>
+        )}
+      </nav>
+
+      {/* 3. ACTIVE TAB CONTENT */}
+      {activeMainTab === 'workout' && (
+        <div className="space-y-4">
+          {/* Horizontal Scrollable Session Selector Pills */}
+          <div className="flex items-center justify-between gap-2">
             <div
               role="tablist"
               aria-label="Chọn buổi tập trong tuần"
-              className="flex flex-wrap items-center gap-1.5"
+              className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full"
             >
               {displayedSessions.map((session, sIdx) => {
                 const isCurrentSession = safeSessionIdx === sIdx;
@@ -1153,12 +615,10 @@ export default function GymGenderAdvisorPanel({
                         onSelectExerciseFor3D(session.exercises[0].exercise.id);
                       }
                     }}
-                    className={`px-3 py-1.5 rounded-xl border text-xs font-black transition-all cursor-pointer ${
+                    className={`px-3.5 py-2 rounded-2xl border text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                       isCurrentSession
-                        ? isMale
-                          ? 'bg-[#5CE1E6] text-[#111114] border-[#5CE1E6]'
-                          : 'bg-[#FF5C8A] text-[#111114] border-[#FF5C8A]'
-                        : 'bg-[#111114] border-[#272733] text-zinc-300 hover:border-zinc-500'
+                        ? 'bg-[#1E293B] text-white border-[#1E293B] shadow-xs'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                     }`}
                   >
                     {session.dayLabelVi} ({session.exercises.length} bài)
@@ -1166,416 +626,444 @@ export default function GymGenderAdvisorPanel({
                 );
               })}
             </div>
+
+            {onOpenCustomizerModal && (
+              <button
+                type="button"
+                onClick={onOpenCustomizerModal}
+                aria-label="Tùy chỉnh lịch tập"
+                className="md:hidden px-3 py-2 rounded-2xl bg-white border border-slate-200 text-xs font-bold text-slate-700 flex items-center gap-1 shrink-0 cursor-pointer"
+              >
+                <ListChecks size={14} />
+                <span>Sửa lịch</span>
+              </button>
+            )}
           </div>
 
-          {/* Step-by-Step Exercise Navigation Bar + Single Detailed 3D Viewer */}
-          {currentExercise && currentItem && (
-            <div className="rounded-3xl bg-[#111114] border border-[#272733] overflow-hidden shadow-xl">
-              {/* Top Stepper Bar: Exercise Dots + Prev + "Tập Xong • Qua Bài Tiếp (Next)" */}
-              <div className="px-3.5 sm:px-5 py-3 bg-[#15151D] border-b border-[#262632] flex flex-wrap items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span
-                    className={`px-2.5 py-1 rounded-xl text-xs font-black shrink-0 ${accentBtnClass}`}
-                  >
-                    Bài {safeExerciseIdx + 1}/{sessionExercises.length}
-                  </span>
-                  <div className="min-w-0">
-                    <div className="text-sm sm:text-base font-black text-[#F7F7F7] truncate flex items-center gap-2">
-                      <span>{currentExercise.vietnameseName}</span>
-                      {isExerciseDone(currentExercise.id) && (
-                        <CheckCircle2 size={16} className="text-[#A3F77B] shrink-0" />
-                      )}
+          {/* Responsive Master-Detail Grid: Left = Session Overview List, Right = Focus Workout Player */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            {/* LEFT COLUMN: SESSION OVERVIEW & CLEAN PHOTO THUMBNAIL EXERCISE LIST */}
+            <div
+              className={`lg:col-span-5 space-y-3 ${
+                mobileWorkoutMode === 'player' ? 'hidden lg:block' : 'block'
+              }`}
+            >
+              {/* Today's Session Hero Card */}
+              {currentSession && (
+                <div className="rounded-3xl bg-white border border-slate-200/90 p-4 sm:p-5 shadow-2xs space-y-3.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-[#F05A28]">
+                        {currentSession.dayLabelVi} • {currentSession.focusTagVi}
+                      </span>
+                      <h2 className="text-base sm:text-lg font-black text-slate-900 mt-0.5 leading-snug">
+                        {currentSession.titleVi}
+                      </h2>
                     </div>
-                    <div className="text-[11px] font-bold text-zinc-400 truncate">
-                      {currentSession?.dayLabelVi}: {currentSession?.titleVi} •{' '}
-                      <span className="text-[#A3F77B]">
-                        {currentItem.suggestedWeightKg > 0
-                          ? `Gợi ý ${currentItem.suggestedWeightKg}kg`
-                          : 'Trọng lượng cơ thể'}
-                      </span>{' '}
-                      • <span className={accentSoftText}>{currentItem.suggestedSetsReps}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step Dots + Prev / Next Action Buttons */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="hidden sm:flex items-center gap-1 mr-1">
-                    {sessionExercises.map((exItem, idx) => {
-                      const active = idx === safeExerciseIdx;
-                      const done = isExerciseDone(exItem.exercise.id);
-                      return (
-                        <button
-                          key={exItem.exercise.id}
-                          type="button"
-                          onClick={() => {
-                            setActiveExerciseIdx(idx);
-                            onSelectExerciseFor3D(exItem.exercise.id);
-                          }}
-                          title={`Bài ${idx + 1}: ${exItem.exercise.vietnameseName}`}
-                          className={`w-7 h-7 rounded-lg text-xs font-black transition cursor-pointer flex items-center justify-center border ${
-                            active
-                              ? isMale
-                                ? 'bg-[#5CE1E6] text-[#111114] border-[#5CE1E6]'
-                                : 'bg-[#FF5C8A] text-[#111114] border-[#FF5C8A]'
-                              : done
-                                ? 'bg-[#A3F77B]/20 text-[#A3F77B] border-[#A3F77B]/50'
-                                : 'bg-[#1D1D27] text-zinc-400 border-[#2D2D3B] hover:text-white'
-                          }`}
-                        >
-                          {idx + 1}
-                        </button>
-                      );
-                    })}
+                    <span className="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold inline-flex items-center gap-1 shrink-0">
+                      <Clock size={12} />
+                      <span>~{currentSession.estimatedMinutes}p</span>
+                    </span>
                   </div>
 
+                  {/* Progress Bar */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-slate-600">
+                        Tiến độ buổi tập hôm nay
+                      </span>
+                      <span className="text-slate-900 tabular-nums">
+                        {completedInSessionCount}/{sessionExercises.length} bài ({sessionProgressPct}%)
+                      </span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-emerald-600 transition-all duration-200"
+                        style={{ width: `${sessionProgressPct}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Mobile Primary CTA to Enter Focus Workout Player */}
                   <button
                     type="button"
-                    disabled={safeExerciseIdx === 0}
-                    onClick={handlePrevExercise}
-                    className="px-3 py-2 rounded-xl bg-[#1E1E28] hover:bg-[#282836] disabled:opacity-40 border border-[#2E2E3D] text-xs font-extrabold text-zinc-200 flex items-center gap-1 cursor-pointer disabled:cursor-default"
+                    onClick={() => setMobileWorkoutMode('player')}
+                    className="lg:hidden w-full py-3 px-4 rounded-2xl bg-[#F05A28] hover:bg-[#d94d1f] text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
                   >
-                    <ArrowLeft size={14} />
-                    <span>Bài trước</span>
+                    <Play size={16} fill="currentColor" />
+                    <span>
+                      {completedInSessionCount > 0
+                        ? `Tiếp tục tập (Bài ${safeExerciseIdx + 1}/${sessionExercises.length})`
+                        : 'Bắt đầu buổi tập ngay'}
+                    </span>
                   </button>
+                </div>
+              )}
+
+              {/* Clean Exercise List with Real Thumbnails (Zero 3D Toy Clutter!) */}
+              <div className="space-y-2">
+                {sessionExercises.map((exItem, idx) => {
+                  const isSelected = idx === safeExerciseIdx;
+                  const done = isExerciseDone(exItem.exercise.id);
+                  const savedW = exerciseLogs[exItem.exercise.id]?.weightKg;
+                  const displayW = savedW ?? exItem.suggestedWeightKg;
+
+                  return (
+                    <button
+                      key={exItem.exercise.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveExerciseIdx(idx);
+                        onSelectExerciseFor3D(exItem.exercise.id);
+                        setMobileWorkoutMode('player');
+                      }}
+                      className={`w-full text-left p-3 rounded-2xl border transition-all flex items-center gap-3 cursor-pointer ${
+                        isSelected
+                          ? 'bg-white border-[#F05A28] ring-2 ring-[#F05A28]/15 shadow-xs'
+                          : done
+                            ? 'bg-emerald-50/40 border-emerald-200/80 hover:bg-emerald-50/70'
+                            : 'bg-white border-slate-200/90 hover:border-slate-300 shadow-2xs'
+                      }`}
+                    >
+                      <ExerciseThumb exercise={exItem.exercise} />
+
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">
+                          {idx + 1}. {exItem.exercise.vietnameseName}
+                        </div>
+                        <div className="text-xs text-slate-500 truncate mt-0.5">
+                          {exItem.exercise.machineName}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-bold">
+                            {exItem.suggestedSetsReps}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-orange-50 text-[#F05A28] text-[11px] font-extrabold tabular-nums">
+                            {displayW > 0 ? `${displayW} kg` : 'Cơ thể'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0">
+                        {done ? (
+                          <span className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+                            <Check size={16} />
+                          </span>
+                        ) : (
+                          <span
+                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              isSelected
+                                ? 'bg-[#F05A28] text-white'
+                                : 'bg-slate-100 text-slate-500'
+                            }`}
+                          >
+                            <ChevronRight size={16} />
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: FOCUS WORKOUT PLAYER (HEVY / NIKE TRAINING CLUB STYLE) */}
+            {currentExercise && currentItem && (
+              <div
+                className={`lg:col-span-7 rounded-3xl bg-white border border-slate-200/90 p-3.5 sm:p-5 shadow-2xs space-y-4 ${
+                  mobileWorkoutMode === 'list' ? 'hidden lg:block' : 'block'
+                }`}
+              >
+                {/* Player Top Bar: Mobile Back + Step Badge + Swap Exercise */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMobileWorkoutMode('list')}
+                      className="lg:hidden px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <ArrowLeft size={14} />
+                      <span>Danh sách</span>
+                    </button>
+
+                    <span className="px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-[#F05A28] text-xs font-extrabold tabular-nums">
+                      Bài {safeExerciseIdx + 1}/{sessionExercises.length}
+                    </span>
+
+                    {isExerciseDone(currentExercise.id) && (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                        <CheckCircle2 size={13} />
+                        <span>Đã xong</span>
+                      </span>
+                    )}
+                  </div>
 
                   {onOpenSubstituteModal && (
                     <button
                       type="button"
                       onClick={onOpenSubstituteModal}
-                      className="px-3 py-2 rounded-xl bg-[#1E1E28] hover:bg-[#282836] border border-[#2E2E3D] text-xs font-extrabold text-zinc-200 flex items-center gap-1 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <RefreshCw size={13} />
                       <span>Đổi bài</span>
                     </button>
                   )}
-
-                  <button
-                    type="button"
-                    onClick={handleCompleteAndNextExercise}
-                    className="px-4 py-2 rounded-xl bg-[#A3F77B] hover:brightness-105 text-[#111114] font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-lg shadow-[#A3F77B]/20 transition active:scale-98 cursor-pointer"
-                  >
-                    <Check size={15} />
-                    <span>
-                      {safeExerciseIdx + 1 < sessionExercises.length
-                        ? `Tập Xong • Qua Bài ${safeExerciseIdx + 2} (Next)`
-                        : 'Hoàn Thành Buổi • Qua Buổi Tiếp'}
-                    </span>
-                    <ArrowRight size={15} />
-                  </button>
                 </div>
-              </div>
 
-              {/* View Mode Switcher Bar (Gender-Adaptive Theme) */}
-              <div className="px-4 py-2 bg-[#111114] border-b border-[#22222C] flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs font-bold text-zinc-400 truncate">
-                  Thiết bị: <strong className="text-zinc-200">{currentExercise.machineName}</strong>
-                </span>
+                {/* Exercise Name & Target Summary */}
+                <div>
+                  <h3 className="text-lg sm:text-xl font-black text-slate-900 leading-snug">
+                    {currentExercise.vietnameseName}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Thiết bị: <strong className="text-slate-700">{currentExercise.machineName}</strong> • Mục tiêu:{' '}
+                    <strong className="text-[#F05A28]">{currentItem.suggestedSetsReps}</strong>
+                  </p>
+                </div>
 
-                <div className="inline-flex items-center gap-0.5 bg-[#1B1B22] border border-[#2E2E3A] p-1 rounded-xl shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setVisualTab('3d')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 cursor-pointer ${
-                      effectiveVisualTab === '3d'
-                        ? accentBtnClass
-                        : 'text-zinc-300 hover:text-white'
-                    }`}
-                  >
-                    <Rotate3d size={13} />
-                    <span>3D Chi Tiết</span>
-                  </button>
+                {/* Visual Stage Switcher (Real Photo First, 3D Optional on Tap!) */}
+                <div className="space-y-2.5">
+                  <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+                    {currentExercise.realGymPhoto && (
+                      <button
+                        type="button"
+                        onClick={() => setVisualTab('gym_photo')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                          effectiveVisualTab === 'gym_photo'
+                            ? 'bg-white text-slate-900 shadow-2xs'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        <MapPin size={13} className="text-[#F05A28]" />
+                        <span>Máy thật</span>
+                      </button>
+                    )}
 
-                  {currentExercise.realGymPhoto && (
                     <button
                       type="button"
-                      onClick={() => setVisualTab('gym_photo')}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 cursor-pointer ${
-                        effectiveVisualTab === 'gym_photo'
-                          ? accentBtnClass
-                          : 'text-zinc-300 hover:text-white'
+                      onClick={() => setVisualTab('dual_photo')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                        effectiveVisualTab === 'dual_photo'
+                          ? 'bg-white text-slate-900 shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      <MapPin size={13} />
-                      <span>Máy Thật</span>
+                      <Camera size={13} className="text-[#F05A28]" />
+                      <span>2 Tư thế</span>
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setVisualTab('3d')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                        effectiveVisualTab === '3d'
+                          ? 'bg-[#1E293B] text-white shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Rotate3d size={13} />
+                      <span>Mô phỏng 3D</span>
+                    </button>
+                  </div>
+
+                  {effectiveVisualTab === 'gym_photo' && currentExercise.realGymPhoto && (
+                    <RealGymMachineView
+                      exercise={currentExercise}
+                      onSwitchTo3D={() => setVisualTab('3d')}
+                    />
                   )}
-
-                  <button
-                    type="button"
-                    onClick={() => setVisualTab('photo')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 cursor-pointer ${
-                      effectiveVisualTab === 'photo'
-                        ? accentBtnClass
-                        : 'text-zinc-300 hover:text-white'
-                    }`}
-                  >
-                    <Camera size={13} />
-                    <span>2 Ảnh</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setVisualTab('split')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-extrabold flex items-center gap-1 cursor-pointer ${
-                      effectiveVisualTab === 'split'
-                        ? accentBtnClass
-                        : 'text-zinc-300 hover:text-white'
-                    }`}
-                  >
-                    <Columns2 size={13} />
-                    <span>Đôi 3D</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Single Detailed 3D Canvas + Visual Reference + Dark Readiness Card */}
-              <div className="p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-3 items-stretch">
-                <div className="lg:col-span-7">
+                  {effectiveVisualTab === 'dual_photo' && (
+                    <ExerciseReferenceDualView
+                      exercise={currentExercise}
+                      onSwitchTo3D={() => setVisualTab('3d')}
+                    />
+                  )}
                   {effectiveVisualTab === '3d' && (
                     <GymMannequin3DViewer
                       exercise={currentExercise}
                       gender={activeGender}
-                      tall
                     />
                   )}
-                  {effectiveVisualTab === 'gym_photo' && currentExercise.realGymPhoto && (
-                    <RealGymMachineView exercise={currentExercise} />
-                  )}
-                  {effectiveVisualTab === 'photo' && (
-                    <ExerciseReferenceDualView exercise={currentExercise} />
-                  )}
-                  {effectiveVisualTab === 'split' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <GymMannequin3DViewer
-                        exercise={currentExercise}
-                        gender={activeGender}
-                      />
-                      {currentExercise.realGymPhoto ? (
-                        <RealGymMachineView exercise={currentExercise} />
-                      ) : (
-                        <ExerciseReferenceDualView exercise={currentExercise} />
-                      )}
-                    </div>
-                  )}
                 </div>
 
-                <div className="lg:col-span-5 flex flex-col justify-between gap-3">
-                  <div className="flex-1">
-                    {currentExercise.realGymPhoto && effectiveVisualTab === '3d' ? (
-                      <RealGymMachineView exercise={currentExercise} />
-                    ) : (
-                      <ExerciseReferenceDualView exercise={currentExercise} />
-                    )}
-                  </div>
-
-                  {/* Dark Neon Biomechanics & Readiness Advice Card (Replaces duplicate white timer) */}
-                  <div className="rounded-2xl bg-[#16161E] border border-[#282836] p-3 space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={`font-black flex items-center gap-1.5 ${accentSoftText}`}>
-                        {readinessStatus.isHighSpinalLoadWarning ? (
-                          <ShieldAlert size={14} className="text-amber-400" />
-                        ) : (
-                          <ShieldCheck size={14} className="text-[#A3F77B]" />
-                        )}
-                        <span>{readinessStatus.phaseTitleVi}</span>
-                      </span>
-                      {!isMale && readinessStatus.dayOfCycle > 0 && (
-                        <span className="px-2 py-0.5 rounded-md bg-[#22222E] text-[10px] font-bold text-zinc-300">
-                          Ngày {readinessStatus.dayOfCycle} chu kỳ
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-zinc-300 leading-relaxed">
-                      {readinessStatus.coachingBannerVi}
-                    </p>
-                    {currentExercise.mistakes && (
-                      <p className="text-[11px] text-zinc-400">
-                        <strong className="text-zinc-200">Tránh lỗi sai:</strong>{' '}
-                        {currentExercise.mistakes}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Unified Set-by-Set Cockpit, Timestamp Rest Timer, Plate Calculator & Weight Stepper */}
-              {setRecommendation && (
-                <GymInlineMetricsTools
-                  key={`${activeGender}_${currentExercise.id}`}
-                  exercise={currentExercise}
-                  gender={activeGender}
-                  savedLog={exerciseLogs[currentExercise.id]}
-                  recommendation={setRecommendation}
-                  onSaveLog={(w, r, tip, extra) =>
-                    onSaveExerciseLog?.(currentExercise.id, w, r, tip, extra)
-                  }
-                />
-              )}
-
-              {/* Optional Collapsible 4 Steps */}
-              <div className="px-4 py-2.5 bg-[#15151D] border-t border-[#262632]">
-                <button
-                  type="button"
-                  onClick={() => setShowStepsDetail((v) => !v)}
-                  className="w-full flex items-center justify-between text-xs font-extrabold text-zinc-400 hover:text-white cursor-pointer"
+                {/* Concise Biomechanics & Readiness Note */}
+                <div
+                  className={`rounded-2xl p-3 border text-xs leading-relaxed flex items-start gap-2.5 ${
+                    readinessStatus.isHighSpinalLoadWarning
+                      ? 'bg-amber-50/80 border-amber-200 text-amber-900'
+                      : 'bg-slate-50 border-slate-200/80 text-slate-700'
+                  }`}
                 >
-                  <span className="text-left">
-                    Mẹo chỉnh máy: {currentExercise.machineSetupTip}
-                  </span>
-                  <span className={`inline-flex items-center gap-1 shrink-0 ml-2 ${accentSoftText}`}>
-                    <span>{showStepsDetail ? 'Ẩn bước tập' : 'Xem 4 bước ngắn'}</span>
-                    {showStepsDetail ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  </span>
-                </button>
+                  {readinessStatus.isHighSpinalLoadWarning ? (
+                    <ShieldAlert size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <ShieldCheck size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                  )}
+                  <div className="space-y-0.5">
+                    <div className="font-extrabold text-slate-900">
+                      {readinessStatus.phaseTitleVi}
+                    </div>
+                    <p>{readinessStatus.coachingBannerVi}</p>
+                  </div>
+                </div>
 
-                {showStepsDetail && (
-                  <ol className="mt-2.5 pt-2.5 border-t border-[#262632] grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {currentExercise.steps.map((step, i) => (
-                      <li
-                        key={i}
-                        className="flex items-start gap-2 text-xs text-zinc-300 bg-[#111114] p-2.5 rounded-xl border border-[#252530]"
-                      >
-                        <span
-                          className={`w-4 h-4 rounded-md text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5 ${accentBtnClass}`}
-                        >
-                          {i + 1}
-                        </span>
-                        <span>{step}</span>
-                      </li>
-                    ))}
-                  </ol>
+                {/* Hevy / Strong Style Set-by-Set Table, Rest Timer & Plate Calculator */}
+                {setRecommendation && (
+                  <GymInlineMetricsTools
+                    key={`${activeGender}_${currentExercise.id}`}
+                    exercise={currentExercise}
+                    gender={activeGender}
+                    savedLog={exerciseLogs[currentExercise.id]}
+                    recommendation={setRecommendation}
+                    onSaveLog={(w, r, tip, extra) =>
+                      onSaveExerciseLog?.(currentExercise.id, w, r, tip, extra)
+                    }
+                  />
                 )}
-              </div>
-            </div>
-          )}
-        </div>
 
-        {/* PART B: VISUAL NUTRITION, INTERACTIVE WATER TRACKER & 4 MEAL CHIPS */}
-        <div className="space-y-2.5 pt-2 border-t border-[#262632]">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Utensils size={16} className="text-[#A3F77B]" />
-              <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#F7F7F7]">
-                2. Đề Xuất Chế Độ Ăn Uống &amp; Thực Đơn 4 Bữa Trong Ngày
-              </h2>
-            </div>
-            <span className="px-2.5 py-0.5 rounded-full bg-[#A3F77B]/15 text-[#A3F77B] text-[11px] font-black">
-              {recommendation.nutritionPlan.calorieBadgeVi}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-            <div className="rounded-2xl bg-[#111114] border border-[#272733] px-3 py-2.5 flex items-center justify-between">
-              <span className="text-xs font-bold text-zinc-400 flex items-center gap-1">
-                <Flame size={13} className={isMale ? 'text-[#5CE1E6]' : 'text-[#FF5C8A]'} /> Calo
-              </span>
-              <span className="text-sm sm:text-base font-black text-[#F7F7F7]">
-                {recommendation.nutritionPlan.targetCaloriesKcal} kcal
-              </span>
-            </div>
-
-            <div className="rounded-2xl bg-[#111114] border border-[#272733] px-3 py-2.5 flex items-center justify-between">
-              <span className="text-xs font-bold text-zinc-400 flex items-center gap-1">
-                <Zap size={13} className="text-[#A3F77B]" /> Đạm
-              </span>
-              <span className="text-sm sm:text-base font-black text-[#A3F77B]">
-                {recommendation.nutritionPlan.proteinGrams}g
-              </span>
-            </div>
-
-            <div className="rounded-2xl bg-[#111114] border border-[#272733] px-3 py-2.5 flex items-center justify-between">
-              <span className="text-xs font-bold text-zinc-400 flex items-center gap-1">
-                <Activity size={13} className="text-[#5CE1E6]" /> Tinh bột
-              </span>
-              <span className="text-sm sm:text-base font-black text-[#5CE1E6]">
-                {recommendation.nutritionPlan.carbsGrams}g
-              </span>
-            </div>
-
-            <div className="rounded-2xl bg-[#111114] border border-[#272733] px-3 py-2.5 flex items-center justify-between">
-              <span className="text-xs font-bold text-zinc-400 flex items-center gap-1">
-                <ShieldCheck size={13} className="text-[#FF85A9]" /> Chất béo
-              </span>
-              <span className="text-sm sm:text-base font-black text-[#FF85A9]">
-                {recommendation.nutritionPlan.fatGrams}g
-              </span>
-            </div>
-
-            {/* Interactive Water Intake Tracker */}
-            <div className="col-span-2 sm:col-span-1 rounded-2xl bg-[#111114] border border-[#272733] px-3 py-2 space-y-1.5">
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-xs font-bold text-zinc-400 flex items-center gap-1">
-                  <Droplets size={13} className="text-[#5CE1E6]" /> Nước
-                </span>
-                <div className="flex items-center gap-1">
+                {/* Collapsible 4-Step Technique & Machine Setup */}
+                <div className="rounded-2xl bg-slate-50 border border-slate-200/80 px-3.5 py-2.5">
                   <button
                     type="button"
-                    onClick={() => handleAdjustWater(-250)}
-                    aria-label="Giảm 250ml nước"
-                    className="w-6 h-6 rounded-lg bg-[#1B1B24] hover:bg-[#262634] border border-[#2E2E3C] text-zinc-300 flex items-center justify-center cursor-pointer"
+                    onClick={() => setShowStepsDetail((v) => !v)}
+                    className="w-full flex items-center justify-between gap-2 text-xs font-bold text-slate-700 hover:text-slate-900 cursor-pointer"
                   >
-                    <Minus size={11} />
+                    <span className="text-left truncate">
+                      Mẹo chỉnh máy: {currentExercise.machineSetupTip}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[#F05A28] shrink-0">
+                      <span>{showStepsDetail ? 'Thu gọn' : '4 bước tập'}</span>
+                      {showStepsDetail ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </span>
                   </button>
-                  <span className="text-xs font-black text-[#F7F7F7]">
-                    {(displayedWaterMl / 1000).toFixed(2)}/{recommendation.nutritionPlan.waterLiters}L
-                  </span>
+
+                  {showStepsDetail && (
+                    <div className="mt-2.5 pt-2.5 border-t border-slate-200/80 space-y-2">
+                      <ol className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {currentExercise.steps.map((step, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start gap-2 text-xs text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200/80"
+                          >
+                            <span className="w-5 h-5 rounded-md bg-[#1E293B] text-white text-[11px] font-bold flex items-center justify-center shrink-0">
+                              {i + 1}
+                            </span>
+                            <span>{step}</span>
+                          </li>
+                        ))}
+                      </ol>
+                      {currentExercise.mistakes && (
+                        <p className="text-xs text-slate-600 px-1">
+                          <strong className="text-slate-900">Tránh lỗi sai:</strong>{' '}
+                          {currentExercise.mistakes}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom Prev / Primary Next Exercise Action Bar */}
+                <div className="pt-2 border-t border-slate-100 flex items-center gap-2.5">
                   <button
                     type="button"
-                    onClick={() => handleAdjustWater(250)}
-                    aria-label="Thêm 250ml nước"
-                    className="w-6 h-6 rounded-lg bg-[#5CE1E6]/20 hover:bg-[#5CE1E6]/35 border border-[#5CE1E6]/40 text-[#5CE1E6] flex items-center justify-center cursor-pointer"
+                    disabled={safeExerciseIdx === 0}
+                    onClick={handlePrevExercise}
+                    className="h-12 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-800 text-xs sm:text-sm font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:cursor-default shrink-0"
                   >
-                    <Plus size={11} />
+                    <ArrowLeft size={16} />
+                    <span>Bài trước</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCompleteAndNextExercise}
+                    className="flex-1 h-12 px-4 rounded-2xl bg-[#F05A28] hover:bg-[#d94d1f] text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 shadow-sm transition-all active:scale-99 cursor-pointer"
+                  >
+                    <Check size={17} />
+                    <span>
+                      {safeExerciseIdx + 1 < sessionExercises.length
+                        ? `Tập xong • Qua bài ${safeExerciseIdx + 2}`
+                        : 'Hoàn thành buổi tập'}
+                    </span>
+                    <ArrowRight size={16} />
                   </button>
                 </div>
               </div>
-              <div className="h-1.5 w-full rounded-full bg-[#1E1E28] overflow-hidden">
-                <div
-                  className="h-full bg-[#5CE1E6] transition-all duration-200"
-                  style={{ width: `${waterPercent}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-            {recommendation.nutritionPlan.meals.map((meal) => {
-              const chips = extractShortFoodChips(meal.menuOptionsVi[0] || '');
-              return (
-                <div
-                  key={meal.id}
-                  className="rounded-2xl bg-[#111114] border border-[#272733] p-3 space-y-2"
-                >
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-xs font-black text-[#F7F7F7] truncate">
-                      {meal.mealTitleVi.split('(')[0].trim()}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-lg bg-[#1F1F2B] text-[#A3F77B] text-[11px] font-black shrink-0">
-                      {meal.approxKcal} kcal
-                    </span>
-                  </div>
-
-                  <div className="text-[10px] font-bold text-zinc-400">
-                    {meal.timingVi} • {meal.macroTagVi.split('•')[0].trim()}
-                  </div>
-
-                  <div className="flex flex-wrap gap-1">
-                    {chips.map((chip, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-1 rounded-lg bg-[#1B1B24] border border-[#2B2B38] text-[11px] font-bold text-zinc-200"
-                      >
-                        {chip}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+            )}
           </div>
         </div>
-      </div>
+      )}
+
+      {activeMainTab === 'nutrition' && (
+        <GymNutritionTabView
+          gender={activeGender}
+          goalLabelVi={recommendation.goalLabelVi}
+          nutritionPlan={recommendation.nutritionPlan}
+          displayedWaterMl={displayedWaterMl}
+          onAdjustWater={handleAdjustWater}
+        />
+      )}
+
+      {activeMainTab === 'progress' && (
+        <GymProgressHistoryModal
+          open={true}
+          mode="inline"
+          gender={activeGender}
+          workoutStreak={workoutStreak}
+          userProfile={draftProfile}
+          exerciseLogs={exerciseLogs}
+          workoutHistory={workoutHistory}
+          bodyMetricsHistory={bodyMetricsHistory}
+          onRecordTodayBodyMetrics={() => {
+            if (onRecordTodayBodyMetrics) {
+              onRecordTodayBodyMetrics();
+            } else {
+              onSaveProfile({ ...draftProfile, gender: activeGender });
+            }
+          }}
+        />
+      )}
+
+      {activeMainTab === 'profile' && (
+        <GymProfileSetupTabView
+          gender={activeGender}
+          draftProfile={draftProfile}
+          draftCycle={draftCycle}
+          onUpdateProfileLive={updateProfileLive}
+          onUpdateCycleLive={updateCycleLive}
+          onToggleSymptom={toggleSymptom}
+          onSubmitForm={handleSubmitForm}
+          onOpenCustomizerModal={onOpenCustomizerModal}
+        />
+      )}
+
+      {/* 4. MOBILE FIXED BOTTOM TAB BAR (Native App Ergonomics on Phones <768px) */}
+      <nav
+        aria-label="Thanh điều hướng di động"
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgba(15,23,42,0.06)]"
+      >
+        <div className="grid grid-cols-4 gap-1 max-w-md mx-auto">
+          {navItems.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeMainTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveMainTab(tab.id)}
+                className={`py-1.5 px-1 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer ${
+                  isActive
+                    ? 'text-[#F05A28] font-extrabold'
+                    : 'text-slate-500 font-semibold hover:text-slate-800'
+                }`}
+              >
+                <Icon size={19} strokeWidth={isActive ? 2.5 : 2} />
+                <span className="text-[11px] leading-tight">{tab.mobileLabel}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </section>
   );
 }

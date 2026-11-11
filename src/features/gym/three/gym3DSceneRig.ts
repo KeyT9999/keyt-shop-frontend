@@ -15,12 +15,12 @@ export const REGISTERED_BLENDER_GLB_EXERCISES = new Set<string>([]);
 
 const glbBufferCache = new Map<string, Promise<ArrayBuffer>>();
 
-const COLOR_NEUTRAL = new THREE.Color(0xcbd5e1);
-const COLOR_JOINT = new THREE.Color(0x475569);
-const COLOR_PRIMARY_FEMALE = new THREE.Color(0xff5c8a);
-const COLOR_PRIMARY_MALE = new THREE.Color(0x38bdf8);
-const COLOR_SECONDARY = new THREE.Color(0xa3f77b);
-const COLOR_EQUIP_METAL = new THREE.Color(0xe2e8f0);
+const COLOR_NEUTRAL = new THREE.Color(0x64748b);
+const COLOR_JOINT = new THREE.Color(0x334155);
+const COLOR_PRIMARY_FEMALE = new THREE.Color(0xf05a28);
+const COLOR_PRIMARY_MALE = new THREE.Color(0xf05a28);
+const COLOR_SECONDARY = new THREE.Color(0xf59e0b);
+const COLOR_EQUIP_METAL = new THREE.Color(0x94a3b8);
 const COLOR_EQUIP_PLATE = new THREE.Color(0x1e293b);
 const COLOR_BENCH_PAD = new THREE.Color(0x334155);
 

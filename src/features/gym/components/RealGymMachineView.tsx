@@ -13,14 +13,14 @@ export default function RealGymMachineView({
   if (!exercise.realGymPhoto) return null;
 
   return (
-    <div className="relative h-56 sm:h-76 w-full rounded-2xl overflow-hidden border border-slate-800 bg-[#0B1220] shadow-sm select-none">
+    <div className="relative h-48 sm:h-64 w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 select-none">
       {/* Subtle blurred ambient backdrop so portrait gym photos fill wide viewports cleanly */}
       <img
         src={exercise.realGymPhoto}
         alt=""
         aria-hidden="true"
         loading="lazy"
-        className="absolute inset-0 w-full h-full object-cover blur-xl scale-110 opacity-35 pointer-events-none"
+        className="absolute inset-0 w-full h-full object-cover blur-xl scale-110 opacity-30 pointer-events-none"
       />
 
       {/* Full uncropped machine photo */}
@@ -33,10 +33,10 @@ export default function RealGymMachineView({
 
       {/* Top badge */}
       <div className="pointer-events-none absolute top-2.5 left-2.5 right-2.5 z-20 flex items-center justify-between gap-2">
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-slate-700/80 shadow-xs">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/92 backdrop-blur-md border border-slate-200/90 shadow-xs">
           <MapPin size={12} className="text-[#F05A28] shrink-0" />
-          <span className="text-[11px] sm:text-xs font-extrabold text-white truncate">
-            Máy thực tế tại phòng Gym của bạn
+          <span className="text-[11px] sm:text-xs font-bold text-slate-800 truncate">
+            Máy thật tại phòng Gym
           </span>
         </div>
 
@@ -44,18 +44,18 @@ export default function RealGymMachineView({
           <button
             type="button"
             onClick={onSwitchTo3D}
-            className="pointer-events-auto px-2.5 py-1 rounded-xl bg-[#F05A28] hover:bg-orange-600 text-white text-[11px] sm:text-xs font-extrabold inline-flex items-center gap-1 shadow-xs transition-colors duration-150 cursor-pointer shrink-0"
+            className="pointer-events-auto px-2.5 py-1 rounded-full bg-[#1E293B] hover:bg-slate-800 text-white text-[11px] sm:text-xs font-bold inline-flex items-center gap-1 shadow-xs transition-colors duration-150 cursor-pointer shrink-0"
           >
             <Rotate3d size={12} />
-            <span>Xem 3D</span>
+            <span>Xoay 3D</span>
           </button>
         )}
       </div>
 
       {/* Bottom machine placard caption */}
       <div className="pointer-events-none absolute bottom-2 left-2.5 right-2.5 z-20">
-        <div className="px-2.5 py-1.5 rounded-xl bg-slate-900/88 backdrop-blur-md border border-slate-700/80 flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-100 font-bold">
-          <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+        <div className="px-2.5 py-1.5 rounded-xl bg-white/92 backdrop-blur-md border border-slate-200/90 flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-800 font-semibold shadow-xs">
+          <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
           <span className="truncate">{exercise.machineName}</span>
         </div>
       </div>

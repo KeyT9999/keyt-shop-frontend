@@ -50,13 +50,13 @@ interface GymAiCoachDrawerProps {
 }
 
 const MALE_SUGGESTIONS_VI = [
-  'Dựa vào chiều cao, cân nặng và số đo Ngực/Bụng/Tay mình vừa nhập, hôm nay nên tập mức tạ nào?',
+  'Dựa vào chiều cao, cân nặng và số đo Ngực/Bụng/Tay của mình, hôm nay nên tập mức tạ nào?',
   'Đi ăn ngoài (cơm tấm, phở bò, bún thịt nướng) thì gọi thế nào để đủ Đạm mà không tích mỡ bụng?',
   'Làm sao để đẩy ngực vào đúng ngực trên mà không bị mỏi khớp vai trước?',
 ];
 
 const FEMALE_SUGGESTIONS_VI = [
-  'Dựa vào chiều cao, cân nặng, số đo Eo/Mông và pha chu kỳ mình vừa nhập, hôm nay nên tập thế nào?',
+  'Dựa vào chiều cao, cân nặng, số đo Eo/Mông và pha chu kỳ của mình, hôm nay nên tập thế nào?',
   'Đi ăn ngoài (phở gà, bún thịt nướng, cơm văn phòng) thì ăn sao để nuôi vòng 3 mà giữ eo thon?',
   'Mình muốn độ mông đào mà không bị to đùi trước, cần lưu ý kỹ thuật gì ở bài đang xem?',
 ];
@@ -78,7 +78,7 @@ function buildLocalFallbackCoachAnswer(
     const waist = userProfile.waistCm || 78;
     const arm = userProfile.armCm || 35;
     return [
-      `Dựa trên thông tin bạn vừa nhập (**Nam • ${userProfile.heightCm}cm • ${userProfile.weightKg}kg • BMI ${bmi}**, Ngực **${chest}cm** • Bụng **${waist}cm** • Bắp tay **${arm}cm**):`,
+      `Dựa trên thông tin của bạn (**Nam • ${userProfile.heightCm}cm • ${userProfile.weightKg}kg • BMI ${bmi}**, Ngực **${chest}cm** • Bụng **${waist}cm** • Bắp tay **${arm}cm**):`,
       `• **Bài tập & Mức tạ (${currentExercise.vietnameseName}):** Thực hiện **${currentExercise.sets} hiệp × ${currentExercise.reps} lần**, hạ tạ chậm 2–3 giây để tối ưu kích thích cơ.`,
       `• **Ăn uống theo chỉ số của bạn:** Mục tiêu **${targetKcal} kcal/ngày** và **${proteinGrams}g Đạm/ngày** (chia đều 4 bữa: ức gà, thăn bò nạc, cá, trứng; ăn ngoài chọn phở bò tái nạc hoặc cơm tấm sườn nạc bỏ mỡ hành).`,
       `• **Trả lời "${question.slice(0, 60)}":** Giữ lưng dưới áp sát ghế đệm, hạ bả vai, thở ra khi phát lực đẩy/kéo và nghỉ ${currentExercise.restSeconds}s giữa các hiệp.`,
@@ -87,7 +87,7 @@ function buildLocalFallbackCoachAnswer(
 
   const whr = ((userProfile.waistCm || 63) / (userProfile.hipCm || 92)).toFixed(2);
   return [
-    `Dựa trên thông tin bạn vừa nhập (**Nữ • ${userProfile.heightCm}cm • ${userProfile.weightKg}kg • BMI ${bmi}**, Eo **${userProfile.waistCm}cm** • Mông **${userProfile.hipCm}cm** • WHR **${whr}**, **${cycleStatus.phaseShortVi}**):`,
+    `Dựa trên thông tin của bạn (**Nữ • ${userProfile.heightCm}cm • ${userProfile.weightKg}kg • BMI ${bmi}**, Eo **${userProfile.waistCm}cm** • Mông **${userProfile.hipCm}cm** • WHR **${whr}**, **${cycleStatus.phaseShortVi}**):`,
     cycleStatus.isDeloadRecommended
       ? `• **Điều chỉnh theo Chu kỳ:** Hôm nay nên **giảm 15–20% mức tạ (Deload)**, ưu tiên bài cô lập mông nhẹ nhàng và tránh nén ổ bụng.`
       : `• **Bài tập & Mức tạ (${currentExercise.vietnameseName}):** Tập **${currentExercise.sets} hiệp × ${currentExercise.reps} lần**, dồn lực qua gót chân và giữ đỉnh co cơ mông 1 giây để ăn vào vòng 3 mà không to đùi trước.`,
@@ -96,8 +96,9 @@ function buildLocalFallbackCoachAnswer(
 }
 
 /**
- * Floating bottom-right corner AI Chat Dock (modeled after ZiweiChat in /tu-vi)
- * that reads the user's live entered metrics, PRs, and workout history (Nam / Nữ).
+ * Clean Light Sport AI Coach Panel.
+ * On mobile (<640px), the floating trigger button is hidden when closed so it never
+ * covers the Bottom Tab Bar (users open AI Coach directly from the Top App Header).
  */
 export default function GymAiCoachDrawer({
   open,
@@ -278,7 +279,7 @@ export default function GymAiCoachDrawer({
       ref={dockRef}
       style={{
         bottom: 'calc(max(1rem, env(safe-area-inset-bottom)) + var(--gym-chat-kb, 0px))',
-        right: 'max(1rem, env(safe-area-inset-right))',
+        right: 'max(0.75rem, env(safe-area-inset-right))',
       }}
       className="fixed z-50"
       onKeyDown={(e) => {
@@ -292,35 +293,24 @@ export default function GymAiCoachDrawer({
         <section
           role="dialog"
           aria-label="Hỏi AI Coach về thông tin thể trạng của bạn"
-          className="w-[min(25rem,calc(100vw-1.5rem))] h-[min(33rem,calc(100dvh-2rem))] rounded-2xl border border-[#2E2E3D] bg-[#15151C] text-[#F7F7F7] shadow-2xl flex flex-col overflow-hidden"
+          className="w-[min(25rem,calc(100vw-1.5rem))] h-[min(33rem,calc(100dvh-2.5rem))] rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-2xl flex flex-col overflow-hidden"
         >
-          {/* Corner Chat Header */}
-          <header
-            className={`px-3.5 py-2.5 flex items-center justify-between gap-2 border-b border-[#272734] ${
-              isMale ? 'bg-[#102329]' : 'bg-[#28131B]'
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <MessageCircle
-                size={18}
-                className={isMale ? 'text-[#5CE1E6] shrink-0' : 'text-[#FF5C8A] shrink-0'}
-              />
+          {/* Clean Navy Sport Header */}
+          <header className="px-4 py-3 flex items-center justify-between gap-2 bg-[#1E293B] text-white">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-[#F05A28] text-white flex items-center justify-center shrink-0">
+                <MessageCircle size={17} />
+              </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h2 className="text-xs sm:text-sm font-black text-[#F7F7F7] truncate">
-                    KeyT Neon AI Coach
+                  <h2 className="text-xs sm:text-sm font-extrabold text-white truncate">
+                    KeyT AI Coach
                   </h2>
-                  <span
-                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-black shrink-0 ${
-                      isMale
-                        ? 'bg-[#5CE1E6]/20 text-[#5CE1E6]'
-                        : 'bg-[#FF5C8A]/20 text-[#FF5C8A]'
-                    }`}
-                  >
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/15 text-white shrink-0">
                     {isMale ? 'Nam' : 'Nữ'}
                   </span>
                 </div>
-                <div className="text-[10px] font-bold text-zinc-300 truncate">
+                <div className="text-[10px] font-medium text-slate-300 truncate">
                   {isMale
                     ? `${userProfile.heightCm}cm • ${userProfile.weightKg}kg • Ngực/Bụng/Tay: ${userProfile.chestCm ?? 96}/${userProfile.waistCm}/${userProfile.armCm ?? 35}cm`
                     : `${userProfile.heightCm}cm • ${userProfile.weightKg}kg • Eo/Mông: ${userProfile.waistCm}/${userProfile.hipCm}cm • ${cycleStatus.phaseShortVi}`}
@@ -335,7 +325,7 @@ export default function GymAiCoachDrawer({
                   onClick={onClearHistory}
                   title="Xóa đoạn chat"
                   aria-label="Xóa đoạn chat"
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-rose-400 hover:bg-white/10 cursor-pointer"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-rose-300 hover:bg-white/10 cursor-pointer"
                 >
                   <Trash2 size={15} />
                 </button>
@@ -344,7 +334,7 @@ export default function GymAiCoachDrawer({
                 type="button"
                 onClick={onClose}
                 aria-label="Thu gọn chat"
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/10 cursor-pointer"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -356,20 +346,20 @@ export default function GymAiCoachDrawer({
             ref={logRef}
             role="log"
             aria-label="Cuộc trò chuyện với AI Coach"
-            className="flex-1 overflow-y-auto p-3 space-y-2.5 text-xs sm:text-[13px]"
+            className="flex-1 overflow-y-auto p-3.5 space-y-2.5 text-xs sm:text-[13px] bg-slate-50/70"
           >
             {chatHistory.length === 0 && (
               <div className="space-y-2">
-                <p className="text-xs text-zinc-400">
-                  AI đã nạp chỉ số bạn vừa nhập ({userProfile.heightCm}cm, {userProfile.weightKg}kg, mục tiêu{' '}
-                  <strong className="text-[#F7F7F7]">{livePlan.goalLabelVi}</strong>). Chọn câu hỏi hoặc nhập bên dưới:
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Huấn luyện viên AI đã đọc chỉ số của bạn ({userProfile.heightCm}cm, {userProfile.weightKg}kg, mục tiêu{' '}
+                  <strong className="text-slate-900">{livePlan.goalLabelVi}</strong>). Chọn gợi ý bên dưới hoặc đặt câu hỏi:
                 </p>
                 {suggestions.map((q) => (
                   <button
                     key={q}
                     type="button"
                     onClick={() => void handleSendQuestion(q)}
-                    className="w-full text-left p-2.5 rounded-xl bg-[#1E1E28] hover:bg-[#272735] border border-[#2E2E3C] text-xs font-semibold text-zinc-200 transition cursor-pointer"
+                    className="w-full text-left p-3 rounded-2xl bg-white hover:bg-orange-50/50 border border-slate-200 hover:border-orange-200 text-xs font-semibold text-slate-800 transition-colors cursor-pointer shadow-2xs"
                   >
                     {q}
                   </button>
@@ -380,12 +370,10 @@ export default function GymAiCoachDrawer({
             {chatHistory.map((msg) => (
               <div
                 key={msg.id}
-                className={`p-2.5 rounded-xl leading-relaxed whitespace-pre-line ${
+                className={`p-3 rounded-2xl leading-relaxed whitespace-pre-line ${
                   msg.role === 'user'
-                    ? isMale
-                      ? 'ml-6 bg-[#5CE1E6] text-[#111114] font-bold'
-                      : 'ml-6 bg-[#FF5C8A] text-[#111114] font-bold'
-                    : 'mr-3 bg-[#1E1E28] border border-[#2D2D3B] text-zinc-100'
+                    ? 'ml-6 bg-[#1E293B] text-white font-semibold'
+                    : 'mr-3 bg-white border border-slate-200 text-slate-800 shadow-2xs'
                 }`}
               >
                 {msg.content}
@@ -395,13 +383,10 @@ export default function GymAiCoachDrawer({
             {isLoading && (
               <div
                 role="status"
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1E1E28] border border-[#2D2D3B] text-xs text-zinc-300"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-white border border-slate-200 text-xs text-slate-600 shadow-2xs"
               >
-                <Loader2
-                  size={14}
-                  className={`animate-spin ${isMale ? 'text-[#5CE1E6]' : 'text-[#FF5C8A]'}`}
-                />
-                <span>AI đang suy nghĩ từ chỉ số của bạn…</span>
+                <Loader2 size={14} className="animate-spin text-[#F05A28]" />
+                <span>AI đang phân tích từ chỉ số của bạn…</span>
               </div>
             )}
           </div>
@@ -412,7 +397,7 @@ export default function GymAiCoachDrawer({
               e.preventDefault();
               void handleSendQuestion(input);
             }}
-            className="p-2.5 border-t border-[#272734] bg-[#111114] flex items-center gap-2"
+            className="p-2.5 border-t border-slate-200 bg-white flex items-center gap-2"
           >
             <input
               ref={inputRef}
@@ -421,19 +406,13 @@ export default function GymAiCoachDrawer({
               onChange={(e) => setInput(e.target.value)}
               placeholder="Hỏi về bài tập, mức tạ, ăn uống…"
               aria-label="Câu hỏi cho AI Coach"
-              className={`flex-1 min-w-0 px-3 py-2 rounded-xl bg-[#1B1B24] border border-[#2E2E3C] text-xs sm:text-sm text-[#F7F7F7] placeholder:text-zinc-500 focus:outline-none ${
-                isMale ? 'focus:border-[#5CE1E6]' : 'focus:border-[#FF5C8A]'
-              }`}
+              className="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-[#F05A28]"
             />
             <button
               type="submit"
               disabled={isLoading || !input.trim()}
               aria-label="Gửi câu hỏi"
-              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition cursor-pointer disabled:opacity-50 ${
-                isMale
-                  ? 'bg-[#5CE1E6] text-[#111114]'
-                  : 'bg-[#FF5C8A] text-[#111114]'
-              }`}
+              className="w-10 h-10 rounded-xl bg-[#F05A28] hover:bg-[#d94d1f] text-white flex items-center justify-center shrink-0 transition-colors cursor-pointer disabled:opacity-40"
             >
               <Send size={16} />
             </button>
@@ -445,14 +424,10 @@ export default function GymAiCoachDrawer({
           aria-haspopup="dialog"
           aria-expanded={false}
           onClick={() => onOpen?.()}
-          className={`min-h-12 px-4 py-2.5 rounded-full font-black text-xs sm:text-sm flex items-center gap-2 shadow-2xl border transition-transform hover:scale-105 cursor-pointer ${
-            isMale
-              ? 'bg-[#5CE1E6] text-[#111114] border-[#5CE1E6]/50 shadow-[#5CE1E6]/30'
-              : 'bg-[#FF5C8A] text-[#111114] border-[#FF5C8A]/50 shadow-[#FF5C8A]/30'
-          }`}
+          className="hidden sm:inline-flex min-h-11 px-4 py-2.5 rounded-full bg-[#1E293B] hover:bg-slate-800 text-white font-bold text-xs sm:text-sm items-center gap-2 shadow-lg border border-slate-700 transition-colors cursor-pointer"
         >
-          <MessageCircle size={19} aria-hidden="true" />
-          <span>Hỏi AI ({userProfile.heightCm}cm • {userProfile.weightKg}kg)</span>
+          <MessageCircle size={17} className="text-[#F05A28]" aria-hidden="true" />
+          <span>Hỏi AI Coach</span>
         </button>
       )}
     </div>

@@ -23,7 +23,6 @@ import {
   BookMarked,
   Layers,
   ArrowRight,
-  Search,
   Flame,
   Video,
   Dumbbell,
@@ -38,11 +37,6 @@ import { useAuthContext } from '../context/useAuthContext';
 import logo from '../assets/logo.png';
 import './Header.css';
 
-interface HeaderProps {
-  onSearch: (query: string) => void;
-  searchValue: string;
-}
-
 interface SubMenuItem {
   title: string;
   desc: string;
@@ -53,7 +47,7 @@ interface SubMenuItem {
   badge?: string;
 }
 
-export default function Header({ onSearch, searchValue }: HeaderProps) {
+export default function Header() {
   const { user, logout } = useAuthContext();
   const location = useLocation();
   const navigate = useNavigate();
@@ -1093,18 +1087,6 @@ export default function Header({ onSearch, searchValue }: HeaderProps) {
           >
             <X size={20} />
           </button>
-        </div>
-
-        {/* Mobile Search */}
-        <div className="mobile-search-box">
-          <Search size={16} className="text-slate-400" />
-          <input
-            type="text"
-            aria-label="Tìm kiếm sản phẩm, dịch vụ"
-            placeholder="Tìm kiếm sản phẩm, dịch vụ..."
-            value={searchValue}
-            onChange={(e) => onSearch(e.target.value)}
-          />
         </div>
 
         <div className="mobile-drawer-content">

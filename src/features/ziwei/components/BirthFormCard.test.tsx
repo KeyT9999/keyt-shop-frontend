@@ -69,7 +69,40 @@ describe('BirthFormCard with BirthDatePicker and BirthTimePicker', () => {
     expect(screen.getAllByText('21/07/2004')).toHaveLength(2);
   });
 
-  it('converts cleanly to Lunar calendar and allows selecting a lunar day', () => {
+  it('updates selected year and month immediately when changing dropdowns without re-clicking the day', () => {
+    render(
+      <StatefulBirthFormHarness
+        initial={{ ...INITIAL_FORM, year: '1998', month: '9', day: '13' }}
+      />
+    );
+
+    const dateTrigger = screen.getByRole('button', { name: /Ngày sinh Đương Số Bên A/i });
+    expect(dateTrigger.textContent).toContain('13/09/1998');
+
+    fireEvent.click(dateTrigger);
+    // Change Year dropdown 1998 -> 2004 directly
+    const yearSelect = screen.getByRole('combobox', { name: /năm|year/i });
+    fireEvent.change(yearSelect, { target: { value: '2004' } });
+
+    // Trigger and popover header immediately show 13/09/2004
+    expect(dateTrigger.textContent).toContain('13/09/2004');
+    expect(screen.getAllByText('13/09/2004').length).toBeGreaterThanOrEqual(2);
+
+    // Clamp check: pick day 31 in Oct 2003 then switch month to Feb -> 28/02/2003
+    fireEvent.change(yearSelect, { target: { value: '2003' } });
+    const monthSelect = screen.getByRole('combobox', { name: /tháng|month/i });
+    fireEvent.change(monthSelect, { target: { value: '9' } }); // 0-indexed Oct
+    const dialogGrid = screen.getByRole('grid');
+    fireEvent.click(within(dialogGrid).getByRole('button', { name: /31/ }));
+    expect(dateTrigger.textContent).toContain('31/10/2003');
+
+    fireEvent.click(dateTrigger);
+    const monthSelectAgain = screen.getByRole('combobox', { name: /tháng|month/i });
+    fireEvent.change(monthSelectAgain, { target: { value: '1' } }); // 0-indexed Feb
+    expect(dateTrigger.textContent).toContain('28/02/2003');
+  });
+
+  it('converts cleanly to Lunar calendar and updates immediately when changing lunar year/month/day', () => {
     render(<StatefulBirthFormHarness />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Âm Lịch' }));
@@ -79,10 +112,14 @@ describe('BirthFormCard with BirthDatePicker and BirthTimePicker', () => {
     expect(dateTrigger.textContent).toContain('Âm');
 
     fireEvent.click(dateTrigger);
+    const lunarYearSelect = screen.getByLabelText('Chọn năm Âm lịch');
+    fireEvent.change(lunarYearSelect, { target: { value: '1999' } });
+    expect(dateTrigger.textContent).toContain('15/05/1999');
+
     const lunarGrid = screen.getByRole('grid', { name: /Ngày Âm lịch/i });
     fireEvent.click(within(lunarGrid).getByRole('button', { name: '20' }));
 
-    expect(dateTrigger.textContent).toContain('20/05/2004');
+    expect(dateTrigger.textContent).toContain('20/05/1999');
   });
 
   it('updates visible time via 24h columns, 12 Canh Giờ tab, and unknownTime toggle', () => {

@@ -3,7 +3,7 @@ import * as Popover from '@radix-ui/react-popover';
 import { DayPicker } from 'react-day-picker';
 import { vi } from 'react-day-picker/locale';
 import 'react-day-picker/style.css';
-import { Calendar, ChevronDown, Moon, Sun } from 'lucide-react';
+import { Calendar, Check, ChevronDown, Moon, Sun } from 'lucide-react';
 import {
   leapMonthOfLunarYear,
   lunarMonthDayCount,
@@ -15,6 +15,7 @@ import {
   BIRTH_YEAR_MAX,
   BIRTH_YEAR_MIN,
   formatBirthDateDisplay,
+  getSolarMonthDayCount,
   getYearGanZhiVi,
   normalizeBirthDate,
   type NormalizedBirthDate,
@@ -47,11 +48,8 @@ interface LunarMonthOption {
 
 interface LunarCalendarPanelProps {
   selected: NormalizedBirthDate;
-  viewYear: number;
-  viewMonth: number;
-  viewLeap: boolean;
-  onViewChange: (year: number, month: number, isLeap: boolean) => void;
-  onSelectDay: (year: number, month: number, day: number, isLeap: boolean) => void;
+  onSyncDate: (year: number, month: number, day: number, isLeap: boolean, closePopover: boolean) => void;
+  onClose: () => void;
 }
 
 const SOLAR_START_MONTH = new Date(BIRTH_YEAR_MIN, 0, 1);
@@ -84,18 +82,11 @@ function buildLunarMonthOptions(year: number): LunarMonthOption[] {
   return options;
 }
 
-function LunarCalendarPanel({
-  selected,
-  viewYear,
-  viewMonth,
-  viewLeap,
-  onViewChange,
-  onSelectDay,
-}: LunarCalendarPanelProps) {
-  const monthOptions = useMemo(() => buildLunarMonthOptions(viewYear), [viewYear]);
+function LunarCalendarPanel({ selected, onSyncDate, onClose }: LunarCalendarPanelProps) {
+  const monthOptions = useMemo(() => buildLunarMonthOptions(selected.year), [selected.year]);
   const dayCount = useMemo(
-    () => lunarMonthDayCount(viewYear, viewMonth, viewLeap) || 29,
-    [viewYear, viewMonth, viewLeap]
+    () => lunarMonthDayCount(selected.year, selected.month, selected.isLeapMonth) || 29,
+    [selected.year, selected.month, selected.isLeapMonth]
   );
 
   const solarEquivalent = useMemo(
@@ -103,18 +94,21 @@ function LunarCalendarPanel({
     [selected.year, selected.month, selected.day, selected.isLeapMonth]
   );
 
-  const selectedMonthKey = `${viewMonth}-${viewLeap ? 1 : 0}`;
+  const selectedMonthKey = `${selected.month}-${selected.isLeapMonth ? 1 : 0}`;
 
   const handleYearChange = (nextYear: number) => {
-    const nextLeap = viewLeap && leapMonthOfLunarYear(nextYear) === viewMonth;
-    onViewChange(nextYear, viewMonth, nextLeap);
+    const nextLeap = selected.isLeapMonth && leapMonthOfLunarYear(nextYear) === selected.month;
+    const maxDay = lunarMonthDayCount(nextYear, selected.month, nextLeap) || 29;
+    const clampedDay = Math.min(selected.day, maxDay);
+    onSyncDate(nextYear, selected.month, clampedDay, nextLeap, false);
   };
 
   const handleMonthChange = (key: string) => {
     const found = monthOptions.find((item) => item.key === key);
-    if (found) {
-      onViewChange(viewYear, found.month, found.isLeap);
-    }
+    if (!found) return;
+    const maxDay = lunarMonthDayCount(selected.year, found.month, found.isLeap) || 29;
+    const clampedDay = Math.min(selected.day, maxDay);
+    onSyncDate(selected.year, found.month, clampedDay, found.isLeap, false);
   };
 
   return (
@@ -152,7 +146,7 @@ function LunarCalendarPanel({
 
         <select
           aria-label="Chọn năm Âm lịch"
-          value={viewYear}
+          value={selected.year}
           onChange={(e) => handleYearChange(Number(e.target.value))}
           className="ziwei-popover-select"
         >
@@ -166,17 +160,13 @@ function LunarCalendarPanel({
 
       <div className="grid grid-cols-7 gap-1 px-3 py-2" role="grid" aria-label="Ngày Âm lịch">
         {Array.from({ length: dayCount }, (_, index) => index + 1).map((d) => {
-          const isSelected =
-            selected.year === viewYear &&
-            selected.month === viewMonth &&
-            selected.isLeapMonth === viewLeap &&
-            selected.day === d;
+          const isSelected = selected.day === d;
 
           return (
             <button
               key={d}
               type="button"
-              onClick={() => onSelectDay(viewYear, viewMonth, d, viewLeap)}
+              onClick={() => onSyncDate(selected.year, selected.month, d, selected.isLeapMonth, true)}
               aria-pressed={isSelected}
               className={`ziwei-lunar-day-btn ${isSelected ? 'is-selected' : ''}`}
             >
@@ -188,17 +178,22 @@ function LunarCalendarPanel({
 
       <div className="ziwei-popover-footer">
         <span className="text-[11px] text-[#6b583f]">
-          Tháng {viewMonth}
-          {viewLeap ? ' nhuận' : ''} năm {getYearGanZhiVi(viewYear)} có {dayCount} ngày
+          Tháng {selected.month}
+          {selected.isLeapMonth ? ' nhuận' : ''} có {dayCount} ngày
         </span>
+        <button type="button" onClick={onClose} className="ziwei-popover-done-btn">
+          <Check size={13} aria-hidden="true" />
+          <span>Xong</span>
+        </button>
       </div>
     </div>
   );
 }
 
 /**
- * Bộ chọn ngày sinh Dương lịch (react-day-picker v10 + Radix Popover) & Âm lịch
- * Hiển thị đầy đủ DD/MM/YYYY dạng tabular-nums không bao giờ bị cắt chữ trên form hẹp.
+ * Bộ chọn ngày sinh Dương lịch (react-day-picker v10 + Radix Popover) & Âm lịch.
+ * Đổi tháng/năm cập nhật ngay ngày đang chọn (kèm tự clamp ngày cuối tháng hợp lệ)
+ * để người dùng chọn theo bất kỳ thứ tự nào (ngày → tháng → năm hoặc năm → tháng → ngày) đều khớp tức thì.
  */
 export default function BirthDatePicker({
   id,
@@ -216,18 +211,15 @@ export default function BirthDatePicker({
   );
 
   const [open, setOpen] = useState(false);
-  const [displayMonth, setDisplayMonth] = useState<Date>(
-    () => new Date(normalized.year, normalized.month - 1, 1)
-  );
-  const [lunarView, setLunarView] = useState({
-    year: normalized.year,
-    month: normalized.month,
-    isLeap: normalized.isLeapMonth,
-  });
 
   const selectedSolarDate = useMemo(
     () => new Date(normalized.year, normalized.month - 1, normalized.day),
     [normalized.year, normalized.month, normalized.day]
+  );
+
+  const displayedSolarMonth = useMemo(
+    () => new Date(normalized.year, normalized.month - 1, 1),
+    [normalized.year, normalized.month]
   );
 
   const lunarPreviewForSolar = useMemo(() => {
@@ -235,50 +227,61 @@ export default function BirthDatePicker({
     return solarToLunar(normalized.year, normalized.month, normalized.day);
   }, [normalized]);
 
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (nextOpen) {
-      setDisplayMonth(new Date(normalized.year, normalized.month - 1, 1));
-      setLunarView({
-        year: normalized.year,
-        month: normalized.month,
-        isLeap: normalized.isLeapMonth,
-      });
-    }
-    setOpen(nextOpen);
+  const handleSolarMonthChange = (nextMonth: Date) => {
+    const nextYear = nextMonth.getFullYear();
+    const nextMonthNum = nextMonth.getMonth() + 1;
+    const maxDay = getSolarMonthDayCount(nextYear, nextMonthNum);
+    const clampedDay = Math.min(normalized.day, maxDay);
+
+    onChange({
+      year: String(nextYear),
+      month: String(nextMonthNum),
+      day: String(clampedDay),
+      isLeapMonth: false,
+    });
   };
 
   const handleSolarSelect = (picked: Date | undefined) => {
-    if (!picked) return;
+    if (!picked) {
+      setOpen(false);
+      return;
+    }
     onChange({
       year: String(picked.getFullYear()),
       month: String(picked.getMonth() + 1),
       day: String(picked.getDate()),
       isLeapMonth: false,
     });
-    setDisplayMonth(new Date(picked.getFullYear(), picked.getMonth(), 1));
     setOpen(false);
   };
 
   const handlePickToday = () => {
-    const today = new Date();
-    handleSolarSelect(today);
+    handleSolarSelect(new Date());
   };
 
-  const handleLunarSelect = (y: number, m: number, d: number, isLeap: boolean) => {
+  const handleLunarSync = (
+    y: number,
+    m: number,
+    d: number,
+    isLeap: boolean,
+    closePopover: boolean
+  ) => {
     onChange({
       year: String(y),
       month: String(m),
       day: String(d),
       isLeapMonth: isLeap,
     });
-    setOpen(false);
+    if (closePopover) {
+      setOpen(false);
+    }
   };
 
   const formattedDate = formatBirthDateDisplay(normalized);
   const isLunar = normalized.calendarType === 'lunar';
 
   return (
-    <Popover.Root open={open} onOpenChange={handleOpenChange}>
+    <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
         <button
           id={id}
@@ -298,9 +301,7 @@ export default function BirthDatePicker({
           </span>
 
           <span className="inline-flex items-center gap-1.5 shrink-0">
-            <span
-              className={`ziwei-picker-tag ${isLunar ? 'is-lunar' : 'is-solar'}`}
-            >
+            <span className={`ziwei-picker-tag ${isLunar ? 'is-lunar' : 'is-solar'}`}>
               {isLunar ? (
                 <>
                   <Moon size={10} aria-hidden="true" />
@@ -335,11 +336,8 @@ export default function BirthDatePicker({
           {isLunar ? (
             <LunarCalendarPanel
               selected={normalized}
-              viewYear={lunarView.year}
-              viewMonth={lunarView.month}
-              viewLeap={lunarView.isLeap}
-              onViewChange={(y, m, isLeap) => setLunarView({ year: y, month: m, isLeap })}
-              onSelectDay={handleLunarSelect}
+              onSyncDate={handleLunarSync}
+              onClose={() => setOpen(false)}
             />
           ) : (
             <div>
@@ -364,11 +362,12 @@ export default function BirthDatePicker({
               <div className="px-2.5 pt-2 pb-1">
                 <DayPicker
                   mode="single"
+                  required
                   locale={vi}
                   selected={selectedSolarDate}
                   onSelect={handleSolarSelect}
-                  month={displayMonth}
-                  onMonthChange={setDisplayMonth}
+                  month={displayedSolarMonth}
+                  onMonthChange={handleSolarMonthChange}
                   captionLayout="dropdown"
                   navLayout="around"
                   reverseYears
@@ -384,15 +383,20 @@ export default function BirthDatePicker({
               </div>
 
               <div className="ziwei-popover-footer">
-                <span className="text-[11px] text-[#6b583f]">
-                  Chọn tháng/năm rồi chạm ngày
-                </span>
                 <button
                   type="button"
                   onClick={handlePickToday}
                   className="ziwei-popover-link-btn"
                 >
                   Hôm nay
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="ziwei-popover-done-btn"
+                >
+                  <Check size={13} aria-hidden="true" />
+                  <span>Xong</span>
                 </button>
               </div>
             </div>

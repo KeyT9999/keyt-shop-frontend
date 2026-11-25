@@ -27,6 +27,40 @@ import {
 } from '../utils/gymCycleAndProgressionUtils';
 import { generateGenderWorkoutAndNutritionPlan } from '../utils/gymGenderAdvisorUtils';
 
+import { getWorkoutUiHelp } from '../utils/gymCoachUiHelp';
+
+function formatCoachInline(text: string) {
+  return text.split(/\*\*([^*\n]+)\*\*/g)
+    .map((part, index) => index % 2 === 1 ? <strong key={index}>{part}</strong> : part);
+}
+
+function CoachMessage({ content }: { content: string }) {
+  const groups: { kind: 'ul' | 'ol' | 'text'; lines: string[] }[] = [];
+  for (const raw of content.split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    const bullet = /^[-*•]\s+(.+)$/.exec(line);
+    const numbered = /^\d+[.)]\s+(.+)$/.exec(line);
+    const kind = bullet ? 'ul' : numbered ? 'ol' : 'text';
+    const text = bullet?.[1] ?? numbered?.[1] ?? line;
+    const last = groups.at(-1);
+    if (kind !== 'text' && last?.kind === kind) last.lines.push(text);
+    else groups.push({ kind, lines: [text] });
+  }
+
+  return <div className="space-y-2 break-words">
+    {groups.map(({ kind, lines }, index) => {
+      if (kind === 'text') return <p key={index}>{formatCoachInline(lines[0])}</p>;
+      const Tag = kind;
+      return (
+        <Tag key={index} className={kind === 'ol' ? 'list-decimal space-y-1 pl-5' : 'list-disc space-y-1 pl-5'}>
+          {lines.map((line, lineIndex) => <li key={lineIndex}>{formatCoachInline(line)}</li>)}
+        </Tag>
+      );
+    })}
+  </div>;
+}
+
 interface GymAiCoachDrawerProps {
   open: boolean;
   activeGender?: GymGenderMode;
@@ -231,6 +265,17 @@ export default function GymAiCoachDrawer({
     };
 
     setInput('');
+    const uiAnswer = getWorkoutUiHelp(trimmed, currentExercise.restSeconds);
+    if (uiAnswer) {
+      onAppendMessages([userMsg, {
+        id: 'a_' + userMsg.createdAtMs,
+        role: 'assistant',
+        content: uiAnswer,
+        provider: 'KeyT Smart Coach',
+        createdAtMs: userMsg.createdAtMs,
+      }]);
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -281,7 +326,7 @@ export default function GymAiCoachDrawer({
         bottom: 'calc(max(1rem, env(safe-area-inset-bottom)) + var(--gym-chat-kb, 0px))',
         right: 'max(0.75rem, env(safe-area-inset-right))',
       }}
-      className="fixed z-50"
+      className={open ? "pointer-events-none fixed left-3 z-50 flex justify-end" : "fixed z-50"}
       onKeyDown={(e) => {
         if (open && e.key === 'Escape') {
           e.stopPropagation();
@@ -293,7 +338,7 @@ export default function GymAiCoachDrawer({
         <section
           role="dialog"
           aria-label="Hỏi AI Coach về thông tin thể trạng của bạn"
-          className="w-[min(25rem,calc(100vw-1.5rem))] h-[min(33rem,calc(100dvh-2.5rem))] rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-2xl flex flex-col overflow-hidden"
+          className="pointer-events-auto w-full max-w-[25rem] h-[min(33rem,calc(100dvh-2.5rem))] rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-2xl flex flex-col overflow-hidden"
         >
           {/* Clean Navy Sport Header */}
           <header className="px-4 py-3 flex items-center justify-between gap-2 bg-[#1E293B] text-white">
@@ -376,7 +421,7 @@ export default function GymAiCoachDrawer({
                     : 'mr-3 bg-white border border-slate-200 text-slate-800 shadow-2xs'
                 }`}
               >
-                {msg.content}
+                {msg.role === 'assistant' ? <CoachMessage content={msg.content} /> : msg.content}
               </div>
             ))}
 

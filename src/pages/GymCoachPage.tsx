@@ -18,6 +18,8 @@ import type {
   GymWorkoutHistoryEntry,
 } from '../features/gym/types/gym';
 import { resolveGenderReadinessStatus } from '../features/gym/utils/gymCycleAndProgressionUtils';
+import { getTodayLocalDateKey } from '../features/gym/utils/gymStateUtils';
+import { getExerciseDraftProgress, selectWorkoutSetDrafts } from '../features/gym/utils/gymWorkoutProgress';
 import { generateGenderWorkoutAndNutritionPlan } from '../features/gym/utils/gymGenderAdvisorUtils';
 
 interface GymCoachPageProps {
@@ -32,7 +34,6 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
     state,
     syncStatus,
     selectDay,
-    toggleExerciseDone,
     completeGenderWorkoutSession,
     saveExerciseLog,
     saveCustomSplitDays,
@@ -106,24 +107,19 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
     [activeSessionDay]
   );
 
-  const currentExercise = useMemo(() => {
-    return (
-      currentDayExercises.find((e) => e.id === selectedExerciseId) ||
-      (selectedExerciseId ? GYM_EXERCISE_MAP[selectedExerciseId] : undefined) ||
-      currentDayExercises[0] ||
-      GYM_EXERCISE_CATALOG[0]
-    );
-  }, [currentDayExercises, selectedExerciseId]);
+  const activeDrafts = selectWorkoutSetDrafts(
+    state.workoutSetDrafts, getTodayLocalDateKey(), activeGender, activeSessionDay?.id
+  );
+  const currentExercise =
+    currentDayExercises.find((exercise) => exercise.id === selectedExerciseId) ||
+    currentDayExercises.find((exercise) =>
+      !getExerciseDraftProgress(activeDrafts.find((draft) => draft.exerciseId === exercise.id)).completed
+    ) ||
+    currentDayExercises.at(-1) ||
+    GYM_EXERCISE_CATALOG[0];
 
-  const readinessStatus = useMemo(
-    () =>
-      resolveGenderReadinessStatus(
-        activeGender,
-        state.userProfile,
-        state.cycleTracking,
-        currentExercise
-      ),
-    [activeGender, state.userProfile, state.cycleTracking, currentExercise]
+  const readinessStatus = resolveGenderReadinessStatus(
+    activeGender, state.userProfile, state.cycleTracking, currentExercise
   );
 
   return (
@@ -132,7 +128,7 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
         <GymGenderAdvisorPanel
           key={activeGender}
           activeGender={activeGender}
-          selectedExerciseId={currentExercise.id}
+          selectedExerciseId={selectedExerciseId}
           savedGenderDays={savedGenderDays}
           activeGenderDayId={activeSessionDay?.id}
           syncStatus={syncStatus}
@@ -142,7 +138,7 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
           exerciseLogs={state.exerciseLogs}
           workoutHistory={state.workoutHistory}
           bodyMetricsHistory={state.bodyMetricsHistory}
-          completedIdsToday={state.completedExerciseIdsToday}
+          workoutSetDrafts={state.workoutSetDrafts ?? []}
           onSelectGenderRoute={handleSelectGenderRoute}
           onSelectGenderDay={(dayId) => selectDay(dayId, activeGender)}
           onSaveProfile={saveUserProfile}
@@ -153,7 +149,6 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
           onSelectExerciseFor3D={(exId) => {
             setSelectedExerciseId(exId);
           }}
-          onToggleExerciseDone={toggleExerciseDone}
           onSaveExerciseLog={saveExerciseLog}
           onAddWaterIntakeMl={addWaterIntakeMl}
           onRecordTodayBodyMetrics={() =>
@@ -164,8 +159,10 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
               gender: activeGender,
               ...summary,
             });
-            setCelebrationSession(entry);
-            setProgressOpen(true);
+            if (entry) {
+              setCelebrationSession(entry);
+              setProgressOpen(true);
+            }
           }}
           onOpenSubstituteModal={() => setSubstituteOpen(true)}
           onOpenCustomizerModal={() => setCustomizerOpen(true)}
@@ -206,17 +203,21 @@ export default function GymCoachPage({ genderRoute }: GymCoachPageProps = {}) {
           gender={activeGender}
           currentExercise={currentExercise}
           currentDayExerciseIds={currentDayExercises.map((e) => e.id)}
+          hasLoggedSets={Boolean(activeDrafts.find((draft) =>
+            draft.exerciseId === currentExercise.id
+          )?.sets.some((set) => set.completed))}
           restrictions={state.exerciseRestrictions}
           userProfile={state.userProfile}
           isDeloadOrPeriod={readinessStatus.isDeloadRecommended}
           onClose={() => setSubstituteOpen(false)}
           onSelectSubstitute={(newExId) => {
-            replaceExerciseInActiveDay(currentExercise.id, newExId, {
+            const changed = replaceExerciseInActiveDay(currentExercise.id, newExId, {
               gender: activeGender,
               dayId: activeSessionDay?.id,
               fallbackDays: effectiveGenderDays,
             });
-            setSelectedExerciseId(newExId);
+            if (changed) setSelectedExerciseId(newExId);
+            return changed;
           }}
           onSetRestriction={setExerciseRestriction}
         />

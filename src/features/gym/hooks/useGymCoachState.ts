@@ -12,7 +12,11 @@ import type {
   GymSetDetailItem,
   GymSplitDayConfig,
   GymWorkoutHistoryEntry,
+  GymWorkoutSummary,
 } from '../types/gym';
+import { GYM_EXERCISE_MAP } from '../data/defaultGymCatalog';
+import { sharesGymStation } from '../utils/gymExerciseSubstitutionUtils';
+import { mergeWorkoutSetDrafts, selectWorkoutSetDrafts } from '../utils/gymWorkoutProgress';
 import { computeEstimated1RM } from '../utils/gymCycleAndProgressionUtils';
 import {
   advanceToNextGymSplitDay,
@@ -63,10 +67,6 @@ export function useGymCoachState(token: string | null) {
   const hydratedTokenRef = useRef<string | null>(null);
   const latestStateRef = useRef<GymClientPersistedState>(state);
 
-  useEffect(() => {
-    latestStateRef.current = state;
-  }, [state]);
-
   const scheduleCloudSave = useCallback(
     (nextState: GymClientPersistedState) => {
       if (!token) return;
@@ -107,6 +107,7 @@ export function useGymCoachState(token: string | null) {
           remote,
           getTodayLocalDateKey()
         );
+        latestStateRef.current = merged;
         writePersistedLocalState(merged);
         setState(merged);
 
@@ -133,12 +134,15 @@ export function useGymCoachState(token: string | null) {
 
   const commitUpdate = useCallback(
     (updater: (prev: GymClientPersistedState) => GymClientPersistedState) => {
-      setState((prev) => {
-        const next = updater(prev);
-        writePersistedLocalState(next);
-        scheduleCloudSave(next);
-        return next;
-      });
+      const prev = latestStateRef.current;
+      const updated = updater(prev);
+      if (updated === prev) return false;
+      const next = { ...updated, clientUpdatedAt: Math.max(updated.clientUpdatedAt || 0, (prev.clientUpdatedAt || 0) + 1) };
+      latestStateRef.current = next;
+      writePersistedLocalState(next);
+      setState(next);
+      scheduleCloudSave(next);
+      return true;
     },
     [scheduleCloudSave]
   );
@@ -189,6 +193,7 @@ export function useGymCoachState(token: string | null) {
         setsDetail?: GymSetDetailItem[];
         setsCompletedToday?: number[];
         autoMarkCompleted?: boolean;
+        workout?: { gender: GymGenderMode; dayId: string; goalLabel: string };
       }
     ) => {
       const now = Date.now();
@@ -196,7 +201,22 @@ export function useGymCoachState(token: string | null) {
       commitUpdate((prev) => {
         const prevLog: GymExerciseUserLog | undefined = prev.exerciseLogs[exerciseId];
         const cleanWeight = Math.max(0, Number(weightKg) || 0);
+        const workout = extra?.workout;
         const nextSetsDetail = extra?.setsDetail ?? prevLog?.setsDetail;
+        const updatedAtMs = Math.max(now, (prev.clientUpdatedAt || 0) + 1);
+        const workoutSetDrafts = workout && extra.setsDetail
+          ? mergeWorkoutSetDrafts(prev.workoutSetDrafts, [{
+              dateKey: todayKey,
+              gender: workout.gender,
+              dayId: workout.dayId,
+              exerciseId,
+              goalLabel: workout.goalLabel,
+              sets: extra.setsDetail,
+              startingPrKg: selectWorkoutSetDrafts(prev.workoutSetDrafts, todayKey, workout.gender, workout.dayId)
+                .find((draft) => draft.exerciseId === exerciseId)?.startingPrKg ?? prevLog?.personalRecordKg ?? 0,
+              updatedAtMs,
+            }], prev.workoutHistory ?? [], todayKey)
+          : prev.workoutSetDrafts;
         const nextCompletedSets =
           extra?.setsCompletedToday ??
           (nextSetsDetail
@@ -217,18 +237,17 @@ export function useGymCoachState(token: string | null) {
 
         const personalRecordKg = Math.max(
           prevLog?.personalRecordKg || 0,
-          prevLog?.weightKg || 0,
-          cleanWeight,
+          workout ? 0 : Math.max(prevLog?.weightKg || 0, cleanWeight),
           maxSetW
         );
         const estimated1RM = Math.max(
           prevLog?.estimated1RM || 0,
-          computeEstimated1RM(cleanWeight, 10),
+          workout ? 0 : computeEstimated1RM(cleanWeight, 10),
           maxSet1RM
         );
 
         const nextCompletedExIds =
-          extra?.autoMarkCompleted && !prev.completedExerciseIdsToday.includes(exerciseId)
+          !workout && extra?.autoMarkCompleted && !prev.completedExerciseIdsToday.includes(exerciseId)
             ? [...prev.completedExerciseIdsToday, exerciseId]
             : prev.completedExerciseIdsToday;
 
@@ -236,7 +255,8 @@ export function useGymCoachState(token: string | null) {
           ...prev,
           completedExerciseIdsToday: nextCompletedExIds,
           sessionDateKey: todayKey,
-          clientUpdatedAt: now,
+          clientUpdatedAt: updatedAtMs,
+          workoutSetDrafts,
           exerciseLogs: {
             ...prev.exerciseLogs,
             [exerciseId]: {
@@ -246,11 +266,12 @@ export function useGymCoachState(token: string | null) {
               personalTip: personalTip.trim().slice(0, 200),
               seatPinNote: (extra?.seatPinNote ?? prevLog?.seatPinNote ?? '').trim().slice(0, 120),
               personalRecordKg,
+              usesWorkoutSets: workout ? true : prevLog?.usesWorkoutSets,
               estimated1RM,
-              setsCompletedToday: nextCompletedSets,
+              setsCompletedToday: workout ? [] : nextCompletedSets,
               setsCompletedDateKey: todayKey,
-              setsDetail: nextSetsDetail,
-              updatedAtMs: now,
+              setsDetail: workout ? [] : nextSetsDetail,
+              updatedAtMs,
             },
           },
         };
@@ -388,52 +409,31 @@ export function useGymCoachState(token: string | null) {
         fallbackDays?: GymSplitDayConfig[];
       }
     ) => {
-      const now = Date.now();
-      commitUpdate((prev) => {
-        const swapInList = (days: GymSplitDayConfig[], targetDayId: string) =>
-          days.map((day) => {
-            if (day.id !== targetDayId) return day;
-            const nextIds = day.exerciseIds.map((id) =>
-              id === oldExerciseId ? newExerciseId : id
-            );
-            return {
-              ...day,
-              exerciseIds: Array.from(new Set(nextIds)),
-            };
-          });
+      return commitUpdate((prev) => {
+        const source = GYM_EXERCISE_MAP[oldExerciseId];
+        const replacement = GYM_EXERCISE_MAP[newExerciseId];
+        if (!source || !replacement || oldExerciseId === newExerciseId) return prev;
+        if (prev.exerciseRestrictions.some(({ exerciseId, kind }) =>
+          (kind === 'busy' && (exerciseId === newExerciseId ||
+            (GYM_EXERCISE_MAP[exerciseId] && sharesGymStation(GYM_EXERCISE_MAP[exerciseId], replacement)))) ||
+          (kind === 'injury' && exerciseId === newExerciseId))) return prev;
 
-        if (options?.gender === 'male') {
-          const baseMaleDays =
-            prev.maleCustomDays && prev.maleCustomDays.length > 0
-              ? prev.maleCustomDays
-              : options.fallbackDays || [];
-          const targetId =
-            options.dayId || prev.activeMaleDayId || baseMaleDays[0]?.id || 'm_session_1';
-          return {
-            ...prev,
-            clientUpdatedAt: now,
-            maleCustomDays: swapInList(baseMaleDays, targetId),
-          };
-        }
+        const gender = options?.gender;
+        const key = gender === 'male' ? 'maleCustomDays' : gender === 'female' ? 'femaleCustomDays' : 'customDays';
+        const dayId = options?.dayId ||
+          (gender === 'male' ? prev.activeMaleDayId : gender === 'female' ? prev.activeFemaleDayId : prev.activeDayId);
+        const days = prev[key]?.length ? prev[key] : options?.fallbackDays;
+        const target = days?.find((day) => day.id === dayId);
+        if (!target || !target.exerciseIds.includes(oldExerciseId) || target.exerciseIds.includes(newExerciseId)) return prev;
+        if (prev.workoutSetDrafts?.some((draft) =>
+          draft.dateKey === getTodayLocalDateKey() && draft.gender === gender && draft.dayId === dayId &&
+          draft.exerciseId === oldExerciseId && draft.sets.some((set) => set.completed))) return prev;
 
-        if (options?.gender === 'female') {
-          const baseFemaleDays =
-            prev.femaleCustomDays && prev.femaleCustomDays.length > 0
-              ? prev.femaleCustomDays
-              : options.fallbackDays || [];
-          const targetId =
-            options.dayId || prev.activeFemaleDayId || baseFemaleDays[0]?.id || 'f_session_1';
-          return {
-            ...prev,
-            clientUpdatedAt: now,
-            femaleCustomDays: swapInList(baseFemaleDays, targetId),
-          };
-        }
-
+        const exerciseIds = target.exerciseIds.map((id) => id === oldExerciseId ? newExerciseId : id);
         return {
           ...prev,
-          clientUpdatedAt: now,
-          customDays: swapInList(prev.customDays, options?.dayId || prev.activeDayId),
+          clientUpdatedAt: Math.max(Date.now(), (prev.clientUpdatedAt || 0) + 1),
+          [key]: days?.map((day) => day === target ? { ...day, exerciseIds } : day),
         };
       });
     },
@@ -441,85 +441,62 @@ export function useGymCoachState(token: string | null) {
   );
 
   const completeGenderWorkoutSession = useCallback(
-    (params: {
-      gender: GymGenderMode;
-      dayId: string;
-      dayTitle: string;
-      nextDayId: string;
-      durationMinutes: number;
-      totalVolumeKg: number;
-      completedExercisesCount: number;
-      caloriesBurned: number;
-      prHighlights: string[];
-    }): GymWorkoutHistoryEntry => {
-      const now = Date.now();
+    (params: GymWorkoutSummary & { gender: GymGenderMode }): GymWorkoutHistoryEntry | null => {
+      const prev = latestStateRef.current;
       const todayKey = getTodayLocalDateKey();
+      const drafts = selectWorkoutSetDrafts(prev.workoutSetDrafts, todayKey, params.gender, params.dayId);
+      if (!drafts.some((draft) => draft.sets.some((set) => set.completed && !set.isWarmup))) return null;
+      const now = Math.max(Date.now(), (prev.clientUpdatedAt || 0) + 1);
+      const isComplete = params.status === 'completed';
+      const nextDayId = isComplete ? params.nextDayId : params.dayId;
       const entry: GymWorkoutHistoryEntry = {
-        id: `wh_${todayKey}_${params.gender}_${now}`,
+        id: 'wh_' + todayKey + '_' + params.gender + '_' + now,
         dateKey: todayKey,
         gender: params.gender,
         dayId: params.dayId,
         dayTitle: params.dayTitle,
-        durationMinutes: Math.max(5, Math.round(params.durationMinutes)),
-        totalVolumeKg: Math.max(0, Math.round(params.totalVolumeKg)),
-        completedExercisesCount: Math.max(0, params.completedExercisesCount),
-        caloriesBurned: Math.max(50, Math.round(params.caloriesBurned)),
+        status: params.status,
+        plannedExercisesCount: params.plannedExercisesCount,
+        durationMinutes: isComplete ? Math.round(params.durationMinutes) : 0,
+        totalVolumeKg: params.totalVolumeKg,
+        completedExercisesCount: params.completedExercisesCount,
+        caloriesBurned: isComplete ? Math.round(params.caloriesBurned) : 0,
         prCount: params.prHighlights.length,
         prHighlights: params.prHighlights.slice(0, 10),
         createdAtMs: now,
       };
 
-      setState((prev) => {
-        const nextStreak = computeSmartWorkoutStreak(
-          prev.workoutStreak,
-          prev.lastCompletedSessionDate,
-          todayKey
+      const workoutHistory = [entry, ...(prev.workoutHistory || [])].slice(0, 60);
+      const nextState: GymClientPersistedState = {
+        ...prev,
+        activeDayId: nextDayId,
+        activeMaleDayId: params.gender === 'male' ? nextDayId : prev.activeMaleDayId,
+        activeFemaleDayId: params.gender === 'female' ? nextDayId : prev.activeFemaleDayId,
+        completedExerciseIdsToday: [],
+        sessionDateKey: todayKey,
+        workoutStreak: isComplete
+          ? computeSmartWorkoutStreak(prev.workoutStreak, prev.lastCompletedSessionDate, todayKey)
+          : prev.workoutStreak,
+        lastCompletedSessionDate: isComplete ? todayKey : prev.lastCompletedSessionDate,
+        workoutHistory,
+        workoutSetDrafts: mergeWorkoutSetDrafts(prev.workoutSetDrafts, [], workoutHistory, todayKey),
+        clientUpdatedAt: now,
+      };
+      latestStateRef.current = nextState;
+      writePersistedLocalState(nextState);
+      setState(nextState);
+
+      if (token) {
+        if (debounceRef.current) window.clearTimeout(debounceRef.current);
+        setCloudStatus('syncing');
+        const exerciseLogs = drafts.flatMap(({ exerciseId }) =>
+          nextState.exerciseLogs[exerciseId] ? [nextState.exerciseLogs[exerciseId]] : []
         );
-        const nextHistory = [entry, ...(prev.workoutHistory || [])].slice(0, 60);
-        const nextState: GymClientPersistedState = {
-          ...prev,
-          activeDayId: params.nextDayId,
-          activeMaleDayId:
-            params.gender === 'male' ? params.nextDayId : prev.activeMaleDayId,
-          activeFemaleDayId:
-            params.gender === 'female' ? params.nextDayId : prev.activeFemaleDayId,
-          completedExerciseIdsToday: [],
-          sessionDateKey: todayKey,
-          workoutStreak: nextStreak,
-          lastCompletedSessionDate: todayKey,
-          workoutHistory: nextHistory,
-          clientUpdatedAt: now,
-        };
-        writePersistedLocalState(nextState);
-
-        if (token) {
-          setCloudStatus('syncing');
-          gymSyncService
-            .completeSession(token, {
-              id: entry.id,
-              dateKey: todayKey,
-              gender: params.gender,
-              dayId: params.dayId,
-              dayTitle: params.dayTitle,
-              nextDayId: params.nextDayId,
-              durationMinutes: entry.durationMinutes,
-              totalVolumeKg: entry.totalVolumeKg,
-              completedExercisesCount: entry.completedExercisesCount,
-              caloriesBurned: entry.caloriesBurned,
-              prCount: entry.prCount,
-              prHighlights: entry.prHighlights,
-              exerciseLogs: Object.values(nextState.exerciseLogs),
-            })
-            .then(() => setCloudStatus('synced'))
-            .catch(() => {
-              // Fallback to regular debounced profile save
-              scheduleCloudSave(nextState);
-            });
-        }
-
-        return nextState;
-      });
-
+        const syncProfileAfterSession = () => scheduleCloudSave(latestStateRef.current);
+        void gymSyncService.completeSession(token, { ...entry, nextDayId, exerciseLogs })
+          .catch(() => undefined)
+          .then(syncProfileAfterSession);
+      }
       return entry;
     },
     [token, scheduleCloudSave]

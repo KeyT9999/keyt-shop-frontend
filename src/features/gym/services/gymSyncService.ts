@@ -6,6 +6,7 @@ import type {
   GymGenderMode,
   GymServerProfilePayload,
   GymWorkoutHistoryEntry,
+  GymWorkoutStatus,
 } from '../types/gym';
 
 const API_BASE_URL =
@@ -43,6 +44,9 @@ export interface CompleteSessionRequestPayload {
   dayId: string;
   dayTitle: string;
   nextDayId?: string;
+  status?: GymWorkoutStatus;
+  plannedExercisesCount?: number;
+  createdAtMs?: number;
   durationMinutes: number;
   totalVolumeKg: number;
   completedExercisesCount: number;

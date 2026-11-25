@@ -11,6 +11,27 @@ export interface RankedExerciseSubstitute {
   reasonBadgesVi: string[];
 }
 
+// Configurations that share one physical station in the gym catalog.
+const SHARED_STATIONS: Readonly<Record<string, string>> = {
+  hip_abductor_adductor: 'brtw_hip_abductor_adductor',
+  hip_adductor_inner: 'brtw_hip_abductor_adductor',
+  leg_extension: 'brtw_leg_curl_extension',
+  seated_leg_curl: 'brtw_leg_curl_extension',
+  pec_deck_fly: 'brtw_pec_fly_rear_deltoid',
+  reverse_pec_deck: 'brtw_pec_fly_rear_deltoid',
+  assisted_pullup: 'brtw_assisted_chin_dip',
+  assisted_chest_dip: 'brtw_assisted_chin_dip',
+  assisted_tricep_dip: 'brtw_assisted_chin_dip',
+  barbell_bench_press: 'brtw_multi_function_press',
+  smith_shoulder_press: 'brtw_multi_function_press',
+  barbell_squat: 'brtw_smith',
+};
+
+export function sharesGymStation(first: GymExerciseDefinition, second: GymExerciseDefinition): boolean {
+  const station = SHARED_STATIONS[first.id];
+  return Boolean(station && station === SHARED_STATIONS[second.id]);
+}
+
 const LOW_BACK_HEAVY_IDS = new Set([
   'barbell_squat',
   'super_squat_machine',
@@ -92,8 +113,10 @@ export function rankExerciseSubstitutes(
   const targetSecondary = new Set(targetExercise.secondaryMuscles);
   const candidates: RankedExerciseSubstitute[] = [];
 
+  const occupiedExercises = catalog.filter((exercise) => restrictionMap.get(exercise.id) === 'busy');
   for (const candidate of catalog) {
-    if (candidate.id === targetExercise.id) continue;
+    if (candidate.id === targetExercise.id || currentDayExerciseIds.includes(candidate.id)) continue;
+    if (occupiedExercises.some((exercise) => sharesGymStation(exercise, candidate))) continue;
 
     const restrictionKind = restrictionMap.get(candidate.id);
     if (restrictionKind === 'injury' || restrictionKind === 'busy') {
@@ -165,13 +188,6 @@ export function rankExerciseSubstitutes(
       } else {
         score -= 40;
       }
-    }
-
-    // Prefer exercises not already in today's queue
-    if (!currentDayExerciseIds.includes(candidate.id)) {
-      score += 15;
-    } else {
-      reasonBadgesVi.push('Đã có trong buổi');
     }
 
     if (restrictionKind === 'dislike') {

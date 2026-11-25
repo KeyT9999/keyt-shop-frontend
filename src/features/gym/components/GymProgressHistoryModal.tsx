@@ -58,7 +58,7 @@ export default function GymProgressHistoryModal({
   const prItems = useMemo(() => {
     return Object.values(exerciseLogs)
       .map((log) => {
-        const prKg = Math.max(log.personalRecordKg || 0, log.weightKg || 0);
+        const prKg = log.usesWorkoutSets ? log.personalRecordKg || 0 : Math.max(log.personalRecordKg || 0, log.weightKg || 0);
         const est1RM = log.estimated1RM || computeEstimated1RM(prKg, 10);
         const ex = GYM_EXERCISE_MAP[log.exerciseId];
         return {
@@ -106,7 +106,7 @@ export default function GymProgressHistoryModal({
             <div className="flex items-center gap-2">
               <Award size={20} className="text-emerald-600 shrink-0" />
               <span className="text-sm sm:text-base font-extrabold text-emerald-900">
-                Hoàn Thành Xuất Sắc: {celebrationSession.dayTitle}
+                {celebrationSession.status === 'partial' ? 'Đã lưu buổi dở' : 'Hoàn Thành Xuất Sắc'}: {celebrationSession.dayTitle}
               </span>
             </div>
             <span className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-extrabold tabular-nums">
@@ -116,21 +116,22 @@ export default function GymProgressHistoryModal({
 
           <div className="grid grid-cols-3 gap-2.5 text-xs">
             <div className="rounded-2xl bg-white p-3 border border-emerald-200/80">
-              <div className="text-slate-500 font-semibold">Thời lượng</div>
+              <div className="text-slate-500 font-semibold">Thời lượng ước tính</div>
               <div className="text-sm sm:text-base font-black text-slate-900 tabular-nums">
-                {celebrationSession.durationMinutes} phút
+                {celebrationSession.durationMinutes > 0 ? celebrationSession.durationMinutes + ' phút' : '—'}
               </div>
             </div>
             <div className="rounded-2xl bg-white p-3 border border-emerald-200/80">
-              <div className="text-slate-500 font-semibold">Tiêu hao</div>
+              <div className="text-slate-500 font-semibold">Tiêu hao ước tính</div>
               <div className="text-sm sm:text-base font-black text-[#F05A28] tabular-nums">
-                ~{celebrationSession.caloriesBurned} kcal
+                {celebrationSession.caloriesBurned > 0 ? celebrationSession.caloriesBurned + ' kcal' : '—'}
               </div>
             </div>
             <div className="rounded-2xl bg-white p-3 border border-emerald-200/80">
               <div className="text-slate-500 font-semibold">Số bài xong</div>
               <div className="text-sm sm:text-base font-black text-emerald-700 tabular-nums">
-                {celebrationSession.completedExercisesCount} bài
+                {celebrationSession.completedExercisesCount}
+                {celebrationSession.plannedExercisesCount ? '/' + celebrationSession.plannedExercisesCount : ''} bài
               </div>
             </div>
           </div>
@@ -151,7 +152,7 @@ export default function GymProgressHistoryModal({
             </div>
           )}
 
-          <div className="rounded-2xl bg-white border border-emerald-200/80 px-3.5 py-2.5 text-xs text-slate-700 flex items-start gap-2">
+          {celebrationSession.status !== 'partial' && <div className="rounded-2xl bg-white border border-emerald-200/80 px-3.5 py-2.5 text-xs text-slate-700 flex items-start gap-2">
             <Utensils size={15} className="text-emerald-600 shrink-0 mt-0.5" />
             <span>
               <strong className="text-slate-900">Bữa phục hồi sau tập 45–60 phút:</strong>{' '}
@@ -159,7 +160,7 @@ export default function GymProgressHistoryModal({
                 ? 'Nạp 35–40g Protein + Carb sạch (VD: 180g ức gà/thăn bò + 1.5 chén cơm trắng hoặc phở bò tái nạc).'
                 : 'Nạp 25–30g Protein + Carb phức (VD: 130g cá hồi/ức gà + 1/2 củ khoai lang + rau xanh để phục hồi vòng 3 không tích mỡ eo).'}
             </span>
-          </div>
+          </div>}
         </div>
       )}
 
@@ -179,7 +180,7 @@ export default function GymProgressHistoryModal({
             <CalendarCheck2 size={14} className="text-emerald-600" /> Đã hoàn thành
           </div>
           <div className="text-xl font-black text-slate-900 mt-1 tabular-nums">
-            {workoutHistory.length} buổi
+            {workoutHistory.filter((session) => session.status !== 'partial').length} buổi
           </div>
         </div>
 
@@ -333,7 +334,7 @@ export default function GymProgressHistoryModal({
 
         {workoutHistory.length === 0 ? (
           <div className="rounded-2xl bg-slate-50 border border-slate-200/80 p-4 text-xs text-slate-600">
-            Bấm <strong className="text-slate-900">Hoàn thành buổi tập</strong> sau khi tập xong bài cuối để ghi lại lịch sử Volume &amp; Calo đốt cháy.
+            Kết thúc buổi tập để lưu các bài và hiệp đã ghi vào lịch sử.
           </div>
         ) : (
           <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
@@ -356,8 +357,11 @@ export default function GymProgressHistoryModal({
                     </span>
                   </div>
                   <div className="text-xs text-slate-500 mt-0.5">
-                    {session.dateKey} • {session.durationMinutes} phút •{' '}
-                    {session.completedExercisesCount} bài • ~{session.caloriesBurned} kcal
+                    {session.dateKey} • {session.completedExercisesCount}
+                    {session.plannedExercisesCount ? '/' + session.plannedExercisesCount : ''} bài
+                    {session.status === 'partial'
+                      ? ' • Tập dở'
+                      : ' • Ước tính ' + session.durationMinutes + ' phút, ' + session.caloriesBurned + ' kcal'}
                   </div>
                 </div>
 

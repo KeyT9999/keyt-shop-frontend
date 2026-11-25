@@ -1,10 +1,11 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import GymGenderAdvisorPanel from './GymGenderAdvisorPanel';
 import GymProgressHistoryModal from './GymProgressHistoryModal';
 import {
   createDefaultCycleTracking,
   createDefaultFemaleBodyProfile,
+  getTodayLocalDateKey,
 } from '../utils/gymStateUtils';
 
 afterEach(() => {
@@ -37,7 +38,7 @@ describe('GymGenderAdvisorPanel — Clean Light Sport 4-Tab Mobile-First UI', ()
     expect(screen.getByText(/^Bài 1\/6$/i)).toBeTruthy();
 
     const nextBtn = screen.getByRole('button', {
-      name: /Tập xong • Qua bài 2/i,
+      name: /Bỏ qua • Qua bài 2/i,
     });
     fireEvent.click(nextBtn);
     expect(screen.getByText(/^Bài 2\/6$/i)).toBeTruthy();
@@ -151,6 +152,108 @@ describe('GymGenderAdvisorPanel — Clean Light Sport 4-Tab Mobile-First UI', ()
     const waterPlusBtn = screen.getByRole('button', { name: /Thêm 250ml nước/i });
     fireEvent.click(waterPlusBtn);
     expect(onAddWater).toHaveBeenCalledWith(250);
+  });
+
+  it('confirms a partial finish and records only the single working set that was logged', () => {
+    const onCompleteSession = vi.fn();
+    render(
+      <GymGenderAdvisorPanel
+        activeGender="female"
+        userProfile={createDefaultFemaleBodyProfile()}
+        cycleTracking={createDefaultCycleTracking()}
+        onSelectGenderRoute={vi.fn()}
+        onSaveProfile={vi.fn()}
+        onSaveCycle={vi.fn()}
+        onApplyRecommendedSplit={vi.fn()}
+        onSelectExerciseFor3D={vi.fn()}
+        onOpenAiCoachDrawer={vi.fn()}
+        onCompleteSession={onCompleteSession}
+      />
+    );
+
+    expect(screen.getAllByText('4 hiệp × 12–15 lần').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('12–15 lần')).toHaveLength(4);
+    fireEvent.change(screen.getByLabelText('Hiệp 1 · lần thực tế'), { target: { value: '13' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Hiệp 1' }));
+    fireEvent.click(screen.getByRole('button', { name: /Gập duỗi lưng dưới.*6\./i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Hoàn thành buổi tập' }));
+    let dialog = screen.getByRole('dialog', { name: 'Buổi tập còn bài chưa xong' });
+    expect(within(dialog).getByText(/0\/6 bài, đã ghi 1 hiệp chính/)).toBeTruthy();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Tập tiếp' }));
+    expect(onCompleteSession).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hoàn thành buổi tập' }));
+    dialog = screen.getByRole('dialog', { name: 'Buổi tập còn bài chưa xong' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Lưu buổi dở' }));
+    expect(onCompleteSession).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'partial',
+      completedExercisesCount: 0,
+      plannedExercisesCount: 6,
+      totalVolumeKg: 195,
+      durationMinutes: 0,
+      caloriesBurned: 0,
+    }));
+  });
+
+  it('resumes the first unfinished exercise from persisted sets', () => {
+    render(
+      <GymGenderAdvisorPanel
+        activeGender="female"
+        userProfile={createDefaultFemaleBodyProfile()}
+        cycleTracking={createDefaultCycleTracking()}
+        workoutSetDrafts={[{
+          dateKey: getTodayLocalDateKey(), gender: 'female', dayId: 'f_session_1',
+          exerciseId: 'machine_hip_thrust', goalLabel: '4 hiệp × 12–15 lần', updatedAtMs: Date.now(),
+          sets: [1, 2, 3, 4].map((setNumber) => ({ setNumber, weightKg: 15, reps: 12, completed: true })),
+        }]}
+        onSelectGenderRoute={vi.fn()}
+        onSaveProfile={vi.fn()}
+        onSaveCycle={vi.fn()}
+        onApplyRecommendedSplit={vi.fn()}
+        onSelectExerciseFor3D={vi.fn()}
+        onOpenAiCoachDrawer={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục tập (Bài 2/6)' }));
+    expect(screen.getByText('Bài 2/6')).toBeTruthy();
+  });
+
+  it('saves a fully logged workout without the partial confirmation and advances to the next session', () => {
+    const complete = vi.fn();
+    render(
+      <GymGenderAdvisorPanel
+        activeGender="female"
+        userProfile={createDefaultFemaleBodyProfile()}
+        cycleTracking={createDefaultCycleTracking()}
+        savedGenderDays={[
+          { id: 'f_session_1', dayLabel: 'Buổi 1', title: 'Buổi thử', subtitle: '', exerciseIds: ['machine_hip_thrust'] },
+          { id: 'f_session_2', dayLabel: 'Buổi 2', title: 'Buổi kế tiếp', subtitle: '', exerciseIds: ['back_extension_45'] },
+        ]}
+        onSelectGenderRoute={vi.fn()}
+        onSaveProfile={vi.fn()}
+        onSaveCycle={vi.fn()}
+        onApplyRecommendedSplit={vi.fn()}
+        onSelectExerciseFor3D={vi.fn()}
+        onOpenAiCoachDrawer={vi.fn()}
+        onCompleteSession={complete}
+      />
+    );
+
+    for (const number of [1, 2, 3, 4]) {
+      fireEvent.click(screen.getByRole('button', { name: 'Hiệp ' + number }));
+    }
+    const finishButtons = screen.getAllByRole('button', { name: 'Hoàn thành buổi tập' });
+    fireEvent.click(finishButtons[finishButtons.length - 1]);
+    expect(complete).toHaveBeenCalledTimes(1);
+    expect(complete).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'completed',
+      nextDayId: 'f_session_2',
+      completedExercisesCount: 1,
+      plannedExercisesCount: 1,
+      totalVolumeKg: 900,
+    }));
+    expect(screen.queryByRole('dialog', { name: 'Buổi tập còn bài chưa xong' })).toBeNull();
   });
 
   it('renders GymProgressHistoryModal (both modal & inline Tiến Độ tab) with celebration banner, PR/1RM table, and records body metrics', () => {

@@ -33,10 +33,14 @@ interface WakeLockSentinelLike {
   release: () => Promise<void>;
 }
 
+import { getWorkoutGoal } from '../utils/gymWorkoutProgress';
+
 interface GymInlineMetricsToolsProps {
   exercise: GymExerciseDefinition;
   gender?: GymGenderMode;
   savedLog?: GymExerciseUserLog;
+  savedSets?: GymSetDetailItem[];
+  goalLabel: string;
   recommendation?: SmartSetRecommendation;
   onSaveLog: (
     weightKg: number,
@@ -136,6 +140,8 @@ export default function GymInlineMetricsTools({
   exercise,
   gender = 'female',
   savedLog,
+  savedSets,
+  goalLabel,
   recommendation,
   onSaveLog,
 }: GymInlineMetricsToolsProps) {
@@ -151,17 +157,15 @@ export default function GymInlineMetricsTools({
   const [wakeLockActive, setWakeLockActive] = useState<boolean>(false);
   const wakeLockRef = useRef<WakeLockSentinelLike | null>(null);
 
-  const [weightKg, setWeightKg] = useState<number>(initialWeight);
+  const weightKg = initialWeight;
+  const [weightInput, setWeightInput] = useState<number | null>(null);
   const [repsNote, setRepsNote] = useState<string>(savedLog?.repsNote ?? '');
   const [personalTip, setPersonalTip] = useState<string>(
     savedLog?.seatPinNote || savedLog?.personalTip || ''
   );
-  const [setsDetail, setSetsDetail] = useState<GymSetDetailItem[]>(() => {
-    if (savedLog?.setsDetail && savedLog.setsDetail.length > 0) {
-      return savedLog.setsDetail;
-    }
-    return buildDefaultSetsForExercise(exercise, initialWeight, initialWeight >= 25);
-  });
+  const setsDetail = savedSets ??
+    buildDefaultSetsForExercise(exercise, weightKg, weightKg >= 25, goalLabel);
+  const goal = getWorkoutGoal(goalLabel);
 
   const [notesOpen, setNotesOpen] = useState<boolean>(false);
   const [showPlateCalc, setShowPlateCalc] = useState<boolean>(false);
@@ -259,8 +263,6 @@ export default function GymInlineMetricsTools({
     const syncedSets = nextSets.map((s) =>
       s.completed || s.isWarmup ? s : { ...s, weightKg: clean }
     );
-    setWeightKg(clean);
-    setSetsDetail(syncedSets);
     const completedSetNumbers = syncedSets
       .filter((s) => s.completed && !s.isWarmup)
       .map((s) => s.setNumber);
@@ -501,8 +503,8 @@ export default function GymInlineMetricsTools({
                 step="0.5"
                 min="0"
                 aria-label="Mức tạ tính bằng kg"
-                value={weightKg}
-                onChange={(e) => setWeightKg(Math.max(0, Number(e.target.value) || 0))}
+                value={weightInput ?? weightKg}
+                onChange={(e) => setWeightInput(Math.max(0, Number(e.target.value) || 0))}
                 className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-900 focus:outline-none focus:border-[#F05A28]"
               />
             </div>
@@ -524,7 +526,8 @@ export default function GymInlineMetricsTools({
           <button
             type="button"
             onClick={() => {
-              persistMetrics(weightKg, repsNote, personalTip);
+              persistMetrics(weightInput ?? weightKg, repsNote, personalTip);
+              setWeightInput(null);
               setNotesOpen(false);
             }}
             className="w-full py-2.5 px-4 rounded-xl bg-[#1E293B] hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
@@ -544,13 +547,13 @@ export default function GymInlineMetricsTools({
         <div className="grid grid-cols-12 items-center px-3.5 py-2 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
           <div className="col-span-3">Hiệp</div>
           <div className="col-span-3 text-center">Mức tạ</div>
-          <div className="col-span-3 text-center">Mục tiêu</div>
+          <div className="col-span-3 text-center">Mục tiêu / thực tế</div>
           <div className="col-span-3 text-right">Hoàn thành</div>
         </div>
 
         {setsDetail.map((setItem, idx) => {
           const isDone = setItem.completed;
-          const displayWeight = setItem.isWarmup ? setItem.weightKg : weightKg;
+          const displayWeight = setItem.isWarmup || isDone ? setItem.weightKg : weightKg;
           const setLabel = setItem.isWarmup
             ? 'Khởi động'
             : `Hiệp ${setItem.setNumber}`;
@@ -584,7 +587,30 @@ export default function GymInlineMetricsTools({
               </div>
 
               <div className="col-span-3 text-center text-xs sm:text-sm font-semibold text-slate-600 tabular-nums">
-                {setItem.isWarmup ? '12 lần' : `${exercise.reps} lần`}
+                <div>{setItem.isWarmup ? '12 lần' : goal.label}</div>
+                {!setItem.isWarmup && setItem.setNumber > goal.minWorkingSets && (
+                  <div className="text-[10px] font-medium">Tùy chọn</div>
+                )}
+                {!setItem.isWarmup && (
+                  <input
+                    type="number"
+                    min={1}
+                    max={200}
+                    value={setItem.reps}
+                    aria-label={setLabel + ' · ' + goal.unit + ' thực tế'}
+                    disabled={isDone}
+                    onFocus={(event) => event.currentTarget.select()}
+                    onChange={(event) => {
+                      const value = event.currentTarget.valueAsNumber;
+                      if (!Number.isFinite(value)) return;
+                      const amount = Math.min(200, Math.max(1, Math.round(value)));
+                      persistMetrics(weightKg, repsNote, personalTip, setsDetail.map((row, rowIdx) =>
+                        rowIdx === idx ? { ...row, reps: amount } : row
+                      ));
+                    }}
+                    className="mt-1 h-8 w-12 rounded-md border border-slate-300 bg-white text-center text-xs text-slate-800 disabled:bg-slate-100"
+                  />
+                )}
               </div>
 
               <div className="col-span-3 flex justify-end">

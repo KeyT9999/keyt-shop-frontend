@@ -112,6 +112,17 @@ export interface GymSetDetailItem {
   completed: boolean;
 }
 
+export interface GymWorkoutSetDraft {
+  dateKey: string;
+  gender: GymGenderMode;
+  dayId: string;
+  exerciseId: string;
+  goalLabel: string;
+  startingPrKg?: number;
+  sets: GymSetDetailItem[];
+  updatedAtMs: number;
+}
+
 export interface GymExerciseUserLog {
   exerciseId: string;
   weightKg: number;
@@ -119,6 +130,7 @@ export interface GymExerciseUserLog {
   personalTip: string;
   seatPinNote?: string;
   personalRecordKg?: number;
+  usesWorkoutSets?: boolean;
   estimated1RM?: number;
   setsCompletedToday?: number[];
   setsCompletedDateKey?: string;
@@ -210,6 +222,8 @@ export interface GymAiChatMessage {
   createdAtMs: number;
 }
 
+export type GymWorkoutStatus = 'completed' | 'partial';
+
 export interface GymWorkoutHistoryEntry {
   id: string;
   dateKey: string;
@@ -219,11 +233,22 @@ export interface GymWorkoutHistoryEntry {
   durationMinutes: number;
   totalVolumeKg: number;
   completedExercisesCount: number;
+  plannedExercisesCount?: number;
+  status?: GymWorkoutStatus;
   caloriesBurned: number;
   prCount: number;
   prHighlights: string[];
   createdAtMs: number;
 }
+
+export type GymWorkoutSummary = Pick<GymWorkoutHistoryEntry,
+  'dayId' | 'dayTitle' | 'durationMinutes' | 'totalVolumeKg' |
+  'completedExercisesCount' | 'caloriesBurned' | 'prHighlights'
+> & {
+  nextDayId: string;
+  plannedExercisesCount: number;
+  status: GymWorkoutStatus;
+};
 
 export interface GymBodyMetricEntry {
   dateKey: string;
@@ -249,6 +274,7 @@ export interface GymClientPersistedState {
   femaleCustomDays?: GymSplitDayConfig[];
   exerciseLogs: Record<string, GymExerciseUserLog>;
   workoutHistory?: GymWorkoutHistoryEntry[];
+  workoutSetDrafts?: GymWorkoutSetDraft[];
   bodyMetricsHistory?: GymBodyMetricEntry[];
   userProfile: GymFemaleBodyProfile;
   cycleTracking: GymCycleTrackingState;
@@ -270,6 +296,7 @@ export interface GymServerProfilePayload {
   femaleCustomDays?: GymSplitDayConfig[];
   exerciseLogs: GymExerciseUserLog[];
   workoutHistory?: GymWorkoutHistoryEntry[];
+  workoutSetDrafts?: GymWorkoutSetDraft[];
   bodyMetricsHistory?: GymBodyMetricEntry[];
   userProfile?: GymFemaleBodyProfile;
   cycleTracking?: GymCycleTrackingState;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -37,6 +37,9 @@ import type {
   GymSplitDayConfig,
   GymSymptomCode,
   GymWorkoutHistoryEntry,
+  GymWorkoutSetDraft,
+  GymWorkoutStatus,
+  GymWorkoutSummary,
 } from '../types/gym';
 import {
   computeSmartSetRecommendation,
@@ -47,6 +50,8 @@ import {
   generateGenderWorkoutAndNutritionPlan,
   type GenderWorkoutAndNutritionRecommendation,
 } from '../utils/gymGenderAdvisorUtils';
+import { getTodayLocalDateKey } from '../utils/gymStateUtils';
+import { getExerciseDraftProgress, selectWorkoutSetDrafts } from '../utils/gymWorkoutProgress';
 import ExerciseReferenceDualView from './ExerciseReferenceDualView';
 import GymInlineMetricsTools from './GymInlineMetricsTools';
 import GymMannequin3DViewer from './GymMannequin3DViewer';
@@ -57,17 +62,6 @@ import RealGymMachineView from './RealGymMachineView';
 
 export type GymMainAppTab = 'workout' | 'nutrition' | 'progress' | 'profile';
 type StageVisualTab = 'gym_photo' | 'dual_photo' | '3d';
-
-export interface CompleteSessionSummaryInput {
-  dayId: string;
-  dayTitle: string;
-  nextDayId: string;
-  durationMinutes: number;
-  totalVolumeKg: number;
-  completedExercisesCount: number;
-  caloriesBurned: number;
-  prHighlights: string[];
-}
 
 interface GymGenderAdvisorPanelProps {
   activeGender: GymGenderMode;
@@ -81,14 +75,13 @@ interface GymGenderAdvisorPanelProps {
   exerciseLogs?: Record<string, GymExerciseUserLog>;
   workoutHistory?: GymWorkoutHistoryEntry[];
   bodyMetricsHistory?: GymBodyMetricEntry[];
-  completedIdsToday?: string[];
+  workoutSetDrafts?: GymWorkoutSetDraft[];
   onSelectGenderRoute: (gender: GymGenderMode) => void;
   onSelectGenderDay?: (dayId: string) => void;
   onSaveProfile: (patch: Partial<GymFemaleBodyProfile>) => void;
   onSaveCycle: (patch: Partial<GymCycleTrackingState>) => void;
   onApplyRecommendedSplit: (days: GymSplitDayConfig[]) => void;
   onSelectExerciseFor3D: (exerciseId: string) => void;
-  onToggleExerciseDone?: (exerciseId: string) => void;
   onSaveExerciseLog?: (
     exerciseId: string,
     weightKg: number,
@@ -99,15 +92,54 @@ interface GymGenderAdvisorPanelProps {
       setsDetail?: GymSetDetailItem[];
       setsCompletedToday?: number[];
       autoMarkCompleted?: boolean;
+      workout?: { gender: GymGenderMode; dayId: string; goalLabel: string };
     }
   ) => void;
   onAddWaterIntakeMl?: (deltaMl: number) => void;
   onRecordTodayBodyMetrics?: () => void;
-  onCompleteSession?: (summary: CompleteSessionSummaryInput) => void;
+  onCompleteSession?: (summary: GymWorkoutSummary) => void;
   onOpenSubstituteModal?: () => void;
   onOpenCustomizerModal?: () => void;
   onOpenProgressModal?: () => void;
   onOpenAiCoachDrawer: () => void;
+}
+
+function PartialWorkoutDialog({ exerciseCount, plannedCount, setCount, onContinue, onSave }: {
+  exerciseCount: number;
+  plannedCount: number;
+  setCount: number;
+  onContinue: () => void;
+  onSave: () => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const element = dialog.current;
+    if (element?.showModal) element.showModal();
+    else element?.setAttribute('open', '');
+  }, []);
+
+  return (
+    <dialog
+      ref={dialog}
+      aria-labelledby="gym-partial-title"
+      onCancel={(event) => { event.preventDefault(); onContinue(); }}
+      className="m-auto w-[calc(100%_-_2rem)] max-w-md rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-xl backdrop:bg-slate-900/60"
+    >
+      <h2 id="gym-partial-title" className="text-lg font-bold">Buổi tập còn bài chưa xong</h2>
+      <p className="mt-2 text-sm text-slate-700">
+        Đã xong {exerciseCount}/{plannedCount} bài, đã ghi {setCount} hiệp chính.
+        {setCount > 0 ? ' Lưu buổi dở sẽ giữ lại các hiệp này và giữ nguyên chuỗi tập.' : ' Hãy ghi ít nhất một hiệp chính để lưu buổi.'}
+      </p>
+      <div className="mt-5 flex flex-wrap justify-end gap-2">
+        <button type="button" autoFocus onClick={onContinue} className="min-h-11 cursor-pointer rounded-xl bg-slate-100 px-4 text-sm font-bold hover:bg-slate-200">
+          Tập tiếp
+        </button>
+        <button type="button" onClick={onSave} disabled={!setCount} className="min-h-11 cursor-pointer rounded-xl bg-[#1E293B] px-4 text-sm font-bold text-white hover:bg-slate-700 disabled:cursor-default disabled:opacity-50">
+          Lưu buổi dở
+        </button>
+      </div>
+    </dialog>
+  );
 }
 
 function ExerciseThumb({ exercise }: { exercise: GymExerciseDefinition }) {
@@ -145,14 +177,13 @@ export default function GymGenderAdvisorPanel({
   exerciseLogs = {},
   workoutHistory = [],
   bodyMetricsHistory = [],
-  completedIdsToday = [],
+  workoutSetDrafts,
   onSelectGenderRoute,
   onSelectGenderDay,
   onSaveProfile,
   onSaveCycle,
   onApplyRecommendedSplit,
   onSelectExerciseFor3D,
-  onToggleExerciseDone,
   onSaveExerciseLog,
   onAddWaterIntakeMl,
   onRecordTodayBodyMetrics,
@@ -181,10 +212,11 @@ export default function GymGenderAdvisorPanel({
   const [activeMainTab, setActiveMainTab] = useState<GymMainAppTab>('workout');
   const [mobileWorkoutMode, setMobileWorkoutMode] = useState<'list' | 'player'>('list');
   const [pickedSessionId, setPickedSessionId] = useState<string>('');
-  const [activeExerciseIdx, setActiveExerciseIdx] = useState<number>(0);
+  const [activeExerciseIdx, setActiveExerciseIdx] = useState<number | null>(null);
   const [visualTab, setVisualTab] = useState<StageVisualTab>('gym_photo');
   const [showStepsDetail, setShowStepsDetail] = useState<boolean>(false);
-  const [localDoneIds, setLocalDoneIds] = useState<string[]>([]);
+  const [localWorkoutDrafts, setLocalWorkoutDrafts] = useState<GymWorkoutSetDraft[]>([]);
+  const [showPartialConfirmation, setShowPartialConfirmation] = useState(false);
   const [localWaterMl, setLocalWaterMl] = useState<number>(
     userProfile.waterIntakeMlToday || 0
   );
@@ -224,15 +256,28 @@ export default function GymGenderAdvisorPanel({
     [currentSession]
   );
 
+  const todayKey = getTodayLocalDateKey();
+  const sessionDrafts = selectWorkoutSetDrafts(
+    workoutSetDrafts ?? localWorkoutDrafts, todayKey, activeGender, currentSession?.id
+  );
+  const draftsByExercise = new Map(sessionDrafts.map((draft) => [draft.exerciseId, draft]));
+  const isExerciseDone = (id: string) => getExerciseDraftProgress(draftsByExercise.get(id)).completed;
+  const firstIncomplete = sessionExercises.findIndex(({ exercise }) => !isExerciseDone(exercise.id));
+  const resumeExerciseIdx = firstIncomplete < 0 ? Math.max(0, sessionExercises.length - 1) : firstIncomplete;
+  const scopeHistoryId = workoutHistory.find((entry) =>
+    entry.dateKey === todayKey && entry.gender === activeGender && entry.dayId === currentSession?.id
+  )?.id;
   const propExerciseIdx = selectedExerciseId
     ? sessionExercises.findIndex((item) => item.exercise.id === selectedExerciseId)
     : -1;
   const rawExerciseIdx =
-    propExerciseIdx >= 0 ? propExerciseIdx : activeExerciseIdx;
+    propExerciseIdx >= 0 ? propExerciseIdx : activeExerciseIdx ?? resumeExerciseIdx;
   const safeExerciseIdx =
     rawExerciseIdx < sessionExercises.length ? rawExerciseIdx : 0;
   const currentItem = sessionExercises[safeExerciseIdx] || sessionExercises[0];
   const currentExercise = currentItem?.exercise;
+  const currentDraft = currentExercise ? draftsByExercise.get(currentExercise.id) : undefined;
+  const currentGoalLabel = currentDraft?.goalLabel ?? currentItem?.suggestedSetsReps ?? '';
 
   const readinessStatus = useMemo(
     () =>
@@ -306,85 +351,63 @@ export default function GymGenderAdvisorPanel({
     setActiveMainTab('workout');
   };
 
-  const isExerciseDone = (exId: string) =>
-    completedIdsToday.includes(exId) || localDoneIds.includes(exId);
+  const completedInSessionCount = sessionExercises.filter((item) => isExerciseDone(item.exercise.id)).length;
+  const sessionProgressPct = sessionExercises.length ? Math.round(completedInSessionCount / sessionExercises.length * 100) : 0;
+  const loggedWorkingSetCount = sessionExercises.reduce((sum, { exercise }) =>
+    sum + getExerciseDraftProgress(draftsByExercise.get(exercise.id)).completedSets.length, 0);
+  const fullyCompleted = sessionExercises.length > 0 && completedInSessionCount === sessionExercises.length;
+  const finishedCurrentExercise = Boolean(currentExercise && isExerciseDone(currentExercise.id));
 
-  const completedInSessionCount = sessionExercises.filter((item) =>
-    isExerciseDone(item.exercise.id)
-  ).length;
-  const sessionProgressPct =
-    sessionExercises.length > 0
-      ? Math.round((completedInSessionCount / sessionExercises.length) * 100)
-      : 0;
-
-  const buildCurrentSessionSummary = (nextSessionId: string): CompleteSessionSummaryInput => {
-    let totalVolumeKg = 0;
-    const prHighlights: string[] = [];
-
-    for (const item of sessionExercises) {
-      const log = exerciseLogs[item.exercise.id];
-      const w = log?.weightKg ?? item.suggestedWeightKg ?? 0;
-      if (log?.setsDetail && log.setsDetail.some((s) => s.completed)) {
-        for (const s of log.setsDetail) {
-          if (s.completed) {
-            totalVolumeKg += (s.weightKg || w) * (s.reps || 10);
-          }
-        }
-      } else if (w > 0) {
-        totalVolumeKg += w * 3 * 10;
-      }
-
-      if (log && log.weightKg > 0 && log.personalRecordKg && log.weightKg >= log.personalRecordKg) {
-        prHighlights.push(`${item.exercise.vietnameseName}: ${log.weightKg}kg`);
-      }
-    }
-
-    const weightFactor = Math.max(40, Math.min(130, draftProfile.weightKg || 55)) / 55;
-    const durationMinutes = currentSession?.estimatedMinutes || sessionExercises.length * 7;
-    const caloriesBurned = Math.round(sessionExercises.length * 42 * weightFactor);
-
-    return {
-      dayId: currentSession?.id || 'session_1',
-      dayTitle: `${currentSession?.dayLabelVi || 'Buổi tập'}: ${currentSession?.titleVi || ''}`,
-      nextDayId: nextSessionId,
-      durationMinutes,
-      totalVolumeKg: Math.round(totalVolumeKg),
-      completedExercisesCount: sessionExercises.length,
-      caloriesBurned,
-      prHighlights: prHighlights.slice(0, 5),
-    };
+  const openExercise = (idx: number) => {
+    const exercise = sessionExercises[idx]?.exercise;
+    if (!exercise) return;
+    setActiveExerciseIdx(idx);
+    onSelectExerciseFor3D(exercise.id);
+    setMobileWorkoutMode('player');
   };
 
-  const handleCompleteAndNextExercise = () => {
-    if (!currentExercise) return;
-    if (!isExerciseDone(currentExercise.id)) {
-      if (onToggleExerciseDone) {
-        onToggleExerciseDone(currentExercise.id);
-      } else {
-        setLocalDoneIds((prev) => [...prev, currentExercise.id]);
-      }
-    }
+  const finishSession = (status: GymWorkoutStatus) => {
+    if (!currentSession || !loggedWorkingSetCount || !onCompleteSession) return;
+    const complete = status === 'completed';
+    const nextSession = complete
+      ? displayedSessions[(safeSessionIdx + 1) % displayedSessions.length]
+      : currentSession;
+    const totalVolumeKg = sessionExercises.reduce((sum, { exercise }) =>
+      sum + getExerciseDraftProgress(draftsByExercise.get(exercise.id)).volume, 0);
 
-    if (safeExerciseIdx + 1 < sessionExercises.length) {
-      const nextIdx = safeExerciseIdx + 1;
-      setActiveExerciseIdx(nextIdx);
-      onSelectExerciseFor3D(sessionExercises[nextIdx].exercise.id);
-    } else {
-      const nextSIdx =
-        safeSessionIdx + 1 < displayedSessions.length ? safeSessionIdx + 1 : 0;
-      const nextSession = displayedSessions[nextSIdx] || displayedSessions[0];
-      if (onCompleteSession && nextSession) {
-        onCompleteSession(buildCurrentSessionSummary(nextSession.id));
-      }
-      setPickedSessionId(nextSession?.id || '');
-      setActiveExerciseIdx(0);
-      setMobileWorkoutMode('list');
-      if (nextSession) {
-        onSelectGenderDay?.(nextSession.id);
-        const firstEx = nextSession.exercises[0]?.exercise;
-        if (firstEx) onSelectExerciseFor3D(firstEx.id);
-      }
-    }
+    onCompleteSession({
+      dayId: currentSession.id,
+      dayTitle: currentSession.dayLabelVi + ': ' + currentSession.titleVi,
+      nextDayId: nextSession.id,
+      status,
+      plannedExercisesCount: sessionExercises.length,
+      completedExercisesCount: completedInSessionCount,
+      durationMinutes: complete ? currentSession.estimatedMinutes : 0,
+      totalVolumeKg: Number(totalVolumeKg.toFixed(2)),
+      caloriesBurned: complete
+        ? Math.round(sessionExercises.length * 42 * Math.max(40, Math.min(130, draftProfile.weightKg || 55)) / 55)
+        : 0,
+      prHighlights: sessionExercises.flatMap(({ exercise }) => {
+        const { newPrKg } = getExerciseDraftProgress(draftsByExercise.get(exercise.id));
+        return newPrKg ? [exercise.vietnameseName + ': ' + newPrKg + 'kg'] : [];
+      }).slice(0, 5),
+    });
+    setShowPartialConfirmation(false);
+    setLocalWorkoutDrafts((drafts) => drafts.filter((draft) => draft.dayId !== currentSession.id));
+    setPickedSessionId(nextSession.id);
+    setActiveExerciseIdx(null);
+    setMobileWorkoutMode('list');
+    onSelectExerciseFor3D('');
+  };
+
+  const handleFinish = () => {
+    if (fullyCompleted) finishSession('completed');
+    else setShowPartialConfirmation(true);
+  };
+
+  const handleNextExercise = () => {
+    if (fullyCompleted || safeExerciseIdx + 1 >= sessionExercises.length) handleFinish();
+    else openExercise(safeExerciseIdx + 1);
   };
 
   const handlePrevExercise = () => {
@@ -609,11 +632,9 @@ export default function GymGenderAdvisorPanel({
                     aria-selected={isCurrentSession}
                     onClick={() => {
                       setPickedSessionId(session.id);
-                      setActiveExerciseIdx(0);
+                      setActiveExerciseIdx(null);
                       onSelectGenderDay?.(session.id);
-                      if (session.exercises[0]) {
-                        onSelectExerciseFor3D(session.exercises[0].exercise.id);
-                      }
+                      onSelectExerciseFor3D('');
                     }}
                     className={`px-3.5 py-2 rounded-2xl border text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                       isCurrentSession
@@ -687,14 +708,16 @@ export default function GymGenderAdvisorPanel({
                   {/* Mobile Primary CTA to Enter Focus Workout Player */}
                   <button
                     type="button"
-                    onClick={() => setMobileWorkoutMode('player')}
+                    onClick={() => fullyCompleted ? handleFinish() : openExercise(resumeExerciseIdx)}
                     className="lg:hidden w-full py-3 px-4 rounded-2xl bg-[#F05A28] hover:bg-[#d94d1f] text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
                   >
                     <Play size={16} fill="currentColor" />
                     <span>
-                      {completedInSessionCount > 0
-                        ? `Tiếp tục tập (Bài ${safeExerciseIdx + 1}/${sessionExercises.length})`
-                        : 'Bắt đầu buổi tập ngay'}
+                      {fullyCompleted
+                        ? 'Hoàn thành buổi tập'
+                        : loggedWorkingSetCount > 0
+                          ? 'Tiếp tục tập (Bài ' + (resumeExerciseIdx + 1) + '/' + sessionExercises.length + ')'
+                          : 'Bắt đầu buổi tập ngay'}
                     </span>
                   </button>
                 </div>
@@ -736,7 +759,7 @@ export default function GymGenderAdvisorPanel({
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                           <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-bold">
-                            {exItem.suggestedSetsReps}
+                            {draftsByExercise.get(exItem.exercise.id)?.goalLabel ?? exItem.suggestedSetsReps}
                           </span>
                           <span className="px-2 py-0.5 rounded-md bg-orange-50 text-[#F05A28] text-[11px] font-extrabold tabular-nums">
                             {displayW > 0 ? `${displayW} kg` : 'Cơ thể'}
@@ -817,7 +840,7 @@ export default function GymGenderAdvisorPanel({
                   </h3>
                   <p className="text-xs text-slate-500 font-medium mt-0.5">
                     Thiết bị: <strong className="text-slate-700">{currentExercise.machineName}</strong> • Mục tiêu:{' '}
-                    <strong className="text-[#F05A28]">{currentItem.suggestedSetsReps}</strong>
+                    <strong className="text-[#F05A28]">{currentGoalLabel}</strong>
                   </p>
                 </div>
 
@@ -910,14 +933,24 @@ export default function GymGenderAdvisorPanel({
                 {/* Hevy / Strong Style Set-by-Set Table, Rest Timer & Plate Calculator */}
                 {setRecommendation && (
                   <GymInlineMetricsTools
-                    key={`${activeGender}_${currentExercise.id}`}
+                    key={[activeGender, currentSession.id, currentExercise.id, scopeHistoryId, currentGoalLabel].join('|')}
                     exercise={currentExercise}
                     gender={activeGender}
                     savedLog={exerciseLogs[currentExercise.id]}
+                    savedSets={currentDraft?.sets}
+                    goalLabel={currentGoalLabel}
                     recommendation={setRecommendation}
-                    onSaveLog={(w, r, tip, extra) =>
-                      onSaveExerciseLog?.(currentExercise.id, w, r, tip, extra)
-                    }
+                    onSaveLog={(w, r, tip, extra) => {
+                      const workout = { gender: activeGender, dayId: currentSession.id, goalLabel: currentGoalLabel };
+                      if (!workoutSetDrafts && extra?.setsDetail) {
+                        const nextDraft = { ...workout, dateKey: todayKey, exerciseId: currentExercise.id, sets: extra.setsDetail, updatedAtMs: Date.now() };
+                        setLocalWorkoutDrafts((drafts) => [
+                          ...drafts.filter((draft) => draft.dayId !== workout.dayId || draft.exerciseId !== nextDraft.exerciseId),
+                          nextDraft,
+                        ]);
+                      }
+                      onSaveExerciseLog?.(currentExercise.id, w, r, tip, { ...extra, workout });
+                    }}
                   />
                 )}
 
@@ -976,22 +1009,37 @@ export default function GymGenderAdvisorPanel({
 
                   <button
                     type="button"
-                    onClick={handleCompleteAndNextExercise}
+                    onClick={handleNextExercise}
                     className="flex-1 h-12 px-4 rounded-2xl bg-[#F05A28] hover:bg-[#d94d1f] text-white font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 shadow-sm transition-all active:scale-99 cursor-pointer"
                   >
                     <Check size={17} />
                     <span>
-                      {safeExerciseIdx + 1 < sessionExercises.length
-                        ? `Tập xong • Qua bài ${safeExerciseIdx + 2}`
-                        : 'Hoàn thành buổi tập'}
+                      {fullyCompleted || safeExerciseIdx + 1 >= sessionExercises.length
+                        ? 'Hoàn thành buổi tập'
+                        : (finishedCurrentExercise ? 'Tập xong' : 'Bỏ qua') + ' • Qua bài ' + (safeExerciseIdx + 2)}
                     </span>
                     <ArrowRight size={16} />
                   </button>
                 </div>
+                {!fullyCompleted && safeExerciseIdx + 1 < sessionExercises.length && loggedWorkingSetCount > 0 && (
+                  <button type="button" onClick={handleFinish} className="cursor-pointer text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-slate-950">
+                    Kết thúc buổi tập
+                  </button>
+                )}
               </div>
             )}
           </div>
         </div>
+      )}
+
+      {showPartialConfirmation && (
+        <PartialWorkoutDialog
+          exerciseCount={completedInSessionCount}
+          plannedCount={sessionExercises.length}
+          setCount={loggedWorkingSetCount}
+          onContinue={() => setShowPartialConfirmation(false)}
+          onSave={() => finishSession('partial')}
+        />
       )}
 
       {activeMainTab === 'nutrition' && (

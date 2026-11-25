@@ -15,8 +15,13 @@ import type {
   GymServerProfilePayload,
   GymSplitDayConfig,
   GymWorkoutHistoryEntry,
+  GymWorkoutSetDraft,
 } from '../types/gym';
 import { computeEstimated1RM } from './gymCycleAndProgressionUtils';
+
+import { buildDefaultSetsForExercise } from './gymCycleAndProgressionUtils';
+import { buildSessionsFromSavedSplitDays, generateGenderWorkoutAndNutritionPlan } from './gymGenderAdvisorUtils';
+import { mergeWorkoutSetDrafts } from './gymWorkoutProgress';
 
 export function getTodayLocalDateKey(now = new Date()): string {
   const y = now.getFullYear();
@@ -170,6 +175,44 @@ export function upgradeLegacyDefaultSplitDays(days: GymSplitDayConfig[]): {
   return { days: nextDays, upgraded };
 }
 
+function restoreLegacyWorkoutSets(
+  state: GymClientPersistedState,
+  todayKey: string,
+  userProfile: GymFemaleBodyProfile,
+  cycleTracking: GymCycleTrackingState,
+): GymWorkoutSetDraft[] | undefined {
+  if (state.sessionDateKey !== todayKey) return undefined;
+  const loggedToday = Object.values(state.exerciseLogs ?? {}).filter((log) =>
+    log.setsCompletedDateKey === todayKey && log.setsDetail?.some((set) => set.completed)
+  );
+  if (loggedToday.length === 0) return undefined;
+  const gender = userProfile.gender === 'male' ? 'male' : 'female';
+  if (state.workoutHistory?.some((entry) => entry.gender === gender && entry.dateKey === todayKey)) return undefined;
+  const dayId = gender === 'male' ? state.activeMaleDayId : state.activeFemaleDayId;
+  if (!dayId) return undefined;
+
+  const fallbackSessions = generateGenderWorkoutAndNutritionPlan({ gender, userProfile, cycleTracking }).sessions;
+  const savedDays = gender === 'male' ? state.maleCustomDays : state.femaleCustomDays;
+  const session = buildSessionsFromSavedSplitDays({ savedDays, fallbackSessions, gender, userProfile, cycleTracking })
+    .find(({ id }) => id === dayId);
+  return session?.exercises.flatMap(({ exercise, suggestedSetsReps: goalLabel }) => {
+    const log = loggedToday.find(({ exerciseId }) => exerciseId === exercise.id);
+    if (!log) return [];
+    const defaultSets = buildDefaultSetsForExercise(exercise, log.weightKg,
+      log.setsDetail?.some((set) => set.isWarmup) === true, goalLabel);
+    const savedSets = log.setsDetail ?? [];
+    return [{
+      dateKey: todayKey, gender, dayId, exerciseId: exercise.id, goalLabel,
+      startingPrKg: log.personalRecordKg ?? log.weightKg,
+      sets: [
+        ...defaultSets.map((set) => savedSets.find((saved) => saved.setNumber === set.setNumber) ?? set),
+        ...savedSets.filter((saved) => saved.completed && !defaultSets.some((set) => set.setNumber === saved.setNumber)),
+      ],
+      updatedAtMs: log.updatedAtMs,
+    }];
+  });
+}
+
 export function normalizeDailySessionRollover(
   state: GymClientPersistedState,
   todayKey = getTodayLocalDateKey()
@@ -215,6 +258,9 @@ export function normalizeDailySessionRollover(
       maleCustomDays: safeMaleDays,
       femaleCustomDays: safeFemaleDays,
       workoutHistory: safeWorkoutHistory,
+      workoutSetDrafts: state.workoutSetDrafts
+        ? mergeWorkoutSetDrafts(state.workoutSetDrafts, [], safeWorkoutHistory, todayKey)
+        : restoreLegacyWorkoutSets(state, todayKey, safeUserProfile, safeCycleTracking),
       bodyMetricsHistory: safeBodyMetrics,
       userProfile: safeUserProfile,
       cycleTracking: safeCycleTracking,
@@ -257,6 +303,7 @@ export function normalizeDailySessionRollover(
     femaleCustomDays: safeFemaleDays,
     exerciseLogs: rolledLogs,
     workoutHistory: safeWorkoutHistory,
+    workoutSetDrafts: [],
     bodyMetricsHistory: safeBodyMetrics,
     userProfile: safeUserProfile,
     cycleTracking: safeCycleTracking,
@@ -310,6 +357,7 @@ export function serializeGymStateForServer(
     femaleCustomDays: state.femaleCustomDays || [],
     exerciseLogs: Object.values(state.exerciseLogs),
     workoutHistory: state.workoutHistory || [],
+    workoutSetDrafts: state.workoutSetDrafts,
     bodyMetricsHistory: state.bodyMetricsHistory || [],
     userProfile: state.userProfile,
     cycleTracking: state.cycleTracking,
@@ -371,11 +419,12 @@ export function mergeGymClientAndServerState(
   for (const item of remote.exerciseLogs || []) {
     if (!item?.exerciseId) continue;
     const localLog = mergedLogs[item.exerciseId];
+    const usesWorkoutSets = localLog?.usesWorkoutSets || item.usesWorkoutSets;
     const bestPr = Math.max(
       localLog?.personalRecordKg || 0,
-      localLog?.weightKg || 0,
+      localLog?.usesWorkoutSets ? 0 : localLog?.weightKg || 0,
       item.personalRecordKg || 0,
-      item.weightKg || 0
+      item.usesWorkoutSets ? 0 : item.weightKg || 0
     );
     const best1RM = Math.max(
       localLog?.estimated1RM || 0,
@@ -391,6 +440,7 @@ export function mergeGymClientAndServerState(
         personalTip: item.personalTip ?? '',
         seatPinNote: item.seatPinNote || localLog?.seatPinNote || '',
         personalRecordKg: bestPr,
+        usesWorkoutSets,
         estimated1RM: best1RM,
         setsCompletedToday: item.setsCompletedToday || [],
         setsCompletedDateKey: item.setsCompletedDateKey || '',
@@ -401,6 +451,7 @@ export function mergeGymClientAndServerState(
       mergedLogs[item.exerciseId] = {
         ...localLog,
         personalRecordKg: bestPr,
+        usesWorkoutSets,
         estimated1RM: best1RM,
       };
     }
@@ -475,5 +526,10 @@ export function mergeGymClientAndServerState(
         bodyMetricsHistory: mergedMetrics,
       };
 
-  return normalizeDailySessionRollover(winnerBase, todayKey);
+  return normalizeDailySessionRollover({
+    ...winnerBase,
+    workoutSetDrafts: local.workoutSetDrafts || remote.workoutSetDrafts
+      ? mergeWorkoutSetDrafts(local.workoutSetDrafts, remote.workoutSetDrafts, mergedHistory, todayKey)
+      : undefined,
+  }, todayKey);
 }

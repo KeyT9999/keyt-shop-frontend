@@ -22,6 +22,19 @@ describe('gymExerciseSubstitutionUtils (0-cost Smart Substitution)', () => {
     expect(topIds).not.toContain('barbell_squat');
   });
 
+  it('excludes existing exercises and other configurations of an occupied station', () => {
+    const target = GYM_EXERCISE_MAP.hip_abductor_adductor;
+    const ranked = rankExerciseSubstitutes(target, GYM_EXERCISE_CATALOG, {
+      currentDayExerciseIds: [target.id, 'machine_hip_thrust'],
+      restrictions: [{ exerciseId: target.id, kind: 'busy', updatedAtMs: 1000 }],
+      limit: 100,
+    });
+
+    expect(ranked.length).toBeGreaterThan(0);
+    expect(ranked.map(({ exercise }) => exercise.id)).not.toContain('machine_hip_thrust');
+    expect(ranked.map(({ exercise }) => exercise.id)).not.toContain('hip_adductor_inner');
+  });
+
   it('excludes exercises flagged as injury or busy machine', () => {
     const target = GYM_EXERCISE_MAP.machine_hip_thrust;
 

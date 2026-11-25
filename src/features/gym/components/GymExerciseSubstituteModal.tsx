@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ArrowRightLeft, Ban, Check, RefreshCw, ShieldAlert, X } from 'lucide-react';
 import { GYM_EXERCISE_CATALOG } from '../data/defaultGymCatalog';
 import type {
@@ -18,7 +19,8 @@ interface GymExerciseSubstituteModalProps {
   userProfile: GymFemaleBodyProfile;
   isDeloadOrPeriod: boolean;
   onClose: () => void;
-  onSelectSubstitute: (newExerciseId: string) => void;
+  onSelectSubstitute: (newExerciseId: string) => boolean;
+  hasLoggedSets: boolean;
   onSetRestriction: (exerciseId: string, kind: GymRestrictionKind | null) => void;
 }
 
@@ -32,8 +34,10 @@ export default function GymExerciseSubstituteModal({
   isDeloadOrPeriod,
   onClose,
   onSelectSubstitute,
+  hasLoggedSets,
   onSetRestriction,
 }: GymExerciseSubstituteModalProps) {
+  const [swapError, setSwapError] = useState(false);
   if (!open) return null;
 
   const resolvedGender: GymGenderMode =
@@ -149,6 +153,18 @@ export default function GymExerciseSubstituteModal({
               Bài tập thay thế phù hợp nhất tại phòng tập
             </div>
 
+            {hasLoggedSets && (
+              <p role="status" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-950">
+                Bài này đã có hiệp được ghi. Bỏ dấu tích các hiệp đó trước khi đổi bài.
+              </p>
+            )}
+            {rankedSubstitutes.length === 0 && (
+              <p role="status" className="rounded-xl bg-white p-3 text-sm text-slate-700">
+                Chưa có bài thay thế phù hợp với lựa chọn này. Lịch hiện tại vẫn được giữ.
+              </p>
+            )}
+            {swapError && <p role="alert" className="text-sm text-red-700">Không thể đổi sang bài này. Hãy kiểm tra lại lịch và chọn bài khác.</p>}
+
             {rankedSubstitutes.map((item, idx) => (
               <div
                 key={item.exercise.id}
@@ -179,10 +195,11 @@ export default function GymExerciseSubstituteModal({
                 <button
                   type="button"
                   onClick={() => {
-                    onSelectSubstitute(item.exercise.id);
-                    onClose();
+                    if (onSelectSubstitute(item.exercise.id)) onClose();
+                    else setSwapError(true);
                   }}
-                  className="shrink-0 px-3.5 py-2.5 rounded-xl bg-[#F05A28] hover:bg-[#d94d1f] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                  disabled={hasLoggedSets}
+                  className="shrink-0 px-3.5 py-2.5 rounded-xl bg-[#1E293B] hover:bg-slate-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors disabled:cursor-default disabled:opacity-50"
                 >
                   <ArrowRightLeft size={13} />
                   <span>Đổi sang bài này</span>

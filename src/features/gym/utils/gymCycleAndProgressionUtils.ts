@@ -10,6 +10,8 @@ import type {
   GymSymptomCode,
 } from '../types/gym';
 
+import { getWorkoutGoal } from './gymWorkoutProgress';
+
 export interface ResolvedCycleStatus {
   phase: GymCyclePhase;
   phaseTitleVi: string;
@@ -206,17 +208,10 @@ export function computePlateBreakdownPerSide(targetPerSideKg: number): PlateBrea
 export function buildDefaultSetsForExercise(
   exercise: GymExerciseDefinition,
   workingWeightKg: number,
-  includeWarmup = false
+  includeWarmup = false,
+  goalLabel = exercise.sets + ' × ' + exercise.reps
 ): GymSetDetailItem[] {
-  const setMatch = exercise.sets.match(/(\d+)/g);
-  const workingSetCount = setMatch
-    ? Math.max(2, Math.min(5, Number(setMatch[setMatch.length - 1]) || 3))
-    : 3;
-
-  const repMatch = exercise.reps.match(/(\d+)/g);
-  const targetReps = repMatch
-    ? Math.max(5, Math.min(25, Number(repMatch[repMatch.length - 1]) || 12))
-    : 12;
+  const { workingSets, defaultAmount } = getWorkoutGoal(goalLabel);
 
   const list: GymSetDetailItem[] = [];
   if (includeWarmup && workingWeightKg > 0) {
@@ -230,11 +225,11 @@ export function buildDefaultSetsForExercise(
     });
   }
 
-  for (let i = 1; i <= workingSetCount; i++) {
+  for (let i = 1; i <= workingSets; i++) {
     list.push({
       setNumber: i,
       weightKg: workingWeightKg,
-      reps: targetReps,
+      reps: defaultAmount,
       isWarmup: false,
       completed: false,
     });

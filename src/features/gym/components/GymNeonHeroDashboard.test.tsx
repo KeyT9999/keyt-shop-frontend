@@ -118,7 +118,7 @@ describe('GymNeonHeroDashboard & Female Gym Modals (Dark Charcoal #111114 & Neon
   });
 
   it('renders smart 0-cost exercise substitutes and swaps exercise on click', () => {
-    const onSelectSubstitute = vi.fn();
+    const onSelectSubstitute = vi.fn(() => true);
     const onSetRestriction = vi.fn();
 
     render(
@@ -129,6 +129,7 @@ describe('GymNeonHeroDashboard & Female Gym Modals (Dark Charcoal #111114 & Neon
         restrictions={[]}
         userProfile={createDefaultFemaleBodyProfile()}
         isDeloadOrPeriod={true}
+        hasLoggedSets={false}
         onClose={vi.fn()}
         onSelectSubstitute={onSelectSubstitute}
         onSetRestriction={onSetRestriction}
